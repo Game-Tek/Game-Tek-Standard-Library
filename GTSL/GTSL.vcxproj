@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GTSL\Allocator.h" />
+    <ClInclude Include="GTSL\Application.h" />
+    <ClInclude Include="GTSL\Array.hpp" />
+    <ClInclude Include="GTSL\BlockingQueue.h" />
+    <ClInclude Include="GTSL\Core.h" />
+    <ClInclude Include="GTSL\DArray.hpp" />
+    <ClInclude Include="GTSL\Delegate.h" />
+    <ClInclude Include="GTSL\Extent.h" />
+    <ClInclude Include="GTSL\FlatHashMap.h" />
+    <ClInclude Include="GTSL\FlipFlop.h" />
+    <ClInclude Include="GTSL\FString.h" />
+    <ClInclude Include="GTSL\FVector.hpp" />
+    <ClInclude Include="GTSL\Id.h" />
+    <ClInclude Include="GTSL\KVector.h" />
+    <ClInclude Include="GTSL\Memory.h" />
+    <ClInclude Include="GTSL\Mutex.h" />
+    <ClInclude Include="GTSL\Network\NetConnection.h" />
+    <ClInclude Include="GTSL\Network\NetSocket.h" />
+    <ClInclude Include="GTSL\Network\NetworkCore.h" />
+    <ClInclude Include="GTSL\Octree.h" />
+    <ClInclude Include="GTSL\Pair.h" />
+    <ClInclude Include="GTSL\Platform\Windows\WindowsApplication.h" />
+    <ClInclude Include="GTSL\Platform\Windows\WindowsWindow.h" />
+    <ClInclude Include="GTSL\Ranger.h" />
+    <ClInclude Include="GTSL\RGB.h" />
+    <ClInclude Include="GTSL\RGBA.h" />
+    <ClInclude Include="GTSL\Semaphore.h" />
+    <ClInclude Include="GTSL\SHashMap.h" />
+    <ClInclude Include="GTSL\Signal.h" />
+    <ClInclude Include="GTSL\SinglyLinkedList.hpp" />
+    <ClInclude Include="GTSL\System.h" />
+    <ClInclude Include="GTSL\TextureCoordinates.h" />
+    <ClInclude Include="GTSL\Thread.h" />
+    <ClInclude Include="GTSL\ThreadPool.h" />
+    <ClInclude Include="GTSL\TimePoint.h" />
+    <ClInclude Include="GTSL\Window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\FString.cpp" />
+    <ClCompile Include="src\Id.cpp" />
+    <ClCompile Include="src\NetSocket.cpp" />
+    <ClCompile Include="src\Platform\Windows\WindowsApplication.cpp" />
+    <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="src\System.cpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{F5D88F6F-AABD-4E2C-ABBC-D1142A690DA0}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>GTSL</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)bin\$(ProjectName)\$(Configuration)-$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)bin-int\$(ProjectName)\$(Configuration)-$(Platform)\</IntDir>
+    <IncludePath>$(ProjectDir)$(ProjectName);$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)bin\$(ProjectName)\$(Configuration)-$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)bin-int\$(ProjectName)\$(Configuration)-$(Platform)\</IntDir>
+    <IncludePath>$(ProjectDir)$(ProjectName);$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
