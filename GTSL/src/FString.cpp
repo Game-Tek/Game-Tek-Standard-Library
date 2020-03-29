@@ -2,23 +2,8 @@
 #include <cstdio>
 #include <cstdarg>
 
-#include "Resources/Resource.h"
 #include "Array.hpp"
 #include "Ranger.h"
-
-OutStream& operator<<(OutStream& archive, FString& string)
-{
-	archive << string.data;
-
-	return archive;
-}
-
-InStream& operator>>(InStream& archive, FString& string)
-{
-	archive >> string.data;
-
-	return archive;
-}
 
 FString::FString() : data(10)
 {

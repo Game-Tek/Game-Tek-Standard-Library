@@ -1,6 +1,6 @@
 #include "System.h"
 
-#if BE_PLATFORM_WIN
+#if (_WIN32)
 #include <windows.h>
 #endif
 

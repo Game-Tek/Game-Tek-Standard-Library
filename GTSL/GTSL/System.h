@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Containers/FString.h"
+#include "FString.h"
 
 struct RAMInfo
 {

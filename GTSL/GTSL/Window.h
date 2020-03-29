@@ -31,10 +31,10 @@ protected:
 	Delegate<void()> onCloseDelegate;
 	Delegate<void(const Extent2D&)> onResizeDelegate;
 	Delegate<void(MouseButton, MouseButtonState)> onMouseButtonClick;
-	Delegate<void(Vector2)> onMouseMove;
+	Delegate<void(float, float)> onMouseMove;
 	Delegate<void(float)> onMouseWheelMove;
 	Delegate<void(uint16, KeyboardKeyState)> onKeyEvent;
-	Delegate<void(const Vector2&)> onWindowResize;
+	Delegate<void(float, float)> onWindowResize;
 public:
 	struct WindowCreateInfo
 	{

@@ -9,7 +9,10 @@ uint64 WindowsWindow::WindowProc(const HWND hwnd, const UINT uMsg, const WPARAM 
 	switch (uMsg)
 	{
 	case WM_CLOSE:       windows_window->onCloseDelegate();	return 0;
-	case WM_MOUSEMOVE:   windows_window->onMouseMove(CalculateMousePos(LOWORD(lParam), HIWORD(lParam))); return 0;
+	case WM_MOUSEMOVE:
+		float x, y;
+		CalculateMousePos(LOWORD(lParam), HIWORD(lParam), x, y);
+		windows_window->onMouseMove(x, y); return 0;
 	case WM_MOUSEHWHEEL: windows_window->onMouseWheelMove(GET_WHEEL_DELTA_WPARAM(wParam)); return 0;
 	case WM_LBUTTONDOWN: windows_window->onMouseButtonClick(MouseButton::LEFT_BUTTON,   MouseButtonState::PRESSED);  return 0;
 	case WM_LBUTTONUP:   windows_window->onMouseButtonClick(MouseButton::LEFT_BUTTON,   MouseButtonState::RELEASED); return 0;
@@ -19,7 +22,7 @@ uint64 WindowsWindow::WindowProc(const HWND hwnd, const UINT uMsg, const WPARAM 
 	case WM_MBUTTONUP:   windows_window->onMouseButtonClick(MouseButton::MIDDLE_BUTTON, MouseButtonState::RELEASED); return 0;
 	case WM_KEYDOWN:     windows_window->onKeyEvent(wParam, KeyboardKeyState::PRESSED);  return 0;
 	case WM_KEYUP:       windows_window->onKeyEvent(wParam, KeyboardKeyState::RELEASED); return 0;
-	case WM_SIZE:        windows_window->onWindowResize(Vector2(LOWORD(lParam), HIWORD(lParam))); return 0;
+	case WM_SIZE:        windows_window->onWindowResize(LOWORD(lParam), HIWORD(lParam)); return 0;
 	}
 }
 

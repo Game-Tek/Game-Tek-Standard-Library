@@ -35,12 +35,12 @@ void WindowsApplication::Update()
 		
 		if (states[i].Gamepad.sThumbLX != input_states[i].Gamepad.sThumbLX || states[i].Gamepad.sThumbLY != input_states[i].Gamepad.sThumbLY)
 		{
-			onLeftStickMove({ states[i].Gamepad.sThumbLX / 32767.f, states[i].Gamepad.sThumbLY / 32767.f }, { (states[i].Gamepad.sThumbLX - input_states[i].Gamepad.sThumbLX) / 32767.f, (states[i].Gamepad.sThumbLY - input_states[i].Gamepad.sThumbLY) / 32767.f });
+			onLeftStickMove(states[i].Gamepad.sThumbLX / 32767.f, states[i].Gamepad.sThumbLY / 32767.f, (states[i].Gamepad.sThumbLX - input_states[i].Gamepad.sThumbLX) / 32767.f, (states[i].Gamepad.sThumbLY - input_states[i].Gamepad.sThumbLY) / 32767.f);
 		}
 		
 		if (states[i].Gamepad.sThumbRX != input_states[i].Gamepad.sThumbRX  || states[i].Gamepad.sThumbRY != input_states[i].Gamepad.sThumbRY)
 		{
-			onRightStickMove({ states[i].Gamepad.sThumbRX / 32767.f, states[i].Gamepad.sThumbRY / 32767.f }, { (states[i].Gamepad.sThumbRX - input_states[i].Gamepad.sThumbRX) / 32767.f, (states[i].Gamepad.sThumbRY - input_states[i].Gamepad.sThumbRY) / 32767.f });
+			onRightStickMove(states[i].Gamepad.sThumbRX / 32767.f, states[i].Gamepad.sThumbRY / 32767.f, (states[i].Gamepad.sThumbRX - input_states[i].Gamepad.sThumbRX) / 32767.f, (states[i].Gamepad.sThumbRY - input_states[i].Gamepad.sThumbRY) / 32767.f);
 		}
 		
 		if ((states[i].Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != (input_states[i].Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP))

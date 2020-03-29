@@ -3,7 +3,6 @@
 #include "Core.h"
 
 #include "FVector.hpp"
-#include "Resources/Stream.h"
 
 class FString
 {
@@ -136,9 +135,6 @@ public:
 
 	static FString MakeString(const char* cstring, ...);
 private:
-	friend OutStream& operator<<(OutStream& archive, FString& string);
-	friend InStream& operator>>(InStream& archive, FString& string);
-
 	FVector<string_type> data;
 
 	static char toLowerCase(char c);

@@ -47,19 +47,18 @@ bool NetSocket::Send(const NetSocketSendInfo& NSSI_)
 
 bool NetSocket::Receive(const NetSocketReceiveInfo& NSRI_)
 {
-#if BE_PLATFORM_WIN
+#if (_WIN32)
 	typedef int socklen_t;
 #endif
 
 	sockaddr_in from;
 	socklen_t fromLength = sizeof(from);
 
-	int bytes = recvfrom(handle, reinterpret_cast<char*>(NSRI_.Buffer), NSRI_.BufferSize, 0,
-	                     reinterpret_cast<sockaddr*>(&from), &fromLength);
+	const int bytes_received = recvfrom(handle, reinterpret_cast<char*>(NSRI_.Buffer), NSRI_.BufferSize, 0, reinterpret_cast<sockaddr*>(&from), &fromLength);
 
 	NSRI_.Sender->AddressFromInt(ntohl(from.sin_addr.s_addr));
 
 	NSRI_.Sender->Port = ntohs(from.sin_port);
 
-	return bytes;
+	return bytes_received;
 }

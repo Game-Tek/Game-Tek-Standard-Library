@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core.h"
+
 /**
  * \brief Specifies and IP endpoint. This is an address and a port.
  * Used for socket connections.
