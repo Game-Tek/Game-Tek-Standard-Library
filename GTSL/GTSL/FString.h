@@ -137,6 +137,12 @@ public:
 private:
 	FVector<string_type> data;
 
+	friend class InStream;
+	friend class OutStream;
+
+	friend class OutStream& operator<<(OutStream& archive, FString& string);
+	friend class InStream& operator>>(InStream& archive, FString& string);
+	
 	static char toLowerCase(char c);
 	static char toUpperCase(char c);
 };

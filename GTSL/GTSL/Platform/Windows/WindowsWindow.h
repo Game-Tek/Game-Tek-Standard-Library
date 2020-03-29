@@ -10,6 +10,8 @@ class WindowsWindow : public Window
 {
 	HWND windowHandle = nullptr;
 	Extent2D extent;
+
+	float mouseX, mouseY;
 	
 	static uint64 __stdcall WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 

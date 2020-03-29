@@ -31,7 +31,7 @@ protected:
 	Delegate<void()> onCloseDelegate;
 	Delegate<void(const Extent2D&)> onResizeDelegate;
 	Delegate<void(MouseButton, MouseButtonState)> onMouseButtonClick;
-	Delegate<void(float, float)> onMouseMove;
+	Delegate<void(float, float, float, float)> onMouseMove;
 	Delegate<void(float)> onMouseWheelMove;
 	Delegate<void(uint16, KeyboardKeyState)> onKeyEvent;
 	Delegate<void(float, float)> onWindowResize;

@@ -9,10 +9,12 @@ uint64 WindowsWindow::WindowProc(const HWND hwnd, const UINT uMsg, const WPARAM 
 	switch (uMsg)
 	{
 	case WM_CLOSE:       windows_window->onCloseDelegate();	return 0;
-	case WM_MOUSEMOVE:
-		float x, y;
-		CalculateMousePos(LOWORD(lParam), HIWORD(lParam), x, y);
-		windows_window->onMouseMove(x, y); return 0;
+	case WM_MOUSEMOVE: /*absolute pos*/
+	{
+		const auto mouse_x = windows_window->mouseX, mouse_y = windows_window->mouseY;
+		CalculateMousePos(LOWORD(lParam), HIWORD(lParam), windows_window->mouseX, windows_window->mouseY);
+		windows_window->onMouseMove(windows_window->mouseX, windows_window->mouseY, windows_window->mouseX - mouse_x, windows_window->mouseY - mouse_y); return 0;
+	}
 	case WM_MOUSEHWHEEL: windows_window->onMouseWheelMove(GET_WHEEL_DELTA_WPARAM(wParam)); return 0;
 	case WM_LBUTTONDOWN: windows_window->onMouseButtonClick(MouseButton::LEFT_BUTTON,   MouseButtonState::PRESSED);  return 0;
 	case WM_LBUTTONUP:   windows_window->onMouseButtonClick(MouseButton::LEFT_BUTTON,   MouseButtonState::RELEASED); return 0;

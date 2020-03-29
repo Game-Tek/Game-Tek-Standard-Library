@@ -38,9 +38,11 @@
     <ClInclude Include="GTSL\RGB.h" />
     <ClInclude Include="GTSL\RGBA.h" />
     <ClInclude Include="GTSL\Semaphore.h" />
+    <ClInclude Include="GTSL\Serialize.h" />
     <ClInclude Include="GTSL\SHashMap.h" />
     <ClInclude Include="GTSL\Signal.h" />
     <ClInclude Include="GTSL\SinglyLinkedList.hpp" />
+    <ClInclude Include="GTSL\Stream.h" />
     <ClInclude Include="GTSL\System.h" />
     <ClInclude Include="GTSL\TextureCoordinates.h" />
     <ClInclude Include="GTSL\Thread.h" />
@@ -54,6 +56,7 @@
     <ClCompile Include="src\NetSocket.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsApplication.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="src\Stream.cpp" />
     <ClCompile Include="src\System.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
