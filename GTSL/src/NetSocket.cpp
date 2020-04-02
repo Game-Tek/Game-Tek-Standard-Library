@@ -9,12 +9,11 @@ typedef int socklen_t;
 
 class WSAStart
 {
+	
 	WSAStart()
 	{
 		WSADATA wsa_data;
 		WSAStartup(MAKEWORD(2, 2), &wsa_data);
-
-		std::cout << "WSA Initialized!" << std::endl;
 	}
 	
 	~WSAStart()
@@ -24,6 +23,8 @@ class WSAStart
 	
 static WSAStart start;
 };
+
+WSAStart WSAStart::start;
 #endif
 
 NetSocket::NetSocket(const CreateInfo& createInfo)
