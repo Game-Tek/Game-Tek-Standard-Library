@@ -14,6 +14,7 @@
     <ClInclude Include="GTSL\Allocator.h" />
     <ClInclude Include="GTSL\Application.h" />
     <ClInclude Include="GTSL\Array.hpp" />
+    <ClInclude Include="GTSL\Bitfield.h" />
     <ClInclude Include="GTSL\BlockingQueue.h" />
     <ClInclude Include="GTSL\Core.h" />
     <ClInclude Include="GTSL\DArray.hpp" />

@@ -2,7 +2,7 @@
 
 #include "FString.h"
 
-struct RAMInfo
+struct RamInfo
 {
 	size_t TotalPhysicalMemory = 0;
 	size_t FreePhysicalMemory = 0;
@@ -51,10 +51,24 @@ struct VectorInfo
 	bool HW_AVX512_VBMI;
 };
 
+struct SystemInfo
+{
+	struct CPUInfo
+	{
+		VectorInfo VectorInfo;
+		uint8 CoreCount = 0;
+		FString CpuBrand{64};
+	} CPU;
+	
+	RamInfo RAM;
+};
+
 class System
 {
 public:
-	static FString GetRunningPath();
-	static RAMInfo GetRAMInfo();
-	static VectorInfo GetVectorInfo();
+	static void GetRunningPath(FString& path);
+	static void GetRAMInfo(RamInfo& ramInfo);
+	static void GetVectorInfo(VectorInfo& vectorInfo);
+	static void GetCPUName(FString& name);
+	static void GetSystemInfo(SystemInfo& systemInfo);
 };

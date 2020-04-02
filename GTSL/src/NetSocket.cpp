@@ -1,64 +1,75 @@
 #include "Network/NetSocket.h"
+#include <iostream>
 
+#if (_WIN32)
 #include <WinSock2.h>
 #pragma comment(lib, "wsock32.lib")
 
-NetSocket::NetSocket(const NetSocketCreateInfo& NSCI_)
-{
-	WSADATA WsaData;
-	WSAStartup(MAKEWORD(2, 2), &WsaData);
+typedef int socklen_t;
 
+class WSAStart
+{
+	WSAStart()
+	{
+		WSADATA wsa_data;
+		WSAStartup(MAKEWORD(2, 2), &wsa_data);
+
+		std::cout << "WSA Initialized!" << std::endl;
+	}
+	
+	~WSAStart()
+	{
+		WSACleanup();
+	}
+	
+static WSAStart start;
+};
+#endif
+
+NetSocket::NetSocket(const CreateInfo& createInfo)
+{
+#if (_WIN32)
 	handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
 	sockaddr_in address{};
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(NSCI_.Port);
+	address.sin_port = htons(createInfo.Port);
+	if (bind(handle, reinterpret_cast<const sockaddr*>(&address), sizeof(sockaddr_in)) < 0) { __debugbreak(); }
 
-	if (bind(handle, reinterpret_cast<const sockaddr*>(&address), sizeof(sockaddr_in)) < 0)
-	{
-	}
-
-	DWORD nonBlocking = 1;
-	if (ioctlsocket(handle, FIONBIO, &nonBlocking) != 0)
-	{
-	}
+	DWORD nonBlocking = createInfo.Blocking;
+	if (ioctlsocket(handle, FIONBIO, &nonBlocking) != 0) {}
+#endif
 }
 
 NetSocket::~NetSocket()
 {
-	closesocket(handle);
-}
-
-bool NetSocket::Send(const NetSocketSendInfo& NSSI_)
-{
-	sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = htonl(NSSI_.Endpoint.IntFromAddress());
-	addr.sin_port = htons(NSSI_.Endpoint.Port);
-
-	int sent_bytes = sendto(handle, static_cast<const char*>(NSSI_.Data), NSSI_.Size, 0,
-	                        reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
-
-	if (sent_bytes != NSSI_.Size) { return false; }
-
-	return true;
-}
-
-bool NetSocket::Receive(const NetSocketReceiveInfo& NSRI_)
-{
 #if (_WIN32)
-	typedef int socklen_t;
+	closesocket(handle);
 #endif
+}
 
-	sockaddr_in from;
+bool NetSocket::Send(const SendInfo& sendInfo) const
+{
+	sockaddr_in addr{};
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = htonl(sendInfo.Endpoint.IntFromAddress());
+	addr.sin_port = htons(sendInfo.Endpoint.Port);
+
+	const auto sent_bytes = sendto(handle, static_cast<const char*>(sendInfo.Data), sendInfo.Size, 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
+
+	return sent_bytes == sendInfo.Size;
+}
+
+bool NetSocket::Receive(const ReceiveInfo& receiveInfo) const
+{
+	sockaddr_in from{};
 	socklen_t fromLength = sizeof(from);
 
-	const int bytes_received = recvfrom(handle, reinterpret_cast<char*>(NSRI_.Buffer), NSRI_.BufferSize, 0, reinterpret_cast<sockaddr*>(&from), &fromLength);
+	const auto bytes_received = recvfrom(handle, reinterpret_cast<char*>(receiveInfo.Buffer), receiveInfo.BufferSize, 0, reinterpret_cast<sockaddr*>(&from), &fromLength);
 
-	NSRI_.Sender->AddressFromInt(ntohl(from.sin_addr.s_addr));
+	receiveInfo.Sender->AddressFromInt(ntohl(from.sin_addr.s_addr));
+	receiveInfo.Sender->Port = ntohs(from.sin_port);
 
-	NSRI_.Sender->Port = ntohs(from.sin_port);
-
-	return bytes_received;
+	return bytes_received != SOCKET_ERROR;
 }
