@@ -14,18 +14,21 @@
     <ClInclude Include="GTSL\Allocator.h" />
     <ClInclude Include="GTSL\Application.h" />
     <ClInclude Include="GTSL\Array.hpp" />
+    <ClInclude Include="GTSL\Assert.h" />
     <ClInclude Include="GTSL\Bitfield.h" />
     <ClInclude Include="GTSL\BlockingQueue.h" />
     <ClInclude Include="GTSL\Core.h" />
-    <ClInclude Include="GTSL\DArray.hpp" />
+    <ClInclude Include="GTSL\FixedVector.hpp" />
     <ClInclude Include="GTSL\Delegate.h" />
     <ClInclude Include="GTSL\Extent.h" />
     <ClInclude Include="GTSL\FlatHashMap.h" />
     <ClInclude Include="GTSL\FlipFlop.h" />
-    <ClInclude Include="GTSL\FString.h" />
-    <ClInclude Include="GTSL\FVector.hpp" />
+    <ClInclude Include="GTSL\StaticString.h" />
+    <ClInclude Include="GTSL\String.h" />
+    <ClInclude Include="GTSL\GamepadQuery.h" />
+    <ClInclude Include="GTSL\Vector.hpp" />
     <ClInclude Include="GTSL\Id.h" />
-    <ClInclude Include="GTSL\KVector.h" />
+    <ClInclude Include="GTSL\KeepVector.h" />
     <ClInclude Include="GTSL\Memory.h" />
     <ClInclude Include="GTSL\Mutex.h" />
     <ClInclude Include="GTSL\Network\NetConnection.h" />
@@ -40,9 +43,7 @@
     <ClInclude Include="GTSL\RGBA.h" />
     <ClInclude Include="GTSL\Semaphore.h" />
     <ClInclude Include="GTSL\Serialize.h" />
-    <ClInclude Include="GTSL\SHashMap.h" />
     <ClInclude Include="GTSL\Signal.h" />
-    <ClInclude Include="GTSL\SinglyLinkedList.hpp" />
     <ClInclude Include="GTSL\Stream.h" />
     <ClInclude Include="GTSL\System.h" />
     <ClInclude Include="GTSL\TextureCoordinates.h" />
@@ -52,7 +53,8 @@
     <ClInclude Include="GTSL\Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\FString.cpp" />
+    <ClCompile Include="src\String.cpp" />
+    <ClCompile Include="src\GamepadQuery.cpp" />
     <ClCompile Include="src\Id.cpp" />
     <ClCompile Include="src\NetSocket.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsApplication.cpp" />
@@ -113,7 +115,7 @@
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -130,7 +132,7 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -22,14 +22,16 @@ class Delegate<RET(PARAMS ...)> final
 	void* callee = nullptr;
 	
 public:
+	typedef decltype(callerFunction) call_signature;
+	
 	Delegate() = default;
 	~Delegate() = default;
 
-	[[nodiscard]] bool isNull() const { return callerFunction == nullptr; }
+	[[nodiscard]] bool IsNull() const { return callerFunction == nullptr; }
 
-	bool operator ==(void* ptr) const { return (ptr == nullptr) && this->isNull(); }
+	bool operator ==(void* ptr) const { return (ptr == nullptr) && this->IsNull(); }
 
-	bool operator !=(void* ptr) const { return (ptr != nullptr) || (!this->isNull()); }
+	bool operator !=(void* ptr) const { return (ptr != nullptr) || (!this->IsNull()); }
 
 	template <typename LAMBDA>
 	Delegate(const LAMBDA& lambda) { assign(static_cast<void*>(&lambda), lambdaCaller<LAMBDA>); }

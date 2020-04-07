@@ -27,9 +27,6 @@
     <ClInclude Include="GTSL\BlockingQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\DArray.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Delegate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -42,16 +39,7 @@
     <ClInclude Include="GTSL\FlipFlop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\FString.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GTSL\FVector.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Id.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GTSL\KVector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\Mutex.h">
@@ -75,13 +63,7 @@
     <ClInclude Include="GTSL\Semaphore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\SHashMap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Signal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GTSL\SinglyLinkedList.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\System.h">
@@ -132,6 +114,27 @@
     <ClInclude Include="GTSL\Bitfield.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GTSL\Vector.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\FixedVector.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\GamepadQuery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\KeepVector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\Assert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\String.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\StaticString.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\Windows\WindowsApplication.cpp">
@@ -143,9 +146,6 @@
     <ClCompile Include="src\System.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\FString.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Id.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -153,6 +153,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Stream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GamepadQuery.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\String.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
