@@ -2,35 +2,42 @@
 
 #include "Core.h"
 
-template<typename T>
-class Bitfield
+namespace GTSL
 {
-	T number{0};
-	
-	friend class BitReference;
-	class BitReference
+	template<uint16 N>
+	class Bitfield
 	{
-		constexpr Bitfield& bitfield;
-		constexpr uint8 bit;
+		constexpr uint8 number[N / 8 + 1]{};
 
-		BitReference(Bitfield& bitfield, const uint8 bit) noexcept: bitfield(bitfield), bit(bit) {}
+		friend class BitReference;
+		class BitReference
+		{
+			constexpr Bitfield& bitfield;
+			constexpr uint16 bit;
+
+			constexpr BitReference(Bitfield& bitfield, const uint16 bit) noexcept : bitfield(bitfield), bit(bit) {}
+		public:
+			constexpr BitReference& operator=(const bool b) const noexcept
+			{
+				uint8 num{bitfield.number[bit / 8]};
+				num = (num & ~(1ull << (bit % 8))) | (b << (bit % 8));
+				bitfield.number[bit / 8] = num;
+				return *this;
+			}
+
+			constexpr operator bool() const noexcept { return (bitfield.number[bit / 8] >> (bit % 8)) & 1; }
+
+			constexpr void Flip() const noexcept { bitfield.number[bit / 8] ^= 1ull << (bit % 8); }
+		};
+
 	public:
-		BitReference& operator=(const bool b) const noexcept { bitfield.number = (bitfield.number & ~(1ull << bit)) | (b << bit); return *this; }
+		constexpr Bitfield() noexcept = default;
 
-		operator bool() const noexcept { return (bitfield.number >> bit) & 1; }
+		constexpr void Flip(const uint16 i) noexcept { number[i / 8] ^= 1ull << (i % 8); }
+		constexpr void Set(const uint16 i, const bool value) noexcept { number[i / 8] = (number[i / 8] & ~(1ull << (i % 8))) | (value << (i % 8)); }
+		constexpr void Get(const uint16 i, bool& value) noexcept { value = ((number[i / 8] >> (i % 8)) & 1ull); }
 
-		void Flip() const noexcept { bitfield.number ^= 1ull << bit; }
+		constexpr BitReference operator[](const uint16 i) const noexcept { return BitReference(*this, i); }
+		constexpr bool operator()(const uint16 i) const noexcept { return (number[i / 8] >> (i % 8)) & 1ull; }
 	};
-	
-public:
-	Bitfield() = default;
-
-	void Flip(const uint8 i) { number ^= 1ull << i; }
-	void Set(const uint8 i, const bool value) { number = (number & ~(1ull << i)) | (value << i); }
-	void Get(const uint8 i, bool& value) { value = ((number >> i) & 1ull); }
-	
-	BitReference operator[](const uint8 i) const { return BitReference(*this, i); }
-	bool operator()(const uint8 i) const { return (number >> i) & 1ull; }
-
-	operator T() const { return number; }
-};
+}
