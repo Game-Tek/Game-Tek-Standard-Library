@@ -3,8 +3,8 @@
 template <typename A, typename B>
 struct Pair
 {
-	constexpr A First;
-	constexpr B Second;
+	A First;
+	B Second;
 
 	Pair() = default;
 
