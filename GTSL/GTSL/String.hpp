@@ -56,6 +56,8 @@ namespace GTSL
 		String& operator=(String&& other) noexcept = default;
 		~String() = default;
 
+		[[nodiscard]] AllocatorReference* GetAllocatorReference() const { return data.GetAllocatorReference(); }
+		
 		String& operator=(const char* cstring);
 		String& operator+=(char c);
 		String& operator+=(const char* cstring);

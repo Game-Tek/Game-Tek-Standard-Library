@@ -93,6 +93,8 @@ namespace GTSL
 		 */
 		[[nodiscard]] const T& back() const noexcept { return this->data[this->length]; }
 
+		[[nodiscard]] AllocatorReference* GetAllocatorReference() const { return allocatorReference; }
+		
 		FixedVector() = default;
 
 		/**
