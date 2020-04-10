@@ -135,10 +135,10 @@
     <ClInclude Include="GTSL\Bitscan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\GTSLString.h">
+    <ClInclude Include="GTSL\Tuple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\Tuple.h">
+    <ClInclude Include="GTSL\String.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

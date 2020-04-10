@@ -4,6 +4,7 @@
 
 #include <initializer_list>
 #include "Memory.h"
+#include "Assert.h"
 
 namespace GTSL
 {

@@ -13,34 +13,34 @@ namespace GTSL
 		using length_type = Vector<string_type>::length_type;
 	public:
 		//Constructs an Empty String.
-		String();
+		String() = default;
 
 		//template<size_t N>
 		//String(const char(&_Literal)[N]) : data(N, *_Literal)
 		//{
 		//}
 
-		String(const char* cstring) : data(StringLength(cstring), const_cast<char*>(cstring)) {}
+		String(const char* cstring, AllocatorReference* allocatorReference) : data(StringLength(cstring), const_cast<char*>(cstring), allocatorReference) {}
 
 		/**
 		 * \brief Creates an String with enough space allocated for length elements.
 		 * \param length Amount of elements to allocate.
 		 */
-		explicit String(const length_type length) : data(length) {}
+		explicit String(const length_type length, AllocatorReference* allocatorReference) : data(length, allocatorReference) {}
 
 		/**
 		 * \brief Creates an String from a length and an array. Assumes the array has no null terminator character. If the array you pass happens to have a null terminator you should insert one character less.
 		 * \param length length to use from the cstring array
 		 * \param cstring array to copy from
 		 */
-		String(const length_type length, const char* cstring);
+		String(const length_type length, const char* cstring, AllocatorReference* allocatorReference);
 
 		/**
 		 * \brief Creates an String from a length and an String. Assumes the string has no null terminator character. If the string you pass happens to have a null terminator you should insert one character less.
 		 * \param length Length to use from the String.
 		 * \param string String to copy characters from.
 		 */
-		String(const length_type length, const String& string);
+		String(const length_type length, const String& string, AllocatorReference* allocatorReference);
 
 		/**
 		 * \brief Creates an String from a length an String and an offset. Assumes the string has no null terminator character. If the string you pass happens to have a null terminator you should insert one character less.
@@ -48,7 +48,7 @@ namespace GTSL
 		 * \param string String to copy from.
 		 * \param offset Offset from the start of the string to start copying from.
 		 */
-		String(const length_type length, const String& string, const length_type offset);
+		String(const length_type length, const String& string, const length_type offset, AllocatorReference* allocatorReference);
 
 		String(const String& other) = default;
 		String(String&& other) noexcept = default;

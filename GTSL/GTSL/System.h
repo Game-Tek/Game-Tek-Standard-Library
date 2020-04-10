@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GTSLString.h"
+#include "String.hpp"
 
 namespace GTSL
 {
@@ -59,7 +59,7 @@ namespace GTSL
 		{
 			VectorInfo VectorInfo;
 			uint8 CoreCount = 0;
-			GTSL::String CpuBrand{ 64 };
+			GTSL::String CpuBrand;
 		} CPU;
 
 		RamInfo RAM;

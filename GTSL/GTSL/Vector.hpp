@@ -92,10 +92,12 @@ namespace GTSL
 		iterator getIterator(const length_type index) noexcept { return &this->data[index]; }
 
 	public:
+		Vector() = default;
+		
 		/**
 		 * \brief Constructs an Empty Vector with no allocations. Vector must be initialized before being used or undefined behaviour will occur.
 		 */
-		Vector(const allocator_delegate allocatorReferenceDelegate = &g_allocator_reference) noexcept : capacity(0), length(0), data(nullptr), allocator(allocatorReferenceDelegate)
+		Vector(const allocator_delegate allocatorReferenceDelegate) noexcept : capacity(0), length(0), data(nullptr), allocator(allocatorReferenceDelegate)
 		{
 		}
 
@@ -103,7 +105,7 @@ namespace GTSL
 		 * \brief Constructs a Vector with enough space to accomodate capacity T elements.
 		 * \param capacity Number of T objects to allocate space for.
 		 */
-		explicit Vector(const length_type capacity, const allocator_delegate allocatorDelegate = &g_allocator_reference) : capacity(capacity), length(0), data(allocate(this->capacity)), allocator(allocatorDelegate)
+		explicit Vector(const length_type capacity, const allocator_delegate allocatorDelegate) : capacity(capacity), length(0), data(allocate(this->capacity)), allocator(allocatorDelegate)
 		{
 		}
 
@@ -112,7 +114,7 @@ namespace GTSL
 		 * \param capacity Number of T objects to allocate space for.
 		 * \param length Number of elements to consider being already placed in vector.
 		 */
-		explicit Vector(const length_type capacity, const length_type length, const allocator_delegate allocatorDelegate = &g_allocator_reference) : capacity(capacity), length(length), data(allocate(this->capacity)), allocator(allocatorDelegate)
+		explicit Vector(const length_type capacity, const length_type length, const allocator_delegate allocatorDelegate) : capacity(capacity), length(length), data(allocate(this->capacity)), allocator(allocatorDelegate)
 		{
 		}
 
@@ -121,7 +123,7 @@ namespace GTSL
 		 * \param length Number T elements to copy from array.
 		 * \param array Pointer to an array of type T elements.
 		 */
-		Vector(const length_type length, const T array[], const allocator_delegate allocatorDelegate = &g_allocator_reference) : capacity(length), length(length), data(allocate(this->capacity)), allocator(allocatorDelegate)
+		Vector(const length_type length, const T array[], const allocator_delegate allocatorDelegate) : capacity(length), length(length), data(allocate(this->capacity)), allocator(allocatorDelegate)
 		{
 			copyArray(array, this->data, length);
 		}
@@ -131,7 +133,7 @@ namespace GTSL
 		 * \param length Number of T elements in array.
 		 * \param array Pointer to an array of type T elements.
 		 */
-		Vector(const length_type length, const T* array[], const allocator_delegate allocatorDelegate = &g_allocator_reference) : capacity(length), length(length), data(*array), allocator(allocatorDelegate)
+		Vector(const length_type length, const T* array[], const allocator_delegate allocatorDelegate) : capacity(length), length(length), data(*array), allocator(allocatorDelegate)
 		{
 		}
 
@@ -141,7 +143,7 @@ namespace GTSL
 		 * \param length Number of occupied T elements at array.
 		 * \param array Pointer to an array of type T elements.
 		 */
-		Vector(const length_type capacity, const length_type length, const T* array[], const allocator_delegate allocatorDelegate = &g_allocator_reference) : capacity(capacity), length(length), data(*array), allocator(allocatorDelegate)
+		Vector(const length_type capacity, const length_type length, const T* array[], const allocator_delegate allocatorDelegate) : capacity(capacity), length(length), data(*array), allocator(allocatorDelegate)
 		{
 		}
 
@@ -159,7 +161,7 @@ namespace GTSL
 		 * \param start Iterator from where to start copying.
 		 * \param end Iterator to where to stop copying.
 		 */
-		Vector(const_iterator start, const_iterator end, const allocator_delegate allocatorDelegate = &g_allocator_reference) : capacity(end - start), length(end - start), data(allocate(this->capacity)), allocator(allocatorDelegate)
+		Vector(const_iterator start, const_iterator end, const allocator_delegate allocatorDelegate) : capacity(end - start), length(end - start), data(allocate(this->capacity)), allocator(allocatorDelegate)
 		{
 			copyArray(start, this->data);
 		}

@@ -1,20 +1,9 @@
 #pragma once
 
 #include "Core.h"
-#include <algorithm>
 
 class Allocator
 {
-	class Block
-	{
-		size_t size = 0;
-		void* data = nullptr;
-		size_t marker = 0;
-
-	public:
-		Block(const size_t size, const void* data);
-	};
-
 public:
 	static void* AlignForward(void* address, const uint8 alignment)
 	{
@@ -67,5 +56,3 @@ struct AllocatorReference
 	 */
 	void Deallocate(uint64 size, void* memory) const;
 };
-
-static AllocatorReference g_allocator_reference;

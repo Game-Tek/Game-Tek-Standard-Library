@@ -3,7 +3,7 @@
 #include "Extent.h"
 
 #include "Delegate.h"
-#include "GTSLString.h"
+#include "String.hpp"
 
 namespace GTSL
 {

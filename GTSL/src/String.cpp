@@ -1,4 +1,4 @@
-#include "GTSLString.h"
+#include "String.hpp"
 
 #include <cstdio>
 #include <cstdarg>
@@ -9,23 +9,25 @@
 
 #include "Serialize.h"
 
-GTSL::String::String() : data(10)
-{
-}
-
-GTSL::String::String(const length_type length, const char* cstring): data(length + 1, const_cast<char*>(cstring))
+GTSL::String::String(const length_type length, const char* cstring, AllocatorReference* allocatorReference) : data(length + 1, const_cast<char*>(cstring), allocatorReference)
 {
 	data.PushBack(char('\0'));
 }
 
-GTSL::String::String(const length_type length, const String& string): data(length, string.data.GetData())
+GTSL::String::String(const length_type length, const String& string, AllocatorReference* allocatorReference) : data(length, string.data.GetData(), allocatorReference)
 {
-	data.PushBack(char('\0'));
+	if(length < string.GetLength())
+	{
+		data.PushBack(char('\0'));
+	}
 }
 
-GTSL::String::String(const length_type length, const String& string, const length_type offset): data(length, string.data.GetData() + offset)
+GTSL::String::String(const length_type length, const String& string, const length_type offset, AllocatorReference* allocatorReference) : data(length, string.data.GetData() + offset, allocatorReference)
 {
-	data.PushBack(char('\0'));
+	if(length + offset < string.GetLength())
+	{
+		data.PushBack(char('\0'));
+	}
 }
 
 GTSL::String& GTSL::String::operator=(const char* cstring)
@@ -267,27 +269,6 @@ constexpr GTSL::String::length_type GTSL::String::StringLength(const char* cstri
 
 	//We return Length + 1 to take into account for the null terminator character.
 	return length + 1;
-}
-
-#define FSTRING_MAKESTRING_DEFAULT_SIZE 256
-
-GTSL::String GTSL::String::MakeString(const char* cstring, ...)
-{
-	String Return(FSTRING_MAKESTRING_DEFAULT_SIZE);
-
-	va_list vaargs;
-	va_start(vaargs, cstring);
-	const auto Count = snprintf(Return.data.GetData(), Return.data.GetLength(), cstring, vaargs) + 1;
-	//Take into account null terminator.
-	if (Count > Return.data.GetLength())
-	{
-		Return.data.Resize(Count);
-
-		snprintf(Return.data.GetData(), Return.data.GetLength(), cstring, vaargs);
-	}
-	va_end(vaargs);
-
-	return Return;
 }
 
 char GTSL::String::toLowerCase(char c)

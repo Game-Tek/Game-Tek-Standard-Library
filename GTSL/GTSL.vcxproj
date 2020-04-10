@@ -25,7 +25,7 @@
     <ClInclude Include="GTSL\FlatHashMap.h" />
     <ClInclude Include="GTSL\FlipFlop.h" />
     <ClInclude Include="GTSL\StaticString.h" />
-    <ClInclude Include="GTSL\GTSLString.h" />
+    <ClInclude Include="GTSL\String.hpp" />
     <ClInclude Include="GTSL\GamepadQuery.h" />
     <ClInclude Include="GTSL\Tuple.h" />
     <ClInclude Include="GTSL\Vector.hpp" />

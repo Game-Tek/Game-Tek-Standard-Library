@@ -8,7 +8,7 @@
 
 namespace GTSL
 {
-	template <typename T, class ALLOCATOR_REF = AllocatorReference>
+	template <typename T>
 	class FixedVector final
 	{
 	public:
@@ -19,11 +19,12 @@ namespace GTSL
 		length_type capacity = 0;
 		length_type length = 0;
 		T* data = nullptr;
+		AllocatorReference* allocatorReference{ nullptr };
 
 		constexpr T* allocate(const length_type _elements)
 		{
 			T* data{ nullptr };
-			return static_cast<T*>(ALLOCATOR_REF().Allocate(sizeof(T) * _elements, &data, &this->capacity));
+			return static_cast<T*>(allocatorReference->Allocate(sizeof(T) * _elements, &data, &this->capacity));
 		}
 
 		void copyLength(const length_type _elements, void* _from)
@@ -38,7 +39,7 @@ namespace GTSL
 
 		void freeArray()
 		{
-			ALLOCATOR_REF().Deallocate(this->capacity, this->data);
+			allocatorReference->Deallocate(this->capacity, this->data);
 			this->data = nullptr;
 		}
 
@@ -98,7 +99,7 @@ namespace GTSL
 		 * \brief Constructs a FixedVector with enough space to accomodate capacity T elements.
 		 * \param capacity Number of T objects to allocate space for.
 		 */
-		explicit FixedVector(const length_type capacity) : capacity(capacity), length(0), data(allocate(capacity))
+		explicit FixedVector(const length_type capacity, AllocatorReference* allocatorReference) : capacity(capacity), length(0), data(allocate(capacity)), allocatorReference(allocatorReference)
 		{
 		}
 
@@ -107,7 +108,7 @@ namespace GTSL
 		 * \param capacity Number of T objects to allocate space for.
 		 * \param length Number of elements to consider being already placed in vector.
 		 */
-		explicit FixedVector(const length_type capacity, const length_type length) : capacity(capacity), length(length), data(allocate(this->capacity))
+		explicit FixedVector(const length_type capacity, const length_type length, AllocatorReference* allocatorReference) : capacity(capacity), length(length), data(allocate(this->capacity)), allocatorReference(allocatorReference)
 		{
 		}
 
@@ -116,7 +117,7 @@ namespace GTSL
 		 * \param length Number T elements to copy from array.
 		 * \param array Pointer to an array of type T elements.
 		 */
-		FixedVector(const length_type length, const T array[]) : capacity(length), length(length), data(allocate(this->capacity))
+		FixedVector(const length_type length, const T array[], AllocatorReference* allocatorReference) : capacity(length), length(length), data(allocate(this->capacity)), allocatorReference(allocatorReference)
 		{
 			copyToData(array, length);
 		}
@@ -126,7 +127,7 @@ namespace GTSL
 		 * \param length Number of T elements in array.
 		 * \param array Pointer to an array of type T elements.
 		 */
-		FixedVector(const length_type length, const T* array[]) : capacity(length), length(length), data(*array)
+		FixedVector(const length_type length, const T* array[], AllocatorReference* allocatorReference) : capacity(length), length(length), data(*array), allocatorReference(allocatorReference)
 		{
 		}
 
@@ -136,7 +137,7 @@ namespace GTSL
 		 * \param length Number of occupied T elements at array.
 		 * \param array Pointer to an array of type T elements.
 		 */
-		FixedVector(const length_type capacity, const length_type length, const T* array[]) : capacity(capacity), length(length), data(*array)
+		FixedVector(const length_type capacity, const length_type length, const T* array[], AllocatorReference* allocatorReference) : capacity(capacity), length(length), data(*array), allocatorReference(allocatorReference)
 		{
 		}
 
@@ -150,7 +151,7 @@ namespace GTSL
 		 * \param start Iterator from where to start copying.
 		 * \param end Iterator to where to stop copying.
 		 */
-		FixedVector(const_iterator start, const_iterator end) : capacity(end - start), length(this->capacity), data(allocate(this->capacity))
+		FixedVector(const_iterator start, const_iterator end, AllocatorReference* allocatorReference) : capacity(end - start), length(this->capacity), data(allocate(this->capacity)), allocatorReference(allocatorReference)
 		{
 			copyToData(start, (end - start) * sizeof(T));
 		}
@@ -209,7 +210,7 @@ namespace GTSL
 		*/
 		T& operator[](const length_type index) noexcept
 		{
-			GTSL_ASSERT(index > this->capacity, "Out of Bounds! Requested index is greater than the array's allocated(current) size!")
+			GTSL_ASSERT(index > this->capacity, "Out of Bounds! Requested index is greater than the array's allocated(current) size!");
 			return this->data[index];
 		}
 
@@ -220,7 +221,7 @@ namespace GTSL
 		 */
 		const T& operator[](const length_type index) const noexcept
 		{
-			GTSL_ASSERT(index > this->capacity, "Out of Bounds! Requested index is greater than the array's allocated(current) size!")
+			GTSL_ASSERT(index > this->capacity, "Out of Bounds! Requested index is greater than the array's allocated(current) size!");
 			return this->data[index];
 		}
 
@@ -257,7 +258,7 @@ namespace GTSL
 
 		void Resize(const length_type length) noexcept
 		{
-			GTSL_ASSERT(length > this->length, "New length cannot be more than allocated length.")
+			GTSL_ASSERT(length > this->length, "New length cannot be more than allocated length.");
 			this->length = length;
 		}
 

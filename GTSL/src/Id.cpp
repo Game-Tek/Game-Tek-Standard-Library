@@ -1,6 +1,6 @@
 #include "Id.h"
 
-#include "GTSLString.h"
+#include "String.hpp"
 
 #include "Ranger.h"
 
