@@ -1,6 +1,6 @@
 #include "Id.h"
 
-#include "String.h"
+#include "GTSLString.h"
 
 #include "Ranger.h"
 
@@ -41,7 +41,7 @@ constexpr GTSL::Id64::HashType GTSL::Id64::hashString(const uint32 length, const
 	return ((primaryHash & 0xFFFFFFFF00000000ull) ^ (secondaryHash & 0x00000000FFFFFFFFull));
 }
 
-uint32 GTSL::Id32::hashString(const uint32 stringLength, const char* str) noexcept
+constexpr uint32 GTSL::Id32::hashString(const uint32 stringLength, const char* str) noexcept
 {
 	uint32 primaryHash(525410765);
 	uint32 secondaryHash(0xAAAAAAAA);
@@ -68,8 +68,8 @@ uint16 GTSL::Id16::hashString(const uint32 stringLength, const char* str)
 	{
 		primaryHash ^= c;
 		secondaryHash ^= c;
-		primaryHash *= 0x5bd1e95;
-		secondaryHash *= 0x8063e;
+		primaryHash *= 0x5bd1;
+		secondaryHash *= 0x8063;
 		primaryHash ^= primaryHash >> 9;
 		secondaryHash ^= secondaryHash >> 11;
 	}
@@ -77,11 +77,11 @@ uint16 GTSL::Id16::hashString(const uint32 stringLength, const char* str)
 	return ((primaryHash & 0xFF00) ^ (secondaryHash & 0x00FF));
 }
 
-GTSL::Id32::Id32(const char* text) noexcept : hash(hashString(String::StringLength(text) - 1, text))
+constexpr GTSL::Id32::Id32(const char* text) noexcept : hash(hashString(String::StringLength(text) - 1, text))
 {
 }
 
-GTSL::Id32::Id32(uint32 length, const char* text) noexcept : hash(hashString(length, text))
+constexpr GTSL::Id32::Id32(uint32 length, const char* text) noexcept : hash(hashString(length, text))
 {
 }
 

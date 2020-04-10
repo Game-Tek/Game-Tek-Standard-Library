@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Vector.hpp"
 
 namespace GTSL
@@ -34,8 +35,8 @@ namespace GTSL
 			return true;
 		}
 	public:
-		auto begin() { return objects.begin(); }
-		auto end() { return objects.end(); }
+		auto begin() noexcept { return objects.begin(); }
+		auto end() noexcept { return objects.end(); }
 
 		explicit KeepVector(const length_type min) : objects(min), freeIndeces(min, min)
 		{
@@ -72,19 +73,19 @@ namespace GTSL
 		 * \param args Arguments for construction of object of type T.
 		 * \return Index At which it was emplaced.
 		 */
-		template <typename... Args>
-		length_type Emplace(Args&&... args)
+		template <typename... ARGS>
+		length_type Emplace(ARGS&&... args)
 		{
 			length_type index = 0;
 
 			if (findFreeIndex(index)) //If there is a free index insert there,
 			{
-				objects.Emplace(index, std::forward<Args>(args) ...);
+				objects.Emplace(index, GTSL::MakeForwardReference<ARGS>(args) ...);
 				return index;
 			}
 
 			//if there wasn't a free index Place a the back of the array.
-			return objects.EmplaceBack(std::forward<Args>(args) ...);
+			return objects.EmplaceBack(GTSL::MakeForwardReference<ARGS>(args) ...);
 		}
 
 		/**

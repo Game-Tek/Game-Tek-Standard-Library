@@ -3,12 +3,12 @@
 template <typename A, typename B>
 struct Pair
 {
-	A First;
-	B Second;
+	constexpr A First;
+	constexpr B Second;
 
 	Pair() = default;
 
-	Pair(const A& first, const B& second) : First(first), Second(second)
+	constexpr Pair(const A& first, const B& second) noexcept : First(first), Second(second)
 	{
 	}
 };

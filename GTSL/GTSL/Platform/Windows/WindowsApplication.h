@@ -2,19 +2,24 @@
 
 #include "Application.h"
 
+#if (_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-class WindowsApplication final : public Application
+namespace GTSL
 {
-	HINSTANCE instance = nullptr;
+	class WindowsApplication final : public Application
+	{
+		HINSTANCE instance = nullptr;
 
-public:
-	explicit WindowsApplication(const ApplicationCreateInfo& applicationCreateInfo);
+	public:
+		explicit WindowsApplication(const ApplicationCreateInfo& applicationCreateInfo);
 
-	void Update() override;
+		void Update() override;
 
-	void Close() override;
-	
-	[[nodiscard]] HINSTANCE GetInstance() const { return instance; }
-};
+		void Close() override;
+
+		[[nodiscard]] HINSTANCE GetInstance() const { return instance; }
+	};
+}
+#endif

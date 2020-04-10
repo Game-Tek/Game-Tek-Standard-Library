@@ -1,4 +1,5 @@
-#include "String.h"
+#include "GTSLString.h"
+
 #include <cstdio>
 #include <cstdarg>
 
@@ -10,6 +11,21 @@
 
 GTSL::String::String() : data(10)
 {
+}
+
+GTSL::String::String(const length_type length, const char* cstring): data(length + 1, const_cast<char*>(cstring))
+{
+	data.PushBack(char('\0'));
+}
+
+GTSL::String::String(const length_type length, const String& string): data(length, string.data.GetData())
+{
+	data.PushBack(char('\0'));
+}
+
+GTSL::String::String(const length_type length, const String& string, const length_type offset): data(length, string.data.GetData() + offset)
+{
+	data.PushBack(char('\0'));
 }
 
 GTSL::String& GTSL::String::operator=(const char* cstring)
@@ -286,16 +302,12 @@ char GTSL::String::toUpperCase(char c)
 	return c;
 }
 
-inline OutStream& operator<<(OutStream& archive, GTSL::String& string)
+OutStream& GTSL::String::operator<<(OutStream& archive)
 {
+	archive << data; return archive;
 }
 
-inline InStream& operator>>(InStream& archive, GTSL::String& string)
+InStream& GTSL::String::operator>>(InStream& archive)
 {
-	archive >> string.data; return archive;
-}
-
-GTSL::OutStream& GTSL::operator<<(OutStream& archive, String& string)
-{
-	archive << string.data;	return archive;
+	archive >> data; return archive;
 }

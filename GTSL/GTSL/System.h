@@ -1,6 +1,6 @@
 #pragma once
 
-#include "String.h"
+#include "GTSLString.h"
 
 struct RamInfo
 {
@@ -57,7 +57,7 @@ struct SystemInfo
 	{
 		VectorInfo VectorInfo;
 		uint8 CoreCount = 0;
-		FString CpuBrand{64};
+		GTSL::String CpuBrand{64};
 	} CPU;
 	
 	RamInfo RAM;
@@ -66,9 +66,9 @@ struct SystemInfo
 class System
 {
 public:
-	static void GetRunningPath(FString& path);
+	static void GetRunningPath(GTSL::String& path);
 	static void GetRAMInfo(RamInfo& ramInfo);
 	static void GetVectorInfo(VectorInfo& vectorInfo);
-	static void GetCPUName(FString& name);
+	static void GetCPUName(GTSL::String& name);
 	static void GetSystemInfo(SystemInfo& systemInfo);
 };

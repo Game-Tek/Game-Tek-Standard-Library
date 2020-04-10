@@ -1,17 +1,20 @@
 #pragma once
 
-class Application
+namespace GTSL
 {
-public:
-	virtual ~Application() = default;
-
-public:
-	struct ApplicationCreateInfo
+	class Application
 	{
-	};
-	explicit Application(const ApplicationCreateInfo& applicationCreateInfo);
+	public:
+		virtual ~Application() = default;
 
-	virtual void Update() = 0;
-	
-	virtual void Close() = 0;
-};
+	public:
+		struct ApplicationCreateInfo
+		{
+		};
+		explicit Application(const ApplicationCreateInfo& applicationCreateInfo);
+
+		virtual void Update() = 0;
+
+		virtual void Close() = 0;
+	};
+}

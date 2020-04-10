@@ -1,10 +1,6 @@
 #include "GamepadQuery.h"
 
-#if (_WIN32)
-#include <winerror.h>
-#endif
-
-void GamepadQuery::Update(bool& connected)
+void GamepadQuery::Update(bool& connected) noexcept
 {
 	XINPUT_STATE xinput_state;
 
@@ -109,7 +105,7 @@ void GamepadQuery::Update(bool& connected)
 	input_state = xinput_state;
 }
 
-void GamepadQuery::SetVibration(const GamepadVibration& gamepadVibration)
+void GamepadQuery::SetVibration(const GamepadVibration& gamepadVibration) const noexcept
 {
 	XINPUT_VIBRATION xinput_vibration;
 	xinput_vibration.wLeftMotorSpeed = static_cast<WORD>(gamepadVibration.LowFrequency * 65535);

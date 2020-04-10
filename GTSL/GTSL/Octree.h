@@ -14,6 +14,6 @@ class Octree
 		
 	};
 
-	Vector<Array<T, 8, uint8>> elements;
+	GTSL::Vector<Array<T, 8, uint8>> elements;
 public:
 };

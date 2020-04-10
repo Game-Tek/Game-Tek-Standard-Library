@@ -8,137 +8,133 @@
 namespace GTSL
 {
 	template<typename T>
-	class blocking_queue
+	class BlockingQueue
 	{
 	public:
 		template<typename Q = T>
 		typename std::enable_if<std::is_copy_constructible<Q>::value, void>::
-			type push(const T& item)
+		type Push(const T& item)
 		{
 			{
-				std::unique_lock lock(m_mutex);
-				m_queue.push(item);
+				std::unique_lock lock(mutex);
+				queue.push(item);
 			}
-			m_ready.notify_one();
+			ready.notify_one();
 		}
 
 		template<typename Q = T>
 		typename std::enable_if<std::is_move_constructible<Q>::value, void>::
-			type push(T&& item)
+			type Push(T&& item)
 		{
 			{
-				std::unique_lock lock(m_mutex);
-				m_queue.Emplace(std::forward<T>(item));
+				std::unique_lock lock(mutex);
+				queue.emplace(GTSL::MakeForwardReference<T>(item));
 			}
-			m_ready.notify_one();
+			ready.notify_one();
 		}
 
 		template<typename Q = T>
 		typename std::enable_if<std::is_copy_constructible<Q>::value, bool>::
-			type try_push(const T& item)
+			type TryPush(const T& item)
 		{
 			{
-				std::unique_lock lock(m_mutex, std::try_to_lock);
-				if (!lock)
-					return false;
-				m_queue.push(item);
+				std::unique_lock lock(mutex, std::try_to_lock);
+				if (!lock) { return false; }
+				queue.push(item);
 			}
-			m_ready.notify_one();
+			ready.notify_one();
 			return true;
 		}
 
 		template<typename Q = T>
 		typename std::enable_if<std::is_move_constructible<Q>::value, bool>::
-			type try_push(T&& item)
+			type TryPush(T&& item)
 		{
 			{
-				std::unique_lock lock(m_mutex, std::try_to_lock);
+				std::unique_lock lock(mutex, std::try_to_lock);
 				if (!lock)
 					return false;
-				m_queue.Emplace(std::forward<T>(item));
+				queue.emplace(GTSL::MakeForwardReference<T>(item));
 			}
-			m_ready.notify_one();
+			ready.notify_one();
 			return true;
 		}
 
 		template<typename Q = T>
 		typename std::enable_if<std::is_copy_assignable<Q>::value && !std::is_move_assignable<Q>::value, bool>::
-			type pop(T& item)
+			type Pop(T& item)
 		{
-			std::unique_lock lock(m_mutex);
-			while (m_queue.empty() && !m_done)
-				m_ready.wait(lock);
-			if (m_queue.empty())
-				return false;
-			item = m_queue.front();
-			m_queue.pop();
-			return true;
-		}
-
-		template<typename Q = T>
-		typename std::enable_if<std::is_move_assignable<Q>::value, bool>::type
-			pop(T& item)
-		{
-			std::unique_lock lock(m_mutex);
-			while (m_queue.empty() && !m_done)
-				m_ready.wait(lock);
-			if (m_queue.empty())
-				return false;
-			item = std::move(m_queue.front());
-			m_queue.pop();
-			return true;
-		}
-
-		template<typename Q = T>
-		typename std::enable_if<std::is_copy_assignable<Q>::value && !std::is_move_assignable<Q>::value, bool>::
-			type try_pop(T& item)
-		{
-			std::unique_lock lock(m_mutex, std::try_to_lock);
-			if (!lock || m_queue.empty())
-				return false;
-			item = m_queue.front();
-			m_queue.pop();
+			std::unique_lock lock(mutex);
+			while (queue.empty() && !done) { ready.wait(lock); }
+			if (queue.empty()) { return false; }
+			item = queue.front();
+			queue.pop();
 			return true;
 		}
 
 		template<typename Q = T>
 		typename std::enable_if<std::is_move_assignable<Q>::value, bool>::
-			type try_pop(T& item)
+		type
+		Pop(T& item)
 		{
-			std::unique_lock lock(m_mutex, std::try_to_lock);
-			if (!lock || m_queue.empty())
-				return false;
-			item = std::move(m_queue.front());
-			m_queue.pop();
+			std::unique_lock lock(mutex);
+			while (queue.empty() && !done) { ready.wait(lock); }
+			if (queue.empty()) { return false; }
+			item = GTSL::MakeTransferReference(queue.front());
+			queue.pop();
 			return true;
 		}
 
-		void done() noexcept
+		template<typename Q = T>
+		typename std::enable_if<std::is_copy_assignable<Q>::value && !std::is_move_assignable<Q>::value, bool>::
+			type TryPop(T& item)
+		{
+			std::unique_lock lock(mutex, std::try_to_lock);
+			if (!lock || queue.empty())
+				return false;
+			item = queue.front();
+			queue.pop();
+			return true;
+		}
+
+		template<typename Q = T>
+		typename std::enable_if<typename std::is_move_assignable<Q>::value, bool>::
+		type TryPop(T& item)
+		{
+			std::unique_lock lock(mutex, std::try_to_lock);
+			if (!lock || queue.empty())
+				return false;
+			item = std::move(queue.front());
+			queue.pop();
+			return true;
+		}
+
+		void Done() noexcept
 		{
 			{
-				std::unique_lock lock(m_mutex);
-				m_done = true;
+				std::unique_lock lock(mutex);
+				done = true;
 			}
-			m_ready.notify_all();
+			ready.notify_all();
 		}
 
-		[[nodiscard]] bool empty() const noexcept
+		[[nodiscard]] bool IsEmpty() const noexcept
 		{
-			std::scoped_lock lock(m_mutex);
-			return m_queue.empty();
+			std::scoped_lock lock(mutex);
+			return queue.empty();
 		}
 
-		[[nodiscard]] uint32 size() const noexcept
+		[[nodiscard]] uint32 GetSize() const noexcept
 		{
-			std::scoped_lock lock(m_mutex);
-			return m_queue.size();
+			std::scoped_lock lock(mutex);
+			return queue.size();
 		}
 
 	private:
-		std::queue<T> m_queue;
-		mutable std::mutex m_mutex;
-		std::condition_variable m_ready;
-		bool m_done = false;
+		std::queue<T> queue;
+		mutable std::mutex mutex;
+		std::condition_variable ready;
+		bool done = false;
 	};
 
 	template<typename T>
@@ -152,7 +148,7 @@ namespace GTSL
 			m_openSlots(size), m_fullSlots(0)
 		{
 			if (!size)
-				throw std::invalid_argument("Invalid queue size!");
+				throw std::invalid_argument("Invalid queue GetSize!");
 		}
 
 		~atomic_blocking_queue() noexcept

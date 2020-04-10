@@ -16,6 +16,7 @@
     <ClInclude Include="GTSL\Array.hpp" />
     <ClInclude Include="GTSL\Assert.h" />
     <ClInclude Include="GTSL\Bitfield.h" />
+    <ClInclude Include="GTSL\Bitscan.h" />
     <ClInclude Include="GTSL\BlockingQueue.h" />
     <ClInclude Include="GTSL\Core.h" />
     <ClInclude Include="GTSL\FixedVector.hpp" />
@@ -24,8 +25,9 @@
     <ClInclude Include="GTSL\FlatHashMap.h" />
     <ClInclude Include="GTSL\FlipFlop.h" />
     <ClInclude Include="GTSL\StaticString.h" />
-    <ClInclude Include="GTSL\String.h" />
+    <ClInclude Include="GTSL\GTSLString.h" />
     <ClInclude Include="GTSL\GamepadQuery.h" />
+    <ClInclude Include="GTSL\Tuple.h" />
     <ClInclude Include="GTSL\Vector.hpp" />
     <ClInclude Include="GTSL\Id.h" />
     <ClInclude Include="GTSL\KeepVector.h" />
@@ -53,6 +55,8 @@
     <ClInclude Include="GTSL\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Bitscan.cpp" />
+    <ClCompile Include="src\Memory.cpp" />
     <ClCompile Include="src\String.cpp" />
     <ClCompile Include="src\GamepadQuery.cpp" />
     <ClCompile Include="src\Id.cpp" />

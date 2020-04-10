@@ -5,7 +5,10 @@
 #include "Delegate.h"
 
 #if (_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <Xinput.h>
+#undef WIN32_LEAN_AND_MEAN
 #endif
 
 /**
@@ -80,5 +83,5 @@ public:
 		 */
 		float HighFrequency{ 0 };
 	};
-	void SetVibration(const GamepadVibration& gamepadVibration) noexcept;
+	void SetVibration(const GamepadVibration& gamepadVibration) const noexcept;
 };

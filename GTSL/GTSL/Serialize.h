@@ -1,6 +1,5 @@
 #pragma once
 
-#include "String.h"
 #include "Stream.h"
 
 template <typename T>

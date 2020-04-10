@@ -2,9 +2,9 @@
 
 #include "Platform/Windows/WindowsApplication.h"
 
-uint64 WindowsWindow::WindowProc(const HWND hwnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
+uint64 GTSL::WindowsWindow::WindowProc(const HWND hwnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
 {
-	const auto windows_window = reinterpret_cast<WindowsWindow*>(GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+	const auto windows_window = reinterpret_cast<GTSL::WindowsWindow*>(GetWindowLongPtrA(hwnd, GWLP_USERDATA));
 
 	switch (uMsg)
 	{
@@ -25,14 +25,15 @@ uint64 WindowsWindow::WindowProc(const HWND hwnd, const UINT uMsg, const WPARAM 
 	case WM_KEYDOWN:     windows_window->onKeyEvent(wParam, KeyboardKeyState::PRESSED);  return 0;
 	case WM_KEYUP:       windows_window->onKeyEvent(wParam, KeyboardKeyState::RELEASED); return 0;
 	case WM_SIZE:        windows_window->onWindowResize(LOWORD(lParam), HIWORD(lParam)); return 0;
+	default: return 0;
 	}
 }
 
-void WindowsWindow::CalculateMousePos(uint32 x, uint32 y, float& xf, float& yf)
+void GTSL::WindowsWindow::CalculateMousePos(uint32 x, uint32 y, float& xf, float& yf)
 {
 }
 
-WindowsWindow::WindowsWindow(const WindowCreateInfo& windowCreateInfo) : Window(windowCreateInfo)
+GTSL::WindowsWindow::WindowsWindow(const WindowCreateInfo& windowCreateInfo) : Window(windowCreateInfo)
 {
 	WNDCLASSA wndclass{};
 	wndclass.lpfnWndProc = reinterpret_cast<WNDPROC>(WindowProc);
@@ -47,7 +48,7 @@ WindowsWindow::WindowsWindow(const WindowCreateInfo& windowCreateInfo) : Window(
 	//ShowWindow(windowHandle, SW_SHOWNORMAL);
 }
 
-void WindowsWindow::SetState(const WindowState windowState)
+void GTSL::WindowsWindow::SetState(const WindowState windowState)
 {
 	switch (windowState)
 	{

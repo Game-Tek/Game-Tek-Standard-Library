@@ -1,10 +1,10 @@
 #include "Platform/Windows/WindowsApplication.h"
 
-WindowsApplication::WindowsApplication(const ApplicationCreateInfo& applicationCreateInfo) : Application(applicationCreateInfo), instance(GetModuleHandle(nullptr))
+GTSL::WindowsApplication::WindowsApplication(const ApplicationCreateInfo& applicationCreateInfo) : Application(applicationCreateInfo), instance(GetModuleHandle(nullptr))
 {
 }
 
-void WindowsApplication::Update()
+void GTSL::WindowsApplication::Update()
 {
 	MSG message;
 	
@@ -15,7 +15,7 @@ void WindowsApplication::Update()
 	}
 }
 
-void WindowsApplication::Close()
+void GTSL::WindowsApplication::Close()
 {
 	PostQuitMessage(0);
 }

@@ -5,84 +5,76 @@
 #include "BlockingQueue.h"
 #include <future>
 #include "Array.hpp"
+#include "Delegate.h"
 
 namespace GTSL
 {
+	//https://github.com/mvorbrodt/blog
+	
 	class ThreadPool
 	{
 	public:
-		explicit ThreadPool(const uint32 threads = Thread::ThreadCount()) : m_queues(threads), m_count(threads)
+		explicit ThreadPool(const uint32 numberOfThreads = Thread::ThreadCount()) : queues(numberOfThreads), threadCount(numberOfThreads)
 		{
-			if (!threads) { throw std::invalid_argument("Invalid thread count!"); }
+			if (!numberOfThreads) { throw std::invalid_argument("Invalid thread count!"); }
 
-			auto worker = [this](auto i)
+			//lambda
+			auto worker_pop_function = [this](const uint8 i)
 			{
 				while (true)
 				{
 					Proc f;
-					for (auto n = 0; n < m_count * K; ++n)
-						if (m_queues[(i + n) % m_count].try_pop(f))
-							break;
-					if (!f && !m_queues[i].Pop(f))
-						break;
+					for (auto n = 0; n < threadCount * K; ++n)
+					{
+						if (queues[(i + n) % threadCount].TryPop(f)) { break; }
+					}
+					
+					if (!f && !queues[i].Pop(f)) { break; }
 					f();
 				}
 			};
 
-			for (auto i = 0; i < threads; ++i)
-				m_threads.EmplaceBack(worker, i);
+			for (uint8 i = 0; i < numberOfThreads; ++i)
+			{
+				//Constructing threads with function and I parameter
+				threads.EmplaceBack(worker_pop_function, i);
+			}
 		}
 
 		~ThreadPool()
 		{
-			for (auto& queue : m_queues)
-				queue.done();
-			for (auto& thread : m_threads)
-				thread.Join();
+			for (auto& queue : queues) { queue.Done(); }
+			for (auto& thread : threads) { thread.Join(); }
 		}
 
-		template<typename F, typename... Args>
-		void EnqueueWork(F&& f, Args&&... args)
+		template<typename F, typename... ARGS>
+		void EnqueueWork(F&& f, ARGS&&... args)
 		{
-			auto work = [p = std::forward<F>(f), t = std::make_tuple(std::forward<Args>(args)...)]() { std::apply(p, t); };
-			auto i = m_index++;
+			auto work = [p = GTSL::MakeForwardReference<F>(f), t = std::make_tuple(GTSL::MakeForwardReference<ARGS>(args)...)]() { std::apply(p, t); };
+			const auto currentIndex = index++;
 
-			for (auto n = 0; n < m_count * K; ++n)
-				if (m_queues[(i + n) % m_count].try_push(work))
-					return;
+			for (auto n = 0; n < threadCount * K; ++n)
+			{
+				//Try to Push work into queues, if success return else when Done looping place into some queue.
+				
+				if (queues[(currentIndex + n) % threadCount].TryPush(work)) { return; }
+			}
 
-			m_queues[i % m_count].push(std::move(work));
-		}
-
-		template<typename F, typename... Args>
-		[[nodiscard]] auto EnqueueTask(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>>
-		{
-			using task_return_type = std::invoke_result_t<F, Args...>;
-			using task_type = std::packaged_task<task_return_type()>;
-
-			auto task = std::make_shared<task_type>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
-			auto work = [task]() { (*task)(); };
-			auto result = task->get_future();
-			auto i = m_index++;
-
-			for (auto n = 0; n < m_count * K; ++n)
-				if (m_queues[(i + n) % m_count].try_push(work))
-					return result;
-
-			m_queues[i % m_count].PushBack(std::move(work));
-
-			return result;
+			queues[currentIndex % threadCount].Push(GTSL::MakeTransferReference(work));
 		}
 
 	private:
 		using Proc = Delegate<void()>;
-		Vector<blocking_queue<Proc>> m_queues;
+		Array<BlockingQueue<Proc>, 64, uint8> queues;
 
-		Array<Thread, 64, uint8> m_threads;
+		Array<Thread, 64, uint8> threads;
 
-		const unsigned int m_count;
-		std::atomic_uint m_index = 0;
+		const uint8 threadCount{ 0 };
+		std::atomic_uint index{ 0 };
 
-		inline static constexpr uint32 K = 2;
+		/**
+		 * \brief Number of times to loop around the queues to find one that is free.
+		 */
+		inline static constexpr uint8 K{ 2 };
 	};
 }

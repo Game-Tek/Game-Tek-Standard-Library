@@ -3,6 +3,7 @@
 #include "Core.h"
 
 #include "Vector.hpp"
+#include "Stream.h"
 
 namespace GTSL
 {
@@ -11,7 +12,7 @@ namespace GTSL
 		using string_type = char;
 		using length_type = Vector<string_type>::length_type;
 	public:
-		//Constructs an empty String.
+		//Constructs an Empty String.
 		String();
 
 		//template<size_t N>
@@ -32,14 +33,14 @@ namespace GTSL
 		 * \param length length to use from the cstring array
 		 * \param cstring array to copy from
 		 */
-		String(const length_type length, const char* cstring) : data(length + 1, const_cast<char*>(cstring)) { data.PushBack('\0'); }
+		String(const length_type length, const char* cstring);
 
 		/**
 		 * \brief Creates an String from a length and an String. Assumes the string has no null terminator character. If the string you pass happens to have a null terminator you should insert one character less.
 		 * \param length Length to use from the String.
 		 * \param string String to copy characters from.
 		 */
-		String(const length_type length, const String& string) : data(length, string.data.GetData()) { data.PushBack('\0'); }
+		String(const length_type length, const String& string);
 
 		/**
 		 * \brief Creates an String from a length an String and an offset. Assumes the string has no null terminator character. If the string you pass happens to have a null terminator you should insert one character less.
@@ -47,7 +48,7 @@ namespace GTSL
 		 * \param string String to copy from.
 		 * \param offset Offset from the start of the string to start copying from.
 		 */
-		String(const length_type length, const String& string, const length_type offset) : data(length, string.data.GetData() + offset) { data.PushBack('\0'); }
+		String(const length_type length, const String& string, const length_type offset);
 
 		String(const String& other) = default;
 		String(String&& other) noexcept = default;
@@ -143,10 +144,10 @@ namespace GTSL
 		friend class InStream;
 		friend class OutStream;
 
-		friend class OutStream& operator<<(OutStream& archive, String& string);
-		friend class InStream& operator>>(InStream& archive, String& string);
-
 		static char toLowerCase(char c);
 		static char toUpperCase(char c);
+		
+		OutStream& operator<<(OutStream& archive);
+		InStream& operator>>(InStream& archive);
 	};
 }

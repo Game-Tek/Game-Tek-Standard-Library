@@ -1,10 +1,12 @@
 #include "System.h"
 
 #if (_WIN32)
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include "intrin.h"
 #endif
 
-void System::GetRunningPath(FString& path)
+void System::GetRunningPath(GTSL::String& path)
 {
 #if (_WIN32)
 	char a[512];
@@ -35,15 +37,15 @@ void System::GetVectorInfo(VectorInfo& vectorInfo)
 #if (_WIN32)
 	//https://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set
 
-	bool OS_x64;
-	bool OS_AVX;
-	bool OS_AVX512;
+	//bool OS_x64;
+	//bool OS_AVX;
+	//bool OS_AVX512;
 
 	int info[4];
 	__cpuidex(info, 0, 0);
 	int nIds = info[0];
 
-	__cpuidex(info, 0x80000000, 0);
+	__cpuidex(info, 0x8000000, 0);
 	uint32 nExIds = info[0];
 
 	//  Detect Features
@@ -99,9 +101,8 @@ void System::GetVectorInfo(VectorInfo& vectorInfo)
 #endif
 }
 
-#include "intrin.h"
 
-void System::GetCPUName(FString& name)
+void System::GetCPUName(GTSL::String& name)
 {
 #if (_WIN32)
 	int CPUInfo[4] = { -1 };
@@ -132,7 +133,7 @@ void System::GetSystemInfo(SystemInfo& systemInfo)
 	SYSTEM_INFO system_info;
 	::GetSystemInfo(&system_info);
 
-	systemInfo.CPU.CoreCount = system_info.dwNumberOfProcessors;
+	systemInfo.CPU.CoreCount = static_cast<uint8>(system_info.dwNumberOfProcessors);
 #endif
 	
 	GetVectorInfo(systemInfo.CPU.VectorInfo);

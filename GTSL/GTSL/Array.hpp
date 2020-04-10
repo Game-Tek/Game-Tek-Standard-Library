@@ -8,7 +8,7 @@
 template <typename T, size_t CAPACITY, typename LT = uint32>
 class Array
 {
-	byte data[CAPACITY * sizeof(T)]{};
+	byte data[CAPACITY * sizeof(T)]{ 0 };
 	LT length = 0;
 
 	constexpr void copyToData(const void* from, const LT length) noexcept
@@ -20,21 +20,21 @@ public:
 	typedef T* iterator;
 	typedef const T* const_iterator;
 
-	constexpr [[nodiscard]] iterator begin() noexcept { return reinterpret_cast<iterator>(this->data); }
+	[[nodiscard]] constexpr iterator begin() noexcept { return reinterpret_cast<iterator>(this->data); }
 
-	constexpr [[nodiscard]] iterator end() noexcept { return reinterpret_cast<iterator>(&this->data[this->length]); }
+	[[nodiscard]] constexpr iterator end() noexcept { return reinterpret_cast<iterator>(&this->data[this->length]); }
 
-	constexpr [[nodiscard]] const_iterator begin() const noexcept { return reinterpret_cast<const_iterator>(this->data); }
+	[[nodiscard]] constexpr const_iterator begin() const noexcept { return reinterpret_cast<const_iterator>(this->data); }
 
-	constexpr [[nodiscard]] const_iterator end() const noexcept { return reinterpret_cast<const_iterator>(&this->data[this->length]); }
+	[[nodiscard]] constexpr const_iterator end() const noexcept { return reinterpret_cast<const_iterator>(&this->data[this->length]); }
 
 	constexpr T& front() noexcept { return this->data[0]; }
 
 	constexpr T& back() noexcept { return this->data[this->length]; }
 
-	constexpr [[nodiscard]] const T& front() const noexcept { return this->data[0]; }
+	[[nodiscard]] constexpr const T& front() const noexcept { return this->data[0]; }
 
-	constexpr [[nodiscard]] const T& back() const noexcept { return this->data[this->length]; }
+	[[nodiscard]] constexpr const T& back() const noexcept { return this->data[this->length]; }
 
 	constexpr Array() noexcept = default;
 
@@ -80,7 +80,7 @@ public:
 		return *this;
 	}
 	
-	constexpr ~Array()
+	~Array()
 	{
 		for (auto& e : *this) { e.~T(); }
 	}
@@ -99,7 +99,7 @@ public:
 
 	constexpr T* GetData() noexcept { return reinterpret_cast<T*>(&this->data); }
 
-	constexpr [[nodiscard]] const T* GetData() const noexcept { return reinterpret_cast<const T*>(this->data); }
+	[[nodiscard]] constexpr const T* GetData() const noexcept { return reinterpret_cast<const T*>(this->data); }
 
 	constexpr LT PushBack(const T& obj) noexcept
 	{
@@ -116,7 +116,7 @@ public:
 		return ++this->length;
 	}
 
-	constexpr void Resize(size_t size)
+	constexpr void Resize(LT size)
 	{
 		GTSL_ASSERT(size > CAPACITY, "Requested size for array Resize is greater than Array's statically allocated size!")
 		this->length = size;
@@ -129,7 +129,7 @@ public:
 		--this->length;
 	}
 
-	constexpr [[nodiscard]] LT GetLength() const noexcept { return this->length; }
+	[[nodiscard]] constexpr LT GetLength() const noexcept { return this->length; }
 
-	constexpr [[nodiscard]] LT GetCapacity() const noexcept { return CAPACITY; }
+	[[nodiscard]] constexpr LT GetCapacity() const noexcept { return CAPACITY; }
 };

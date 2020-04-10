@@ -2,17 +2,14 @@
 
 #include "Core.h"
 
-#include <cstdlib>
-#include <cstring>
-
-#include <type_traits>
+#include "Memory.h"
 #include <initializer_list>
-
 #include "Assert.h"
+#include "Allocator.h"
+#include "Delegate.h"
 
 namespace GTSL
 {
-
 	template <typename T>
 	class Vector
 	{
@@ -22,12 +19,15 @@ namespace GTSL
 		typedef T* iterator;
 		typedef const T* const_iterator;
 		typedef T value_type;
-
+		using allocator_delegate = AllocatorReference*;//Delegate<AllocatorReference*()>;
+		
 	private:
 		length_type capacity = 0;
 		length_type length = 0;
 
 		T* data = nullptr;
+
+		allocator_delegate allocator;
 
 		/**
 		 * \brief Copies data from from to to.
@@ -37,7 +37,7 @@ namespace GTSL
 		 */
 		static void copyArray(const T* from, T* to, const length_type elementCount)
 		{
-			memcpy(to, from, elementCount * sizeof(T));
+			Memory::CopyMemory(elementCount * sizeof(T), from, to);
 		}
 
 		/**
@@ -45,7 +45,14 @@ namespace GTSL
 		 * \param elementCount How many elements of this vector's T to allocate space for.
 		 * \return T pointer to the newly allocated memory.
 		 */
-		static T* allocate(const length_type elementCount) { return static_cast<T*>(malloc(elementCount * sizeof(T))); }
+		T* allocate(const length_type elementCount)
+		{
+			void* data{ nullptr };
+			uint64 allocated_size{ 0 };
+			allocator->Allocate(elementCount * sizeof(T), alignof(T), &data, &allocated_size);
+			this->capacity = static_cast<length_type>(allocated_size);
+			return static_cast<T*>(data);
+		}
 
 		/**
 		 * \brief Deletes the data found At this vector's data and sets data as nullptr.
@@ -53,7 +60,7 @@ namespace GTSL
 		void freeData()
 		{
 			GTSL_ASSERT(this->data == nullptr, "Data is nullptr.")
-			free(this->data);
+			allocator->Deallocate(this->capacity, this->data);
 			this->data = nullptr;
 		}
 
@@ -68,12 +75,11 @@ namespace GTSL
 		{
 			if (this->length + additionalElements > this->capacity)
 			{
-				const length_type new_capacity = this->length * 1.5;
-				T* new_data = allocate(new_capacity);
+				const length_type new_capacity = this->length * 2;
+				T* new_data = this->allocate(new_capacity);
 				copyArray(this->data, new_data, this->capacity);
 				GTSL_ASSERT(this->data == nullptr, "Data is nullptr.")
-				free(this->data);
-				this->capacity = new_capacity;
+				allocator->Deallocate(this->capacity, this->data);
 				this->data = new_data;
 			}
 		}
@@ -87,9 +93,9 @@ namespace GTSL
 
 	public:
 		/**
-		 * \brief Constructs an empty Vector with no allocations. Vector must be initialized before being used or undefined behaviour will occur.
+		 * \brief Constructs an Empty Vector with no allocations. Vector must be initialized before being used or undefined behaviour will occur.
 		 */
-		Vector() noexcept : capacity(0), length(0), data(nullptr)
+		Vector(const allocator_delegate allocatorReferenceDelegate = &g_allocator_reference) noexcept : capacity(0), length(0), data(nullptr), allocator(allocatorReferenceDelegate)
 		{
 		}
 
@@ -97,7 +103,7 @@ namespace GTSL
 		 * \brief Constructs a Vector with enough space to accomodate capacity T elements.
 		 * \param capacity Number of T objects to allocate space for.
 		 */
-		explicit Vector(const length_type capacity) : capacity(capacity), length(0), data(allocate(this->capacity))
+		explicit Vector(const length_type capacity, const allocator_delegate allocatorDelegate = &g_allocator_reference) : capacity(capacity), length(0), data(allocate(this->capacity)), allocator(allocatorDelegate)
 		{
 		}
 
@@ -106,7 +112,7 @@ namespace GTSL
 		 * \param capacity Number of T objects to allocate space for.
 		 * \param length Number of elements to consider being already placed in vector.
 		 */
-		explicit Vector(const length_type capacity, const length_type length) : capacity(capacity), length(length), data(allocate(this->capacity))
+		explicit Vector(const length_type capacity, const length_type length, const allocator_delegate allocatorDelegate = &g_allocator_reference) : capacity(capacity), length(length), data(allocate(this->capacity)), allocator(allocatorDelegate)
 		{
 		}
 
@@ -115,7 +121,7 @@ namespace GTSL
 		 * \param length Number T elements to copy from array.
 		 * \param array Pointer to an array of type T elements.
 		 */
-		Vector(const length_type length, const T array[]) : capacity(length), length(length), data(allocate(this->capacity))
+		Vector(const length_type length, const T array[], const allocator_delegate allocatorDelegate = &g_allocator_reference) : capacity(length), length(length), data(allocate(this->capacity)), allocator(allocatorDelegate)
 		{
 			copyArray(array, this->data, length);
 		}
@@ -125,7 +131,7 @@ namespace GTSL
 		 * \param length Number of T elements in array.
 		 * \param array Pointer to an array of type T elements.
 		 */
-		Vector(const length_type length, const T* array[]) : capacity(length), length(length), data(*array)
+		Vector(const length_type length, const T* array[], const allocator_delegate allocatorDelegate = &g_allocator_reference) : capacity(length), length(length), data(*array), allocator(allocatorDelegate)
 		{
 		}
 
@@ -135,7 +141,7 @@ namespace GTSL
 		 * \param length Number of occupied T elements at array.
 		 * \param array Pointer to an array of type T elements.
 		 */
-		Vector(const length_type capacity, const length_type length, const T* array[]) : capacity(capacity), length(length), data(*array)
+		Vector(const length_type capacity, const length_type length, const T* array[], const allocator_delegate allocatorDelegate = &g_allocator_reference) : capacity(capacity), length(length), data(*array), allocator(allocatorDelegate)
 		{
 		}
 
@@ -153,7 +159,7 @@ namespace GTSL
 		 * \param start Iterator from where to start copying.
 		 * \param end Iterator to where to stop copying.
 		 */
-		Vector(const_iterator start, const_iterator end) : capacity(end - start), length(end - start), data(allocate(this->capacity))
+		Vector(const_iterator start, const_iterator end, const allocator_delegate allocatorDelegate = &g_allocator_reference) : capacity(end - start), length(end - start), data(allocate(this->capacity)), allocator(allocatorDelegate)
 		{
 			copyArray(start, this->data);
 		}
@@ -162,7 +168,7 @@ namespace GTSL
 		 * \brief Constructs a Vector from a reference to another Vector.
 		 * \param other Reference to another Vector.
 		 */
-		Vector(const Vector& other) : capacity(other.capacity), length(other.length), data(allocate(this->capacity))
+		Vector(const Vector& other) : capacity(other.capacity), length(other.length), data(allocate(this->capacity)), allocator(other.allocator)
 		{
 			copyArray(other.data, this->data, this->length);
 		}
@@ -171,7 +177,7 @@ namespace GTSL
 		 * \brief Constructs a Vector from an r-value reference to another Vector.
 		 * \param other R-Value reference to other Vector to transfer from.
 		 */
-		Vector(Vector&& other) noexcept : capacity(other.capacity), length(other.length), data(other.data)
+		Vector(Vector&& other) noexcept : capacity(other.capacity), length(other.length), data(other.data), allocator(GTSL::MakeTransferReference(other.allocator))
 		{
 			other.data = nullptr;
 		}
@@ -201,6 +207,8 @@ namespace GTSL
 			capacity = other.capacity;
 			length = other.length;
 			data = other.data;
+			allocator = GTSL::MakeTransferReference(other.allocator);
+			other.data = nullptr;
 			return *this;
 		}
 
@@ -270,19 +278,18 @@ namespace GTSL
 		}
 
 		/**
-		 * \brief Initializes the Vector with space for count elements. Useful for when Vector was initialized with no allocation. Calling this function when the array is not empty will lead to a memory leak.
+		 * \brief Initializes the Vector with space for count elements. Useful for when Vector was initialized with no allocation. Calling this function when the array is not Empty will lead to a memory leak.
 		 * \param count Number of T elements to allocate space for.
 		 */
 		void Initialize(const length_type count)
 		{
 			GTSL_ASSERT(this->data, "Array pointer is not null!")
 			this->data = allocate(count);
-			this->capacity = count;
 			this->length = 0;
 		}
 
 		/**
-		* \brief Initializes the Vector with space for count elements and copies data to it's array. Useful for when Vector was initialized with no allocation. Calling this function when the array is not empty will lead to a memory leak.
+		* \brief Initializes the Vector with space for count elements and copies data to it's array. Useful for when Vector was initialized with no allocation. Calling this function when the array is not Empty will lead to a memory leak.
 		* \param count Number of T elements to allocate space for and to copy from data.
 		* \param data Pointer to an array of T elements to copy from.
 		*/
@@ -290,12 +297,11 @@ namespace GTSL
 		{
 			this->data = allocate(count);
 			copyArray(data, this->data, count);
-			this->capacity = count;
 			this->length = count;
 		}
 
 		/**
-		* \brief Initializes the Vector with space for count elements and copies length elements from data to it's array. Useful for when Vector was initialized with no allocation. Calling this function when the array is not empty will lead to a memory leak.
+		* \brief Initializes the Vector with space for count elements and copies length elements from data to it's array. Useful for when Vector was initialized with no allocation. Calling this function when the array is not Empty will lead to a memory leak.
 		* \param count Number of T elements to allocate space for.
 		* \param length Number of elements to copy from data.
 		* \param data Pointer to an array of T elements to copy from.
@@ -304,7 +310,6 @@ namespace GTSL
 		{
 			this->data = allocate(count);
 			copyArray(data, this->data, length);
-			this->capacity = count;
 			this->length = length;
 		}
 
@@ -314,7 +319,6 @@ namespace GTSL
 		 */
 		void Shrink(const length_type count)
 		{
-			this->capacity = count;
 			this->length = count;
 			T* buffer = allocate(this->capacity);
 			copyArray(this->data, buffer, this->length);
@@ -369,7 +373,7 @@ namespace GTSL
 		length_type EmplaceBack(ARGS&&... args)
 		{
 			reallocateIfExceeds(1);
-			::new(this->data + this->length) T(std::forward<ARGS>(args) ...);
+			::new(this->data + this->length) T(GTSL::MakeForwardReference<ARGS>(args)...);
 			return this->length += 1;
 		}
 
@@ -378,11 +382,9 @@ namespace GTSL
 		 */
 		void PopBack()
 		{
-			if (this->length != 0)
-			{
-				this->data[this->length].~T();
-				this->length -= 1;
-			}
+			GTSL_ASSERT(this->length == 0, "Cannot pop back, there are no more elements!")
+			this->data[this->length].~T();
+			this->length -= 1;
 		}
 
 		/**
@@ -472,7 +474,7 @@ namespace GTSL
 		void Emplace(const length_type index, ARGS&&... args)
 		{
 			this->data[index].~T();
-			::new(this->data + index) T(std::forward<ARGS>(args) ...);
+			::new(this->data + index) T(GTSL::MakeForwardReference<ARGS>(args) ...);
 		}
 
 		/**
@@ -518,12 +520,9 @@ namespace GTSL
 		 */
 		iterator Find(const T& obj) noexcept
 		{
-			for (length_type i = 0; i < this->length; i++)
+			for (auto begin = this->begin(); begin != this->end(); ++begin)
 			{
-				if (obj == data[i])
-				{
-					return getIterator(i);
-				}
+				if (obj == *begin) { return begin; }
 			}
 
 			return this->end();
@@ -536,7 +535,7 @@ namespace GTSL
 		 */
 		T& operator[](const length_type index) noexcept
 		{
-			GTSL_ASSERT(index < this->length, "Entered index is not accessible, array is not as large.")
+			GTSL_ASSERT(index > this->length, "Entered index is not accessible, array is not as large.")
 			return this->data[index];
 		}
 
@@ -547,8 +546,8 @@ namespace GTSL
 		 */
 		const T& operator[](const length_type index) const noexcept
 		{
-			GTSL_ASSERT(index < this->length, "Entered index is not accessible, array is not as large.")
-				return this->data[index];
+			GTSL_ASSERT(index > this->length, "Entered index is not accessible, array is not as large.")
+			return this->data[index];
 		}
 
 		/**
