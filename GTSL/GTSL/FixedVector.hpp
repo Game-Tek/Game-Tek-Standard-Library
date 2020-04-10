@@ -24,7 +24,7 @@ namespace GTSL
 		constexpr T* allocate(const length_type _elements)
 		{
 			T* data{ nullptr };
-			return static_cast<T*>(allocatorReference->Allocate(sizeof(T) * _elements, &data, &this->capacity));
+			return static_cast<T*>(allocatorReference->Allocate(sizeof(T) * _elements, alignof(T) ,&data, &this->capacity));
 		}
 
 		void copyLength(const length_type _elements, void* _from)
