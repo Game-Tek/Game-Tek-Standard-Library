@@ -6,7 +6,7 @@
 #include "intrin.h"
 #endif
 
-void System::GetRunningPath(GTSL::String& path)
+void GTSL::System::GetRunningPath(GTSL::String& path)
 {
 #if (_WIN32)
 	char a[512];
@@ -18,7 +18,7 @@ void System::GetRunningPath(GTSL::String& path)
 #endif
 }
 
-void System::GetRAMInfo(RamInfo& ramInfo)
+void GTSL::System::GetRAMInfo(RamInfo& ramInfo)
 {
 #if (_WIN32)
 	MEMORYSTATUSEX memory_status{};
@@ -32,7 +32,7 @@ void System::GetRAMInfo(RamInfo& ramInfo)
 #endif
 }
 
-void System::GetVectorInfo(VectorInfo& vectorInfo)
+void GTSL::System::GetVectorInfo(VectorInfo& vectorInfo)
 {
 #if (_WIN32)
 	//https://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set
@@ -102,7 +102,7 @@ void System::GetVectorInfo(VectorInfo& vectorInfo)
 }
 
 
-void System::GetCPUName(GTSL::String& name)
+void GTSL::System::GetCPUName(GTSL::String& name)
 {
 #if (_WIN32)
 	int CPUInfo[4] = { -1 };
@@ -127,7 +127,7 @@ void System::GetCPUName(GTSL::String& name)
 #endif
 }
 
-void System::GetSystemInfo(SystemInfo& systemInfo)
+void GTSL::System::GetSystemInfo(SystemInfo& systemInfo)
 {
 #if (_WIN32)
 	SYSTEM_INFO system_info;

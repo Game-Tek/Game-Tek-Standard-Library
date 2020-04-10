@@ -3,6 +3,7 @@
 #include "Core.h"
 
 #include <initializer_list>
+#include "Memory.h"
 
 namespace GTSL
 {
