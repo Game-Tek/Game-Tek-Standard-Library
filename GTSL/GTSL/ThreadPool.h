@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Vector.hpp"
 #include "Thread.h"
 #include "BlockingQueue.h"
 #include <future>
@@ -50,7 +49,11 @@ namespace GTSL
 		template<typename F, typename... ARGS>
 		void EnqueueWork(F&& f, ARGS&&... args)
 		{
-			auto work = [p = GTSL::MakeForwardReference<F>(f), t = std::make_tuple(GTSL::MakeForwardReference<ARGS>(args)...)]() { std::apply(p, t); };
+			auto work = [function = GTSL::MakeForwardReference<F>(f), arguments = std::make_tuple(GTSL::MakeForwardReference<ARGS>(args)...)]()
+			{
+				std::apply(function, arguments);
+			};
+			
 			const auto currentIndex = index++;
 
 			for (auto n = 0; n < threadCount * K; ++n)
