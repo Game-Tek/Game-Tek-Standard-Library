@@ -5,6 +5,7 @@
 #include "Allocator.h"
 #include <initializer_list>
 #include "Memory.h"
+#include <new>
 
 namespace GTSL
 {
@@ -24,22 +25,20 @@ namespace GTSL
 		constexpr T* allocate(const length_type _elements)
 		{
 			T* data{ nullptr };
-			return static_cast<T*>(allocatorReference->Allocate(sizeof(T) * _elements, alignof(T) ,&data, &this->capacity));
+			uint64 allocatedSize{ 0 };
+			allocatorReference->Allocate(sizeof(T) * _elements, alignof(T), reinterpret_cast<void**>(&data), &allocatedSize);
+			this->capacity = static_cast<length_type>(allocatedSize);
+			return data;
 		}
 
-		void copyLength(const length_type _elements, void* _from)
+		void copyLength(const length_type elements, void* from)
 		{
-			Memory::CopyMemory(sizeof(T) * _elements, _from, this->data);
-		}
-
-		void copyToData(const void* _from, size_t _size)
-		{
-			Memory::CopyMemory(_size, _from, this->data);
+			Memory::CopyMemory(sizeof(T) * elements, from, this->data);
 		}
 
 		void freeArray()
 		{
-			allocatorReference->Deallocate(this->capacity, this->data);
+			allocatorReference->Deallocate(this->capacity, alignof(T), this->data);
 			this->data = nullptr;
 		}
 
@@ -155,7 +154,7 @@ namespace GTSL
 		 */
 		FixedVector(const_iterator start, const_iterator end, AllocatorReference* allocatorReference) : capacity(end - start), length(this->capacity), data(allocate(this->capacity)), allocatorReference(allocatorReference)
 		{
-			copyToData(start, (end - start) * sizeof(T));
+			copyLength(this->length, start);
 		}
 
 		/**
@@ -234,14 +233,25 @@ namespace GTSL
 		*/
 		length_type PushBack(const T& obj)
 		{
-			::new(this->data + this->length) T(obj);
+			::new(static_cast<void*>(this->data + this->length)) T(obj);
+			return ++this->length;
+		}
+
+		/**
+		* \brief Places a copy of obj At the back of the vector.
+		* \param obj Object to Insert back.
+		* \return Length of vector after inserting, also index At which obj was inserted.
+		*/
+		length_type PushBack(T&& obj)
+		{
+			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeTransferReference(obj));
 			return ++this->length;
 		}
 
 		template<typename ...ARGS>
 		length_type EmplaceBack(ARGS&&... args)
 		{
-			::new(this->data + this->length) T(GTSL::MakeForwardReference<ARGS>(args) ...);
+			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeForwardReference<ARGS>(args)...);
 			return ++this->length;
 		}
 

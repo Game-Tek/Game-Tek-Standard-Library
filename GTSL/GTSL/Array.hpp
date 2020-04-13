@@ -5,13 +5,14 @@
 #include <initializer_list>
 #include "Memory.h"
 #include "Assert.h"
+#include <new>
 
 namespace GTSL
 {
 	template <typename T, size_t CAPACITY, typename LT = uint32>
 	class Array
 	{
-		byte data[CAPACITY * sizeof(T)]{ 0 };
+		byte data[CAPACITY * sizeof(T)];
 		LT length = 0;
 
 		constexpr void copyToData(const void* from, const LT length) noexcept
@@ -50,17 +51,17 @@ namespace GTSL
 		{
 		}
 
-		constexpr Array(const LT length, T array[]) noexcept : data(), length(length)
+		constexpr Array(const LT length, T array[]) noexcept : length(length)
 		{
 			copyToData(array, length);
 		}
 
-		constexpr Array(const Array& other) noexcept : data(0), length(length)
+		constexpr Array(const Array& other) noexcept : length(length)
 		{
 			copyToData(other.data, other.length);
 		}
 
-		constexpr Array(Array&& other) noexcept : data(0), length(length)
+		constexpr Array(Array&& other) noexcept : length(length)
 		{
 			copyToData(other.data, other.length);
 			for (auto& e : other) { e.~T(); }
@@ -107,7 +108,14 @@ namespace GTSL
 		constexpr LT PushBack(const T& obj) noexcept
 		{
 			GTSL_ASSERT((this->length + 1) > CAPACITY, "Array is not long enough to insert any more elements!");
-			::new(this->data + this->length) T(obj);
+			::new(static_cast<void*>(this->data + this->length)) T(obj);
+			return ++this->length;
+		}
+
+		constexpr LT PushBack(T&& obj) noexcept
+		{
+			GTSL_ASSERT((this->length + 1) > CAPACITY, "Array is not long enough to insert any more elements!");
+			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeTransferReference(obj));
 			return ++this->length;
 		}
 
@@ -115,7 +123,7 @@ namespace GTSL
 		constexpr LT EmplaceBack(ARGS&&... args)
 		{
 			GTSL_ASSERT((this->length + 1) > CAPACITY, "Array is not long enough to insert any more elements!");
-			::new(this->data + this->length) T(GTSL::MakeForwardReference<ARGS>(args) ...);
+			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeForwardReference<ARGS>(args) ...);
 			return ++this->length;
 		}
 

@@ -6,7 +6,7 @@
 #include <initializer_list>
 #include "Assert.h"
 #include "Allocator.h"
-#include "Delegate.h"
+#include <new>
 
 namespace GTSL
 {
@@ -60,7 +60,7 @@ namespace GTSL
 		void freeData()
 		{
 			GTSL_ASSERT(this->data == nullptr, "Data is nullptr.")
-			allocatorReference->Deallocate(this->capacity, this->data);
+			allocatorReference->Deallocate(this->capacity, alignof(T), this->data);
 			this->data = nullptr;
 		}
 
@@ -79,7 +79,7 @@ namespace GTSL
 				T* new_data = this->allocate(new_capacity);
 				copyArray(this->data, new_data, this->capacity);
 				GTSL_ASSERT(this->data == nullptr, "Data is nullptr.")
-				allocatorReference->Deallocate(this->capacity, this->data);
+				allocatorReference->Deallocate(this->capacity, alignof(T), this->data);
 				this->data = new_data;
 			}
 		}
@@ -338,7 +338,19 @@ namespace GTSL
 		length_type PushBack(const T& obj)
 		{
 			reallocateIfExceeds(1);
-			::new(this->data + this->length) T(obj);
+			::new(static_cast<void*>(this->data + this->length)) T(obj);
+			return this->length += 1;
+		}
+
+		/**
+		 * \brief Places a copy of obj At the back of the vector.
+		 * \param obj Object to Insert back.
+		 * \return Length of vector after inserting, also index At which obj was inserted.
+		 */
+		length_type PushBack(T&& obj)
+		{
+			reallocateIfExceeds(1);
+			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeTransferReference(obj));
 			return this->length += 1;
 		}
 
@@ -377,7 +389,7 @@ namespace GTSL
 		length_type EmplaceBack(ARGS&&... args)
 		{
 			reallocateIfExceeds(1);
-			::new(this->data + this->length) T(GTSL::MakeForwardReference<ARGS>(args)...);
+			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeForwardReference<ARGS>(args)...);
 			return this->length += 1;
 		}
 
@@ -413,7 +425,7 @@ namespace GTSL
 		{
 			reallocateIfExceeds(1);
 			copyArray(getIterator(index), getIterator(index + 1), this->length - index);
-			::new(this->data + this->length) T(obj);
+			::new(static_cast<void*>(this->data + this->length)) T(obj);
 			return this->length += 1;
 		}
 
@@ -452,7 +464,7 @@ namespace GTSL
 		void Place(const length_type index, const T& obj)
 		{
 			this->data[index].~T();
-			::new(this->data + index) T(obj);
+			::new(static_cast<void*>(this->data + index)) T(obj);
 		}
 
 		/**
@@ -478,7 +490,7 @@ namespace GTSL
 		void Emplace(const length_type index, ARGS&&... args)
 		{
 			this->data[index].~T();
-			::new(this->data + index) T(GTSL::MakeForwardReference<ARGS>(args) ...);
+			::new(static_cast<void*>(this->data + index)) T(GTSL::MakeForwardReference<ARGS>(args) ...);
 		}
 
 		/**

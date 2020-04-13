@@ -19,3 +19,8 @@ void GTSL::WindowsApplication::Close()
 {
 	PostQuitMessage(0);
 }
+
+void GTSL::WindowsApplication::GetNativeHandles(void* nativeHandles)
+{
+	static_cast<Win32NativeHandles*>(nativeHandles)->HINSTANCE = instance;
+}
