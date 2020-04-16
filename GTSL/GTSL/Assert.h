@@ -1,5 +1,6 @@
 #pragma once
 
+#if (_DEBUG)
 extern void onAssert(const char* text, int line, const char* file, const char* function);
 
 inline void assert(const bool condition, const char* text, const int line, const char* file, const char* function)
@@ -12,6 +13,7 @@ inline void assert(const bool condition, const char* text, const int line, const
 #endif
 	}
 }
+#endif
 
 #ifdef _DEBUG
 #define GTSL_ASSERT(condition, text) assert(condition, text, __LINE__, __FILE__, __FUNCTION__);

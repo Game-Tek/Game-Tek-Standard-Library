@@ -1,26 +1,30 @@
 #pragma once
 
-/**
- * \brief Contains a bool which flips it's state every time the object(FlipFlop) is evaluated as a bool. Useful for setting or keeping track of sticky states.
- */
-class FlipFlop
+
+namespace GTSl
 {
-	bool state = true;
-
-public:
-	FlipFlop() = default;
-
-	FlipFlop(const bool state) : state(state)
+	/**
+	 * \brief Contains a bool which flips it's state every time the object(FlipFlop) is evaluated as a bool. Useful for setting or keeping track of sticky states.
+	 */
+	class FlipFlop
 	{
-	}
+		bool state = true;
 
-	FlipFlop(const FlipFlop& other) = default;
+	public:
+		FlipFlop() = default;
 
-	~FlipFlop() = default;
+		FlipFlop(const bool state) : state(state)
+		{
+		}
 
-	operator bool() { state = !state; return state; }
+		FlipFlop(const FlipFlop& other) = default;
 
-	[[nodiscard]] bool GetState() const { return state; }
-	void SetState(const bool newState) { state = newState; }
-	void FlipState() { state = !state; }
-};
+		~FlipFlop() = default;
+
+		operator bool() { state = !state; return state; }
+
+		[[nodiscard]] bool GetState() const { return state; }
+		void SetState(const bool newState) { state = newState; }
+		void FlipState() { state = !state; }
+	};
+}

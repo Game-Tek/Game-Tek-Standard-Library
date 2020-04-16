@@ -1,5 +1,7 @@
 #include "GamepadQuery.h"
 
+using namespace GTSL;
+
 void GamepadQuery::Update(bool& connected) noexcept
 {
 	XINPUT_STATE xinput_state;

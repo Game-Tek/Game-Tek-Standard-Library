@@ -137,7 +137,13 @@ namespace GTSL
 		void ReplaceAll(const char* a, const char* with);
 
 		//Returns the length of the C-String accounting for the null terminator character. C-String MUST BE NULL TERMINATED.
-		constexpr static length_type StringLength(const char* cstring);
+		static constexpr length_type StringLength(const char* cstring)
+		{
+			length_type length = 0;	while (*cstring) { ++length; }
+
+			//We return Length + 1 to take into account for the null terminator character.
+			return length + 1;
+		}
 
 		static String MakeString(const char* cstring, ...);
 	private:
@@ -149,7 +155,7 @@ namespace GTSL
 		static char toLowerCase(char c);
 		static char toUpperCase(char c);
 		
-		OutStream& operator<<(OutStream& archive);
-		InStream& operator>>(InStream& archive);
+		friend OutStream& operator<<(OutStream& os, const String& string);
+		friend InStream& operator>>(InStream& inStream, String& string);
 	};
 }

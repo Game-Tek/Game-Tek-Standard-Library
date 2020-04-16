@@ -38,7 +38,7 @@ namespace GTSL
 		auto begin() noexcept { return objects.begin(); }
 		auto end() noexcept { return objects.end(); }
 
-		explicit KeepVector(const length_type min) : objects(min), freeIndeces(min, min)
+		explicit KeepVector(const length_type min, AllocatorReference* allocatorReference) : objects(min, allocatorReference), freeIndeces(min, min, allocatorReference)
 		{
 			//Allocate objects space for min objects
 			//Allocate min indeces and set it's length as min so they are marked as used

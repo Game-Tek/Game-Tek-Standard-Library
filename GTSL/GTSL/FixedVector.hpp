@@ -17,16 +17,16 @@ namespace GTSL
 		typedef const T* const_iterator;
 		typedef uint32 length_type;
 	private:
-		length_type capacity = 0;
-		length_type length = 0;
-		T* data = nullptr;
+		length_type capacity{ 0 };
+		length_type length{ 0 };
 		AllocatorReference* allocatorReference{ nullptr };
+		T* data{ nullptr };
 
 		constexpr T* allocate(const length_type _elements)
 		{
 			T* data{ nullptr };
 			uint64 allocatedSize{ 0 };
-			allocatorReference->Allocate(sizeof(T) * _elements, alignof(T), reinterpret_cast<void**>(&data), &allocatedSize);
+			this->allocatorReference->Allocate(sizeof(T) * _elements, alignof(T), reinterpret_cast<void**>(&data), &allocatedSize);
 			this->capacity = static_cast<length_type>(allocatedSize);
 			return data;
 		}
@@ -38,7 +38,7 @@ namespace GTSL
 
 		void freeArray()
 		{
-			allocatorReference->Deallocate(this->capacity, alignof(T), this->data);
+			this->allocatorReference->Deallocate(this->capacity, alignof(T), this->data);
 			this->data = nullptr;
 		}
 
@@ -92,7 +92,7 @@ namespace GTSL
 		 */
 		[[nodiscard]] const T& back() const noexcept { return this->data[this->length]; }
 
-		[[nodiscard]] AllocatorReference* GetAllocatorReference() const { return allocatorReference; }
+		[[nodiscard]] AllocatorReference* GetAllocatorReference() const { return this->allocatorReference; }
 		
 		FixedVector() = default;
 
@@ -100,7 +100,7 @@ namespace GTSL
 		 * \brief Constructs a FixedVector with enough space to accomodate capacity T elements.
 		 * \param capacity Number of T objects to allocate space for.
 		 */
-		explicit FixedVector(const length_type capacity, AllocatorReference* allocatorReference) : capacity(capacity), length(0), data(allocate(capacity)), allocatorReference(allocatorReference)
+		explicit FixedVector(const length_type capacity, AllocatorReference* allocatorReference) : capacity(capacity), length(0), allocatorReference(allocatorReference), data(this->allocate(capacity))
 		{
 		}
 
@@ -109,7 +109,7 @@ namespace GTSL
 		 * \param capacity Number of T objects to allocate space for.
 		 * \param length Number of elements to consider being already placed in vector.
 		 */
-		explicit FixedVector(const length_type capacity, const length_type length, AllocatorReference* allocatorReference) : capacity(capacity), length(length), data(allocate(this->capacity)), allocatorReference(allocatorReference)
+		explicit FixedVector(const length_type capacity, const length_type length, AllocatorReference* allocatorReference) : capacity(capacity), length(length), allocatorReference(allocatorReference), data(this->allocate(this->capacity))
 		{
 		}
 
@@ -118,7 +118,7 @@ namespace GTSL
 		 * \param length Number T elements to copy from array.
 		 * \param array Pointer to an array of type T elements.
 		 */
-		FixedVector(const length_type length, const T array[], AllocatorReference* allocatorReference) : capacity(length), length(length), data(allocate(this->capacity)), allocatorReference(allocatorReference)
+		FixedVector(const length_type length, const T array[], AllocatorReference* allocatorReference) : capacity(length), length(length), allocatorReference(allocatorReference), data(this->allocate(this->capacity))
 		{
 			copyToData(array, length);
 		}
@@ -128,7 +128,7 @@ namespace GTSL
 		 * \param length Number of T elements in array.
 		 * \param array Pointer to an array of type T elements.
 		 */
-		FixedVector(const length_type length, const T* array[], AllocatorReference* allocatorReference) : capacity(length), length(length), data(*array), allocatorReference(allocatorReference)
+		FixedVector(const length_type length, const T* array[], AllocatorReference* allocatorReference) : capacity(length), length(length), allocatorReference(allocatorReference), data(*array)
 		{
 		}
 
@@ -138,11 +138,11 @@ namespace GTSL
 		 * \param length Number of occupied T elements at array.
 		 * \param array Pointer to an array of type T elements.
 		 */
-		FixedVector(const length_type capacity, const length_type length, const T* array[], AllocatorReference* allocatorReference) : capacity(capacity), length(length), data(*array), allocatorReference(allocatorReference)
+		FixedVector(const length_type capacity, const length_type length, const T* array[], AllocatorReference* allocatorReference) : capacity(capacity), length(length), allocatorReference(allocatorReference), data(*array)
 		{
 		}
 
-		constexpr FixedVector(const std::initializer_list<T>& list) : capacity(list.size()), length(list.size()), data(allocate(list.size()))
+		constexpr FixedVector(const std::initializer_list<T>& list) : capacity(list.size()), length(list.size()), data(this->allocate(list.size()))
 		{
 			copyLength(this->length, const_cast<T*>(list.begin()));
 		}
@@ -152,7 +152,7 @@ namespace GTSL
 		 * \param start Iterator from where to start copying.
 		 * \param end Iterator to where to stop copying.
 		 */
-		FixedVector(const_iterator start, const_iterator end, AllocatorReference* allocatorReference) : capacity(end - start), length(this->capacity), data(allocate(this->capacity)), allocatorReference(allocatorReference)
+		FixedVector(const_iterator start, const_iterator end, AllocatorReference* allocatorReference) : capacity(end - start), length(this->capacity), allocatorReference(allocatorReference), data(this->allocate(this->capacity))
 		{
 			copyLength(this->length, start);
 		}
@@ -161,7 +161,7 @@ namespace GTSL
 		 * \brief Constructs a FixedVector from a reference to another FixedVector.
 		 * \param other Reference to another Vector.
 		 */
-		FixedVector(const FixedVector<T>& other) : capacity(other.capacity), length(other.length), data(allocate(this->capacity))
+		FixedVector(const FixedVector<T>& other) : capacity(other.capacity), length(other.length), data(this->allocate(this->capacity))
 		{
 			copyLength(this->capacity, other.data);
 		}

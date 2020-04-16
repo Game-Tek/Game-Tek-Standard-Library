@@ -1,6 +1,6 @@
 #pragma once
 
-#include "NetworkCore.h"
+#include "IpEndpoint"
 #include "Application/Clock.h"
 
 class NetConnection

@@ -2,6 +2,8 @@
 
 #include "Core.h"
 
+#undef CopyMemory
+
 namespace GTSL
 {
 	class Memory

@@ -2,7 +2,9 @@
 
 #include "Platform/Windows/WindowsApplication.h"
 
-uint64 GTSL::WindowsWindow::WindowProc(const HWND hwnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
+using namespace GTSL;
+
+uint64 WindowsWindow::WindowProc(const HWND hwnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
 {
 	const auto windows_window = reinterpret_cast<WindowsWindow*>(GetWindowLongPtrA(hwnd, GWLP_USERDATA));
 
@@ -96,14 +98,14 @@ uint64 GTSL::WindowsWindow::WindowProc(const HWND hwnd, const UINT uMsg, const W
 	}
 }
 
-void GTSL::WindowsWindow::CalculateMousePos(const uint32 x, const uint32 y)
+void WindowsWindow::CalculateMousePos(const uint32 x, const uint32 y)
 {
 	const auto halfX = static_cast<float>(windowSize.Width) * 0.5f;
 	const auto halfY = static_cast<float>(windowSize.Height) * 0.5f;
 	mouseX = (x - halfX) / halfX; mouseY = (y - halfY) / halfY;
 }
 
-void GTSL::WindowsWindow::TranslateKeys(uint32 win32Key, uint64 context, KeyboardKeys& key)
+void WindowsWindow::TranslateKeys(uint32 win32Key, uint64 context, KeyboardKeys& key)
 {
 	switch (win32Key)
 	{
@@ -185,12 +187,13 @@ void GTSL::WindowsWindow::TranslateKeys(uint32 win32Key, uint64 context, Keyboar
 	}
 }
 
-GTSL::WindowsWindow::WindowsWindow(const WindowCreateInfo& windowCreateInfo) : Window(windowCreateInfo)
+WindowsWindow::WindowsWindow(const WindowCreateInfo& windowCreateInfo) : Window(windowCreateInfo)
 {
 	WNDCLASSA wndclass{};
 	wndclass.lpfnWndProc = reinterpret_cast<WNDPROC>(WindowProc);
 	wndclass.hInstance = static_cast<WindowsApplication*>(windowCreateInfo.Application)->GetInstance();
 	wndclass.lpszClassName = windowCreateInfo.Name.c_str();
+	wndclass.hCursor = nullptr;
 	RegisterClassA(&wndclass);
 	
 	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.c_str(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, static_cast<WindowsWindow*>(windowCreateInfo.ParentWindow)->windowHandle, nullptr, static_cast<WindowsApplication*>(windowCreateInfo.Application)->GetInstance(), nullptr);
@@ -200,7 +203,7 @@ GTSL::WindowsWindow::WindowsWindow(const WindowCreateInfo& windowCreateInfo) : W
 	defaultWindowStyle = ::GetWindowLong(windowHandle, GWL_STYLE);
 }
 
-void GTSL::WindowsWindow::SetState(const WindowState& windowState)
+void WindowsWindow::SetState(const WindowState& windowState)
 {
 	switch (windowState.NewWindowSizeState)
 	{
@@ -252,17 +255,17 @@ void GTSL::WindowsWindow::SetState(const WindowState& windowState)
 	}
 }
 
-void GTSL::WindowsWindow::GetNativeHandles(void* nativeHandlesStruct)
+void WindowsWindow::GetNativeHandles(void* nativeHandlesStruct)
 {
 	static_cast<Win32NativeHandles*>(nativeHandlesStruct)->HWND = windowHandle;
 }
 
-void GTSL::WindowsWindow::Notify()
+void WindowsWindow::Notify()
 {
 	FlashWindow(windowHandle, true);
 }
 
-void GTSL::WindowsWindow::SetTitle(const char* title)
+void WindowsWindow::SetTitle(const char* title)
 {
 	SetWindowTextA(windowHandle, title);
 }

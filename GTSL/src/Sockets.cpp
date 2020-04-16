@@ -1,5 +1,7 @@
-#include "Network/NetSocket.h"
+#include "Network/Sockets.h"
 #include <iostream>
+
+using namespace GTSL;
 
 #define WIN32_LEAN_AND_MEAN
 #if (_WIN32)
@@ -28,7 +30,7 @@ static WSAStart start;
 WSAStart WSAStart::start;
 #endif
 
-NetSocket::NetSocket(const CreateInfo& createInfo)
+UDPSocket::UDPSocket(const CreateInfo& createInfo)
 {
 #if (_WIN32)
 	handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -44,14 +46,14 @@ NetSocket::NetSocket(const CreateInfo& createInfo)
 #endif
 }
 
-NetSocket::~NetSocket()
+UDPSocket::~UDPSocket()
 {
 #if (_WIN32)
 	closesocket(handle);
 #endif
 }
 
-bool NetSocket::Send(const SendInfo& sendInfo) const
+bool UDPSocket::Send(const SendInfo& sendInfo) const
 {
 	sockaddr_in addr{};
 	addr.sin_family = AF_INET;
@@ -60,10 +62,10 @@ bool NetSocket::Send(const SendInfo& sendInfo) const
 
 	const auto sent_bytes = sendto(handle, static_cast<const char*>(sendInfo.Data), sendInfo.Size, 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
 
-	return sent_bytes == sendInfo.Size;
+	return sent_bytes == static_cast<int32>(sendInfo.Size);
 }
 
-bool NetSocket::Receive(const ReceiveInfo& receiveInfo) const
+bool UDPSocket::Receive(const ReceiveInfo& receiveInfo) const
 {
 	sockaddr_in from{};
 	socklen_t fromLength = sizeof(from);

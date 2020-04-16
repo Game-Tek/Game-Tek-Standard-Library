@@ -1,13 +1,14 @@
 #include "String.hpp"
 
 #include <cstdio>
-#include <cstdarg>
 
 #include "Array.hpp"
 #include "Ranger.h"
 #include "Stream.h"
 
 #include "Serialize.h"
+
+using namespace GTSL;
 
 GTSL::String::String(const length_type length, const char* cstring, AllocatorReference* allocatorReference) : data(length + 1, const_cast<char*>(cstring), allocatorReference)
 {
@@ -263,14 +264,6 @@ void GTSL::String::ReplaceAll(const char* a, const char* with)
 	}
 }
 
-constexpr GTSL::String::length_type GTSL::String::StringLength(const char* cstring)
-{
-	length_type length = 0;	while (*cstring) { ++length; }
-
-	//We return Length + 1 to take into account for the null terminator character.
-	return length + 1;
-}
-
 char GTSL::String::toLowerCase(char c)
 {
 	if ('A' <= c && c <= 'Z') return c += ('a' - 'A');
@@ -283,12 +276,12 @@ char GTSL::String::toUpperCase(char c)
 	return c;
 }
 
-OutStream& GTSL::String::operator<<(OutStream& archive)
+OutStream& GTSL::operator<<(OutStream& os, const String& string)
 {
-	archive << data; return archive;
+	os << string.data; return os;
 }
 
-InStream& GTSL::String::operator>>(InStream& archive)
+InStream& GTSL::operator>>(InStream& inStream, String& string)
 {
-	archive >> data; return archive;
+	inStream >> string.data; return inStream;
 }

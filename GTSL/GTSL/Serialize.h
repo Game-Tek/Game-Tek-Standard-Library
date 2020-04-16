@@ -2,22 +2,25 @@
 
 #include "Stream.h"
 
-template <typename T>
-void operator<<(OutStream& outStream, GTSL::Vector<T>& vector)
+namespace GTSL
 {
-	outStream.Write(vector.GetLength());
+	template <typename T>
+	void operator<<(OutStream& outStream, const Vector<T>& vector)
+	{
+		outStream.Write(vector.GetLength());
 
-	for (auto& e : vector) { outStream << e; }
-}
+		for (auto& e : vector) { outStream << e; }
+	}
 
-template <typename T>
-void operator>>(InStream& inStream, GTSL::Vector<T>& vector)
-{
-	typename GTSL::Vector<T>::length_type length = 0;
+	template <typename T>
+	void operator>>(InStream& inStream, Vector<T>& vector)
+	{
+		typename Vector<T>::length_type length = 0;
 
-	inStream.Read(&length);
+		inStream.Read(&length);
 
-	vector.Resize(length);
+		vector.Resize(length);
 
-	for (auto& e : vector) { inStream >> e; }
+		for (auto& e : vector) { inStream >> e; }
+	}
 }

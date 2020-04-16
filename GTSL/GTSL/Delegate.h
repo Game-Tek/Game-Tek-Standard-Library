@@ -24,12 +24,12 @@ class Delegate<RET(PARAMS ...)> final
 public:
 	typedef decltype(callerFunction) call_signature;
 	
-	//Delegate() = default;
+	Delegate() = default;
 	~Delegate() = default;
 
-	template <RET(*FUNCTION)(PARAMS ...)>
-	explicit Delegate() : callerFunction(&functionCaller<FUNCTION>), callee(nullptr)
-	{}
+	//template <RET(*FUNCTION)(PARAMS ...)>
+	//explicit Delegate() : callerFunction(&functionCaller<FUNCTION>), callee(nullptr)
+	//{}
 
 	template <class T, RET(T::*METHOD)(PARAMS...)>
 	explicit Delegate(T* instance) : callerFunction(&methodCaller<T, METHOD>), callee(instance)

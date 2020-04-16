@@ -1,6 +1,7 @@
 #pragma once
 
 #include "String.hpp"
+#include "StaticString.h"
 
 namespace GTSL
 {
@@ -59,7 +60,7 @@ namespace GTSL
 		{
 			VectorInfo VectorInfo;
 			uint8 CoreCount = 0;
-			GTSL::String CpuBrand;
+			String CpuBrand;
 		} CPU;
 
 		RamInfo RAM;
@@ -69,6 +70,7 @@ namespace GTSL
 	{
 	public:
 		static void GetRunningPath(String& path);
+		static void GetRunningPath(StaticString<512>& path);
 		static void GetRAMInfo(RamInfo& ramInfo);
 		static void GetVectorInfo(VectorInfo& vectorInfo);
 		static void GetCPUName(String& name);

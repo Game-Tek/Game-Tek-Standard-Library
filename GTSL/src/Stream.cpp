@@ -5,6 +5,8 @@
 using InStreamType = std::ifstream;
 using OutStreamType = std::ofstream;
 
+using namespace GTSL;
+
 void InStream::readInternal(const size_t size, void* data) const
 {
 	auto stream_ = static_cast<InStreamType*>(stream);

@@ -6,8 +6,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-#include "Extent.h"
-
 namespace GTSL
 {
 	class WindowsWindow : public Window
@@ -16,7 +14,7 @@ namespace GTSL
 
 		WindowSizeState windowSizeState;
 		
-		float mouseX, mouseY;
+		float mouseX{0}, mouseY{0};
 
 		DWORD defaultWindowStyle{ 0 };
 

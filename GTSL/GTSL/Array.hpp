@@ -105,6 +105,12 @@ namespace GTSL
 
 		[[nodiscard]] constexpr const T* GetData() const noexcept { return reinterpret_cast<const T*>(this->data); }
 
+		constexpr LT PushBack(LT length, const T array[])
+		{
+			Memory::CopyMemory(length, array, this->data + this->length);
+			return this->length += length;
+		}
+
 		constexpr LT PushBack(const T& obj) noexcept
 		{
 			GTSL_ASSERT((this->length + 1) > CAPACITY, "Array is not long enough to insert any more elements!");
