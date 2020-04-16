@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.29920.165
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GTSL", "GTSL\GTSL.vcxproj", "{F5D88F6F-AABD-4E2C-ABBC-D1142A690DA0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GAL", "GAL\GAL.vcxproj", "{A0DC76E1-9D10-4E84-94E9-745A62537374}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -19,6 +21,12 @@ Global
 		{F5D88F6F-AABD-4E2C-ABBC-D1142A690DA0}.Release|x64.ActiveCfg = Release|x64
 		{F5D88F6F-AABD-4E2C-ABBC-D1142A690DA0}.Release|x64.Build.0 = Release|x64
 		{F5D88F6F-AABD-4E2C-ABBC-D1142A690DA0}.Release|x86.ActiveCfg = Release|x64
+		{A0DC76E1-9D10-4E84-94E9-745A62537374}.Debug|x64.ActiveCfg = Debug|x64
+		{A0DC76E1-9D10-4E84-94E9-745A62537374}.Debug|x64.Build.0 = Debug|x64
+		{A0DC76E1-9D10-4E84-94E9-745A62537374}.Debug|x86.ActiveCfg = Debug|x64
+		{A0DC76E1-9D10-4E84-94E9-745A62537374}.Release|x64.ActiveCfg = Release|x64
+		{A0DC76E1-9D10-4E84-94E9-745A62537374}.Release|x64.Build.0 = Release|x64
+		{A0DC76E1-9D10-4E84-94E9-745A62537374}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
