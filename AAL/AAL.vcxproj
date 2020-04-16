@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -11,57 +19,36 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GAL\Bindings.h" />
-    <ClInclude Include="GAL\CommandBuffer.h" />
-    <ClInclude Include="GAL\ComputePipeline.h" />
-    <ClInclude Include="GAL\Framebuffer.h" />
-    <ClInclude Include="GAL\GraphicsPipeline.h" />
-    <ClInclude Include="GAL\RenderContext.h" />
-    <ClInclude Include="GAL\RenderCore.h" />
-    <ClInclude Include="GAL\RenderDevice.h" />
-    <ClInclude Include="GAL\RenderMesh.h" />
-    <ClInclude Include="GAL\RenderPass.h" />
-    <ClInclude Include="GAL\RenderTarget.h" />
-    <ClInclude Include="GAL\Texture.h" />
-    <ClInclude Include="GAL\UniformBuffer.h" />
-    <ClInclude Include="GAL\Vulkan\Vulkan.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanBase.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanBindings.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanCommandBuffer.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanFramebuffer.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanPipelines.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanRenderContext.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanRenderDevice.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanRenderMesh.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanRenderPass.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanRenderTarget.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanSwapchainImage.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanTexture.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanUniformBuffer.h" />
+    <ClInclude Include="AAL\AudioCore.h" />
+    <ClInclude Include="AAL\AudioDevice.h" />
+    <ClInclude Include="AAL\Platform\Windows\WindowsAudioDevice.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\RenderDevice.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanBindings.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanCommandBuffer.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanFramebuffer.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanPipelines.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanRenderContext.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanRenderDevice.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanRenderMesh.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanRenderPass.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanRenderTarget.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanSwapchainImage.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanTexture.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanUniformBuffer.cpp" />
+    <ClCompile Include="src\AudioCore.cpp" />
+    <ClCompile Include="src\AudioDevice.cpp" />
+    <ClCompile Include="src\Windows\WindowsAudioDevice.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
-    <ProjectGuid>{A0DC76E1-9D10-4E84-94E9-745A62537374}</ProjectGuid>
+    <ProjectGuid>{38BE2DB5-1206-48BE-B478-18FD741FD190}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>GAL</RootNamespace>
+    <RootNamespace>AAL</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -80,6 +67,12 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -91,14 +84,20 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)bin\$(ProjectName)\</OutDir>
     <IntDir>$(SolutionDir)bin-int\$(ProjectName)\</IntDir>
-    <IncludePath>$(SolutionDir)GTSL;$(ProjectDir);$(ProjectDir)/ext;$(ProjectDir)/ext/vulkan;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)GTSL;$(ProjectDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <TargetName>$(ProjectName)-$(Configuration)-$(Platform)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)bin\$(ProjectName)\</OutDir>
     <IntDir>$(SolutionDir)bin-int\$(ProjectName)\</IntDir>
-    <IncludePath>$(SolutionDir)GTSL;$(ProjectDir);$(ProjectDir)/ext;$(ProjectDir)/ext/vulkan;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)GTSL;$(ProjectDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <TargetName>$(ProjectName)-$(Configuration)-$(Platform)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -116,9 +115,40 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>$(SolutionDir)bin\GTSL\GTSL-$(Configuration)-$(Platform).lib;vulkan-1.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)ext;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(SolutionDir)bin\GTSL\GTSL-$(Configuration)-$(Platform).lib</AdditionalDependencies>
     </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -139,8 +169,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>$(SolutionDir)bin\GTSL\GTSL-$(Configuration)-$(Platform).lib;vulkan-1.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)ext;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(SolutionDir)bin\GTSL\GTSL-$(Configuration)-$(Platform).lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

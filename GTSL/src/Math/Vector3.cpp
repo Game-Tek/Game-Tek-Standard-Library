@@ -1,6 +1,4 @@
-#include "Math/Vector3.h"
-
-#include "Math/Math.hpp"
+#include "GTSL/Math/Math.hpp"
 
 using namespace GTSL;
 

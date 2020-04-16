@@ -1,7 +1,7 @@
-#include "Math/Quaternion.h"
+#include "GTSL/Math/Quaternion.h"
 
-#include "Math/Math.hpp"
-#include "Math/AxisAngle.h"
+#include "GTSL/Math/Math.hpp"
+#include "GTSL/Math/AxisAngle.h"
 
 using namespace GTSL;
 

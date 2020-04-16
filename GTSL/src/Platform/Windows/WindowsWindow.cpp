@@ -1,6 +1,6 @@
-#include "Platform/Windows/WindowsWindow.h"
+#include "GTSL/Platform/Windows/WindowsWindow.h"
 
-#include "Platform/Windows/WindowsApplication.h"
+#include "GTSL/Platform/Windows/WindowsApplication.h"
 
 using namespace GTSL;
 

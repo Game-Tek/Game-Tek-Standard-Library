@@ -1,12 +1,8 @@
-#include "String.hpp"
+#include "GTSL/String.hpp"
 
 #include <cstdio>
-
-#include "Array.hpp"
-#include "Ranger.h"
-#include "Stream.h"
-
-#include "Serialize.h"
+#include "GTSL/Array.hpp"
+#include "GTSL/Serialize.h"
 
 using namespace GTSL;
 
@@ -190,7 +186,7 @@ GTSL::String::length_type GTSL::String::FindFirst(const char c) const
 GTSL::String::length_type GTSL::String::FindLast(const char c) const
 {
 	length_type i = 0;
-	for (auto& e : Ranger(data.end(), data.begin())) { if (e == c) { return i; } ++i; }
+	for (auto& e : data) { if (e == c) { return i; } ++i; }
 	return npos();
 }
 

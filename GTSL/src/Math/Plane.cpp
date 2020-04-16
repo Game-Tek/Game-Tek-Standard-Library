@@ -1,6 +1,7 @@
-#include "Math/Plane.h"
+#include "GTSL/Math/Plane.h"
 
-#include "Math/Math.hpp"
+#include "GTSL/Math/Vector3.h"
+#include "GTSL/Math/Math.hpp"
 
 using namespace GTSL;
 

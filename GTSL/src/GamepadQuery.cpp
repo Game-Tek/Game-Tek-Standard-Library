@@ -1,4 +1,6 @@
-#include "GamepadQuery.h"
+#include "GTSL/GamepadQuery.h"
+
+#include <winerror.h>
 
 using namespace GTSL;
 

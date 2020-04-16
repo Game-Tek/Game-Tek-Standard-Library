@@ -1,8 +1,8 @@
-#include "Math/Matrix4.h"
+#include "GTSL/Math/Matrix4.h"
 
-#include "SIMD/float32_4.h"
-#include "Math/Quaternion.h"
-#include "Math/Math.hpp"
+#include "GTSL/Math/Quaternion.h"
+#include "GTSL/Math/Math.hpp"
+#include "GTSL/SIMD/float32_4.h"
 
 using namespace GTSL;
 

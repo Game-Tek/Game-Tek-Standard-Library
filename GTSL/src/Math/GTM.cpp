@@ -1,7 +1,6 @@
-#include "Math/Math.hpp"
+#include "GTSL/Math/Math.hpp"
 
-#include "SIMD/float32_4.h"
-
+#include "GTSL/SIMD/float32_4.h"
 #include <cmath>
 
 using namespace GTSL;

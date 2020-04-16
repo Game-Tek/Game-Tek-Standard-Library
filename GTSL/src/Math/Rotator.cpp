@@ -1,6 +1,6 @@
-#include "Math/Rotator.h"
+#include "GTSL/Math/Rotator.h"
 
-#include "Math/Math.hpp"
+#include "GTSL/Math/Math.hpp"
 
 //there seems to be some inaccuracy in the X field, CHECK, but works fairly well for now
 

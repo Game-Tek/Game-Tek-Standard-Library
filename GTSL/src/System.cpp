@@ -1,4 +1,6 @@
-#include "System.h"
+#include "GTSL/System.h"
+
+#include "GTSL/String.hpp"
 
 #if (_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -6,7 +8,9 @@
 #include "intrin.h"
 #endif
 
-void GTSL::System::GetRunningPath(GTSL::String& path)
+using namespace GTSL;
+
+void System::GetRunningPath(String& path)
 {
 #if (_WIN32)
 	char a[512];
@@ -18,7 +22,7 @@ void GTSL::System::GetRunningPath(GTSL::String& path)
 #endif
 }
 
-void GTSL::System::GetRunningPath(StaticString<512>& path)
+void System::GetRunningPath(StaticString<512>& path)
 {
 #if (_WIN32)
 	char a[512];
@@ -30,7 +34,7 @@ void GTSL::System::GetRunningPath(StaticString<512>& path)
 #endif
 }
 
-void GTSL::System::GetRAMInfo(RamInfo& ramInfo)
+void System::GetRAMInfo(RamInfo& ramInfo)
 {
 #if (_WIN32)
 	MEMORYSTATUSEX memory_status{};
@@ -44,7 +48,7 @@ void GTSL::System::GetRAMInfo(RamInfo& ramInfo)
 #endif
 }
 
-void GTSL::System::GetVectorInfo(VectorInfo& vectorInfo)
+void System::GetVectorInfo(VectorInfo& vectorInfo)
 {
 #if (_WIN32)
 	//https://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set
@@ -114,7 +118,7 @@ void GTSL::System::GetVectorInfo(VectorInfo& vectorInfo)
 }
 
 
-void GTSL::System::GetCPUName(GTSL::String& name)
+void System::GetCPUName(String& name)
 {
 #if (_WIN32)
 	int CPUInfo[4] = { -1 };
@@ -139,7 +143,7 @@ void GTSL::System::GetCPUName(GTSL::String& name)
 #endif
 }
 
-void GTSL::System::GetSystemInfo(SystemInfo& systemInfo)
+void System::GetSystemInfo(SystemInfo& systemInfo)
 {
 #if (_WIN32)
 	SYSTEM_INFO system_info;

@@ -1,10 +1,14 @@
-#include "Platform/Windows/WindowsApplication.h"
+#include "GTSL/Platform/Windows/WindowsApplication.h"
 
-GTSL::WindowsApplication::WindowsApplication(const ApplicationCreateInfo& applicationCreateInfo) : Application(applicationCreateInfo), instance(GetModuleHandle(nullptr))
+#include "GTSL/Application.h"
+
+using namespace GTSL;
+
+WindowsApplication::WindowsApplication(const ApplicationCreateInfo& applicationCreateInfo) : Application(applicationCreateInfo), instance(GetModuleHandle(nullptr))
 {
 }
 
-void GTSL::WindowsApplication::Update()
+void WindowsApplication::Update()
 {
 	MSG message;
 	
@@ -15,12 +19,12 @@ void GTSL::WindowsApplication::Update()
 	}
 }
 
-void GTSL::WindowsApplication::Close()
+void WindowsApplication::Close()
 {
 	PostQuitMessage(0);
 }
 
-void GTSL::WindowsApplication::GetNativeHandles(void* nativeHandles)
+void WindowsApplication::GetNativeHandles(void* nativeHandles)
 {
 	static_cast<Win32NativeHandles*>(nativeHandles)->HINSTANCE = instance;
 }

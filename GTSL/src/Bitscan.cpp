@@ -1,4 +1,4 @@
-#include "Bitscan.h"
+#include "GTSL/Bitscan.h"
 
 #include <algorithm>
 #if (_WIN32)
@@ -7,6 +7,8 @@
 #include <apiquery2.h>
 #undef BitScanForward
 #endif
+
+using namespace GTSL;
 
 void GTSL::BitScanForward(const uint32 number, uint8& bit)
 {

@@ -1,4 +1,6 @@
-#include "Id.h"
+#include "GTSL/Id.h"
+
+#include "GTSL/String.hpp"
 
 using namespace GTSL;
 

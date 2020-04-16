@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "Core.h"
+#include "GTSL/Core.h"
 
 #include "Vector2.h"
 #include "Vector3.h"
@@ -15,7 +15,6 @@
 
 namespace GTSL
 {
-
 	class Math
 	{
 		// +  float
