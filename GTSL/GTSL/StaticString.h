@@ -17,7 +17,8 @@ namespace GTSL
 		}
 	public:
 		constexpr StaticString() noexcept = default;
-		constexpr StaticString(const char* cstring) : array(cstring, stringLength(cstring))
+		
+		constexpr StaticString(const char* cstring) : array(stringLength(cstring), cstring)
 		{
 			GTSL_ASSERT(stringLength(cstring) > N, "Input string longer than static string size!");
 		}
@@ -42,6 +43,8 @@ namespace GTSL
 
 		[[nodiscard]] uint32 npos() const { return this->array.GetLength() + 1; }
 
+		const char* CString() const { return this->array.GetData(); }
+		
 		uint32 FindLast(char c)
 		{
 			uint32 i{ 0 };

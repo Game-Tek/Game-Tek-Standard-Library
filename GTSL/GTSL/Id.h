@@ -15,15 +15,20 @@ namespace GTSL
 		using HashType = uint64;
 
 	protected:
+		static constexpr uint32 stringLength(const char* cstring)
+		{
+			uint32 length = 0;	while (true) { if (cstring[length] == '\0') { return length; } ++length; }
+		}
+
 		static constexpr HashType hashString(const uint32 length, const char* text) noexcept
 		{
 			HashType primaryHash(525201411107845655ull);
 			HashType secondaryHash(0xAAAAAAAAAAAAAAAAull);
 
-			for (auto& c : Ranger(length, text))
+			for (uint32 i{ 0 }; i < length; ++i)
 			{
-				primaryHash ^= c;
-				secondaryHash ^= c;
+				primaryHash ^= text[i];
+				secondaryHash ^= text[i];
 				primaryHash *= 0x5bd1e9955bd1e995;
 				secondaryHash *= 0x80638e;
 				primaryHash ^= primaryHash >> 47;
@@ -34,13 +39,18 @@ namespace GTSL
 
 			return ((primaryHash & 0xFFFFFFFF00000000ull) ^ (secondaryHash & 0x00000000FFFFFFFFull));
 		}
-	public:		
-		
-		constexpr static HashType HashString(const char* text) noexcept { return hashString(String::StringLength(text) - 1, text); };
-		
+	public:
+
+		constexpr static HashType HashString(const char* text) noexcept { return hashString(stringLength(text) - 1, text); };
+
 		constexpr Id64() = default;
-		
-		constexpr Id64(const char* cstring) noexcept : hashValue(HashString(cstring))
+
+		template<size_t N>
+		constexpr Id64(const char(&literal)[N]) noexcept : hashValue(hashString(N - 1, *literal))
+		{
+		}
+
+		constexpr Id64(const char* cstring) noexcept : hashValue(hashString(stringLength(cstring) - 1, cstring))
 		{
 		}
 		

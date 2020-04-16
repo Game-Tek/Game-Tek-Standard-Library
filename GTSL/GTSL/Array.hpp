@@ -51,7 +51,7 @@ namespace GTSL
 		{
 		}
 
-		constexpr Array(const LT length, T array[]) noexcept : length(length)
+		constexpr Array(const LT length, const T array[]) noexcept : length(length)
 		{
 			copyToData(array, length);
 		}
