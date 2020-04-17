@@ -11,9 +11,7 @@ namespace GTSL
 
 		static constexpr uint32 stringLength(const char* text)
 		{
-			uint32 i{ 0 };
-			while (*text) { ++i; }
-			return i + 1;
+			uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i + 1;
 		}
 	public:
 		constexpr StaticString() noexcept = default;
@@ -25,8 +23,8 @@ namespace GTSL
 
 		StaticString& operator+=(const char* cstring)
 		{
-			array.PopBack();
-			array.PushBack(stringLength(cstring), cstring);
+			this->array.PopBack();
+			this->array.PushBack(stringLength(cstring), cstring);
 			return *this;
 		}
 
@@ -43,7 +41,7 @@ namespace GTSL
 
 		[[nodiscard]] uint32 npos() const { return this->array.GetLength() + 1; }
 
-		const char* CString() const { return this->array.GetData(); }
+		[[nodiscard]] const char* CString() const { return this->array.GetData(); }
 		
 		uint32 FindLast(char c)
 		{

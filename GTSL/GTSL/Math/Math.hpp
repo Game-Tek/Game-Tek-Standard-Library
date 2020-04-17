@@ -110,6 +110,8 @@ namespace GTSL
 			return Result;
 		}
 
+		static uint64 AlignedNumber(const uint64 number, const uint64 alignment) { return (number + (alignment - 1)) & -alignment; }
+		
 		/**
 		 * \brief Returns x to the y.
 		 * \param x number

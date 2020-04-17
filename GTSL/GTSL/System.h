@@ -1,7 +1,6 @@
 #pragma once
 
 #include "String.hpp"
-#include "StaticString.h"
 
 namespace GTSL
 {
@@ -70,7 +69,6 @@ namespace GTSL
 	{
 	public:
 		static void GetRunningPath(String& path);
-		static void GetRunningPath(StaticString<512>& path);
 		static void GetRAMInfo(RamInfo& ramInfo);
 		static void GetVectorInfo(VectorInfo& vectorInfo);
 		static void GetCPUName(String& name);

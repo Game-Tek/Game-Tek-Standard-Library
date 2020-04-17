@@ -123,9 +123,6 @@
     <ClInclude Include="GTSL\Assert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\StaticString.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Bitscan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -226,6 +223,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\Network\Ipv4Endpoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\StaticString.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

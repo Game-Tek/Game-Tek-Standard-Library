@@ -22,18 +22,6 @@ void System::GetRunningPath(String& path)
 #endif
 }
 
-void System::GetRunningPath(StaticString<512>& path)
-{
-#if (_WIN32)
-	char a[512];
-	GetModuleFileNameA(NULL, a, 512);
-	//GTSL_ASSERT(GetModuleFileNameA(NULL, a, 512), "Failed to get Win32 module file name!")
-	path += a;
-	path.Drop(path.FindLast('\\') + 1);
-	path.ReplaceAll('\\', '/');
-#endif
-}
-
 void System::GetRAMInfo(RamInfo& ramInfo)
 {
 #if (_WIN32)

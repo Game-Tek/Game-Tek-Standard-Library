@@ -39,7 +39,7 @@
     <ClInclude Include="GTSL\Math\Vector4.h" />
     <ClInclude Include="GTSL\SIMD\float32_4.h" />
     <ClInclude Include="GTSL\SIMD\uint32_16.h" />
-    <ClInclude Include="GTSL\StaticString.h" />
+    <ClInclude Include="GTSL\StaticString.hpp" />
     <ClInclude Include="GTSL\String.hpp" />
     <ClInclude Include="GTSL\GamepadQuery.h" />
     <ClInclude Include="GTSL\Tuple.h" />
