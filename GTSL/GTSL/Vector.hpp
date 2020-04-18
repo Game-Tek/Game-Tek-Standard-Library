@@ -56,9 +56,12 @@ namespace GTSL
 		 */
 		void freeData()
 		{
-			GTSL_ASSERT(this->data == nullptr, "Data is nullptr.")
-			this->allocatorReference->Deallocate(this->capacity, alignof(T), this->data);
-			this->data = nullptr;
+			if (this->data)
+			{
+				GTSL_ASSERT(this->data == nullptr, "Data is nullptr.")
+				this->allocatorReference->Deallocate(this->capacity, alignof(T), this->data);
+				this->data = nullptr;
+			}
 		}
 
 		/**

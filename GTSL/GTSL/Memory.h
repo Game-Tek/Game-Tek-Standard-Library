@@ -16,7 +16,7 @@ namespace GTSL
 
 		static void* AlignedPointer(const uint64 alignment, void* data)
 		{
-			return reinterpret_cast<void*>(reinterpret_cast<uint64>(static_cast<byte*>(data) + (alignment - 1)) & -alignment);
+			return reinterpret_cast<void*>(reinterpret_cast<uint64>(static_cast<byte*>(data) + (alignment - 1)) & ~(alignment - 1));
 		}
 	};
 }

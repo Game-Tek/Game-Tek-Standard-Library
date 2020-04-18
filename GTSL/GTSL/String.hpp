@@ -139,7 +139,7 @@ namespace GTSL
 		//Returns the length of the C-String accounting for the null terminator character. C-String MUST BE NULL TERMINATED.
 		static constexpr length_type StringLength(const char* cstring)
 		{
-			length_type length = 0;	while (*cstring) { ++length; }
+			length_type length = 0;	while (cstring[length] != '\0') { ++length; }
 
 			//We return Length + 1 to take into account for the null terminator character.
 			return length + 1;
