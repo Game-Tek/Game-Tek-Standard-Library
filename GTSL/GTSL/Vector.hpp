@@ -47,7 +47,7 @@ namespace GTSL
 			void* data{ nullptr };
 			uint64 allocated_size{ 0 };
 			this->allocatorReference->Allocate(elementCount * sizeof(T), alignof(T), &data, &allocated_size);
-			this->capacity = static_cast<length_type>(allocated_size);
+			this->capacity = static_cast<length_type>(allocated_size / sizeof(T));
 			return static_cast<T*>(data);
 		}
 
