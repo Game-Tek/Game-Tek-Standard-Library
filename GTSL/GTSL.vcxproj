@@ -20,7 +20,7 @@
     <ClInclude Include="GTSL\BlockingQueue.h" />
     <ClInclude Include="GTSL\Core.h" />
     <ClInclude Include="GTSL\FixedVector.hpp" />
-    <ClInclude Include="GTSL\Delegate.h" />
+    <ClInclude Include="GTSL\Delegate.hpp" />
     <ClInclude Include="GTSL\Extent.h" />
     <ClInclude Include="GTSL\FlatHashMap.h" />
     <ClInclude Include="GTSL\FlipFlop.h" />
@@ -53,8 +53,6 @@
     <ClInclude Include="GTSL\Network\Ipv4Endpoint.h" />
     <ClInclude Include="GTSL\Octree.h" />
     <ClInclude Include="GTSL\Pair.h" />
-    <ClInclude Include="GTSL\Platform\Windows\WindowsApplication.h" />
-    <ClInclude Include="GTSL\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="GTSL\Ranger.h" />
     <ClInclude Include="GTSL\RGB.h" />
     <ClInclude Include="GTSL\RGBA.h" />
@@ -84,6 +82,7 @@
     <ClInclude Include="Math\Vector4.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Bitscan.cpp" />
     <ClCompile Include="src\Math\AxisAngle.cpp" />
     <ClCompile Include="src\Math\GTM.cpp" />
@@ -97,10 +96,9 @@
     <ClCompile Include="src\GamepadQuery.cpp" />
     <ClCompile Include="src\Id.cpp" />
     <ClCompile Include="src\Sockets.cpp" />
-    <ClCompile Include="src\Platform\Windows\WindowsApplication.cpp" />
-    <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Stream.cpp" />
     <ClCompile Include="src\System.cpp" />
+    <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

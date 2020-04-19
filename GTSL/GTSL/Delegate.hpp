@@ -27,21 +27,25 @@ public:
 	Delegate() = default;
 	~Delegate() = default;
 
+	Delegate(void* calee, decltype(callerFunction) cF) : callerFunction(cF), callee(calee)
+	{
+	}
+	
 	//template <RET(*FUNCTION)(PARAMS ...)>
 	//explicit Delegate() : callerFunction(&functionCaller<FUNCTION>), callee(nullptr)
 	//{}
 
-	template <class T, RET(T::*METHOD)(PARAMS...)>
-	explicit Delegate(T* instance) : callerFunction(&methodCaller<T, METHOD>), callee(instance)
-	{}
-
-	template <class T, RET(T::*CONST_METHOD)(PARAMS...) const>
-	explicit Delegate(T const* instance) : callerFunction(&constMethodCaller<T, CONST_METHOD>), callee(const_cast<T*>(instance))
-	{}
-	
-	template <typename LAMBDA>
-	explicit Delegate(LAMBDA& lambda) : callerFunction(&lambdaCaller<LAMBDA>), callee(reinterpret_cast<void*>(&lambda))
-	{}
+	//template <class T, RET(T::*METHOD)(PARAMS...)>
+	//explicit Delegate(T* instance) : callerFunction(&methodCaller<T, METHOD>), callee(instance)
+	//{}
+	//
+	//template <class T, RET(T::*CONST_METHOD)(PARAMS...) const>
+	//explicit Delegate(T const* instance) : callerFunction(&constMethodCaller<T, CONST_METHOD>), callee(const_cast<T*>(instance))
+	//{}
+	//
+	//template <typename LAMBDA>
+	//explicit Delegate(LAMBDA& lambda) : callerFunction(&lambdaCaller<LAMBDA>), callee(reinterpret_cast<void*>(&lambda))
+	//{}
 	
 	operator bool() const noexcept { return callerFunction; }
 
@@ -53,17 +57,17 @@ public:
 	bool operator ==(const Delegate& another) const { return callerFunction == another.callerFunction && callee == another.callee; }
 	bool operator !=(const Delegate& another) const { return callerFunction != another.callerFunction && callee != another.callee; }
 
-	//template <class T, RET(T::*METHOD)(PARAMS...)>
-	//static Delegate Create(T* instance) { return Delegate(instance, methodCaller<T, METHOD>); }
-	//
-	//template <class T, RET(T::* CONST_METHOD)(PARAMS...) const>
-	//static Delegate Create(T const* instance) { return Delegate(const_cast<T*>(instance), constMethodCaller<T, CONST_METHOD>); }
-	//
-	//template <RET(*FUNCTION)(PARAMS ...)>
-	//static Delegate Create() { return Delegate(nullptr, functionCaller<FUNCTION>); }
-	//
-	//template <typename LAMBDA>
-	//static Delegate Create(const LAMBDA& instance) { return Delegate(static_cast<void*>(&instance), lambdaCaller<LAMBDA>); }
+	template <class T, RET(T::*METHOD)(PARAMS...)>
+	static Delegate Create(T* instance) { return Delegate(instance, methodCaller<T, METHOD>); }
+	
+	template <class T, RET(T::* CONST_METHOD)(PARAMS...) const>
+	static Delegate Create(T const* instance) { return Delegate(const_cast<T*>(instance), constMethodCaller<T, CONST_METHOD>); }
+	
+	template <RET(*FUNCTION)(PARAMS ...)>
+	static Delegate Create() { return Delegate(nullptr, functionCaller<FUNCTION>); }
+	
+	template <typename LAMBDA>
+	static Delegate Create(const LAMBDA& instance) { return Delegate(static_cast<void*>(&instance), lambdaCaller<LAMBDA>); }
 
 	RET operator()(PARAMS... arg) const { return (*callerFunction)(callee, arg...); }
 

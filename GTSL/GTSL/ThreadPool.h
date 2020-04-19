@@ -4,7 +4,7 @@
 #include "BlockingQueue.h"
 #include <future>
 #include "Array.hpp"
-#include "Delegate.h"
+#include "Delegate.hpp"
 
 namespace GTSL
 {

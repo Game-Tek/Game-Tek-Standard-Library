@@ -2,16 +2,15 @@
 
 #include "Extent.h"
 
-#include "Delegate.h"
+#include "Delegate.hpp"
 #include "String.hpp"
+#include "Math/Vector2.h"
 
 namespace GTSL
 {
 	class Window
 	{
 	public:
-		virtual ~Window() = default;
-
 		enum class MouseButton : uint8
 		{
 			LEFT_BUTTON, RIGHT_BUTTON, MIDDLE_BUTTON
@@ -122,10 +121,26 @@ namespace GTSL
 		{
 			TITLE_BAR = 0,
 		};
+
+		enum class WindowSizeState : uint8
+		{
+			MINIMIZED, MAXIMIZED, FULLSCREEN
+		};
 		
 	protected:
 		Extent2D windowSize;
 		Extent2D clientSize;
+		Vector2 mousePos;
+		WindowSizeState windowSizeState;
+
+		void* windowHandle = nullptr;
+		uint32 defaultWindowStyle{ 0 };
+
+#if (_WIN32)
+		static uint64 __stdcall Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam);
+		void Win32_calculateMousePos(uint32 x, uint32 y);
+		static void Win32_translateKeys(uint64 win32Key, uint64 context, KeyboardKeys& key);
+#endif
 		
 		Delegate<void()> onCloseDelegate;
 		Delegate<void(const Extent2D&)> onResizeDelegate;
@@ -133,13 +148,13 @@ namespace GTSL
 		/**
 		 * \brief Delegate called when mouse moves, the first two floats are the X;Y in the -1 <-> 1 range, and the other two floats are delta position in the same range in respect to the last update to the screen.
 		 */
-		Delegate<void(float, float, float, float)> onMouseMove;
+		Delegate<void(const Vector2&, const Vector2&)> onMouseMove;
 		Delegate<void(float)> onMouseWheelMove;
 		Delegate<void(KeyboardKeys, KeyboardKeyState)> onKeyEvent;
-		Delegate<void(float, float)> onWindowResize;
 		Delegate<void(uint16)> onCharEvent;
 		Delegate<void(uint16, uint16)> onWindowMove;
 	public:
+		Window() = default;
 		struct WindowCreateInfo
 		{
 			String Name;
@@ -147,19 +162,20 @@ namespace GTSL
 			Window* ParentWindow = nullptr;
 			class Application* Application = nullptr;
 		};
-		Window(const WindowCreateInfo& windowCreateInfo);
-
-		virtual void SetTitle(const char* title) = 0;
-		virtual void Notify() = 0;
+		explicit Window(const WindowCreateInfo& windowCreateInfo);
+		~Window();
+		
+		void SetTitle(const char* title);
+		void Notify();
 
 		struct WindowIconInfo
 		{
 			byte* Data = nullptr;
 			Extent2D Extent;
 		};
-		virtual void SetIcon(const WindowIconInfo& windowIconInfo) = 0;
+		void SetIcon(const WindowIconInfo& windowIconInfo);
 
-		void GetFramebufferExtent(Extent2D& extent) const { extent = clientSize; }
+		void GetFramebufferExtent(Extent2D& extent) const;
 		void GetWindowExtent(Extent2D& windowExtent) const { windowExtent = windowSize; }
 
 		static void GetAspectRatio(const Extent2D& extent, float& aspectRatio) { aspectRatio = static_cast<float>(extent.Width) / static_cast<float>(extent.Height); }
@@ -175,13 +191,8 @@ namespace GTSL
 		void SetOnMouseWheelMoveDelegate(const decltype(onMouseWheelMove)& delegate) { onMouseWheelMove = delegate; }
 		void SetOnResizeDelegate(const decltype(onResizeDelegate)& delegate) { onResizeDelegate = delegate; }
 		void SetOnMouseButtonClickDelegate(const decltype(onMouseButtonClick)& delegate) { onMouseButtonClick = delegate; }
-		void SetOnWindowResizeDelegate(const decltype(onWindowResize)& delegate) { onWindowResize = delegate; }
+		void SetOnWindowResizeDelegate(const decltype(onResizeDelegate)& delegate) { onResizeDelegate = delegate; }
 		void SetOnCharEventDelegate(const decltype(onCharEvent)& delegate) { onCharEvent = delegate; }
-
-		enum class WindowSizeState
-		{
-			MINIMIZED, MAXIMIZED, FULLSCREEN
-		};
 
 		struct WindowState
 		{
@@ -190,12 +201,15 @@ namespace GTSL
 			Extent2D NewResolution;
 			uint8 NewBitsPerPixel = 8;
 		};
-		virtual void SetState(const WindowState& windowState) = 0;
+		void SetState(const WindowState& windowState);
 
 		struct Win32NativeHandles
 		{
 			void* HWND{ nullptr };
 		};
-		virtual void GetNativeHandles(void* nativeHandlesStruct) = 0;
+		void GetNativeHandles(void* nativeHandlesStruct) const;
+
+		void ShowWindow();
+		void HideWindow();
 	};
 }

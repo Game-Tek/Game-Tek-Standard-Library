@@ -2,25 +2,28 @@
 
 namespace GTSL
 {
+	class Window;
+
 	class Application
 	{
-	public:
-		virtual ~Application() = default;
 
 	public:
 		struct ApplicationCreateInfo
 		{
 		};
 		explicit Application(const ApplicationCreateInfo& applicationCreateInfo);
+		~Application();
 
-		virtual void Update() = 0;
+		void Update();
 
-		virtual void Close() = 0;
+		void UpdateWindow(Window* window);
+
+		void Close();
 
 		struct Win32NativeHandles
 		{
 			void* HINSTANCE{ nullptr };
 		};
-		virtual void GetNativeHandles(void* nativeHandles) = 0;
+		void GetNativeHandles(void* nativeHandles);
 	};
 }
