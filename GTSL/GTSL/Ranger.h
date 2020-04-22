@@ -6,7 +6,7 @@ class Ranger
 	const T* from = 0,* to = 0;
 	
 public:
-	constexpr Ranger(T* start, T* end) noexcept : from(start), to(end)
+	constexpr Ranger(const T* start, const T* end) noexcept : from(start), to(end)
 	{
 	}
 
@@ -15,5 +15,7 @@ public:
 	}
 	
 	constexpr T* begin() noexcept { return from; }
+	[[nodiscard]] constexpr const T* begin() const noexcept { return from; }
 	constexpr T* end() noexcept { return to; }
+	[[nodiscard]] constexpr const T* end() const noexcept { return to; }
 };

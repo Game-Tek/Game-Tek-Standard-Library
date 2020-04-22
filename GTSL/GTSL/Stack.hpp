@@ -14,17 +14,22 @@ namespace GTSL
 		LT capacity{ 0 };
 		LT elementCount{ 0 };
 
+		void resize(const LT newLength, AllocatorReference* allocatorReference)
+		{
+			uint64 new_capacity{ 0 };
+			void* new_data{ nullptr };
+			allocatorReference->Allocate(newLength, alignof(T), &new_data, &new_capacity);
+			Memory::CopyMemory(elementCount, this->data, new_data);
+			allocatorReference->Deallocate(capacity, alignof(T), reinterpret_cast<void*>(data));
+			this->capacity = static_cast<LT>(new_capacity);
+			this->data = static_cast<T*>(new_data);
+		}
+		
 		void resizeIfNeeded(LT newElementsCount, AllocatorReference* allocatorReference)
 		{
-			if(this->elementCount + newElementsCount > this->capacity)
+			if(this->elementCount + newElementsCount > this->capacity) [[unlikely]]
 			{
-				uint64 new_capacity = this->capacity * 2;
-				void* new_data{ nullptr };
-				allocatorReference->Allocate(new_capacity, alignof(T), &new_data, &new_capacity);
-				Memory::CopyMemory(elementCount, this->data, new_data);
-				allocatorReference->Deallocate(capacity, alignof(T), reinterpret_cast<void*>(data));
-				this->capacity = static_cast<LT>(new_capacity);
-				this->data = static_cast<T*>(new_data);
+				resize(this->capacity * 2, allocatorReference);
 			}
 		}
 	public:
