@@ -225,6 +225,9 @@
     <ClInclude Include="GTSL\Stack.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GTSL\DLL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\System.cpp">
@@ -276,6 +279,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GTSL\DLL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

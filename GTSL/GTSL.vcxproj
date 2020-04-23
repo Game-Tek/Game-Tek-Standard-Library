@@ -19,6 +19,7 @@
     <ClInclude Include="GTSL\Bitscan.h" />
     <ClInclude Include="GTSL\BlockingQueue.h" />
     <ClInclude Include="GTSL\Core.h" />
+    <ClInclude Include="GTSL\DLL.h" />
     <ClInclude Include="GTSL\FixedVector.hpp" />
     <ClInclude Include="GTSL\Delegate.hpp" />
     <ClInclude Include="GTSL\Extent.h" />
@@ -83,6 +84,7 @@
     <ClInclude Include="Math\Vector4.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GTSL\DLL.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Bitscan.cpp" />
     <ClCompile Include="src\Math\AxisAngle.cpp" />
