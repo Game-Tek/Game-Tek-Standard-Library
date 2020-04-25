@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Ipv4Endpoint.h"
+#include "GTSL/Ranger.h"
 
 namespace GTSL
 {
@@ -9,20 +10,21 @@ namespace GTSL
 		uint64 handle = 0;
 
 	public:
+		UDPSocket() = default;
+		~UDPSocket() = default;
+
 		struct CreateInfo
 		{
 			uint16 Port = 0;
 			bool Blocking = false;
 		};
-
-		UDPSocket(const CreateInfo& createInfo);
-		~UDPSocket();
-
+		void Open(const CreateInfo& createInfo);
+		void Close();
+		
 		struct SendInfo
 		{
 			IpEndpoint Endpoint;
-			void* Data = nullptr;
-			uint32 Size = 0;
+			Ranger<byte> Buffer;
 		};
 		[[nodiscard]] bool Send(const SendInfo& sendInfo) const;
 
@@ -30,8 +32,7 @@ namespace GTSL
 		struct ReceiveInfo
 		{
 			IpEndpoint* Sender = nullptr;
-			void* Buffer = nullptr;
-			uint32 BufferSize = 0;
+			Ranger<byte> Buffer;
 		};
 		[[nodiscard]] bool Receive(const ReceiveInfo& receiveInfo) const;
 	};

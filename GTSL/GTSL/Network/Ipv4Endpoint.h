@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Core.h"
+#include "GTSL/Core.h"
 
 namespace GTSL
 {
@@ -10,7 +10,7 @@ namespace GTSL
 	 */
 	struct IpEndpoint
 	{
-		uint8 Address[4]{};
+		uint8 Address[4]{ 0 };
 		uint16 Port = 0;
 
 		/**

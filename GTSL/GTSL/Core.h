@@ -11,6 +11,9 @@ namespace GTSL
 	using int32 = int;
 	using uint64 = unsigned long long;
 	using int64 = long long;
+
+	using float32 = float;
+	using float64 = double;
 	
 	template <typename T>
 	struct RemoveReference { using type = T; using const_type_ref = const T; };

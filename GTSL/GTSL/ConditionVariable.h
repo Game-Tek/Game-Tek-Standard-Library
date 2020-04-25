@@ -17,5 +17,15 @@ namespace GTSL
 			std::unique_lock<std::mutex> lock(mutex);
 			conditionVariable.wait(lock);
 		}
+
+		void NotifyAll()
+		{
+			conditionVariable.notify_all();
+		}
+
+		void NotifyOne()
+		{
+			conditionVariable.notify_one();
+		}
 	};
 }

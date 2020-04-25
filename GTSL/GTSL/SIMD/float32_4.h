@@ -21,7 +21,7 @@ namespace GTSL
 		{
 		}
 
-		float32_4(const float x, const float y, const float z, const float w) : vector(_mm_set_ps(x, y, z, w))
+		float32_4(const float x, const float y, const float z, const float w) : vector(_mm_set_ps(w, z, y, x))
 		{
 		}
 
@@ -59,7 +59,7 @@ namespace GTSL
 		}
 
 		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
-		template <const unsigned A, const unsigned B, const unsigned C, const unsigned D>
+		template<const unsigned A, const unsigned B, const unsigned C, const unsigned D>
 		[[nodiscard]] static float32_4 Shuffle(const float32_4& a, const float32_4& b)
 		{
 			return _mm_shuffle_ps(a.vector, b.vector, _MM_SHUFFLE(A, B, C, D));
@@ -115,33 +115,31 @@ namespace GTSL
 			return _mm_cvtss_f32(vector);
 		}
 
-		float GetY() const
+		[[nodiscard]] float GetY() const
 		{
 			alignas(16) float v[4];
 			_mm_store_ps(v, vector);
 			return v[1];
 		}
 
-		float GetZ() const
+		[[nodiscard]] float GetZ() const
 		{
 			alignas(16) float v[4];
 			_mm_store_ps(v, vector);
 			return v[2];
 		}
 
-		float GetW() const
+		[[nodiscard]] float GetW() const
 		{
 			alignas(16) float v[4];
 			_mm_store_ps(v, vector);
 			return v[3];
 		}
 
-
-		__m128i Toint4() const
+		[[nodiscard]] __m128i Toint4() const
 		{
 			return _mm_cvtps_epi32(vector);
 		}
-
 
 		float32_4 operator+(const float32_4& other) const
 		{

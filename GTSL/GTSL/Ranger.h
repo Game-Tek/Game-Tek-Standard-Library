@@ -15,10 +15,6 @@ namespace GTSL
 		{
 		}
 
-		constexpr Ranger(const T* start, const T* end) noexcept : from(start), to(end)
-		{
-		}
-
 		constexpr Ranger(const size_t length, T* start) noexcept : from(start), to(start + length)
 		{
 		}
