@@ -21,6 +21,7 @@
     <ClInclude Include="GTSL\ConditionVariable.h" />
     <ClInclude Include="GTSL\Core.h" />
     <ClInclude Include="GTSL\DLL.h" />
+    <ClInclude Include="GTSL\File.h" />
     <ClInclude Include="GTSL\FixedVector.hpp" />
     <ClInclude Include="GTSL\Delegate.hpp" />
     <ClInclude Include="GTSL\Extent.h" />
@@ -85,9 +86,10 @@
     <ClInclude Include="Math\Vector4.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GTSL\DLL.cpp" />
+    <ClCompile Include="src\DLL.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Bitscan.cpp" />
+    <ClCompile Include="src\File.cpp" />
     <ClCompile Include="src\Math\AxisAngle.cpp" />
     <ClCompile Include="src\Math\GTM.cpp" />
     <ClCompile Include="src\Math\Matrix4.cpp" />

@@ -31,8 +31,10 @@ namespace GTSL
 			auto Call(ARGS&&... args) -> RET { return reinterpret_cast<RET(*)(ARGS...)>(functionPointer)(GTSL::MakeForwardReference<ARGS>(args)...); }
 		};
 
+		~DLL();
+		
 		void LoadLibrary(const Ranger<char>& ranger);
-
+		
 		[[nodiscard]] DynamicFunction LoadDynamicFunction(const Ranger<char>& ranger) const;
 	};
 }

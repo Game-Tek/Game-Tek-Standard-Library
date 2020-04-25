@@ -1,10 +1,15 @@
-#include "DLL.h"
+#include "GTSL/DLL.h"
 
 #include <Windows.h>
 
 #undef LoadLibrary
 
 using namespace GTSL;
+
+DLL::~DLL()
+{
+	FreeLibrary(static_cast<HMODULE>(handle));
+}
 
 void DLL::LoadLibrary(const Ranger<char>& ranger)
 {
