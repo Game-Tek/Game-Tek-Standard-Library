@@ -1,6 +1,9 @@
 #include "GTSL/GamepadQuery.h"
 
-#include <winerror.h>
+#if (_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 
 using namespace GTSL;
 

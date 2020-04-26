@@ -6,7 +6,6 @@
 
 #if (_WIN32)
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <Xinput.h>
 #undef WIN32_LEAN_AND_MEAN
 #endif
@@ -29,10 +28,7 @@ namespace GTSL
 #if (_WIN32)
 		XINPUT_STATE input_state{};
 		uint8 controllerId{ 0 };
-		static constexpr GamepadButtonState intToGamepadButtonState(const int a) noexcept
-		{
-			return static_cast<GamepadButtonState>(!a);
-		}
+		static constexpr GamepadButtonState intToGamepadButtonState(const int a) noexcept { return static_cast<GamepadButtonState>(!a); }
 #endif
 
 	public:
