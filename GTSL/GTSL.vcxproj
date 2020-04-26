@@ -28,6 +28,7 @@
     <ClInclude Include="GTSL\Extent.h" />
     <ClInclude Include="GTSL\FlatHashMap.h" />
     <ClInclude Include="GTSL\FlipFlop.h" />
+    <ClInclude Include="GTSL\Input.h" />
     <ClInclude Include="GTSL\Math\AxisAngle.h" />
     <ClInclude Include="GTSL\Math\Frustum.h" />
     <ClInclude Include="GTSL\Math\Math.hpp" />
@@ -69,7 +70,7 @@
     <ClInclude Include="GTSL\TextureCoordinates.h" />
     <ClInclude Include="GTSL\Thread.h" />
     <ClInclude Include="GTSL\ThreadPool.h" />
-    <ClInclude Include="GTSL\TimePoint.h" />
+    <ClInclude Include="GTSL\Time.h" />
     <ClInclude Include="GTSL\Window.h" />
     <ClInclude Include="Math\AxisAngle.h" />
     <ClInclude Include="Math\Core.h" />

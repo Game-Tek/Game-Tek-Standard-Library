@@ -27,39 +27,39 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	}
 	case WM_LBUTTONDOWN:
 	{
-		window->onMouseButtonClick(MouseButton::LEFT_BUTTON, MouseButtonState::PRESSED);  return 0;
+		window->onMouseButtonClick(MouseButton::LEFT_BUTTON, ButtonState::PRESSED);  return 0;
 	}
 	case WM_LBUTTONUP:
 	{
-		window->onMouseButtonClick(MouseButton::LEFT_BUTTON, MouseButtonState::RELEASED); return 0;
+		window->onMouseButtonClick(MouseButton::LEFT_BUTTON, ButtonState::RELEASED); return 0;
 	}
 	case WM_RBUTTONDOWN:
 	{
-		window->onMouseButtonClick(MouseButton::RIGHT_BUTTON, MouseButtonState::PRESSED);  return 0;
+		window->onMouseButtonClick(MouseButton::RIGHT_BUTTON, ButtonState::PRESSED);  return 0;
 	}
 	case WM_RBUTTONUP:
 	{
-		window->onMouseButtonClick(MouseButton::RIGHT_BUTTON, MouseButtonState::RELEASED); return 0;
+		window->onMouseButtonClick(MouseButton::RIGHT_BUTTON, ButtonState::RELEASED); return 0;
 	}
 	case WM_MBUTTONDOWN:
 	{
-		window->onMouseButtonClick(MouseButton::MIDDLE_BUTTON, MouseButtonState::PRESSED);  return 0;
+		window->onMouseButtonClick(MouseButton::MIDDLE_BUTTON, ButtonState::PRESSED);  return 0;
 	}
 	case WM_MBUTTONUP:
 	{
-		window->onMouseButtonClick(MouseButton::MIDDLE_BUTTON, MouseButtonState::RELEASED); return 0;
+		window->onMouseButtonClick(MouseButton::MIDDLE_BUTTON, ButtonState::RELEASED); return 0;
 	}
 	case WM_KEYDOWN:
 	{
 		KeyboardKeys keyboard_keys;
 		Win32_translateKeys(wParam, lParam, keyboard_keys);
-		window->onKeyEvent(keyboard_keys, KeyboardKeyState::PRESSED);  return 0;
+		window->onKeyEvent(keyboard_keys, ButtonState::PRESSED);  return 0;
 	}
 	case WM_KEYUP:
 	{
 		KeyboardKeys keyboard_keys;
 		Win32_translateKeys(wParam, lParam, keyboard_keys);
-		window->onKeyEvent(keyboard_keys, KeyboardKeyState::RELEASED); return 0;
+		window->onKeyEvent(keyboard_keys, ButtonState::RELEASED); return 0;
 	}
 	case WM_CHAR:
 	{
@@ -205,7 +205,7 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 	Application::Win32NativeHandles win32_native_handles;
 	windowCreateInfo.Application->GetNativeHandles(&win32_native_handles);
 	
-	wndclass.hInstance = reinterpret_cast<HINSTANCE>(win32_native_handles.HINSTANCE);
+	wndclass.hInstance = static_cast<HINSTANCE>(win32_native_handles.HINSTANCE);
 	wndclass.lpszClassName = windowCreateInfo.Name.c_str();
 	RegisterClassA(&wndclass);
 	

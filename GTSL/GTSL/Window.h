@@ -3,6 +3,7 @@
 #include "Extent.h"
 
 #include "Delegate.hpp"
+#include "Input.h"
 #include "String.hpp"
 #include "Math/Vector2.h"
 
@@ -18,43 +19,9 @@ namespace GTSL
 
 		enum class KeyboardKeys : uint8
 		{
-			Q,
-			W,
-			E,
-			R,
-			T,
-			Y,
-			U,
-			I,
-			O,
-			P,
-			A,
-			S,
-			D,
-			F,
-			G,
-			H,
-			J,
-			K,
-			L,
-			Z,
-			X,
-			C,
-			V,
-			B,
-			N,
-			M,
+			Q, W, E, R, T, Y, U, I, O, P, A, S, D, F, G, H, J, K, L, Z, X, C, V, B, N, M,
 
-			Keyboard0,
-			Keyboard1,
-			Keyboard2,
-			Keyboard3,
-			Keyboard4,
-			Keyboard5,
-			Keyboard6,
-			Keyboard7,
-			Keyboard8,
-			Keyboard9,
+			Keyboard0, Keyboard1, Keyboard2, Keyboard3, Keyboard4, Keyboard5, Keyboard6, Keyboard7, Keyboard8, Keyboard9,
 
 			Backspace,
 			Enter,
@@ -82,16 +49,7 @@ namespace GTSL
 
 			SpaceBar,
 
-			Numpad0,
-			Numpad1,
-			Numpad2,
-			Numpad3,
-			Numpad4,
-			Numpad5,
-			Numpad6,
-			Numpad7,
-			Numpad8,
-			Numpad9,
+			Numpad0, Numpad1, Numpad2, Numpad3, Numpad4, Numpad5, Numpad6, Numpad7, Numpad8, Numpad9,
 
 			F1,
 			F2,
@@ -105,16 +63,6 @@ namespace GTSL
 			F10,
 			F11,
 			F12
-		};
-		
-		enum class MouseButtonState : uint8
-		{
-			PRESSED, RELEASED
-		};
-
-		enum class KeyboardKeyState : uint8
-		{
-			PRESSED, RELEASED
 		};
 
 		enum class WindowStyle
@@ -144,13 +92,13 @@ namespace GTSL
 		
 		Delegate<void()> onCloseDelegate;
 		Delegate<void(const Extent2D&)> onResizeDelegate;
-		Delegate<void(MouseButton, MouseButtonState)> onMouseButtonClick;
+		Delegate<void(MouseButton, ButtonState)> onMouseButtonClick;
 		/**
 		 * \brief Delegate called when mouse moves, the first two floats are the X;Y in the -1 <-> 1 range, and the other two floats are delta position in the same range in respect to the last update to the screen.
 		 */
 		Delegate<void(const Vector2&, const Vector2&)> onMouseMove;
 		Delegate<void(float)> onMouseWheelMove;
-		Delegate<void(KeyboardKeys, KeyboardKeyState)> onKeyEvent;
+		Delegate<void(KeyboardKeys, ButtonState)> onKeyEvent;
 		Delegate<void(uint16)> onCharEvent;
 		Delegate<void(uint16, uint16)> onWindowMove;
 	public:

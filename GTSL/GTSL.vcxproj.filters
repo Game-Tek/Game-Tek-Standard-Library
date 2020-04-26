@@ -75,9 +75,6 @@
     <ClInclude Include="GTSL\ThreadPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\TimePoint.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -235,6 +232,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\Buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\Input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\Time.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
