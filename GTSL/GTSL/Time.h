@@ -4,76 +4,57 @@
 
 namespace GTSL
 {
-	template<uint64 NUM, uint64 RATIO>
-	class UnsignedTimeUnit
+	template<typename ST, uint64 NUM, uint64 RATIO>
+	class TimeUnit
 	{
 	protected:
-		uint64 count{ 0 };
-
+		ST count{ 0 };
+		
 	public:
-		using storing_type = uint64;
+		using storing_type = ST;
 
-		UnsignedTimeUnit(const storing_type time) : count(time) {}
+		TimeUnit(const storing_type time) : count(time * NUM) {}
 		
 		template<typename T>
-		operator T() const { return static_cast<T>(count) / static_cast<T>(RATIO); }
+		operator T() const { return count * static_cast<T>((NUM / RATIO)); }
 
-		template<uint64 N, uint64 R>
-		operator UnsignedTimeUnit<N, R>() const { return UnsignedTimeUnit<N, R>(count * (N / R)); }
+		template<typename S, storing_type N, storing_type R>
+		operator TimeUnit<S, N, R>() const { return TimeUnit<S, N, R>(count * (N / R)); }
 
-		template<uint64 N, uint64 R>
-		UnsignedTimeUnit operator+(const UnsignedTimeUnit<N, R>& other) { return this->count + (other.count * (N / R)); }
-		template<uint64 N, uint64 R>
-		UnsignedTimeUnit operator-(const UnsignedTimeUnit<N, R>& other) { return this->count - (other.count * (N / R)); }
-		template<uint64 N, uint64 R>
-		UnsignedTimeUnit operator*(const UnsignedTimeUnit<N, R>& other) { return this->count * (other.count * (N / R)); }
-		template<uint64 N, uint64 R>
-		UnsignedTimeUnit operator/(const UnsignedTimeUnit<N, R>& other) { return this->count / (other.count * (N / R)); }
+		template<typename RET, typename S, storing_type N, storing_type R>
+		RET As(const TimeUnit<S, N, R>& other) { return count * static_cast<RET>((N / R)); }
 
-		template<uint64 N, uint64 R>
-		UnsignedTimeUnit& operator+=(const UnsignedTimeUnit<N, R>& other) { this->count += (other.count * (N / R)); return *this; }
-		template<uint64 N, uint64 R>
-		UnsignedTimeUnit& operator-=(const UnsignedTimeUnit<N, R>& other) { this->count -= (other.count * (N / R)); return *this; }
-		template<uint64 N, uint64 R>
-		UnsignedTimeUnit& operator*=(const UnsignedTimeUnit<N, R>& other) { this->count *= (other.count * (N / R)); return *this; }
-		template<uint64 N, uint64 R>
-		UnsignedTimeUnit& operator/=(const UnsignedTimeUnit<N, R>& other) { this->count /= (other.count * (N / R)); return *this; }
-	};
+		template<typename S, storing_type N, storing_type R>
+		TimeUnit operator+(const TimeUnit<S, N, R>& other) { return this->count + (other.count * (N / R)); }
+		template<typename S, storing_type N, storing_type R>
+		TimeUnit operator-(const TimeUnit<S, N, R>& other) { return this->count - (other.count * (N / R)); }
+		template<typename S, storing_type N, storing_type R>
+		TimeUnit operator*(const TimeUnit<S, N, R>& other) { return this->count * (other.count * (N / R)); }
+		template<typename S, storing_type N, storing_type R>
+		TimeUnit operator/(const TimeUnit<S, N, R>& other) { return this->count / (other.count * (N / R)); }
 
-	template<uint64 RATIO>
-	class SignedTimeUnit
-	{
-	protected:
-		int64 count{ 0 };
-
-	public:
-		using storing_type = int64;
-
-		SignedTimeUnit(const storing_type time) : count(time) {}
-		
-		template<uint64 R>
-		operator SignedTimeUnit<R>() const { return SignedTimeUnit<R>(count / R); }
-
-		SignedTimeUnit operator+(const SignedTimeUnit& other) { return this->count + other.count; }
-		SignedTimeUnit operator-(const SignedTimeUnit& other) { return this->count - other.count; }
-		SignedTimeUnit operator*(const SignedTimeUnit& other) { return this->count * other.count; }
-		SignedTimeUnit operator/(const SignedTimeUnit& other) { return this->count / other.count; }
-
-		SignedTimeUnit& operator+=(const SignedTimeUnit& other) { this->count += other.count; return *this; }
-		SignedTimeUnit& operator-=(const SignedTimeUnit& other) { this->count -= other.count; return *this; }
-		SignedTimeUnit& operator*=(const SignedTimeUnit& other) { this->count *= other.count; return *this; }
-		SignedTimeUnit& operator/=(const SignedTimeUnit& other) { this->count /= other.count; return *this; }
+		template<typename S, storing_type N, storing_type R>
+		TimeUnit& operator+=(const TimeUnit<S, N, R>& other) { this->count += (other.count * (N / R)); return *this; }
+		template<typename S, storing_type N, storing_type R>
+		TimeUnit& operator-=(const TimeUnit<S, N, R>& other) { this->count -= (other.count * (N / R)); return *this; }
+		template<typename S, storing_type N, storing_type R>
+		TimeUnit& operator*=(const TimeUnit<S, N, R>& other) { this->count *= (other.count * (N / R)); return *this; }
+		template<typename S, storing_type N, storing_type R>
+		TimeUnit& operator/=(const TimeUnit<S, N, R>& other) { this->count /= (other.count * (N / R)); return *this; }
 	};
 	
-	using SignedNanoseconds  = SignedTimeUnit<1000000000>;
-	using SignedMicroseconds = SignedTimeUnit<1000000>;
-	using SignedMilliseconds = SignedTimeUnit<1000>;
-	using SignedSeconds      = SignedTimeUnit<1>;
+	using SignedNanoseconds  = TimeUnit<int64, 1, 1000000000>;
+	using SignedMicroseconds = TimeUnit<int64, 1, 1000000>;
+	using SignedMilliseconds = TimeUnit<int64, 1, 1000>;
+	using SignedSeconds      = TimeUnit<int64, 1, 1>;
 
-	using Nanoseconds  = UnsignedTimeUnit<1, 1000000000>;
-	using Microseconds = UnsignedTimeUnit<1, 1000000>;
-	using Milliseconds = UnsignedTimeUnit<1, 1000>;
-	using Seconds      = UnsignedTimeUnit<1, 1>;
+	using Nanoseconds  = TimeUnit<uint64, 1, 1000000000>;
+	using Microseconds = TimeUnit<uint64, 1, 1000000>;
+	using Milliseconds = TimeUnit<uint64, 1, 1000>;
+	using Seconds      = TimeUnit<uint64, 1, 1>;
+	using Minutes      = TimeUnit<uint64, 60, 1>;
+	using Hour		   = TimeUnit<uint64, 3600, 1>;
+	using Day		   = TimeUnit<uint64, 86400, 1>;
 	
 	//template<typename T, uint64 ratio>
 	//T TimeUnitCast(const UnsignedTimeUnit<ratio>& timeUnit) { return T(timeUnit.count / ratio); }
