@@ -59,7 +59,7 @@ bool UDPSocket::Receive(const ReceiveInfo& receiveInfo) const
 	sockaddr_in from{};
 	socklen_t fromLength{ sizeof(from) };
 
-	const auto bytes_received = recvfrom(handle, reinterpret_cast<char*>(const_cast<unsigned char*>(receiveInfo.Buffer.begin())), receiveInfo.Buffer.Bytes(), 0, reinterpret_cast<sockaddr*>(&from), &fromLength);
+	const auto bytes_received = recvfrom(handle, static_cast<char*>(const_cast<void*>(receiveInfo.Buffer.Data())), receiveInfo.Buffer.Bytes(), 0, reinterpret_cast<sockaddr*>(&from), &fromLength);
 
 	receiveInfo.Sender->AddressFromInt(ntohl(from.sin_addr.s_addr));
 	receiveInfo.Sender->Port = ntohs(from.sin_port);

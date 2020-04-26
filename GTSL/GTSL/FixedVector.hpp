@@ -31,8 +31,9 @@ namespace GTSL
 			return data;
 		}
 
-		void copyLength(const length_type elements, void* from)
+		void copyLength(const length_type elements, const void* from)
 		{
+#undef CopyMemory
 			Memory::CopyMemory(sizeof(T) * elements, from, this->data);
 		}
 
@@ -144,7 +145,7 @@ namespace GTSL
 
 		constexpr FixedVector(const std::initializer_list<T>& list) : capacity(list.size()), length(list.size()), data(this->allocate(list.size()))
 		{
-			copyLength(this->length, const_cast<T*>(list.begin()));
+			copyLength(this->length, list.begin());
 		}
 
 		/**

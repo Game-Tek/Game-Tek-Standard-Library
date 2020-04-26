@@ -20,7 +20,7 @@ namespace GTSL
 		//{
 		//}
 
-		String(const char* cstring, AllocatorReference* allocatorReference) : data(StringLength(cstring), const_cast<char*>(cstring), allocatorReference) {}
+		String(const char* cstring, AllocatorReference* allocatorReference) : data(StringLength(cstring), cstring, allocatorReference) {}
 
 		/**
 		 * \brief Creates an String with enough space allocated for length elements.

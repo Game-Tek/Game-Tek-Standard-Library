@@ -36,7 +36,7 @@ void File::WriteToFile(const Ranger<byte>& buffer, uint64& bytesWritten)
 void File::ReadFromFile(const Ranger<byte>& buffer, uint64& bytesRead)
 {
 	DWORD bytes{ 0 };
-	ReadFile(static_cast<HANDLE>(fileHandle), const_cast<byte*>(buffer.begin()), buffer.Bytes(), &bytes, nullptr);
+	ReadFile(static_cast<HANDLE>(fileHandle), const_cast<void*>(buffer.Data()), buffer.Bytes(), &bytes, nullptr);
 	bytesRead = bytes;
 }
 

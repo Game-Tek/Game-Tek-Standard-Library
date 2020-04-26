@@ -432,7 +432,7 @@ namespace GTSL
 		 * \param array Pointer to an array to copy from.
 		 * \param index Index At which to Place the copied elements.
 		 */
-		void Insert(const length_type length, T array[], const length_type index)
+		void Insert(const length_type length, const T array[], const length_type index)
 		{
 			reallocateIfExceeds(length);
 			copyArray(getIterator(index), getIterator(index + length), this->length - index);

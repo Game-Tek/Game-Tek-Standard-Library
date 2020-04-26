@@ -6,16 +6,16 @@
 
 using namespace GTSL;
 
-GTSL::String::String(const length_type length, const char* cstring, AllocatorReference* allocatorReference) : data(length + 1, const_cast<char*>(cstring), allocatorReference)
+GTSL::String::String(const length_type length, const char* cstring, AllocatorReference* allocatorReference) : data(length + 1, cstring, allocatorReference)
 {
-	data.PushBack(char('\0'));
+	data.PushBack('\0');
 }
 
 GTSL::String::String(const length_type length, const String& string, AllocatorReference* allocatorReference) : data(length, string.data.GetData(), allocatorReference)
 {
 	if(length < string.GetLength())
 	{
-		data.PushBack(char('\0'));
+		data.PushBack('\0');
 	}
 }
 
@@ -23,13 +23,13 @@ GTSL::String::String(const length_type length, const String& string, const lengt
 {
 	if(length + offset < string.GetLength())
 	{
-		data.PushBack(char('\0'));
+		data.PushBack('\0');
 	}
 }
 
-GTSL::String& GTSL::String::operator=(const char* cstring)
+String& GTSL::String::operator=(const char* cstring)
 {
-	data.Recreate(StringLength(cstring), const_cast<char*>(cstring));
+	data.Recreate(StringLength(cstring), cstring);
 	return *this;
 }
 
@@ -78,7 +78,7 @@ void GTSL::String::Append(const char* cstring)
 {
 	data.PopBack(); //Get rid of null terminator.
 	data.PushBack(' '); //Push space.
-	data.PushBack(StringLength(cstring), const_cast<char*>(cstring));
+	data.PushBack(StringLength(cstring), cstring);
 	return;
 }
 
@@ -172,7 +172,7 @@ void GTSL::String::Append(const double number)
 
 void GTSL::String::Insert(const char* cstring, const length_type index)
 {
-	data.Insert(index, const_cast<char*>(cstring), StringLength(cstring));
+	data.Insert(index, cstring, StringLength(cstring));
 	return;
 }
 
@@ -250,7 +250,7 @@ void GTSL::String::ReplaceAll(const char* a, const char* with)
 		for (auto& e : ocurrences)
 		{
 			data.MakeSpace(e, with_length - a_length);
-			data.Place(with_length, const_cast<string_type*>(with), e);
+			data.Place(with_length, with, e);
 		}
 
 		if (i == data.GetLength() - 1) //if current index is last index in whole string break out of the loop
