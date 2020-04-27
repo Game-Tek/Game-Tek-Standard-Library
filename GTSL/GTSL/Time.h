@@ -22,16 +22,18 @@ namespace GTSL
 		operator TimeUnit<S, N, R>() const { return TimeUnit<S, N, R>(count * (N / R)); }
 
 		template<typename RET, typename S, storing_type N, storing_type R>
-		RET As(const TimeUnit<S, N, R>& other) { return count * static_cast<RET>((N / R)); }
+		RET As(const TimeUnit<S, N, R>& other) const { return count * static_cast<RET>((N / R)); }
 
+		storing_type Count() const { return count; }
+		
 		template<typename S, storing_type N, storing_type R>
-		TimeUnit operator+(const TimeUnit<S, N, R>& other) { return this->count + (other.count * (N / R)); }
+		TimeUnit operator+(const TimeUnit<S, N, R>& other) const { return this->count + (other.count * (N / R)); }
 		template<typename S, storing_type N, storing_type R>
-		TimeUnit operator-(const TimeUnit<S, N, R>& other) { return this->count - (other.count * (N / R)); }
+		TimeUnit operator-(const TimeUnit<S, N, R>& other) const { return this->count - (other.count * (N / R)); }
 		template<typename S, storing_type N, storing_type R>
-		TimeUnit operator*(const TimeUnit<S, N, R>& other) { return this->count * (other.count * (N / R)); }
+		TimeUnit operator*(const TimeUnit<S, N, R>& other) const { return this->count * (other.count * (N / R)); }
 		template<typename S, storing_type N, storing_type R>
-		TimeUnit operator/(const TimeUnit<S, N, R>& other) { return this->count / (other.count * (N / R)); }
+		TimeUnit operator/(const TimeUnit<S, N, R>& other) const { return this->count / (other.count * (N / R)); }
 
 		template<typename S, storing_type N, storing_type R>
 		TimeUnit& operator+=(const TimeUnit<S, N, R>& other) { this->count += (other.count * (N / R)); return *this; }
@@ -41,6 +43,12 @@ namespace GTSL
 		TimeUnit& operator*=(const TimeUnit<S, N, R>& other) { this->count *= (other.count * (N / R)); return *this; }
 		template<typename S, storing_type N, storing_type R>
 		TimeUnit& operator/=(const TimeUnit<S, N, R>& other) { this->count /= (other.count * (N / R)); return *this; }
+
+		template<typename S, storing_type N, storing_type R>
+		bool operator>(const TimeUnit<S, N, R>& other) const { return this->count > (other.count * (N / R)); }
+
+		template<typename S, storing_type N, storing_type R>
+		bool operator<(const TimeUnit<S, N, R>& other) const { return this->count < (other.count * (N / R)); }
 	};
 	
 	using SignedNanoseconds  = TimeUnit<int64, 1, 1000000000>;

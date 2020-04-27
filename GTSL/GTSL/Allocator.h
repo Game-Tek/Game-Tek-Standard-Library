@@ -51,7 +51,13 @@ namespace GTSL
 		void(AllocatorReference::*allocate)(uint64 size, uint64 alignment, void** data, uint64* allocatedSize) const { nullptr };
 		void(AllocatorReference::*deallocate)(uint64 size, uint64 alignment, void* data) const { nullptr };
 
-	public:		
+	public:
+		AllocatorReference() = default;
+		
+		AllocatorReference(decltype(allocate)& allocateFunc, decltype(deallocate)& deallocateFunc) : allocate(allocateFunc), deallocate(deallocateFunc)
+		{
+		}
+
 		/**
 		 * \brief Allocates memory.
 		 * \param size Number of bytes to allocate.
