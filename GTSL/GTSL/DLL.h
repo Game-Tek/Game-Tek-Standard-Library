@@ -7,16 +7,16 @@ namespace GTSL
 {
 	class DLL
 	{
-#if (_WIN64)
+		#if (_WIN64)
 		void* handle{ nullptr };
-#endif
+		#endif
 
 	public:
 		class DynamicFunction
 		{
-#if (_WIN64)
+			#if (_WIN64)
 			long long(__stdcall* functionPointer)() { nullptr };
-#endif
+			#endif
 		public:
 			using function_signature = decltype(functionPointer);
 			
@@ -31,9 +31,11 @@ namespace GTSL
 			auto Call(ARGS&&... args) -> RET { return reinterpret_cast<RET(*)(ARGS...)>(functionPointer)(GTSL::MakeForwardReference<ARGS>(args)...); }
 		};
 
-		~DLL();
+		DLL() = default;
+		~DLL() = default;
 		
 		void LoadLibrary(const Ranger<char>& ranger);
+		void UnloadLibrary();
 		
 		[[nodiscard]] DynamicFunction LoadDynamicFunction(const Ranger<char>& ranger) const;
 	};
