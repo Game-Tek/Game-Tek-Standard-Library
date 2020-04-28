@@ -13,6 +13,8 @@ namespace GTSL
 	public:
 		using storing_type = ST;
 
+		TimeUnit() = default;
+		
 		TimeUnit(const storing_type time) : count(time * NUM) {}
 		
 		template<typename T>
