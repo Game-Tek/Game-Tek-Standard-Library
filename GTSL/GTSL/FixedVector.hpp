@@ -7,6 +7,8 @@
 #include "Memory.h"
 #include <new>
 
+#include "Ranger.h"
+
 namespace GTSL
 {
 	template <typename T>
@@ -93,6 +95,8 @@ namespace GTSL
 		 */
 		[[nodiscard]] const T& back() const noexcept { return this->data[this->length]; }
 
+		operator Ranger<T>() const { return Ranger<T>(this->length, this->data); }
+		
 		[[nodiscard]] AllocatorReference* GetAllocatorReference() const { return this->allocatorReference; }
 		
 		FixedVector() = default;

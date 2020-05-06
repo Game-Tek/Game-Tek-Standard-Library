@@ -5,6 +5,7 @@
 #include <initializer_list>
 #include "Memory.h"
 #include "Assert.h"
+#include "Ranger.h"
 #include <new>
 
 namespace GTSL
@@ -39,6 +40,9 @@ namespace GTSL
 		[[nodiscard]] constexpr const T& front() const noexcept { return this->data[0]; }
 
 		[[nodiscard]] constexpr const T& back() const noexcept { return this->data[this->length]; }
+
+		Ranger<T> GetRanger() { return Ranger<T>(this->length, this->begin()); }
+		operator GTSL::Ranger<T>() { return Ranger<T>(this->length, this->begin()); }
 
 		constexpr Array() noexcept = default;
 

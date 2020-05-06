@@ -12,6 +12,8 @@ namespace GTSL
 	using uint64 = unsigned long long;
 	using int64 = long long;
 
+	using UTF8 = int8;
+	
 	using float32 = float;
 	using float64 = double;
 	

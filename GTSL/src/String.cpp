@@ -6,12 +6,12 @@
 
 using namespace GTSL;
 
-GTSL::String::String(const length_type length, const char* cstring, AllocatorReference* allocatorReference) : data(length + 1, cstring, allocatorReference)
+String::String(const length_type length, const char* cstring, AllocatorReference* allocatorReference) : data(length + 1, cstring, allocatorReference)
 {
 	data.PushBack('\0');
 }
 
-GTSL::String::String(const length_type length, const String& string, AllocatorReference* allocatorReference) : data(length, string.data.GetData(), allocatorReference)
+String::String(const length_type length, const String& string, AllocatorReference* allocatorReference) : data(length, string.data.GetData(), allocatorReference)
 {
 	if(length < string.GetLength())
 	{
@@ -19,7 +19,7 @@ GTSL::String::String(const length_type length, const String& string, AllocatorRe
 	}
 }
 
-GTSL::String::String(const length_type length, const String& string, const length_type offset, AllocatorReference* allocatorReference) : data(length, string.data.GetData() + offset, allocatorReference)
+String::String(const length_type length, const String& string, const length_type offset, AllocatorReference* allocatorReference) : data(length, string.data.GetData() + offset, allocatorReference)
 {
 	if(length + offset < string.GetLength())
 	{
@@ -27,13 +27,13 @@ GTSL::String::String(const length_type length, const String& string, const lengt
 	}
 }
 
-String& GTSL::String::operator=(const char* cstring)
+String& String::operator=(const char* cstring)
 {
 	data.Recreate(StringLength(cstring), cstring);
 	return *this;
 }
 
-GTSL::String& GTSL::String::operator+=(char c)
+String& String::operator+=(char c)
 {
 	data.PopBack();
 	data.PushBack(c);
@@ -41,19 +41,19 @@ GTSL::String& GTSL::String::operator+=(char c)
 	return *this;
 }
 
-GTSL::String& GTSL::String::operator+=(const char* cstring)
+String& String::operator+=(const char* cstring)
 {
 	data.PopBack();
 	data.PushBack(StringLength(cstring), cstring);
 	return *this;
 }
 
-GTSL::String& GTSL::String::operator+=(const String& string)
+String& String::operator+=(const String& string)
 {
 	data.PopBack(); data.PushBack(string.data); return *this;
 }
 
-bool GTSL::String::operator==(const String& other) const
+bool String::operator==(const String& other) const
 {
 	//Discard if Length of strings is not equal, first because it helps us discard before even starting, second because we can't compare strings of different sizes.
 	if (data.GetLength() != other.data.GetLength()) return false;
@@ -63,7 +63,7 @@ bool GTSL::String::operator==(const String& other) const
 	return true;
 }
 
-bool GTSL::String::NonSensitiveComp(const String& other) const
+bool String::NonSensitiveComp(const String& other) const
 {
 	//Discard if Length of strings is not equal, first because it helps us discard before even starting, second because we can't compare strings of different sizes.
 	if (data.GetLength() != other.data.GetLength()) return false;
@@ -74,134 +74,122 @@ bool GTSL::String::NonSensitiveComp(const String& other) const
 	return true;
 }
 
-void GTSL::String::Append(const char* cstring)
+void String::Append(const char* cstring)
 {
-	data.PopBack(); //Get rid of null terminator.
-	data.PushBack(' '); //Push space.
+	data.Place(data.GetLength(), ' '); //Push space.
 	data.PushBack(StringLength(cstring), cstring);
 	return;
 }
 
-void GTSL::String::Append(const String& string)
+void String::Append(const String& string)
 {
-	data.PopBack(); //Get rid of null terminator.
-	data.PushBack(' '); //Push space.
+	data.Place(data.GetLength(), ' '); //Push space.
 	data.PushBack(string.data); //Push new string.
 	return;
 }
 
-void GTSL::String::Append(const uint8 number)
+void String::Append(const uint8 number)
 {
-	data.PopBack();
-	data.PushBack(' ');
+	data.Place(data.GetLength(), ' '); //Push space.
 	data.Resize(data.GetLength() + 3 + 1);
 	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%d", number) + 1);
 }
 
-void GTSL::String::Append(const int8 number)
+void String::Append(const int8 number)
 {
-	data.PopBack();
-	data.PushBack(' ');
+	data.Place(data.GetLength(), ' '); //Push space.
 	data.Resize(data.GetLength() + 4 + 1);
 	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%d", number) + 1);
 }
 
-void GTSL::String::Append(const uint16 number)
+void String::Append(const uint16 number)
 {
-	data.PopBack();
-	data.PushBack(' ');
+	data.Place(data.GetLength(), ' '); //Push space.
 	data.Resize(data.GetLength() + 6 + 1);
 	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%hu", number) + 1);
 }
 
-void GTSL::String::Append(const int16 number)
+void String::Append(const int16 number)
 {
-	data.PopBack();
-	data.PushBack(' ');
+	data.Place(data.GetLength(), ' '); //Push space.
 	data.Resize(data.GetLength() + 7 + 1);
 	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%hi", number) + 1);
 }
 
-void GTSL::String::Append(const uint32 number)
+void String::Append(const uint32 number)
 {
-	data.PopBack();
-	data.PushBack(' ');
+	data.Place(data.GetLength(), ' '); //Push space.
 	data.Resize(data.GetLength() + 10 + 1);
 	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%lu", number) + 1);
 }
 
-void GTSL::String::Append(const int32 number)
+void String::Append(const int32 number)
 {
-	data.PopBack();
-	data.PushBack(' ');
+	data.Place(data.GetLength(), ' '); //Push space.
 	data.Resize(data.GetLength() + 11 + 1);
 	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%d", number) + 1);
 }
 
-void GTSL::String::Append(const uint64 number)
+void String::Append(const uint64 number)
 {
-	data.PopBack();
-	data.PushBack(' ');
+	data.Place(data.GetLength(), ' '); //Push space.
 	data.Resize(data.GetLength() + 20 + 1);
 	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%llu", number) + 1);
 }
 
-void GTSL::String::Append(const int64 number)
+void String::Append(const int64 number)
 {
-	data.PopBack();
-	data.PushBack(' ');
+	data.Place(data.GetLength(), ' '); //Push space.
 	data.Resize(data.GetLength() + 21 + 1);
 	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%lld", number) + 1);
 }
 
-void GTSL::String::Append(const float number)
+void String::Append(const float number)
 {
-	data.PopBack();
-	data.PushBack(' ');
+	data.Place(data.GetLength(), ' '); //Push space.
 	data.Resize(data.GetLength() + 31 + 1);
 	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%f", number) + 1);
 }
 
-void GTSL::String::Append(const double number)
+void String::Append(const double number)
 {
-	data.PopBack();
-	data.PushBack(' ');
+	data.Place(data.GetLength(), ' '); //Push space.
 	data.Resize(data.GetLength() + 61 + 1);
 	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%lf", number) + 1);
 }
 
-void GTSL::String::Insert(const char* cstring, const length_type index)
+void String::Insert(const char* cstring, const length_type index)
 {
 	data.Insert(index, cstring, StringLength(cstring));
 	return;
 }
 
-GTSL::String::length_type GTSL::String::FindFirst(const char c) const
+String::length_type String::FindFirst(const char c) const
 {
 	length_type i = 0;
 	for (const auto& e : data) { if (e == c) { return i; } ++i; }
 	return npos();
 }
 
-GTSL::String::length_type GTSL::String::FindLast(const char c) const
+String::length_type String::FindLast(const char c) const
 {
 	length_type i = 0;
-	for (auto& e : data) { if (e == c) { return i; } ++i; }
+	for (const auto& e : data) { if (e == c) { return i; } ++i; }
 	return npos();
 }
 
-void GTSL::String::Drop(const length_type from)
+void String::Drop(const length_type from)
 {
 	data.Resize(from + 1);
 	data[from + 1] = '\0';
 }
 
-void GTSL::String::ReplaceAll(const char a, const char with)
+void String::ReplaceAll(const char a, const char with)
 {
 	for (auto& c : data) { if (c == a) { c = with; } }
 }
 
-void GTSL::String::ReplaceAll(const char* a, const char* with)
+void String::ReplaceAll(const char* a, const char* with)
 {
 	Array<uint32, 24, uint8> ocurrences; //cache ocurrences so as to not perform an array Resize every time we Find a match
 
@@ -260,13 +248,13 @@ void GTSL::String::ReplaceAll(const char* a, const char* with)
 	}
 }
 
-char GTSL::String::toLowerCase(char c)
+char String::toLowerCase(char c)
 {
 	if ('A' <= c && c <= 'Z') return c += ('a' - 'A');
 	return c;
 }
 
-char GTSL::String::toUpperCase(char c)
+char String::toUpperCase(char c)
 {
 	if ('a' <= c && c <= 'z') return c += ('a' - 'A');
 	return c;

@@ -36,7 +36,7 @@ void VulkanShaders::CompileShader(const GTSL::String& code, const GTSL::String& 
 		//BE_BASIC_LOG_ERROR("Failed to compile shader: %s. Errors: %s", shaderName.c_str(), shaderc_module.GetErrorMessage().c_str())
 	}
 
-	result.Initialize(shaderc_module.end() - shaderc_module.begin(), shaderc_module.begin());
+	result.Initialize(shaderc_module.begin(), shaderc_module.end());
 }
 
 VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanRenderDevice* vulkanRenderDevice, const GAL::GraphicsPipelineCreateInfo& _GPCI)

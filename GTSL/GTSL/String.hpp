@@ -9,7 +9,7 @@ namespace GTSL
 {
 	class String
 	{
-		using string_type = char;
+		using string_type = UTF8;
 		using length_type = Vector<string_type>::length_type;
 	public:
 		//Constructs an Empty String.

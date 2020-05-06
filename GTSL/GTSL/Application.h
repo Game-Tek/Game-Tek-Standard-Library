@@ -1,12 +1,18 @@
 #pragma once
 
+#include "Ranger.h"
+#include "StaticString.hpp"
+
 namespace GTSL
 {
 	class Window;
 
 	class Application
 	{
-
+	public:
+		static constexpr uint16 MaxPathLength{ 2048 };
+	private:
+		StaticString<MaxPathLength> path;
 	public:
 		struct ApplicationCreateInfo
 		{
@@ -25,5 +31,7 @@ namespace GTSL
 			void* HINSTANCE{ nullptr };
 		};
 		void GetNativeHandles(void* nativeHandles);
+
+		Ranger<char> GetPathToExecutable();
 	};
 }

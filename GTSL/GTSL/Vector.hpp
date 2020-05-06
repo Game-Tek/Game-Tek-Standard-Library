@@ -8,6 +8,8 @@
 #include "Allocator.h"
 #include <new>
 
+#include "Ranger.h"
+
 namespace GTSL
 {
 	template <typename T>
@@ -266,8 +268,8 @@ namespace GTSL
 		 */
 		[[nodiscard]] const T& back() const noexcept { return this->data[this->length]; }
 
-
-
+		operator Ranger<T>() const { return Ranger<T>(this->length, this->data); }
+		
 		/**
 		 * \brief Resizes the array(if necessary, does not reallocate for downsize) to accomodate count T elements.
 		 * \param count Number of new T elements to accomodate.
@@ -275,26 +277,36 @@ namespace GTSL
 		void Resize(const length_type count)
 		{
 			reallocateIfExceeds(count);
+			this->length = count;
 		}
 
 		/**
 		 * \brief Initializes the Vector with space for count elements. Useful for when Vector was initialized with no allocation. Calling this function when the array is not Empty will lead to a memory leak.
 		 * \param count Number of T elements to allocate space for.
 		 */
-		void Initialize(const length_type count)
+		void Initialize(const length_type count, AllocatorReference* allocatorReference = nullptr)
 		{
+			this->allocatorReference = allocatorReference;
 			GTSL_ASSERT(this->data, "Array pointer is not null!")
 			this->data = allocate(count);
 			this->length = 0;
 		}
 
+		void Initialize(const const_iterator from, const const_iterator to, AllocatorReference* allocatorReference = nullptr)
+		{
+			this->allocatorReference = allocatorReference;
+			this->data = allocate(to - from);
+			this->length = to - from;
+		}
+		
 		/**
 		* \brief Initializes the Vector with space for count elements and copies data to it's array. Useful for when Vector was initialized with no allocation. Calling this function when the array is not Empty will lead to a memory leak.
 		* \param count Number of T elements to allocate space for and to copy from data.
 		* \param data Pointer to an array of T elements to copy from.
 		*/
-		void Initialize(const length_type count, const T data[])
+		void Initialize(const length_type count, const T data[], AllocatorReference* allocatorReference = nullptr)
 		{
+			this->allocatorReference = allocatorReference;
 			this->data = allocate(count);
 			copyArray(data, this->data, count);
 			this->length = count;
@@ -306,8 +318,9 @@ namespace GTSL
 		* \param length Number of elements to copy from data.
 		* \param data Pointer to an array of T elements to copy from.
 		*/
-		void Initialize(const length_type count, const length_type length, const T data[])
+		void Initialize(const length_type count, const length_type length, const T data[], AllocatorReference* allocatorReference = nullptr)
 		{
+			this->allocatorReference = allocatorReference;
 			this->data = allocate(count);
 			copyArray(data, this->data, length);
 			this->length = length;
@@ -425,7 +438,6 @@ namespace GTSL
 			return this->length += 1;
 		}
 
-		//Places the passed array At the specified index and shifts the rest of the array forward to fit it in.
 		/**
 		 * \brief
 		 * \param length Number of elements to Insert and how many to copy from array.
@@ -582,6 +594,12 @@ namespace GTSL
 		[[nodiscard]] length_type GetCapacity() const noexcept { return this->capacity; }
 
 		/**
+		 * \brief Return the number of remaining slots sin the vector.
+		 * \return Remaining slots in the vector.
+		 */
+		[[nodiscard]] length_type GetRemainingLength() const noexcept { return this->capacity - this->length; }
+		
+		/**
 		 * \brief Return a pointer to the internal array.
 		 * \return Pointer to the internal array.
 		 */
@@ -604,5 +622,13 @@ namespace GTSL
 		 * \return Size of allocated slots.
 		 */
 		[[nodiscard]] size_t GetCapacitySize() const noexcept { return this->capacity * sizeof(T); }
+
+		/**
+		 * \brief Returns the size(bytes) of the remaining free slots.
+		 * \return Size(bytes) of the remaining free slots.
+		 */
+		[[nodiscard]] size_t GetRemainingLengthSize() const noexcept { return this->GetRemainingLength() * sizeof(T); }
+
+		[[nodiscard]] Ranger<T> GetRanger() const noexcept { return Ranger<T>(this->data, this->data + this->length); }
 	};
 }

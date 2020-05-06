@@ -4,7 +4,6 @@
 
 using namespace GTSL;
 
-
 void File::OpenFile(const Ranger<char>& path, OpenFileMode openFileMode)
 {
 	uint64 open_mode{ 0 };
