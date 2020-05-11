@@ -2,8 +2,6 @@
 
 #include "Core.h"
 
-#undef CopyMemory
-
 namespace GTSL
 {
 	class Memory
@@ -11,7 +9,7 @@ namespace GTSL
 	public:
 		static void Allocate(uint64 size, void** data);
 		static void Deallocate(uint64 size, void* data);
-		static void CopyMemory(uint64 size, const void* from, void* to);
+		static void MemCopy(uint64 size, const void* from, void* to);
 		static void SetZero(uint64 size, void* data);
 
 		static void* AlignedPointer(const uint64 alignment, void* data)

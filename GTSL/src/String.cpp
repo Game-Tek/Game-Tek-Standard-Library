@@ -88,6 +88,11 @@ void String::Append(const String& string)
 	return;
 }
 
+void String::Append(const Ranger<UTF8>& ranger)
+{
+	data.PushBack(ranger);
+}
+
 void String::Append(const uint8 number)
 {
 	data.Place(data.GetLength(), ' '); //Push space.

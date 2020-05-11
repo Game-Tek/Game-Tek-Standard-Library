@@ -33,14 +33,14 @@ namespace GTSL
 		 * \param length length to use from the cstring array
 		 * \param cstring array to copy from
 		 */
-		String(const length_type length, const char* cstring, AllocatorReference* allocatorReference);
+		String(length_type length, const char* cstring, AllocatorReference* allocatorReference);
 
 		/**
 		 * \brief Creates an String from a length and an String. Assumes the string has no null terminator character. If the string you pass happens to have a null terminator you should insert one character less.
 		 * \param length Length to use from the String.
 		 * \param string String to copy characters from.
 		 */
-		String(const length_type length, const String& string, AllocatorReference* allocatorReference);
+		String(length_type length, const String& string, AllocatorReference* allocatorReference);
 
 		/**
 		 * \brief Creates an String from a length an String and an offset. Assumes the string has no null terminator character. If the string you pass happens to have a null terminator you should insert one character less.
@@ -48,7 +48,7 @@ namespace GTSL
 		 * \param string String to copy from.
 		 * \param offset Offset from the start of the string to start copying from.
 		 */
-		String(const length_type length, const String& string, const length_type offset, AllocatorReference* allocatorReference);
+		String(length_type length, const String& string, length_type offset, AllocatorReference* allocatorReference);
 
 		String(const String& other) = default;
 		String(String&& other) noexcept = default;
@@ -94,6 +94,8 @@ namespace GTSL
 		void Append(const char* cstring);
 		//Places the String after this String with a space in the middle.
 		void Append(const String& string);
+
+		void Append(const Ranger<UTF8>& ranger);
 
 		void Append(uint8 number);
 		void Append(int8 number);

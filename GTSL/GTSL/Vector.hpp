@@ -36,7 +36,7 @@ namespace GTSL
 		 */
 		static void copyArray(const T* from, T* to, const length_type elementCount)
 		{
-			Memory::CopyMemory(elementCount * sizeof(T), from, to);
+			Memory::MemCopy(elementCount * sizeof(T), from, to);
 		}
 
 		/**
@@ -376,6 +376,13 @@ namespace GTSL
 			return this->length += length;
 		}
 
+		length_type PushBack(const Ranger<T>& ranger)
+		{
+			reallocateIfExceeds(ranger.ElementCount());
+			copyArray(ranger.begin(), getIterator(this->length), ranger.ElementCount());
+			return this->length += ranger.ElementCount();
+		}
+		
 		/**
 		 * \brief Places a copy of the elements from the passed in Vector At the end of the vector.
 		 * \param other Vector to copy elements from.

@@ -1,10 +1,13 @@
 #pragma once
 
+#include "Core.h"
+
 namespace GTSL
 {
 	template<typename T>
 	class Ranger
 	{
+	protected:
 		T* from = 0, * to = 0;
 
 	public:
@@ -26,9 +29,16 @@ namespace GTSL
 		constexpr T* end() noexcept { return to; }
 		[[nodiscard]] constexpr const T* end() const noexcept { return to; }
 
-		[[nodiscard]] constexpr uint64 Bytes() const noexcept { return ((to - from) / sizeof(type) * sizeof(type)); }
+		[[nodiscard]] constexpr uint64 Bytes() const noexcept { return ((to - from) * sizeof(type)); }
+
+		[[nodiscard]] uint64 ElementCount() const noexcept { return (to - from); }
 		
 		[[nodiscard]] constexpr void* Data() noexcept { return from; }
 		[[nodiscard]] constexpr const void* Data() const noexcept { return from; }
+		
+		template<size_t L>
+		constexpr Ranger(char const (&s)[L]) : from(&s), to(&s + L)
+		{
+		}
 	};
 }

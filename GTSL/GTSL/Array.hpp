@@ -13,12 +13,12 @@ namespace GTSL
 	template <typename T, size_t CAPACITY, typename LT = uint32>
 	class Array
 	{
-		byte data[CAPACITY * sizeof(T)];
+		byte data[CAPACITY * sizeof(T)]{ 0 };
 		LT length = 0;
 
 		constexpr void copyToData(const void* from, const LT length) noexcept
 		{
-			Memory::CopyMemory(length * sizeof(T), from, this->data);
+			Memory::MemCopy(length * sizeof(T), from, this->data);
 		}
 
 	public:
@@ -55,9 +55,9 @@ namespace GTSL
 		{
 		}
 
-		constexpr Array(const LT length, const T array[]) noexcept : length(length)
+		constexpr Array(const Ranger<T>& ranger) noexcept : length(ranger.ElementCount())
 		{
-			copyToData(array, length);
+			copyToData(ranger.begin(), ranger.ElementCount());
 		}
 
 		constexpr Array(const Array& other) noexcept : length(length)
@@ -105,15 +105,18 @@ namespace GTSL
 			return reinterpret_cast<T&>(const_cast<byte&>(this->data[i]));
 		}
 
+		constexpr bool operator==(const Array& other)
+		{
+			for (iterator begin = this->begin(), begin_other = other.begin(); begin != this->end(); ++begin)
+			{
+				if (*begin != *begin_other) { return false; }
+			}
+			return true;
+		}
+		
 		constexpr T* GetData() noexcept { return reinterpret_cast<T*>(&this->data); }
 
 		[[nodiscard]] constexpr const T* GetData() const noexcept { return reinterpret_cast<const T*>(this->data); }
-
-		constexpr LT PushBack(LT length, const T array[])
-		{
-			Memory::CopyMemory(length, array, this->data + this->length);
-			return this->length += length;
-		}
 
 		constexpr LT PushBack(const T& obj) noexcept
 		{
@@ -127,6 +130,12 @@ namespace GTSL
 			GTSL_ASSERT((this->length + 1) > CAPACITY, "Array is not long enough to insert any more elements!");
 			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeTransferReference(obj));
 			return ++this->length;
+		}
+
+		constexpr LT PushBack(const Ranger<T>& ranger) noexcept
+		{
+			copyToData(ranger.begin(), ranger.ElementCount());
+			return this->length += ranger.ElementCount();
 		}
 
 		template<typename... ARGS>

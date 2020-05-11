@@ -2,7 +2,6 @@
 
 #include "Core.h"
 
-#include "String.hpp"
 #include "Ranger.h"
 
 namespace GTSL
@@ -15,48 +14,29 @@ namespace GTSL
 		using HashType = uint64;
 
 	protected:
-		static constexpr uint32 stringLength(const char* cstring)
+		static constexpr HashType hashString(const Ranger<UTF8>& ranger) noexcept
 		{
-			uint32 length = 0;	while (true) { if (cstring[length] == '\0') { return length; } ++length; }
-		}
+			HashType primary_hash(525201411107845655ull);
+			HashType secondary_hash(0xAAAAAAAAAAAAAAAAull);
 
-		static constexpr HashType hashString(const uint32 length, const char* text) noexcept
-		{
-			HashType primaryHash(525201411107845655ull);
-			HashType secondaryHash(0xAAAAAAAAAAAAAAAAull);
-
-			for (uint32 i{ 0 }; i < length; ++i)
+			for (auto const& e : ranger)
 			{
-				primaryHash ^= text[i];
-				secondaryHash ^= text[i];
-				primaryHash *= 0x5bd1e9955bd1e995;
-				secondaryHash *= 0x80638e;
-				primaryHash ^= primaryHash >> 47;
-				secondaryHash ^= secondaryHash >> 35;
+				primary_hash ^= e; secondary_hash ^= e;
+				primary_hash *= 0x5bd1e9955bd1e995; secondary_hash *= 0x80638e;
+				primary_hash ^= primary_hash >> 47; secondary_hash ^= secondary_hash >> 35;
 			}
 
-			//primaryHash ^= secondaryHash + 0x9e3779b9 + (primaryHash << 6) + (primaryHash >> 2);
-
-			return ((primaryHash & 0xFFFFFFFF00000000ull) ^ (secondaryHash & 0x00000000FFFFFFFFull));
+			return (primary_hash & 0xFFFFFFFF00000000ull) ^ (secondary_hash & 0x00000000FFFFFFFFull);
 		}
+		
 	public:
-
-		constexpr static HashType HashString(const char* text) noexcept { return hashString(stringLength(text) - 1, text); };
-
 		constexpr Id64() = default;
 
 		template<size_t N>
-		constexpr Id64(const char(&literal)[N]) noexcept : hashValue(hashString(N - 1, *literal))
-		{
-		}
-
-		constexpr Id64(const char* cstring) noexcept : hashValue(hashString(stringLength(cstring) - 1, cstring))
-		{
-		}
-		
-		constexpr explicit Id64(HashType id) noexcept;
-		explicit Id64(const String& string);
-		constexpr Id64(const Id64& other) = default;
+		constexpr Id64(const char(&literal)[N]) noexcept : hashValue(hashString(N - 1, *literal)) {}
+		constexpr Id64(const Ranger<UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
+		constexpr Id64(const HashType id) noexcept : hashValue(id) {}
+		constexpr Id64(const Id64& other) noexcept = default;
 		constexpr Id64(Id64&& other) noexcept : hashValue(other.hashValue) { other.hashValue = 0; }
 
 		~Id64() noexcept = default;
@@ -65,13 +45,10 @@ namespace GTSL
 		constexpr bool operator==(const Id64& other) const noexcept { return hashValue == other.hashValue; }
 		constexpr Id64& operator=(Id64&& other) noexcept { hashValue = other.hashValue; other.hashValue = 0; return *this; }
 
-		constexpr HashType GetID() noexcept { return hashValue; }
+		[[nodiscard]] constexpr HashType GetID() noexcept { return hashValue; }
 		[[nodiscard]] constexpr HashType GetID() const noexcept { return hashValue; }
 
-		constexpr operator HashType() const { return hashValue; }
-
-		static HashType HashString(const String& string) noexcept;
-
+		[[nodiscard]] constexpr operator HashType() const noexcept { return hashValue; }
 	private:
 		HashType hashValue = 0;
 	};

@@ -19,7 +19,7 @@ namespace GTSL
 			uint64 new_capacity{ 0 };
 			void* new_data{ nullptr };
 			allocatorReference->Allocate(newLength, alignof(T), &new_data, &new_capacity);
-			Memory::CopyMemory(elementCount, this->data, new_data);
+			Memory::MemCopy(elementCount, this->data, new_data);
 			allocatorReference->Deallocate(capacity, alignof(T), reinterpret_cast<void*>(data));
 			this->capacity = static_cast<LT>(new_capacity);
 			this->data = static_cast<T*>(new_data);

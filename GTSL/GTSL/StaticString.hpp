@@ -9,16 +9,20 @@ namespace GTSL
 	{
 		Array<CL, N> array;
 
-		static constexpr uint32 stringLength(const char* text)
+		static constexpr uint32 stringLength(const char* text) noexcept
 		{
 			uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i + 1;
 		}
 	public:
 		constexpr StaticString() noexcept = default;
 
-		constexpr StaticString(const char* cstring) : array(stringLength(cstring), cstring)
+		constexpr StaticString(const char* cstring) : array(Ranger<CL>(stringLength(cstring), cstring))
 		{
 			GTSL_ASSERT(stringLength(cstring) > N, "Input string longer than static string size!");
+		}
+
+		constexpr StaticString(const Ranger<CL>& ranger) : array(ranger)
+		{
 		}
 
 		[[nodiscard]] CL* begin() { return this->array.begin(); }
@@ -33,13 +37,6 @@ namespace GTSL
 		
 		GTSL::Ranger<CL> GetRanger() { return array.GetRanger(); }
 		operator GTSL::Ranger<CL>() { return array; }
-
-		StaticString& operator+=(const char* cstring)
-		{
-			this->array.PopBack();
-			this->array.PushBack(stringLength(cstring), cstring);
-			return *this;
-		}
 
 		void Drop(const uint32 from)
 		{
@@ -63,10 +60,18 @@ namespace GTSL
 			return npos();
 		}
 
-		constexpr StaticString& operator<<(const char* text)
+		constexpr StaticString& operator+=(const char* cstring) noexcept
 		{
-			GTSL_ASSERT(stringLength(text) + this->array.GetLength() > N, "CString does not fit in static string.")
-				for (uint32 i = 0; i < stringLength(text); ++i) { this->array[i] = text[i]; }
+			this->array.PopBack();
+			this->array.PushBack(Ranger<CL>(stringLength(cstring), cstring));
+			return *this;
+		}
+		
+		constexpr StaticString& operator+=(const Ranger<UTF8>& ranger)
+		{
+			GTSL_ASSERT(ranger.ElementCount() + this->array.GetLength() > N, "CString does not fit in static string.")
+			this->array.PopBack();
+			this->array.PushBack(ranger);
 			return *this;
 		}
 	};

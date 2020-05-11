@@ -4,17 +4,6 @@
 
 using namespace GTSL;
 
-
-Id64::Id64(const String& string) : hashValue(HashString(string))
-{
-}
-
-constexpr Id64::Id64(const HashType id) noexcept : hashValue(id)
-{
-}
-
-Id64::HashType Id64::HashString(const String& fstring) noexcept { return hashString(fstring.GetLength(), fstring.c_str()); }
-
 constexpr uint32 Id32::hashString(const uint32 stringLength, const char* str) noexcept
 {
 	uint32 primaryHash(525410765);

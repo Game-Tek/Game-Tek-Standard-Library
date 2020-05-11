@@ -15,7 +15,7 @@ void Memory::Deallocate(const uint64 size, void* data)
 	std::free(data);
 }
 
-void Memory::CopyMemory(uint64 size, const void* from, void* to)
+void Memory::MemCopy(uint64 size, const void* from, void* to)
 {
 	std::memcpy(to, from, size);
 }
