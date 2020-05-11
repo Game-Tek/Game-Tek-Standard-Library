@@ -35,7 +35,6 @@ namespace GTSL
 
 		void copyLength(const length_type elements, const void* from)
 		{
-#undef CopyMemory
 			Memory::MemCopy(sizeof(T) * elements, from, this->data);
 		}
 
