@@ -21,6 +21,11 @@ namespace GTSL
 			Memory::MemCopy(length * sizeof(T), from, this->data);
 		}
 
+		void copy(const LT length, const void* from, const void* to)
+		{
+			Memory::MemCopy(length * sizeof(T), from, to);
+		}
+
 	public:
 		typedef T* iterator;
 		typedef const T* const_iterator;
@@ -42,7 +47,7 @@ namespace GTSL
 		[[nodiscard]] constexpr const T& back() const noexcept { return this->data[this->length]; }
 
 		Ranger<T> GetRanger() { return Ranger<T>(this->length, this->begin()); }
-		operator GTSL::Ranger<T>() { return Ranger<T>(this->length, this->begin()); }
+		operator GTSL::Ranger<T>() const { return Ranger<T>(this->length, this->begin()); }
 
 		constexpr Array() noexcept = default;
 
@@ -113,7 +118,7 @@ namespace GTSL
 			}
 			return true;
 		}
-		
+
 		constexpr T* GetData() noexcept { return reinterpret_cast<T*>(&this->data); }
 
 		[[nodiscard]] constexpr const T* GetData() const noexcept { return reinterpret_cast<const T*>(this->data); }
@@ -135,6 +140,12 @@ namespace GTSL
 		constexpr LT PushBack(const Ranger<T>& ranger) noexcept
 		{
 			copyToData(ranger.begin(), ranger.ElementCount());
+			return this->length += ranger.ElementCount();
+		}
+
+		constexpr LT Insert(const LT index, const Ranger<T>& ranger) noexcept
+		{
+			copy(ranger.ElementCount(), ranger.begin(), this->data + index);
 			return this->length += ranger.ElementCount();
 		}
 

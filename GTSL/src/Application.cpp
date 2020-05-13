@@ -10,11 +10,10 @@
 
 using namespace GTSL;
 
-Application::Application(const ApplicationCreateInfo& applicationCreateInfo)
+Application::Application(const ApplicationCreateInfo& applicationCreateInfo) : handle(GetModuleHandleA(NULL))
 {
-	path.Resize(GetModuleFileNameA(NULL, path.begin(), path.GetCapacity()) + 1);
+	path.Resize(GetModuleFileNameA(static_cast<HMODULE>(handle), path.begin(), path.GetCapacity()) + 1);
 	//GTSL_ASSERT(GetModuleFileNameA(NULL, a, 512), "Failed to get Win32 module file name!")
-	path.Drop(path.FindLast('\\') + 1);
 	path.ReplaceAll('\\', '/');
 }
 
@@ -45,10 +44,7 @@ void Application::Close()
 
 void Application::GetNativeHandles(void* nativeHandles)
 {
-	static_cast<Win32NativeHandles*>(nativeHandles)->HINSTANCE = GetModuleHandle(nullptr);
+	static_cast<Win32NativeHandles*>(nativeHandles)->HINSTANCE = static_cast<HMODULE>(handle);
 }
 
-Ranger<char> Application::GetPathToExecutable()
-{
-	return path;
-}
+Ranger<UTF8> Application::GetPathToExecutable() const { return path; }

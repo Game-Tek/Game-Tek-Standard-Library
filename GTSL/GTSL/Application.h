@@ -11,8 +11,11 @@ namespace GTSL
 	{
 	public:
 		static constexpr uint16 MaxPathLength{ 2048 };
+		
 	private:
 		StaticString<MaxPathLength> path;
+		void* handle{ nullptr };
+		
 	public:
 		struct ApplicationCreateInfo
 		{
@@ -32,6 +35,6 @@ namespace GTSL
 		};
 		void GetNativeHandles(void* nativeHandles);
 
-		Ranger<char> GetPathToExecutable();
+		[[nodiscard]] Ranger<UTF8> GetPathToExecutable() const;
 	};
 }

@@ -83,8 +83,7 @@ namespace GTSL
 		char* c_str() { return data.GetData(); }
 
 		operator Ranger<UTF8>() const { return Ranger<UTF8>(data); }
-		
-		//Returns the contents of this String as a C-String.
+
 		[[nodiscard]] const char* c_str() const { return data.GetData(); }
 
 		//Return the length of this String. Does not take into account the null terminator character.

@@ -32,8 +32,6 @@ namespace GTSL
 	public:
 		constexpr Id64() = default;
 
-		template<size_t N>
-		constexpr Id64(const char(&literal)[N]) noexcept : hashValue(hashString(N - 1, *literal)) {}
 		constexpr Id64(const Ranger<UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
 		constexpr Id64(const HashType id) noexcept : hashValue(id) {}
 		constexpr Id64(const Id64& other) noexcept = default;
