@@ -40,8 +40,8 @@ namespace GTSL
 
 		void Drop(const uint32 from)
 		{
-			this->array.Resize(from + 1);
-			this->array[from + 1] = '\0';
+			this->array.Resize(from);
+			this->array[from] = '\0';
 		}
 
 		void ReplaceAll(UTF8 a, UTF8 with)
@@ -53,16 +53,16 @@ namespace GTSL
 
 		[[nodiscard]] const char* CString() const { return this->array.GetData(); }
 
-		uint32 FindLast(char c)
+		uint32 FindLast(UTF8 c)
 		{
-			uint32 i{ 0 };
-			for (auto& e : this->array) { if (e == c) { return i; } ++i; }
+			uint32 i{ this->GetLength() };
+			for (auto begin = this->array.end(); begin != this->array.begin(); --begin) { if (*begin == c) { return i; } --i; }
 			return npos();
 		}
 
 		constexpr StaticString& operator+=(const char* cstring) noexcept
 		{
-			this->array.PushBack(Ranger<UTF8>(stringLength(cstring), cstring));
+			this->array.PushBack(Ranger<UTF8>(stringLength(cstring) - 1, cstring));
 			return *this;
 		}
 

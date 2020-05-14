@@ -21,7 +21,7 @@ namespace GTSL
 			Memory::MemCopy(length * sizeof(T), from, this->data);
 		}
 
-		void copy(const LT length, const void* from, const void* to)
+		void copy(const LT length, const void* from, void* to)
 		{
 			Memory::MemCopy(length * sizeof(T), from, to);
 		}
@@ -139,7 +139,7 @@ namespace GTSL
 
 		constexpr LT PushBack(const Ranger<T>& ranger) noexcept
 		{
-			copyToData(ranger.begin(), ranger.ElementCount());
+			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
 			return this->length += ranger.ElementCount();
 		}
 

@@ -51,4 +51,42 @@ namespace GTSL
 			}
 		}
 	};
+
+	class uint64_2
+	{
+		__m128i data;
+
+	public:
+		uint64_2(const AlignedPointer<uint64, 16> alignedPointer) : data(_mm_load_si128(reinterpret_cast<__m128i*>(alignedPointer.Get())))
+		{
+		}
+
+		uint64_2(const UnalignedPointer<uint64> unalignedPointer) : data(_mm_load_si128(reinterpret_cast<__m128i*>(unalignedPointer.Get())))
+		{
+		}
+
+		uint64_2(const uint64 a, const uint64 b) : data(_mm_set_epi64x(b, a))
+		{
+		}
+
+		uint64_2& operator+=(const uint64_2& other) { data = _mm_add_epi64(data, other.data); return *this; }
+		uint64_2& operator-=(const uint64_2& other) { data = _mm_sub_epi64(data, other.data); return *this; }
+		//uint64_8& operator*=(const uint64_8& other) { data = _mm256_mullo_epi64(data, other.data); return *this; }
+		uint64_2& operator/=(const uint64_2& other) { data = _mm_div_epi64(data, other.data); return *this; }
+
+		void Store(const AlignedPointer<uint64, 16> alignedPointer) const
+		{
+			_mm_store_si128(reinterpret_cast<__m128i*>(alignedPointer.Get()), data);
+		}
+
+		void Store(const UnalignedPointer<uint64> unalignedPointer) const
+		{
+			_mm_store_si128(reinterpret_cast<__m128i*>(unalignedPointer.Get()), data);
+		}
+
+		[[nodiscard]] uint8 FindEqualElement(const uint64_2& other) const
+		{
+			return _mm_movemask_epi8(_mm_cmpeq_epi64(data, other.data)) == 0xff00 ? 0 : 1;
+		}
+	};
 }
