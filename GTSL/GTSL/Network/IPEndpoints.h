@@ -8,7 +8,7 @@ namespace GTSL
 	 * \brief Specifies and IP endpoint. This is an address and a port.
 	 * Used for socket connections.
 	 */
-	struct IpEndpoint
+	struct IPv4Endpoint
 	{
 		uint8 Address[4]{ 0 };
 		uint16 Port = 0;

@@ -88,10 +88,11 @@ namespace GTSL
 	};
 
 	template<typename T>
-	Allocation<T> New(AllocatorReference* allocatorReference)
+	Allocation<T> NewVirtual(AllocatorReference* allocatorReference)
 	{
 		Allocation<T> ret;
-		allocatorReference->Allocate(sizeof(T), alignof(uint64), reinterpret_cast<void**>(ret.Data), &ret.Size);
+		allocatorReference->Allocate(sizeof(T), alignof(uint64), reinterpret_cast<void**>(&ret.Data), &ret.Size);
+		::new(ret.Data) T();
 		return ret;
 	}
 
@@ -99,7 +100,8 @@ namespace GTSL
 	T* New(AllocatorReference* allocatorReference)
 	{
 		T* ret{ nullptr }; uint64 allocated_size{ 0 };
-		allocatorReference->Allocate(sizeof(T), alignof(uint64), reinterpret_cast<void**>(ret), &allocated_size);
+		allocatorReference->Allocate(sizeof(T), alignof(uint64), reinterpret_cast<void**>(&ret), &allocated_size);
+		::new(ret) T();
 		return ret;
 	}
 

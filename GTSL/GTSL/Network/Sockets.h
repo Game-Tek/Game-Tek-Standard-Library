@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Ipv4Endpoint.h"
+#include "IPEndpoints.h"
 #include "GTSL/Ranger.h"
 
 namespace GTSL
@@ -15,15 +15,14 @@ namespace GTSL
 
 		struct CreateInfo
 		{
-			uint16 Port = 0;
-			bool Blocking = false;
+			bool Blocking = false; IPv4Endpoint Endpoint;
 		};
 		void Open(const CreateInfo& createInfo);
 		void Close();
 		
 		struct SendInfo
 		{
-			IpEndpoint Endpoint;
+			IPv4Endpoint Endpoint;
 			Ranger<byte> Buffer;
 		};
 		[[nodiscard]] bool Send(const SendInfo& sendInfo) const;
@@ -31,7 +30,35 @@ namespace GTSL
 
 		struct ReceiveInfo
 		{
-			IpEndpoint* Sender = nullptr;
+			IPv4Endpoint* Sender = nullptr;
+			Ranger<byte> Buffer;
+		};
+		[[nodiscard]] bool Receive(const ReceiveInfo& receiveInfo) const;
+	};
+
+	class TCPSocket
+	{
+		uint64 handle{ 0 };
+	public:
+
+		struct CreateInfo
+		{
+			bool Blocking = false; IPv4Endpoint Endpoint;
+		};
+		void Open(const CreateInfo& createInfo);
+		void Close();
+
+		struct SendInfo
+		{
+			IPv4Endpoint Endpoint;
+			Ranger<byte> Buffer;
+		};
+		[[nodiscard]] bool Send(const SendInfo& sendInfo) const;
+
+
+		struct ReceiveInfo
+		{
+			IPv4Endpoint* Sender = nullptr;
 			Ranger<byte> Buffer;
 		};
 		[[nodiscard]] bool Receive(const ReceiveInfo& receiveInfo) const;

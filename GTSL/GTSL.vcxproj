@@ -60,7 +60,7 @@
     <ClInclude Include="GTSL\Mutex.h" />
     <ClInclude Include="GTSL\Network\NetConnection.h" />
     <ClInclude Include="GTSL\Network\Sockets.h" />
-    <ClInclude Include="GTSL\Network\Ipv4Endpoint.h" />
+    <ClInclude Include="GTSL\Network\IPEndpoints.h" />
     <ClInclude Include="GTSL\Octree.h" />
     <ClInclude Include="GTSL\Pair.h" />
     <ClInclude Include="GTSL\Ranger.h" />
