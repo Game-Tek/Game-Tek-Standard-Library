@@ -29,7 +29,7 @@ void Application::UpdateWindow(Window* window)
 
 	MSG message;
 
-	while (GetMessageA(&message, static_cast<HWND>(win32_native_handles.HWND), 0, 0) > 0)
+	while (PeekMessageA(&message, static_cast<HWND>(win32_native_handles.HWND), 0, 0, PM_REMOVE))
 	{
 		TranslateMessage(&message);
 		DispatchMessageA(&message);
