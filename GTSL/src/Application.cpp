@@ -12,9 +12,7 @@ using namespace GTSL;
 
 Application::Application(const ApplicationCreateInfo& applicationCreateInfo) : handle(GetModuleHandleA(NULL))
 {
-	path.Resize(GetModuleFileNameA(static_cast<HMODULE>(handle), path.begin(), path.GetCapacity()) + 1);
-	//GTSL_ASSERT(GetModuleFileNameA(NULL, a, 512), "Failed to get Win32 module file name!")
-	path.ReplaceAll('\\', '/');
+
 }
 
 Application::~Application() = default;
@@ -33,8 +31,25 @@ void Application::UpdateWindow(Window* window)
 
 	while (GetMessageA(&message, static_cast<HWND>(win32_native_handles.HWND), 0, 0) > 0)
 	{
-		TranslateMessage(&message); DispatchMessageA(&message);
+		TranslateMessage(&message);
+		DispatchMessageA(&message);
 	}
+}
+
+void Application::SetProcessPriority(const Priority priority) noexcept
+{
+	int32 priority_class{ NORMAL_PRIORITY_CLASS };
+	switch (priority)
+	{
+	case Priority::LOW: priority_class = IDLE_PRIORITY_CLASS; break;
+	case Priority::LOW_MID: priority_class = BELOW_NORMAL_PRIORITY_CLASS; break;
+	case Priority::MID: priority_class = NORMAL_PRIORITY_CLASS; break;
+	case Priority::MID_HIGH: priority_class = ABOVE_NORMAL_PRIORITY_CLASS; break;
+	case Priority::HIGH: priority_class = HIGH_PRIORITY_CLASS; break;
+	default: break;
+	}
+
+	SetPriorityClass(GetCurrentProcess(), priority_class);
 }
 
 void Application::Close()
@@ -47,4 +62,13 @@ void Application::GetNativeHandles(void* nativeHandles)
 	static_cast<Win32NativeHandles*>(nativeHandles)->HINSTANCE = static_cast<HMODULE>(handle);
 }
 
-Ranger<UTF8> Application::GetPathToExecutable() const { return path; }
+uint8 Application::ThreadCount() noexcept {	SYSTEM_INFO system_info; GetSystemInfo(&system_info); return system_info.dwNumberOfProcessors; }
+
+StaticString<Application::MaxPathLength> Application::GetPathToExecutable() const
+{
+	StaticString<Application::MaxPathLength> ret;
+	ret.Resize(GetModuleFileNameA(static_cast<HMODULE>(handle), ret.begin(), ret.GetCapacity()) + 1);
+	//GTSL_ASSERT(GetModuleFileNameA(NULL, a, 512), "Failed to get Win32 module file name!")
+	ret.ReplaceAll('\\', '/');
+	return ret;
+}

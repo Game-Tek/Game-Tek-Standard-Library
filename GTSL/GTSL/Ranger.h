@@ -16,11 +16,12 @@ namespace GTSL
 
 		Ranger() = default;
 
-		constexpr Ranger(T* start, T* end) noexcept : from(start), to(end)
+		template<uint64 N>
+		Ranger(const char (&text)[N]) : from(const_cast<char*>(text)), to(const_cast<char*>(text) + N)
 		{
 		}
 
-		constexpr Ranger(const size_t length, T* start) noexcept : from(start), to(start + length)
+		constexpr Ranger(T* start, T* end) noexcept : from(start), to(end)
 		{
 		}
 
@@ -35,9 +36,10 @@ namespace GTSL
 
 		[[nodiscard]] constexpr uint64 Bytes() const noexcept { return ((to - from) * sizeof(type)); }
 
-		[[nodiscard]] uint64 ElementCount() const noexcept { return (to - from); }
-
+		[[nodiscard]] uint64 ElementCount() const { return to - from; }
 		[[nodiscard]] constexpr void* Data() noexcept { return from; }
 		[[nodiscard]] constexpr const void* Data() const noexcept { return from; }
+
+		T& operator[](uint64 i) const { return this->from + i; }
 	};
 }

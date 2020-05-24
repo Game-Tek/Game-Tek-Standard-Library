@@ -110,6 +110,7 @@
     <ClCompile Include="src\Sockets.cpp" />
     <ClCompile Include="src\Stream.cpp" />
     <ClCompile Include="src\System.cpp" />
+    <ClCompile Include="src\Thread.cpp" />
     <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

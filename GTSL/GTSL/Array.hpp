@@ -65,12 +65,12 @@ namespace GTSL
 			copyToData(ranger.begin(), ranger.ElementCount());
 		}
 
-		constexpr Array(const Array& other) noexcept : length(length)
+		constexpr Array(const Array& other) noexcept : length(other.length)
 		{
 			copyToData(other.data, other.length);
 		}
 
-		constexpr Array(Array&& other) noexcept : length(length)
+		constexpr Array(Array&& other) noexcept : length(other.length)
 		{
 			copyToData(other.data, other.length);
 			for (auto& e : other) { e.~T(); }

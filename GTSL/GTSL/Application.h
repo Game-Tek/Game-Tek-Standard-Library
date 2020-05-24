@@ -10,10 +10,9 @@ namespace GTSL
 	class Application
 	{
 	public:
-		static constexpr uint16 MaxPathLength{ 2048 };
+		static constexpr uint16 MaxPathLength{ 1024 };
 		
 	private:
-		StaticString<MaxPathLength> path;
 		void* handle{ nullptr };
 		
 	public:
@@ -27,6 +26,12 @@ namespace GTSL
 
 		void UpdateWindow(Window* window);
 
+		enum class Priority : uint8
+		{
+			LOW, LOW_MID, MID, MID_HIGH, HIGH
+		};
+		void SetProcessPriority(Priority priority) noexcept;
+		
 		void Close();
 
 		struct Win32NativeHandles
@@ -35,6 +40,8 @@ namespace GTSL
 		};
 		void GetNativeHandles(void* nativeHandles);
 
-		[[nodiscard]] Ranger<UTF8> GetPathToExecutable() const;
+		static uint8 ThreadCount() noexcept;
+		
+		[[nodiscard]] StaticString<MaxPathLength> GetPathToExecutable() const;
 	};
 }

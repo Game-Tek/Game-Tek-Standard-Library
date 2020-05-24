@@ -14,6 +14,21 @@ namespace GTSL
 		using HashType = uint64;
 
 	protected:
+		static constexpr HashType hashString(const Ranger<const UTF8>& ranger) noexcept
+		{
+			HashType primary_hash(525201411107845655ull);
+			HashType secondary_hash(0xAAAAAAAAAAAAAAAAull);
+
+			for (auto const& e : ranger)
+			{
+				primary_hash ^= e; secondary_hash ^= e;
+				primary_hash *= 0x5bd1e9955bd1e995; secondary_hash *= 0x80638e;
+				primary_hash ^= primary_hash >> 47; secondary_hash ^= secondary_hash >> 35;
+			}
+
+			return (primary_hash & 0xFFFFFFFF00000000ull) ^ (secondary_hash & 0x00000000FFFFFFFFull);
+		}
+
 		static constexpr HashType hashString(const Ranger<UTF8>& ranger) noexcept
 		{
 			HashType primary_hash(525201411107845655ull);
@@ -32,6 +47,7 @@ namespace GTSL
 	public:
 		constexpr Id64() = default;
 
+		constexpr Id64(const Ranger<const UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
 		constexpr Id64(const Ranger<UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
 		constexpr Id64(const HashType id) noexcept : hashValue(id) {}
 		constexpr Id64(const Id64& other) noexcept = default;

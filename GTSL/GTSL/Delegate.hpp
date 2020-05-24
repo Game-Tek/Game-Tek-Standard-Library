@@ -12,77 +12,80 @@
 	Original publication: https://www.codeproject.com/Articles/1170503/The-Impossibly-Fast-Cplusplus-Delegates-Fixed
 */
 
-template <typename T>
-class Delegate;
-
-template <typename RET, typename... ARGS>
-class Delegate<RET(ARGS...)> final
+namespace GTSL
 {
-public:
-	using call_signature = RET(*)(ARGS...);
-	
-private:
-	RET(*callerFunction)(void*, ARGS&& ...) { nullptr };
-	void* callee{ nullptr };
+	template <typename T>
+	class Delegate;
 
-
-	Delegate(void* calee, decltype(callerFunction) cF) : callerFunction(cF), callee(calee)
+	template <typename RET, typename... ARGS>
+	class Delegate<RET(ARGS...)> final
 	{
-	}
-public:
-	Delegate() = default;
-	~Delegate() = default;
-	
-	//template <RET(*FUNCTION)(PARAMS ...)>
-	//explicit Delegate() : callerFunction(&functionCaller<FUNCTION>), callee(nullptr)
-	//{}
+	public:
+		using call_signature = RET(*)(ARGS...);
 
-	//template <class T, RET(T::*METHOD)(PARAMS...)>
-	//explicit Delegate(T* instance) : callerFunction(&methodCaller<T, METHOD>), callee(instance)
-	//{}
-	//
-	//template <class T, RET(T::*CONST_METHOD)(PARAMS...) const>
-	//explicit Delegate(T const* instance) : callerFunction(&constMethodCaller<T, CONST_METHOD>), callee(const_cast<T*>(instance))
-	//{}
-	//
-	//template <typename LAMBDA>
-	//explicit Delegate(LAMBDA& lambda) : callerFunction(&lambdaCaller<LAMBDA>), callee(reinterpret_cast<void*>(&lambda))
-	//{}
-	
-	operator bool() const noexcept { return callerFunction; }
+	private:
+		RET(*callerFunction)(void*, ARGS&& ...) { nullptr };
+		void* callee{ nullptr };
 
-	Delegate& operator =(const Delegate& another) = default;
 
-	template <typename LAMBDA> // template instantiation is not needed, will be deduced (inferred):
-	Delegate& operator=(const LAMBDA& instance) { callee = static_cast<void*>(&instance); callerFunction = lambdaCaller<LAMBDA>; return *this; }
+		Delegate(void* calee, decltype(callerFunction) cF) : callerFunction(cF), callee(calee)
+		{
+		}
+	public:
+		Delegate() = default;
+		~Delegate() = default;
 
-	bool operator ==(const Delegate& another) const { return callerFunction == another.callerFunction && callee == another.callee; }
-	bool operator !=(const Delegate& another) const { return callerFunction != another.callerFunction && callee != another.callee; }
+		//template <RET(*FUNCTION)(PARAMS ...)>
+		//explicit Delegate() : callerFunction(&functionCaller<FUNCTION>), callee(nullptr)
+		//{}
 
-	template <class T, RET(T::*METHOD)(ARGS...)>
-	static Delegate Create(T* instance) { return Delegate(instance, methodCaller<T, METHOD>); }
-	
-	template <class T, RET(T::* CONST_METHOD)(ARGS...) const>
-	static Delegate Create(T const* instance) { return Delegate(const_cast<T*>(instance), constMethodCaller<T, CONST_METHOD>); }
-	
-	template <RET(*FUNCTION)(ARGS ...)>
-	static Delegate Create() { return Delegate(nullptr, functionCaller<FUNCTION>); }
-	
-	template <typename LAMBDA>
-	static Delegate Create(const LAMBDA& instance) { return Delegate(static_cast<void*>(&instance), lambdaCaller<LAMBDA>); }
+		//template <class T, RET(T::*METHOD)(PARAMS...)>
+		//explicit Delegate(T* instance) : callerFunction(&methodCaller<T, METHOD>), callee(instance)
+		//{}
+		//
+		//template <class T, RET(T::*CONST_METHOD)(PARAMS...) const>
+		//explicit Delegate(T const* instance) : callerFunction(&constMethodCaller<T, CONST_METHOD>), callee(const_cast<T*>(instance))
+		//{}
+		//
+		//template <typename LAMBDA>
+		//explicit Delegate(LAMBDA& lambda) : callerFunction(&lambdaCaller<LAMBDA>), callee(reinterpret_cast<void*>(&lambda))
+		//{}
 
-	RET operator()(ARGS... args) const { return (*callerFunction)(callee, GTSL::MakeForwardReference<ARGS>(args)...); }
+		operator bool() const noexcept { return callerFunction; }
 
-private:
-	template <class T, RET(T::*METHOD)(ARGS ...)>
-	static RET methodCaller(void* callee, ARGS&&... params) { return (static_cast<T*>(callee)->*METHOD)(GTSL::MakeForwardReference<ARGS>(params)...); }
+		Delegate& operator =(const Delegate& another) = default;
 
-	template <class T, RET(T::*CONST_METHOD)(ARGS ...) const>
-	static RET constMethodCaller(void* callee, ARGS&&... params) { return (static_cast<const T*>(callee)->*CONST_METHOD)(GTSL::MakeForwardReference<ARGS>(params)...); }
+		template <typename LAMBDA> // template instantiation is not needed, will be deduced (inferred):
+		Delegate& operator=(const LAMBDA& instance) { callee = static_cast<void*>(&instance); callerFunction = lambdaCaller<LAMBDA>; return *this; }
 
-	template <RET(*FUNCTION)(ARGS ...)>
-	static RET functionCaller(void* callee, ARGS&&... params) { return (FUNCTION)(GTSL::MakeForwardReference<ARGS>(params)...); }
+		bool operator ==(const Delegate& another) const { return callerFunction == another.callerFunction && callee == another.callee; }
+		bool operator !=(const Delegate& another) const { return callerFunction != another.callerFunction && callee != another.callee; }
 
-	template <typename LAMBDA>
-	static RET lambdaCaller(void* callee, ARGS&&... params) { return (static_cast<LAMBDA*>(callee)->operator())(GTSL::MakeForwardReference<ARGS>(params)...); }
-};
+		template <class T, RET(T::* METHOD)(ARGS...)>
+		static Delegate Create(T* instance) { return Delegate(instance, methodCaller<T, METHOD>); }
+
+		template <class T, RET(T::* CONST_METHOD)(ARGS...) const>
+		static Delegate Create(T const* instance) { return Delegate(const_cast<T*>(instance), constMethodCaller<T, CONST_METHOD>); }
+
+		template <RET(*FUNCTION)(ARGS ...)>
+		static Delegate Create() { return Delegate(nullptr, functionCaller<FUNCTION>); }
+
+		template <typename LAMBDA>
+		static Delegate Create(const LAMBDA& instance) { return Delegate(static_cast<void*>(&instance), lambdaCaller<LAMBDA>); }
+
+		RET operator()(ARGS... args) const { return (*callerFunction)(callee, GTSL::MakeForwardReference<ARGS>(args)...); }
+
+	private:
+		template <class T, RET(T::* METHOD)(ARGS ...)>
+		static RET methodCaller(void* callee, ARGS&&... params) { return (static_cast<T*>(callee)->*METHOD)(GTSL::MakeForwardReference<ARGS>(params)...); }
+
+		template <class T, RET(T::* CONST_METHOD)(ARGS ...) const>
+		static RET constMethodCaller(void* callee, ARGS&&... params) { return (static_cast<const T*>(callee)->*CONST_METHOD)(GTSL::MakeForwardReference<ARGS>(params)...); }
+
+		template <RET(*FUNCTION)(ARGS ...)>
+		static RET functionCaller(void* callee, ARGS&&... params) { return (FUNCTION)(GTSL::MakeForwardReference<ARGS>(params)...); }
+
+		template <typename LAMBDA>
+		static RET lambdaCaller(void* callee, ARGS&&... params) { return (static_cast<LAMBDA*>(callee)->operator())(GTSL::MakeForwardReference<ARGS>(params)...); }
+	};
+}
