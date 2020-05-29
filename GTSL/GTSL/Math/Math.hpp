@@ -34,16 +34,6 @@ namespace GTSL
 		// /  type
 		// /= type
 
-		inline static uint8 RandUseCount = 0;
-		static constexpr uint32 RandTable[] = {
-			542909189, 241292975, 485392319, 280587594, 22564577, 131346666, 540115444, 163133756, 7684350, 906455780
-		};
-		inline static uint8 FloatRandUseCount = 0;
-		static constexpr double FloatRandTable[] = {
-			0.7406606394, 0.8370865161, 0.3390759540, 0.4997499184, 0.0598975500, 0.1089056913, 0.3401726208, 0.2333399466,
-			0.3234475486, 0.2359271793
-		};
-
 		static float StraightRaise(const float A, const uint8 Times)
 		{
 			float Result = A;
@@ -62,30 +52,21 @@ namespace GTSL
 
 		static int64 Random()
 		{
-			int64 ret = RandTable[RandUseCount];
+			static int64 x = 123456789, y = -362436069, z = 521288629;
 
-			ret = RandUseCount % 2 == 1 ? ret * -1 : ret;
+			//period 2^96-1
+			
+			int64 t{ 0 };
+			x ^= x << 16; x ^= x >> 5; x ^= x << 1;
 
-			RandUseCount = (RandUseCount + 1) % 10;
+			t = x; x = y; y = z; z = t ^ x ^ y;
 
-			return ret;
+			return z;
 		}
 
-		static int64 Random(int64 _Min, int64 _Max)
-		{
-			return Random() % (_Max - _Min + 1) + _Min;
-		}
+		static int64 Random(const int64 min, const int64 max) { return Random() % (max - min + 1) + min; }
 
-		static double fRandom()
-		{
-			auto ret = FloatRandTable[FloatRandUseCount];
-
-			ret = FloatRandUseCount % 2 == 1 ? ret * -1 : ret;
-
-			RandUseCount = (RandUseCount + 1) % 10;
-
-			return ret;
-		}
+		static double fRandom() { return Random() * 0.8123495678; }
 
 		//STATIC
 
@@ -110,7 +91,9 @@ namespace GTSL
 			return Result;
 		}
 
-		static uint64 AlignedNumber(const uint64 number, const uint64 alignment) { return (number + (alignment - 1)) & ~(alignment - 1); }
+		static uint64 PowerOf2RoundUp(const uint64 number, const uint64 alignment) { return (number + alignment - 1) & -alignment; }
+
+		static void RoundDown(const uint64 x, const uint64 multiple, uint64& quotient, uint64& remainder) { const uint64 rem = (x % multiple); remainder = rem; quotient = x - rem; }
 		
 		/**
 		 * \brief Returns x to the y.
@@ -201,18 +184,9 @@ namespace GTSL
 		//////////////////////////////////////////////////////////////
 
 		//Returns 1 if A is bigger than 0. 0 if A is equal to 0. and -1 if A is less than 0.
-		static int8 Sign(const int64 _A)
+		static int8 Sign(const int64 A)
 		{
-			if (_A > 0)
-			{
-				return 1;
-			}
-			if (_A < 0)
-			{
-				return -1;
-			}
-
-			return 0;
+			if (A > 0) { return 1; } if (A < 0) { return -1; } return 0;
 		}
 
 		//Returns 1 if A is bigger than 0. 0 if A is equal to 0. and -1 if A is less than 0.
