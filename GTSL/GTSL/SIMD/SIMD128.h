@@ -12,6 +12,291 @@ namespace GTSL
 	class SIMD128;
 
 	template<>
+	class SIMD128<int8>
+	{
+	public:
+		using type = int8;
+		static constexpr uint8 TypeElementsCount = 16;
+
+		SIMD128() = default;
+
+		explicit SIMD128(const type a) : vector(_mm_set1_epi8(a)) {}
+
+		SIMD128(const AlignedPointer<type, 16> data) : vector(_mm_load_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
+		SIMD128(const UnalignedPointer<type> data) : vector(_mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
+
+		SIMD128(const type a, const type b, const type c, const type d, const type e, const type f, const type g, const type h, const type i, const type j, const type k, const type l, const type m, const type n, const type o, const type p) : vector(_mm_set_epi8(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)) {}
+
+		SIMD128(const SIMD128& other) = default;
+
+		~SIMD128() = default;
+
+		void Set(const AlignedPointer<type, 16> data) { vector = _mm_load_si128(reinterpret_cast<__m128i*>(data.Get())); }
+		void Set(const UnalignedPointer<type> data) { vector = _mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get())); }
+
+		/**
+		 * \brief Sets all of this vector's components as a.
+		 * \param a float to set all of this vector's components as.
+		 * \return Returns a reference to itself.
+		 */
+		SIMD128& operator=(const type a) { vector = _mm_set1_epi8(a); return *this; }
+		SIMD128& operator=(const SIMD128& other) { vector = other.vector; return *this; }
+
+		SIMD128& operator=(const AlignedPointer<type, 16> data) { vector = _mm_load_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
+		SIMD128& operator=(const UnalignedPointer<type> data) { vector = _mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
+
+		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
+		void CopyTo(const AlignedPointer<type, 16> data) const { _mm_store_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
+
+		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
+		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
+
+		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
+		template<uint8 A, uint8 B, uint8 C, uint8 D, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
+		[[nodiscard]] static SIMD128 Shuffle(const SIMD128& a, const SIMD128& b) { return _mm_shuffle_epi8(a.vector, SIMD128(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)); }
+
+		void Abs() { vector = _mm_abs_epi8(vector); }
+
+		static SIMD128 Min(const SIMD128& a, const SIMD128& b) { return _mm_min_epi8(a, b); }
+		static SIMD128 Max(const SIMD128& a, const SIMD128& b) { return _mm_max_epi8(a, b); }
+
+		//static SIMD128 HorizontalAdd(const SIMD128& a, const SIMD128& b) { return _mm_hadd_epi8(a.vector, b.vector); }
+		//
+		////Horizontally add adjacent pairs of single - precision(32 - bit) floating - point elements in a and B, and pack the results in dst.
+		//static SIMD128 HorizontalSub(const SIMD128& a, const SIMD128& b) { return _mm_hsub_epi8(a.vector, b.vector); }
+		//
+		////Alternatively add and subtract packed single-precision (32-bit) floating-point elements in a to/from packed elements in B, and store the results in dst
+		//[[nodiscard]] static SIMD128 Add13Sub02(const SIMD128& a, const SIMD128& b) { return _mm_addsub_epi8(a.vector, b.vector); }
+		//
+		////Conditionally multiply the packed single-precision (32-bit) floating-point elements in a and B using the high 4 bits in imm8, sum the four products, and conditionally store the sum in dst using the low 4 bits of imm8.
+		//[[nodiscard]] static SIMD128 DotProduct(const SIMD128& a, const SIMD128& b) { return _mm_dp_epi8(a.vector, b.vector, 0xff); }
+
+		//static void Transpose(SIMD128& a, SIMD128& b, SIMD128& c, SIMD128& d) { _MM_TRANSPOSE4_epi8(a, b, c, d); }
+
+		template<uint8 I>
+		[[nodiscard]] type GetElement() const { return _mm_extract_epi8(vector, I); }
+
+		SIMD128 operator+(const SIMD128& other) const { return _mm_add_epi8(vector, other.vector); }
+		SIMD128 operator-(const SIMD128& other) const { return _mm_sub_epi8(vector, other.vector); }
+		//SIMD128 operator*(const SIMD128& other) const { return _mm_mul_epi8(vector, other.vector); }
+		SIMD128 operator/(const SIMD128& other) const { return _mm_div_epi8(vector, other.vector); }
+
+		SIMD128& operator+=(const SIMD128& other) { vector = _mm_add_epi8(vector, other.vector); return *this; }
+		SIMD128& operator-=(const SIMD128& other) { vector = _mm_sub_epi8(vector, other.vector); return *this; }
+		//SIMD128& operator*=(const SIMD128& other) { vector = _mm_mul_epi8(vector, other.vector); return *this; }
+		SIMD128& operator/=(const SIMD128& other) { vector = _mm_div_epi8(vector, other.vector); return *this; }
+
+		SIMD128 operator==(const SIMD128& other) const { return _mm_cmpeq_epi8(vector, other.vector); }
+		//SIMD128 operator!=(const SIMD128& other) const { return _mm_cmpneq_(vector, other.vector); }
+		SIMD128 operator>(const SIMD128& other)  const { return _mm_cmpgt_epi8(vector, other.vector); }
+		//SIMD128 operator>=(const SIMD128& other) const { return _mm_cmpge_si128(vector, other.vector); }
+		SIMD128 operator<(const SIMD128& other)  const { return _mm_cmplt_epi8(vector, other.vector); }
+		//SIMD128 operator<=(const SIMD128& other) const { return _mm_cmple_ss(vector, other.vector); }
+
+		SIMD128 operator&(const SIMD128& other) const { return _mm_and_si128(vector, other.vector); }
+		SIMD128 operator|(const SIMD128& other) const { return _mm_or_si128(vector, other.vector); }
+		SIMD128 operator^(const SIMD128& other) const { return _mm_xor_si128(vector, other); }
+		SIMD128& operator~() { vector = _mm_xor_si128(vector, _mm_cmpeq_epi8(vector, vector)); return *this; }
+
+	private:
+		__m128i vector;
+
+		SIMD128(const __m128i& m128) : vector(m128) {}
+
+		operator __m128i() const { return vector; }
+	};
+	
+	template<>
+	class SIMD128<uint8>
+	{
+	public:
+		using type = uint8;
+		static constexpr uint8 TypeElementsCount = 16;
+
+		SIMD128() = default;
+
+		explicit SIMD128(const type a) : vector(_mm_set1_epi8(a)) {}
+
+		SIMD128(const AlignedPointer<type, 16> data) : vector(_mm_load_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
+		SIMD128(const UnalignedPointer<type> data) : vector(_mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
+
+		SIMD128(const type a, const type b, const type c, const type d, const type e, const type f, const type g, const type h, const type i, const type j, const type k, const type l, const type m, const type n, const type o, const type p) : vector(_mm_set_epi8(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)) {}
+
+		SIMD128(const SIMD128& other) = default;
+
+		~SIMD128() = default;
+
+		void Set(const AlignedPointer<type, 16> data) { vector = _mm_load_si128(reinterpret_cast<__m128i*>(data.Get())); }
+		void Set(const UnalignedPointer<type> data) { vector = _mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get())); }
+
+		/**
+		 * \brief Sets all of this vector's components as a.
+		 * \param a float to set all of this vector's components as.
+		 * \return Returns a reference to itself.
+		 */
+		SIMD128& operator=(const type a) { vector = _mm_set1_epi8(a); return *this; }
+		SIMD128& operator=(const SIMD128& other) { vector = other.vector; return *this; }
+
+		SIMD128& operator=(const AlignedPointer<type, 16> data) { vector = _mm_load_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
+		SIMD128& operator=(const UnalignedPointer<type> data) { vector = _mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
+
+		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
+		void CopyTo(const AlignedPointer<type, 16> data) const { _mm_store_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
+
+		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
+		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
+
+		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
+		template<uint8 A, uint8 B, uint8 C, uint8 D, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
+		[[nodiscard]] static SIMD128 Shuffle(const SIMD128& a, const SIMD128& b) { return _mm_shuffle_epi8(a.vector, SIMD128(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)); }
+
+		void Abs() { vector = _mm_abs_epi8(vector); }
+
+		static SIMD128 Min(const SIMD128& a, const SIMD128& b) { return _mm_min_epi8(a, b); }
+		static SIMD128 Max(const SIMD128& a, const SIMD128& b) { return _mm_max_epi8(a, b); }
+
+		//static SIMD128 HorizontalAdd(const SIMD128& a, const SIMD128& b) { return _mm_hadd_epi8(a.vector, b.vector); }
+		//
+		////Horizontally add adjacent pairs of single - precision(32 - bit) floating - point elements in a and B, and pack the results in dst.
+		//static SIMD128 HorizontalSub(const SIMD128& a, const SIMD128& b) { return _mm_hsub_epi8(a.vector, b.vector); }
+		//
+		////Alternatively add and subtract packed single-precision (32-bit) floating-point elements in a to/from packed elements in B, and store the results in dst
+		//[[nodiscard]] static SIMD128 Add13Sub02(const SIMD128& a, const SIMD128& b) { return _mm_addsub_epi8(a.vector, b.vector); }
+		//
+		////Conditionally multiply the packed single-precision (32-bit) floating-point elements in a and B using the high 4 bits in imm8, sum the four products, and conditionally store the sum in dst using the low 4 bits of imm8.
+		//[[nodiscard]] static SIMD128 DotProduct(const SIMD128& a, const SIMD128& b) { return _mm_dp_epi8(a.vector, b.vector, 0xff); }
+
+		//static void Transpose(SIMD128& a, SIMD128& b, SIMD128& c, SIMD128& d) { _MM_TRANSPOSE4_epi8(a, b, c, d); }
+
+		template<uint8 I>
+		[[nodiscard]] type GetElement() const { return _mm_extract_epi8(vector, I); }
+
+		SIMD128 operator+(const SIMD128& other) const { return _mm_add_epi8(vector, other.vector); }
+		SIMD128 operator-(const SIMD128& other) const { return _mm_sub_epi8(vector, other.vector); }
+		//SIMD128 operator*(const SIMD128& other) const { return _mm_mul_epi8(vector, other.vector); }
+		SIMD128 operator/(const SIMD128& other) const { return _mm_div_epi8(vector, other.vector); }
+
+		SIMD128& operator+=(const SIMD128& other) { vector = _mm_add_epi8(vector, other.vector); return *this; }
+		SIMD128& operator-=(const SIMD128& other) { vector = _mm_sub_epi8(vector, other.vector); return *this; }
+		//SIMD128& operator*=(const SIMD128& other) { vector = _mm_mul_epi8(vector, other.vector); return *this; }
+		SIMD128& operator/=(const SIMD128& other) { vector = _mm_div_epi8(vector, other.vector); return *this; }
+
+		SIMD128 operator==(const SIMD128& other) const { return _mm_cmpeq_epi8(vector, other.vector); }
+		SIMD128 operator!=(const SIMD128& other) const { return _mm_andnot_si128(_mm_cmpeq_epi64(vector, other.vector), _mm_set1_epi64x(-1)); }
+		SIMD128 operator>(const SIMD128& other)  const { return _mm_cmpgt_epi8(vector, other.vector); }
+		SIMD128 operator>=(const SIMD128& other) const { return _mm_cmpeq_epi64(_mm_max_epu64(vector, other.vector), vector); }
+		SIMD128 operator<(const SIMD128& other)  const { return _mm_cmplt_epi8(vector, other.vector); }
+		SIMD128 operator<=(const SIMD128& other) const { return _mm_cmpeq_epi8(_mm_min_epu8(vector, other.vector), vector); }
+
+		SIMD128 operator&(const SIMD128& other) const { return _mm_and_si128(vector, other.vector); }
+		SIMD128 operator|(const SIMD128& other) const { return _mm_or_si128(vector, other.vector); }
+		SIMD128 operator^(const SIMD128& other) const { return _mm_xor_si128(vector, other); }
+		SIMD128& operator~() { vector = _mm_xor_si128(vector, _mm_cmpeq_epi8(vector, vector)); return *this; }
+
+	private:
+		__m128i vector;
+
+		SIMD128(const __m128i& m128) : vector(m128) {}
+
+		operator __m128i() const { return vector; }
+	};
+
+	template<>
+	class SIMD128<uint64>
+	{
+	public:
+		using type = uint64;
+		static constexpr uint8 TypeElementsCount = 2;
+
+		SIMD128() = default;
+
+		explicit SIMD128(const type a) : vector(_mm_set1_epi64x(a)) {}
+
+		SIMD128(const AlignedPointer<type, 16> data) : vector(_mm_load_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
+		SIMD128(const UnalignedPointer<type> data) : vector(_mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
+
+		SIMD128(const type a, const type b) : vector(_mm_set_epi64x(a, b)) {}
+
+		SIMD128(const SIMD128& other) = default;
+
+		~SIMD128() = default;
+
+		void Set(const AlignedPointer<type, 16> data) { vector = _mm_load_si128(reinterpret_cast<__m128i*>(data.Get())); }
+		void Set(const UnalignedPointer<type> data) { vector = _mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get())); }
+
+		/**
+		 * \brief Sets all of this vector's components as a.
+		 * \param a float to set all of this vector's components as.
+		 * \return Returns a reference to itself.
+		 */
+		SIMD128& operator=(const type a) { vector = _mm_set1_epi64x(a); return *this; }
+		SIMD128& operator=(const SIMD128& other) { vector = other.vector; return *this; }
+
+		SIMD128& operator=(const AlignedPointer<type, 16> data) { vector = _mm_load_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
+		SIMD128& operator=(const UnalignedPointer<type> data) { vector = _mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
+
+		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
+		void CopyTo(const AlignedPointer<type, 16> data) const { _mm_store_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
+
+		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
+		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
+
+		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
+		//template<uint8 A, uint8 B, uint8 C, uint8 D, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
+		//[[nodiscard]] static SIMD128 Shuffle(const SIMD128& a, const SIMD128& b) { return _MM_SHUFFLE2(a.vector, SIMD128(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)); }
+
+		void Abs() { vector = _mm_abs_epi64(vector); }
+
+		static SIMD128 Min(const SIMD128& a, const SIMD128& b) { return _mm_min_epi64(a, b); }
+		static SIMD128 Max(const SIMD128& a, const SIMD128& b) { return _mm_max_epi64(a, b); }
+
+		//static SIMD128 HorizontalAdd(const SIMD128& a, const SIMD128& b) { return _mm_hadd_epi64(a.vector, b.vector); }
+		//
+		////Horizontally add adjacent pairs of single - precision(32 - bit) floating - point elements in a and B, and pack the results in dst.
+		//static SIMD128 HorizontalSub(const SIMD128& a, const SIMD128& b) { return _mm_hsub_epi64(a.vector, b.vector); }
+		//
+		////Alternatively add and subtract packed single-precision (32-bit) floating-point elements in a to/from packed elements in B, and store the results in dst
+		//[[nodiscard]] static SIMD128 Add13Sub02(const SIMD128& a, const SIMD128& b) { return _mm_addsub_epi64(a.vector, b.vector); }
+		//
+		////Conditionally multiply the packed single-precision (32-bit) floating-point elements in a and B using the high 4 bits in imm8, sum the four products, and conditionally store the sum in dst using the low 4 bits of imm8.
+		//[[nodiscard]] static SIMD128 DotProduct(const SIMD128& a, const SIMD128& b) { return _mm_dp_epi64(a.vector, b.vector, 0xff); }
+
+		//static void Transpose(SIMD128& a, SIMD128& b, SIMD128& c, SIMD128& d) { _MM_TRANSPOSE4_epi64(a, b, c, d); }
+
+		template<uint8 I>
+		[[nodiscard]] type GetElement() const { return _mm_extract_epi64(vector, I); }
+
+		SIMD128 operator+(const SIMD128& other) const { return _mm_add_epi64(vector, other.vector); }
+		SIMD128 operator-(const SIMD128& other) const { return _mm_sub_epi64(vector, other.vector); }
+		//SIMD128 operator*(const SIMD128& other) const { return _mm_mul_epi64(vector, other.vector); }
+		SIMD128 operator/(const SIMD128& other) const { return _mm_div_epi64(vector, other.vector); }
+
+		SIMD128& operator+=(const SIMD128& other) { vector = _mm_add_epi64(vector, other.vector); return *this; }
+		SIMD128& operator-=(const SIMD128& other) { vector = _mm_sub_epi64(vector, other.vector); return *this; }
+		//SIMD128& operator*=(const SIMD128& other) { vector = _mm_mul_epi64(vector, other.vector); return *this; }
+		SIMD128& operator/=(const SIMD128& other) { vector = _mm_div_epi64(vector, other.vector); return *this; }
+
+		SIMD128 operator==(const SIMD128& other) const { return _mm_cmpeq_epi64(vector, other.vector); }
+		SIMD128 operator!=(const SIMD128& other) const { return _mm_andnot_si128(_mm_cmpeq_epi64(vector, other.vector), _mm_set1_epi64x(-1)); }
+		SIMD128 operator>(const SIMD128& other)  const { return _mm_cmpgt_epi64(vector, other.vector); }
+		SIMD128 operator>=(const SIMD128& other) const { return _mm_cmpeq_epi64(_mm_max_epu64(vector, other.vector), vector); }
+		SIMD128 operator<(const SIMD128& other)  const { return _mm_andnot_si128(_mm_cmpeq_epi64(_mm_max_epu64(vector, other.vector), vector), _mm_set1_epi64x(-1)); }
+		SIMD128 operator<=(const SIMD128& other) const { return _mm_cmpeq_epi8(_mm_min_epu8(vector, other.vector), vector); }
+
+		SIMD128 operator&(const SIMD128& other) const { return _mm_and_si128(vector, other.vector); }
+		SIMD128 operator|(const SIMD128& other) const { return _mm_or_si128(vector, other.vector); }
+		SIMD128 operator^(const SIMD128& other) const { return _mm_xor_si128(vector, other); }
+		SIMD128& operator~() { vector = _mm_xor_si128(vector, _mm_cmpeq_epi64(vector, vector)); return *this; }
+
+	private:
+		__m128i vector;
+
+		SIMD128(const __m128i& m128) : vector(m128) {}
+
+		operator __m128i() const { return vector; }
+	};
+	
+	template<>
 	class SIMD128<float32>
 	{
 	public:
