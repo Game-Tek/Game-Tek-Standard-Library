@@ -404,7 +404,7 @@ namespace GTSL
 		//	Vec1.Z = Vec1.Z / Length;
 		//}
 
-		static Vector4 Normalized(const Vector4& _A);
+		static Vector4 Normalized(const Vector4& a);
 		//{
 		//	const float Length = VectorLength(Vec1);
 		//	return Vector4(Vec1.X / Length, Vec1.Y / Length, Vec1.Z / Length, Vec1.W / Length);
@@ -432,7 +432,7 @@ namespace GTSL
 
 		static float DotProduct(const Vector4& _A, const Vector4& _B);
 
-		static Vector3 Cross(const Vector3& _A, const Vector3& _B);
+		static Vector3 Cross(const Vector3& a, const Vector3& b);
 		//{
 		//	return Vector3(Vec1.Y * Vec2.Z - Vec1.Z * Vec2.Y, Vec1.Z * Vec2.X - Vec1.X * Vec2.Z, Vec1.X * Vec2.Y - Vec1.Y * Vec2.X);
 		//}

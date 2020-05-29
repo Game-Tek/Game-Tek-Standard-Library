@@ -9,7 +9,6 @@
 
 namespace GTSL
 {
-	constexpr uint8 MATRIX_SIZE = 16;
 	
 	/**
 	 * \brief Defines a 4x4 matrix with floating point precision.\n
@@ -27,8 +26,10 @@ namespace GTSL
 	 * Most operations are accelerated by SIMD code.
 	 *
 	 */
-	class Matrix4
+	class alignas(16) Matrix4
 	{
+		static constexpr uint8 MATRIX_SIZE = 16;
+		
 	public:
 		/**
 		 * \brief Default constructor. Sets all of the matrices' components as 0.
@@ -47,9 +48,9 @@ namespace GTSL
 		 * 0 0 _A 0\n
 		 * 0 0 0 _A\n
 		 *
-		 * \param _A float to set each of the matrix identity elements value as.
+		 * \param a float to set each of the matrix identity elements value as.
 		 */
-		explicit Matrix4(const float _A) : array{ _A, 0, 0, 0, 0, _A, 0, 0, 0, 0, _A, 0, 0, 0, 0, _A }
+		explicit Matrix4(const float32 a) : array{ a, 0, 0, 0, 0, a, 0, 0, 0, 0, a, 0, 0, 0, 0, a }
 		{
 		}
 
@@ -101,20 +102,10 @@ namespace GTSL
 		 */
 		void MakeIdentity()
 		{
-			for (auto& element : array)
-			{
-				element = 0.0f;
-			}
+			for (auto& element : array) { element = 0.0f; }
 
-			array[0] = 1.0f;
-			array[5] = 1.0f;
-			array[10] = 1.0f;
-			array[15] = 1.0f;
+			array[0] = 1.0f; array[5] = 1.0f; array[10] = 1.0f; array[15] = 1.0f;
 		}
-
-		//Matrix4& operator=(float _Array[16]) { Array = _Array; return *this; }
-		//
-		//void SetData(float _Array[]) { Array = _Array; }
 
 		/**
 		 * \brief Returns a pointer to the matrices' data array.
@@ -150,9 +141,9 @@ namespace GTSL
 
 		Matrix4& operator+=(const float other)
 		{
-			for (uint8 i = 0; i < MATRIX_SIZE; i++)
+			for (float& i : array)
 			{
-				array[i] += other;
+				i += other;
 			}
 
 			return *this;
@@ -301,10 +292,10 @@ namespace GTSL
 		float& operator[](const uint8 index) { return array[index]; }
 		float operator[](const uint8 index) const { return array[index]; }
 
-		float operator()(const uint8 row, const uint8 column) const { return array[row * 4 + column]; }
 		float& operator()(const uint8 row, const uint8 column) { return array[row * 4 + column]; }
+		float operator()(const uint8 row, const uint8 column) const { return array[row * 4 + column]; }
 
 	private:
-		float array[MATRIX_SIZE];
+		float32 array[MATRIX_SIZE];
 	};
 }

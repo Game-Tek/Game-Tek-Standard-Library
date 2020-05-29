@@ -1,131 +1,130 @@
 #include "GTSL/Math/Math.hpp"
 
-#include "GTSL/SIMD/float32_4.h"
+#include "GTSL/SIMD/SIMD128.h"
 #include <cmath>
 
 using namespace GTSL;
 
-float Math::Power(const float x, const float y) { return powf(x, y); }
+float Math::Power(const float32 x, const float32 y) { return powf(x, y); }
 
-float Math::Log10(const float x) { return log10f(x); }
+float Math::Log10(const float32 x) { return log10f(x); }
 
-float Math::Sine(const float Degrees) { return sinf(DegreesToRadians(Degrees)); }
+float Math::Sine(const float32 Degrees) { return sinf(DegreesToRadians(Degrees)); }
 
-double Math::Sine(const double Degrees) { return sin(DegreesToRadians(Degrees)); }
+double Math::Sine(const float64 Degrees) { return sin(DegreesToRadians(Degrees)); }
 
-float Math::Cosine(const float Degrees) { return cosf(DegreesToRadians(Degrees)); }
+float Math::Cosine(const float32 Degrees) { return cosf(DegreesToRadians(Degrees)); }
 
-double Math::Cosine(const double Degrees) { return cos(DegreesToRadians(Degrees)); }
+double Math::Cosine(const float64 Degrees) { return cos(DegreesToRadians(Degrees)); }
 
-float Math::Tangent(const float Degrees) { return tanf(DegreesToRadians(Degrees)); }
+float Math::Tangent(const float32 Degrees) { return tanf(DegreesToRadians(Degrees)); }
 
-double Math::Tangent(const double Degrees) { return tan(DegreesToRadians(Degrees)); }
+double Math::Tangent(const float64 Degrees) { return tan(DegreesToRadians(Degrees)); }
 
-float Math::ArcSine(const float A) {	return RadiansToDegrees(asin(A)); }
+float Math::ArcSine(const float32 A) {	return RadiansToDegrees(asin(A)); }
 
-float Math::ArcCosine(const float A) { return RadiansToDegrees(acos(A)); }
+float Math::ArcCosine(const float32 A) { return RadiansToDegrees(acos(A)); }
 
-float Math::ArcTangent(const float A) { return RadiansToDegrees(atan(A)); }
+float Math::ArcTangent(const float32 A) { return RadiansToDegrees(atan(A)); }
 
-float Math::ArcTan2(const float X, const float Y) { return RadiansToDegrees(atan2(Y, X)); }
+float Math::ArcTan2(const float32 X, const float32 Y) { return RadiansToDegrees(atan2(Y, X)); }
 
 float Math::LengthSquared(const Vector2& _A)
 {
-	float32_4 a(_A.X, _A.Y, 0.0f, 0.0f);
-	return float32_4::DotProduct(a, a).GetX();
+	const SIMD128<float32> a(_A.X, _A.Y, 0.0f, 0.0f);
+	return SIMD128<float32>::DotProduct(a, a).GetElement<1>();
 }
 
 float Math::LengthSquared(const Vector3& _A)
 {
-	float32_4 a(_A.X, _A.Y, _A.Z, 0.0f);
-	return float32_4::DotProduct(a, a).GetX();
+	const SIMD128<float32> a(_A.X, _A.Y, _A.Z, 0.0f);
+	return SIMD128<float32>::DotProduct(a, a).GetElement<1>();
 }
 
 float Math::LengthSquared(const Vector4& _A)
 {
-	float32_4 a(_A.X, _A.Y, _A.Z, _A.W);
-	return float32_4::DotProduct(a, a).GetX();
+	const SIMD128<float32> a(AlignedPointer<float32, 16>(&_A.X));
+	return SIMD128<float32>::DotProduct(a, a).GetElement<1>();
 }
 
 Vector2 Math::Normalized(const Vector2& _A)
 {
-	float32_4 a(_A.X, _A.Y, 0.0f, 0.0f);
-	const float32_4 length(Length(_A));
+	SIMD128<float32> a(_A.X, _A.Y, 0.0f, 0.0f);
+	const SIMD128<float32> length(Length(_A));
 	a /= length;
 	alignas(16) float vector[4];
-	a.CopyToAlignedData(vector);
+	a.CopyTo(AlignedPointer<float, 16>(vector));
 
-	return Vector2(vector[0], vector[1]);
+	return Vector2(vector[3], vector[2]);
 }
 
 void Math::Normalize(Vector2& _A)
 {
-	float32_4 a(_A.X, _A.Y, 0.0f, 0.0f);
-	const float32_4 length(Length(_A));
+	SIMD128<float32> a(_A.X, _A.Y, 0.0f, 0.0f);
+	const SIMD128<float32> length(Length(_A));
 	a /= length;
 	alignas(16) float vector[4];
-	a.CopyToAlignedData(vector);
-	_A.X = vector[0];
-	_A.Y = vector[1];
+	a.CopyTo(AlignedPointer<float, 16>(vector));
+	_A.X = vector[3];
+	_A.Y = vector[2];
 }
 
 Vector3 Math::Normalized(const Vector3& _A)
 {
-	float32_4 a(_A.X, _A.Y, _A.Z, 0.0f);
-	const float32_4 length(Length(_A));
+	SIMD128<float32> a(_A.X, _A.Y, _A.Z, 0.0f);
+	const SIMD128<float32> length(Length(_A));
+	alignas(16) float32 vector[4];
 	a /= length;
-	alignas(16) float vector[4];
-	a.CopyToAlignedData(vector);
+	a.CopyTo(AlignedPointer<float, 16>(vector));
 
 	return Vector3(vector[3], vector[2], vector[1]);
 }
 
 void Math::Normalize(Vector3& _A)
 {
-	float32_4 a(_A.X, _A.Y, _A.Z, 0.0f);
-	const float32_4 length(Length(_A));
+	SIMD128<float32> a(_A.X, _A.Y, _A.Z, 0.0f);
+	const SIMD128<float32> length(Length(_A));
 	a /= length;
-	alignas(16) float Vector[4];
-	a.CopyToAlignedData(Vector);
-	_A.X = Vector[0];
-	_A.Y = Vector[1];
-	_A.Z = Vector[2];
+	alignas(16) float vector[4];
+	a.CopyTo(AlignedPointer<float32, 16>(vector));
+	_A.X = vector[3];
+	_A.Y = vector[2];
+	_A.Z = vector[1];
 }
 
-Vector4 Math::Normalized(const Vector4& _A)
+Vector4 Math::Normalized(const Vector4& a)
 {
 	alignas(16) Vector4 result;
-	auto a = float32_4::MakeFromUnaligned(&_A.X);
-	const float32_4 length(Length(_A));
-	a /= length;
-	a.CopyToAlignedData(&result.X);
+	auto vec = SIMD128<float32>(UnalignedPointer<float32>(&a.X));
+	const SIMD128<float32> length(Length(a));
+	vec /= length;
+	vec.CopyTo(AlignedPointer<float32, 16>(&result.X));
 	return result;
 }
 
 void Math::Normalize(Vector4& _A)
 {
-	auto a = float32_4::MakeFromUnaligned(&_A.X);
-	const float32_4 length(Length(_A));
+	auto a = SIMD128<float32>(UnalignedPointer<float32>(&_A.X)); const SIMD128<float32> length(Length(_A));
 	a /= length;
-	a.CopyToUnalignedData(&_A.X);
+	a.CopyTo(UnalignedPointer<float32>(&_A.X));
 }
 
 float Math::DotProduct(const Vector2& _A, const Vector2& _B)
 {
-	return float32_4::DotProduct(float32_4(_A.X, _A.Y, 0.0f, 0.0f), float32_4(_B.X, _B.Y, 0.0f, 0.0f)).GetX();
+	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, 0.0f, 0.0f), SIMD128<float32>(_B.X, _B.Y, 0.0f, 0.0f)).GetElement<1>();
 }
 
 float Math::DotProduct(const Vector3& _A, const Vector3& _B)
 {
-	return float32_4::DotProduct(float32_4(_A.X, _A.Y, _A.Z, 0.0f), float32_4(_B.X, _B.Y, _B.Z, 0.0f)).GetX();
+	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, _A.Z, 0.0f), SIMD128<float32>(_B.X, _B.Y, _B.Z, 0.0f)).GetElement<1>();
 }
 
 float Math::DotProduct(const Vector4& _A, const Vector4& _B)
 {
-	return float32_4::DotProduct(float32_4(_A.X, _A.Y, _A.Z, _A.W), float32_4(_B.X, _B.Y, _B.Z, _A.W)).GetX();
+	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, _A.Z, _A.W), SIMD128<float32>(_B.X, _B.Y, _B.Z, _A.W)).GetElement<1>();
 }
 
-Vector3 Math::Cross(const Vector3& _A, const Vector3& _B)
+Vector3 Math::Cross(const Vector3& a, const Vector3& b)
 {
 	//alignas(16) float vector[4];
 	//
@@ -138,34 +137,34 @@ Vector3 Math::Cross(const Vector3& _A, const Vector3& _B)
 	//return Vector3(vector[3], vector[2], vector[1]);
 	//
 
-	return Vector3(_A.Y * _B.Z - _A.Z * _B.Y, _A.Z * _B.X - _A.X * _B.Z, _A.X * _B.Y - _A.Y * _B.X);
+	return Vector3(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
 }
 
 float Math::DotProduct(const Quaternion& _A, const Quaternion& _B)
 {
-	return float32_4::DotProduct(float32_4(_A.X, _A.Y, _A.Z, _A.Q), float32_4(_B.X, _B.Y, _B.Z, _A.Q)).GetX();
+	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, _A.Z, _A.Q), SIMD128<float32>(_B.X, _B.Y, _B.Z, _A.Q)).GetElement<1>();
 }
 
 float Math::LengthSquared(const Quaternion& _A)
 {
-	float32_4 a(_A.X, _A.Y, _A.Z, _A.Q);
-	return float32_4::DotProduct(a, a).GetX();
+	SIMD128<float32> a(UnalignedPointer<float32>(&_A.X));
+	return SIMD128<float32>::DotProduct(a, a).GetElement<1>();
 }
 
 Quaternion Math::Normalized(const Quaternion& _A)
 {
 	alignas(16) Quaternion result;
-	auto a = float32_4::MakeFromUnaligned(&_A.X);
-	const float32_4 length(Length(_A));
+	auto a = SIMD128<float32>(UnalignedPointer<float32>(&_A.X));
+	const SIMD128<float32> length(Length(_A));
 	a /= length;
-	a.CopyToAlignedData(&result.X);
+	a.CopyTo(AlignedPointer<float32, 16>(&result.X));
 	return result;
 }
 
 void Math::Normalize(Quaternion& _A)
 {
-	auto a = float32_4::MakeFromUnaligned(&_A.X);
-	const float32_4 length(Length(_A));
+	auto a = SIMD128<float32>(UnalignedPointer<float32>(&_A.X));
+	const SIMD128<float32> length(Length(_A));
 	a /= length;
-	a.CopyToUnalignedData(&_A.X);
+	a.CopyTo(UnalignedPointer<float32>(&_A.X));
 }

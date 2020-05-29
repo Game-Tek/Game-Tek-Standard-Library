@@ -1,7 +1,7 @@
 #include "GTSL/Math/AxisAngle.h"
 
 #include "GTSL/Math/Math.hpp"
-#include "GTSL/SIMD/float32_4.h"
+#include "GTSL/SIMD/SIMD128.h"
 
 using namespace GTSL;
 

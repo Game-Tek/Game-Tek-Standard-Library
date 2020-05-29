@@ -44,7 +44,7 @@
     <ClInclude Include="GTSL\Math\Vector2.h" />
     <ClInclude Include="GTSL\Math\Vector3.h" />
     <ClInclude Include="GTSL\Math\Vector4.h" />
-    <ClInclude Include="GTSL\SIMD\float32_4.h" />
+    <ClInclude Include="GTSL\SIMD\SIMD128.h" />
     <ClInclude Include="GTSL\SIMD\SIMD.h" />
     <ClInclude Include="GTSL\SIMD\uint32_16.h" />
     <ClInclude Include="GTSL\SIMD\uint64_2.h" />

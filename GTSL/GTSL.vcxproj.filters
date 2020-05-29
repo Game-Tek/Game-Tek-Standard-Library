@@ -204,9 +204,6 @@
     <ClInclude Include="GTSL\Math\Math.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\SIMD\float32_4.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\SIMD\uint32_16.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -250,6 +247,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\Network\IPEndpoints.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\SIMD\SIMD128.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

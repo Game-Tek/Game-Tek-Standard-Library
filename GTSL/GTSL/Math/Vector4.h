@@ -4,37 +4,35 @@
 
 namespace GTSL
 {
-	class Vector4
+	class alignas(16) Vector4
 	{
 	public:
 		//X component of this vector.
-		float X = 0.0f;
+		float32 X = 0.0f;
 
 		//Y component of this vector.
-		float Y = 0.0f;
+		float32 Y = 0.0f;
 
 		//Z component of this vector.
-		float Z = 0.0f;
+		float32 Z = 0.0f;
 
 		//W component of this vector.
-		float W = 0.0f;
+		float32 W = 0.0f;
 
 		Vector4() = default;
 
-		Vector4(float X, float Y, float Z, float W) : X(X), Y(Y), Z(Z), W(W)
-		{
-		}
+		Vector4(const float32 x, const float32 y, const float32 z, const float32 w) : X(x), Y(y), Z(z), W(w) {}
 
 		~Vector4() = default;
 
-		Vector4 operator+(float Other) const
+		Vector4 operator+(const float other) const
 		{
-			return { X + Other, Y + Other, Z + Other, W + Other };
+			return { X + other, Y + other, Z + other, W + other };
 		}
 
-		Vector4 operator+(const Vector4& Other) const
+		Vector4 operator+(const Vector4& other) const
 		{
-			return { X + Other.X, Y + Other.Y, Z + Other.Z, W + Other.W };
+			return { X + other.X, Y + other.Y, Z + other.Z, W + other.W };
 		}
 
 		Vector4& operator+=(float Other)
@@ -117,14 +115,8 @@ namespace GTSL
 			return *this;
 		}
 
-		inline bool operator==(const Vector4& Other)
-		{
-			return X == Other.X && Y == Other.Y && Z == Other.Z && W == Other.W;
-		}
+		bool operator==(const Vector4& Other) { return X == Other.X && Y == Other.Y && Z == Other.Z && W == Other.W; }
 
-		inline bool operator!=(const Vector4& Other)
-		{
-			return X != Other.X || Y != Other.Y || Z != Other.Z || W != Other.W;
-		}
+		bool operator!=(const Vector4& Other) { return X != Other.X || Y != Other.Y || Z != Other.Z || W != Other.W; }
 	};
 }
