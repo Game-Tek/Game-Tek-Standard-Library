@@ -5,13 +5,12 @@
 
 namespace GTSL
 {
-	template<typename T, GTSL::uint64 ALIGNMENT>
+	template<typename T, uint64 ALIGNMENT>
 	struct AlignedPointer
 	{
 		explicit AlignedPointer(T* ptr) : pointer(ptr)
 		{
-			//GTSL_ASSERT(ptr)
-			//TODO: CHECK ALIGNMENT
+			GTSL_ASSERT(static_cast<uint64>(ptr) % ALIGNMENT == 0, "Expected aligned pointer is not aligned to boundaries!")
 		}
 
 		operator T*() const { return pointer; }
