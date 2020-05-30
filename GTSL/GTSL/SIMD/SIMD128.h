@@ -307,8 +307,8 @@ namespace GTSL
 
 		explicit SIMD128(const type a) : vector(_mm_set_ps1(a)) {}
 
-		SIMD128(const AlignedPointer<type, 16> data) : vector(_mm_load_ps(data)) {}
-		SIMD128(const UnalignedPointer<type> data) : vector(_mm_loadu_ps(data)) {}
+		SIMD128(const AlignedPointer<const type, 16> data) : vector(_mm_load_ps(data)) {}
+		SIMD128(const UnalignedPointer<const type> data) : vector(_mm_loadu_ps(data)) {}
 
 		SIMD128(const type x, const type y, const type z, const type w) : vector(_mm_set_ps(x, y, z, w)) {}
 
@@ -327,8 +327,8 @@ namespace GTSL
 		SIMD128& operator=(const type a) { vector = _mm_set_ps1(a); return *this; }
 		SIMD128& operator=(const SIMD128 & other) { vector = other.vector; return *this; }
 
-		SIMD128& operator=(const AlignedPointer<type, 16> data) { vector = _mm_load_ps(data); return *this; }
-		SIMD128& operator=(const UnalignedPointer<type> data) { vector = _mm_loadu_ps(data); return *this; }
+		SIMD128& operator=(const AlignedPointer<const type, 16> data) { vector = _mm_load_ps(data); return *this; }
+		SIMD128& operator=(const UnalignedPointer<const type> data) { vector = _mm_loadu_ps(data); return *this; }
 
 		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
 		void CopyTo(const AlignedPointer<type, 16> data) const { _mm_store_ps(data, vector); }

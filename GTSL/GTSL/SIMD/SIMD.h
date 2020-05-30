@@ -10,12 +10,7 @@ namespace GTSL
 	{
 		explicit AlignedPointer(T* ptr) : pointer(ptr)
 		{
-			GTSL_ASSERT(static_cast<uint64>(ptr) % ALIGNMENT == 0, "Expected aligned pointer is not aligned to boundaries!")
-		}
-
-		explicit AlignedPointer(const T* ptr) : pointer(ptr)
-		{
-			GTSL_ASSERT(static_cast<uint64>(ptr) % ALIGNMENT == 0, "Expected aligned pointer is not aligned to boundaries!")
+			GTSL_ASSERT(reinterpret_cast<uint64>(ptr) % ALIGNMENT == 0, "Expected aligned pointer is not aligned to boundaries!")
 		}
 
 		operator T*() const { return pointer; }
@@ -30,10 +25,6 @@ namespace GTSL
 	struct UnalignedPointer
 	{
 		explicit UnalignedPointer(T* ptr) : pointer(ptr)
-		{
-		}
-
-		explicit UnalignedPointer(const T* ptr) : pointer(ptr)
 		{
 		}
 

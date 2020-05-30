@@ -91,9 +91,9 @@ namespace GTSL
 			return Result;
 		}
 
-		static uint64 PowerOf2RoundUp(const uint64 number, const uint64 alignment) { return (number + alignment - 1) & -alignment; }
+		static uint64 PowerOf2RoundUp(const uint64 number, const uint32 alignment) { return (number + alignment - 1) & -static_cast<int64>(alignment); }
 
-		static void RoundDown(const uint64 x, const uint64 multiple, uint64& quotient, uint64& remainder) { const uint64 rem = (x % multiple); remainder = rem; quotient = x - rem; }
+		static void RoundDown(const uint64 x, const uint64 multiple, uint64& quotient, uint64& remainder) { const uint64 rem = x % multiple; remainder = rem; quotient = x - rem; }
 		
 		/**
 		 * \brief Returns x to the y.

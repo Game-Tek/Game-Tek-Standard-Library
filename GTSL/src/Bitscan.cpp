@@ -8,9 +8,19 @@
 
 using namespace GTSL;
 
+void GTSL::BitScanForward(const uint32 number, uint8& bit)
+{
+    unsigned long set_bit{ 0 };	_BitScanForward(&set_bit, number); bit = static_cast<uint8>(set_bit);
+}
+
 void GTSL::BitScanForward(const uint32 number, uint8& bit, bool& anySetBit)
 {
     unsigned long set_bit{ 0 };	anySetBit = _BitScanForward(&set_bit, number); bit = static_cast<uint8>(set_bit);
+}
+
+void GTSL::BitScanForward(const uint64 number, uint8& bit)
+{
+	unsigned long set_bit{ 0 };	_BitScanForward64(&set_bit, number); bit = static_cast<uint8>(set_bit);
 }
 
 void GTSL::BitScanForward(const uint64 number, uint8& bit, bool& anySetBit)

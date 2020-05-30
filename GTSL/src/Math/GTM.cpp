@@ -43,7 +43,7 @@ float Math::LengthSquared(const Vector3& _A)
 
 float Math::LengthSquared(const Vector4& _A)
 {
-	const SIMD128<float32> a(AlignedPointer<float32, 16>(&_A.X));
+	const SIMD128<float32> a(AlignedPointer<const float32, 16>(&_A.X));
 	return SIMD128<float32>::DotProduct(a, a).GetElement<1>();
 }
 
@@ -95,7 +95,7 @@ void Math::Normalize(Vector3& _A)
 Vector4 Math::Normalized(const Vector4& a)
 {
 	alignas(16) Vector4 result;
-	auto vec = SIMD128<float32>(UnalignedPointer<float32>(&a.X));
+	auto vec = SIMD128<float32>(UnalignedPointer<const float32>(&a.X));
 	const SIMD128<float32> length(Length(a));
 	vec /= length;
 	vec.CopyTo(AlignedPointer<float32, 16>(&result.X));
@@ -104,7 +104,7 @@ Vector4 Math::Normalized(const Vector4& a)
 
 void Math::Normalize(Vector4& _A)
 {
-	auto a = SIMD128<float32>(UnalignedPointer<float32>(&_A.X)); const SIMD128<float32> length(Length(_A));
+	auto a = SIMD128<float32>(UnalignedPointer<const float32>(&_A.X)); const SIMD128<float32> length(Length(_A));
 	a /= length;
 	a.CopyTo(UnalignedPointer<float32>(&_A.X));
 }
@@ -147,14 +147,14 @@ float Math::DotProduct(const Quaternion& _A, const Quaternion& _B)
 
 float Math::LengthSquared(const Quaternion& _A)
 {
-	SIMD128<float32> a(UnalignedPointer<float32>(&_A.X));
+	SIMD128<float32> a(UnalignedPointer<const float32>(&_A.X));
 	return SIMD128<float32>::DotProduct(a, a).GetElement<1>();
 }
 
 Quaternion Math::Normalized(const Quaternion& _A)
 {
 	alignas(16) Quaternion result;
-	auto a = SIMD128<float32>(UnalignedPointer<float32>(&_A.X));
+	auto a = SIMD128<float32>(UnalignedPointer<const float32>(&_A.X));
 	const SIMD128<float32> length(Length(_A));
 	a /= length;
 	a.CopyTo(AlignedPointer<float32, 16>(&result.X));
@@ -163,7 +163,7 @@ Quaternion Math::Normalized(const Quaternion& _A)
 
 void Math::Normalize(Quaternion& _A)
 {
-	auto a = SIMD128<float32>(UnalignedPointer<float32>(&_A.X));
+	auto a = SIMD128<float32>(UnalignedPointer<const float32>(&_A.X));
 	const SIMD128<float32> length(Length(_A));
 	a /= length;
 	a.CopyTo(UnalignedPointer<float32>(&_A.X));
