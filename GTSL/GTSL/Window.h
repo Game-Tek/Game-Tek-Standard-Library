@@ -78,7 +78,6 @@ namespace GTSL
 	protected:
 		Extent2D windowSize;
 		Extent2D clientSize;
-		Vector2 mousePos;
 		WindowSizeState windowSizeState;
 
 		void* windowHandle = nullptr;
@@ -86,7 +85,7 @@ namespace GTSL
 
 #if (_WIN32)
 		static uint64 __stdcall Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam);
-		void Win32_calculateMousePos(uint32 x, uint32 y);
+		void Win32_calculateMousePos(uint32 x, uint32 y, Vector2& mousePos) const;
 		static void Win32_translateKeys(uint64 win32Key, uint64 context, KeyboardKeys& key);
 #endif
 		
@@ -96,7 +95,7 @@ namespace GTSL
 		/**
 		 * \brief Delegate called when mouse moves, the first two floats are the X;Y in the -1 <-> 1 range, and the other two floats are delta position in the same range in respect to the last update to the screen.
 		 */
-		Delegate<void(const Vector2&, const Vector2&)> onMouseMove;
+		Delegate<void(Vector2)> onMouseMove;
 		Delegate<void(float)> onMouseWheelMove;
 		Delegate<void(KeyboardKeys, ButtonState)> onKeyEvent;
 		Delegate<void(uint16)> onCharEvent;

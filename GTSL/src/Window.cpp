@@ -7,7 +7,7 @@
 GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam)
 {
 	const auto window = reinterpret_cast<Window*>(GetWindowLongPtrA(reinterpret_cast<HWND>(hwnd), GWLP_USERDATA));
-	auto win_handle = reinterpret_cast<HWND>(hwnd);
+	const auto win_handle = reinterpret_cast<HWND>(hwnd);
 	
 	switch (uMsg)
 	{
@@ -17,9 +17,9 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	}
 	case WM_MOUSEMOVE: /*absolute pos*/
 	{
-		const auto mouse_pos = window->mousePos;
-		window->Win32_calculateMousePos(LOWORD(lParam), HIWORD(lParam));
-		window->onMouseMove(window->mousePos, window->mousePos - mouse_pos); return 0;
+		Vector2 mousePos;
+		window->Win32_calculateMousePos(LOWORD(lParam), HIWORD(lParam), mousePos);
+		window->onMouseMove(mousePos); return 0;
 	}
 	case WM_MOUSEHWHEEL:
 	{
@@ -99,11 +99,11 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	}
 }
 
-void GTSL::Window::Win32_calculateMousePos(uint32 x, uint32 y)
+void GTSL::Window::Win32_calculateMousePos(const uint32 x, const uint32 y, GTSL::Vector2& mousePos) const
 {
-	const auto halfX = static_cast<float>(windowSize.Width) * 0.5f;
-	const auto halfY = static_cast<float>(windowSize.Height) * 0.5f;
-	mousePos.X = (x - halfX) / halfX; mousePos.Y = (y - halfY) / halfY;
+	const auto halfX = static_cast<float>(clientSize.Width) * 0.5f;
+	const auto halfY = static_cast<float>(clientSize.Height) * 0.5f;
+	mousePos.X = (x - halfX) / halfX; mousePos.Y = (halfY - y) / halfY;
 }
 
 void GTSL::Window::Win32_translateKeys(uint64 win32Key, uint64 context, KeyboardKeys& key)
