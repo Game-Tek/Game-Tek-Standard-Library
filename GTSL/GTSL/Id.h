@@ -48,7 +48,7 @@ namespace GTSL
 		constexpr Id64() = default;
 
 		template<uint64 N>
-		constexpr Id64(const char(&string)[N]) noexcept : hashValue(hashString(GTSL::Ranger<const UTF8>(N, &string))) {}
+		constexpr Id64(const char(&string)[N]) noexcept : hashValue(hashString(GTSL::Ranger<const UTF8>(N, string))) {}
 		
 		constexpr Id64(const Ranger<const UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
 		constexpr Id64(const Ranger<UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
