@@ -8,7 +8,7 @@ namespace GTSL
 	class Console
 	{
 	public:
-		Console() = default;
+		Console();
 		
 		Console(const Ranger<const UTF8>& text);
 

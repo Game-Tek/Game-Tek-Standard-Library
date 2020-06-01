@@ -5,6 +5,10 @@
 #include <Windows.h>
 #endif
 
+GTSL::Console::Console() : handle(GetStdHandle(STD_OUTPUT_HANDLE))
+{
+}
+
 GTSL::Console::Console(const Ranger<const UTF8>& text)
 {
 	AllocConsole();
