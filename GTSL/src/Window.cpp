@@ -6,8 +6,8 @@
 #if (_WIN32)
 GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam)
 {
-	const auto window = reinterpret_cast<Window*>(GetWindowLongPtrA(reinterpret_cast<HWND>(hwnd), GWLP_USERDATA));
-	const auto win_handle = reinterpret_cast<HWND>(hwnd);
+	const auto window = reinterpret_cast<Window*>(GetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA));
+	const auto win_handle = static_cast<HWND>(hwnd);
 	
 	switch (uMsg)
 	{
@@ -201,37 +201,39 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 	wndclass.lpszMenuName = nullptr;
 	wndclass.style = 0;
 	wndclass.cbWndExtra = 0;
+	StaticString<1024> name(windowCreateInfo.Name);
+	name += '\0';
+	wndclass.lpszClassName = name.begin();
 
 	Application::Win32NativeHandles win32_native_handles;
 	windowCreateInfo.Application->GetNativeHandles(&win32_native_handles);
 	
 	wndclass.hInstance = static_cast<HINSTANCE>(win32_native_handles.HINSTANCE);
-	wndclass.lpszClassName = windowCreateInfo.Name.c_str();
 	RegisterClassA(&wndclass);
 	
-	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.c_str(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, reinterpret_cast<HINSTANCE>(win32_native_handles.HINSTANCE), nullptr);
+	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, name.begin(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, reinterpret_cast<HINSTANCE>(win32_native_handles.HINSTANCE), nullptr);
 
 	GTSL_ASSERT(windowHandle, "Window failed to create!")
 	
-	SetWindowLongPtrA(reinterpret_cast<HWND>(windowHandle), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+	SetWindowLongPtrA(static_cast<HWND>(windowHandle), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
-	defaultWindowStyle = ::GetWindowLong(reinterpret_cast<HWND>(windowHandle), GWL_STYLE);
+	defaultWindowStyle = ::GetWindowLong(static_cast<HWND>(windowHandle), GWL_STYLE);
 #endif
 }
 
 GTSL::Window::~Window()
 {
-	DestroyWindow(reinterpret_cast<HWND>(windowHandle));
+	DestroyWindow(static_cast<HWND>(windowHandle));
 }
 
 void GTSL::Window::SetTitle(const char* title)
 {
-	SetWindowTextA(reinterpret_cast<HWND>(windowHandle), title);
+	SetWindowTextA(static_cast<HWND>(windowHandle), title);
 }
 
 void GTSL::Window::Notify()
 {
-	FlashWindow(reinterpret_cast<HWND>(windowHandle), true);
+	FlashWindow(static_cast<HWND>(windowHandle), true);
 }
 
 void GTSL::Window::SetIcon(const WindowIconInfo& windowIconInfo)
@@ -264,9 +266,9 @@ void GTSL::Window::SetState(const WindowState& windowState)
 	{
 		const DWORD remove = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 		const DWORD new_style = defaultWindowStyle & ~remove;
-		SetWindowLongPtrA(reinterpret_cast<HWND>(windowHandle), GWL_STYLE, new_style);
-		SetWindowPos(reinterpret_cast<HWND>(windowHandle), HWND_TOP, 0, 0, GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CXFULLSCREEN), SWP_FRAMECHANGED);
-		::ShowWindow(reinterpret_cast<HWND>(windowHandle), SW_SHOWMAXIMIZED);
+		SetWindowLongPtrA(static_cast<HWND>(windowHandle), GWL_STYLE, new_style);
+		SetWindowPos(static_cast<HWND>(windowHandle), HWND_TOP, 0, 0, GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CXFULLSCREEN), SWP_FRAMECHANGED);
+		::ShowWindow(static_cast<HWND>(windowHandle), SW_SHOWMAXIMIZED);
 
 		//DEVMODEA devmodea;
 		//devmodea.dmDisplayFrequency = windowState.RefreshRate;
@@ -287,7 +289,7 @@ void GTSL::Window::SetState(const WindowState& windowState)
 		//	ChangeDisplaySettingsA(nullptr, CDS_FULLSCREEN);
 		//}
 
-		::ShowWindow(reinterpret_cast<HWND>(windowHandle), SW_MINIMIZE);
+		::ShowWindow(static_cast<HWND>(windowHandle), SW_MINIMIZE);
 
 		windowSizeState = windowState.NewWindowSizeState;
 	}
@@ -302,10 +304,10 @@ void GTSL::Window::GetNativeHandles(void* nativeHandlesStruct) const
 
 void GTSL::Window::ShowWindow()
 {
-	::ShowWindow(reinterpret_cast<HWND>(windowHandle), SW_SHOWNORMAL);
+	::ShowWindow(static_cast<HWND>(windowHandle), SW_SHOWNORMAL);
 }
 
 void GTSL::Window::HideWindow()
 {
-	::ShowWindow(reinterpret_cast<HWND>(windowHandle), SW_HIDE);
+	::ShowWindow(static_cast<HWND>(windowHandle), SW_HIDE);
 }

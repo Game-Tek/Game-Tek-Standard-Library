@@ -5,25 +5,16 @@
 
 using namespace GTSL;
 
-String::String(const length_type length, const char* cstring, AllocatorReference* allocatorReference) : data(length + 1, cstring, allocatorReference)
+String::String(const length_type length, const char* cstring, AllocatorReference* allocatorReference) : data(length, cstring, allocatorReference)
 {
-	data.PushBack('\0');
 }
 
 String::String(const length_type length, const String& string, AllocatorReference* allocatorReference) : data(length, string.data.GetData(), allocatorReference)
 {
-	if(length < string.GetLength())
-	{
-		data.PushBack('\0');
-	}
 }
 
 String::String(const length_type length, const String& string, const length_type offset, AllocatorReference* allocatorReference) : data(length, string.data.GetData() + offset, allocatorReference)
 {
-	if(length + offset < string.GetLength())
-	{
-		data.PushBack('\0');
-	}
 }
 
 String& String::operator=(const char* cstring)
@@ -34,15 +25,12 @@ String& String::operator=(const char* cstring)
 
 String& String::operator+=(char c)
 {
-	data.PopBack();
 	data.PushBack(c);
-	data.PushBack('\0');
 	return *this;
 }
 
 String& String::operator+=(const char* cstring)
 {
-	data.PopBack();
 	data.PushBack(StringLength(cstring), cstring);
 	return *this;
 }
@@ -95,70 +83,70 @@ void String::Append(const Ranger<UTF8>& ranger)
 
 void String::Append(const uint8 number)
 {
-	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
 	data.PushBack(range);
 }
 
 void String::Append(const int8 number)
 {
-	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
 	data.PushBack(range);
 }
 
 void String::Append(const uint16 number)
 {
-	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
 	data.PushBack(range);
 }
 
 void String::Append(const int16 number)
 {
-	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
 	data.PushBack(range);
 }
 
 void String::Append(const uint32 number)
 {
-	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
 	data.PushBack(range);
 }
 
 void String::Append(const int32 number)
 {
-	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
 	data.PushBack(range);
 }
 
 void String::Append(const uint64 number)
 {
-	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
 	data.PushBack(range);
 }
 
 void String::Append(const int64 number)
 {
-	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
 	data.PushBack(range);
 }
 
 void String::Append(const float number)
 {
-	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
 	data.PushBack(range);
 }
 
 void String::Append(const double number)
 {
-	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
 	data.PushBack(range);
 }
@@ -185,8 +173,7 @@ String::length_type String::FindLast(const char c) const
 
 void String::Drop(const length_type from)
 {
-	data.Resize(from + 1);
-	data[from + 1] = '\0';
+	data.Resize(from);
 }
 
 void String::ReplaceAll(const char a, const char with)

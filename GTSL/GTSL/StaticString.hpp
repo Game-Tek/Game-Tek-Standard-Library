@@ -68,18 +68,16 @@ namespace GTSL
 			this->array.PushBack(ranger);
 			return *this;
 		}
-
-		constexpr StaticString& operator+=(const int8 num)
+		
+		constexpr StaticString& operator+=(const char num)
 		{
-			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.end());
-			ToString(num, range);
-			this->array.PushBack(range);
+			this->array.PushBack(num);
 			return *this;
 		}
 
 		constexpr StaticString& operator+=(const uint8 num)
 		{
-			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.end());
+			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.begin() + this->array.GetCapacity());
 			ToString(num, range);
 			this->array.PushBack(range);
 			return *this;
@@ -87,7 +85,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const int16 num)
 		{
-			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.end());
+			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.begin() + this->array.GetCapacity());
 			ToString(num, range);
 			this->array.PushBack(range);
 			return *this;
@@ -95,7 +93,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const uint16 num)
 		{
-			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.end());
+			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.begin() + this->array.GetCapacity());
 			ToString(num, range);
 			this->array.PushBack(range);
 			return *this;
@@ -103,7 +101,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const int32 num)
 		{
-			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.end());
+			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.begin() + this->array.GetCapacity());
 			ToString(num, range);
 			this->array.PushBack(range);
 			return *this;
@@ -111,7 +109,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const uint32 num)
 		{
-			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.end());
+			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.begin() + this->array.GetCapacity());
 			ToString(num, range);
 			this->array.PushBack(range);
 			return *this;
@@ -119,7 +117,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const int64 num)
 		{
-			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.end());
+			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.begin() + this->array.GetCapacity());
 			ToString(num, range);
 			this->array.PushBack(range);
 			return *this;
@@ -127,7 +125,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const uint64 num)
 		{
-			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.end());
+			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.begin() + this->array.GetCapacity());
 			ToString(num, range);
 			this->array.PushBack(range);
 			return *this;
@@ -135,7 +133,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const float32 num)
 		{
-			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.end());
+			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.begin() + this->array.GetCapacity());
 			ToString(num, range);
 			this->array.PushBack(range);
 			return *this;
@@ -143,7 +141,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const float64 num)
 		{
-			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.end());
+			Ranger<UTF8> range(this->array.begin() + this->array.GetLength(), this->array.begin() + this->array.GetCapacity());
 			ToString(num, range);
 			this->array.PushBack(range);
 			return *this;
