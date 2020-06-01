@@ -53,6 +53,7 @@
     <ClInclude Include="GTSL\StaticString.hpp" />
     <ClInclude Include="GTSL\String.hpp" />
     <ClInclude Include="GTSL\GamepadQuery.h" />
+    <ClInclude Include="GTSL\StringCommon.h" />
     <ClInclude Include="GTSL\Tuple.h" />
     <ClInclude Include="GTSL\Vector.hpp" />
     <ClInclude Include="GTSL\Id.h" />
@@ -108,9 +109,9 @@
     <ClCompile Include="src\Memory.cpp" />
     <ClCompile Include="src\String.cpp" />
     <ClCompile Include="src\GamepadQuery.cpp" />
-    <ClCompile Include="src\Id.cpp" />
     <ClCompile Include="src\Sockets.cpp" />
     <ClCompile Include="src\Stream.cpp" />
+    <ClCompile Include="src\StringCommon.cpp" />
     <ClCompile Include="src\System.cpp" />
     <ClCompile Include="src\Thread.cpp" />
     <ClCompile Include="src\Window.cpp" />

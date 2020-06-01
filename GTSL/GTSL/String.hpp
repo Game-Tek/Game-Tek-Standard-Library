@@ -4,6 +4,7 @@
 
 #include "Vector.hpp"
 #include "Stream.h"
+#include "StringCommon.h"
 
 namespace GTSL
 {
@@ -20,7 +21,7 @@ namespace GTSL
 		//{
 		//}
 
-		String(const char* cstring, AllocatorReference* allocatorReference) : data(StringLength(cstring), cstring, allocatorReference) {}
+		String(const char* cstring, AllocatorReference* allocatorReference) : data(stringLength(cstring), cstring, allocatorReference) {}
 
 		/**
 		 * \brief Creates an String with enough space allocated for length elements.
@@ -114,7 +115,7 @@ namespace GTSL
 		 * \param cstring C-String to insert in the string.
 		 * \param index Index At which to Place the cstring.
 		 */
-		void Insert(const char* cstring, const length_type index);
+		void Insert(const char* cstring, length_type index);
 
 		/**
 		* \brief Returns an index to the first char in the string that is equal to c. If no such character is found npos() is returned.
@@ -138,17 +139,7 @@ namespace GTSL
 
 		void ReplaceAll(char a, char with);
 		void ReplaceAll(const char* a, const char* with);
-
-		//Returns the length of the C-String accounting for the null terminator character. C-String MUST BE NULL TERMINATED.
-		static constexpr length_type StringLength(const char* cstring)
-		{
-			length_type length = 0;	while (cstring[length] != '\0') { ++length; }
-
-			//We return Length + 1 to take into account for the null terminator character.
-			return length + 1;
-		}
-
-		static String MakeString(const char* cstring, ...);
+		
 	private:
 		Vector<string_type> data;
 

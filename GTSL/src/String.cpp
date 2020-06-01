@@ -29,7 +29,7 @@ String::String(const length_type length, const String& string, const length_type
 
 String& String::operator=(const char* cstring)
 {
-	data.Recreate(StringLength(cstring), cstring);
+	data.Recreate(stringLength(cstring), cstring);
 	return *this;
 }
 
@@ -44,7 +44,7 @@ String& String::operator+=(char c)
 String& String::operator+=(const char* cstring)
 {
 	data.PopBack();
-	data.PushBack(StringLength(cstring), cstring);
+	data.PushBack(stringLength(cstring), cstring);
 	return *this;
 }
 
@@ -77,7 +77,8 @@ bool String::NonSensitiveComp(const String& other) const
 void String::Append(const char* cstring)
 {
 	data.Place(data.GetLength(), ' '); //Push space.
-	data.PushBack(StringLength(cstring), cstring);
+	data.PushBack(stringLength(cstring), cstring);
+	data.PushBack(stringLength(cstring), cstring);
 	return;
 }
 
@@ -95,77 +96,77 @@ void String::Append(const Ranger<UTF8>& ranger)
 
 void String::Append(const uint8 number)
 {
-	data.Place(data.GetLength(), ' '); //Push space.
-	data.Resize(data.GetLength() + 3 + 1);
-	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%d", number) + 1);
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	ToString(number, range);
+	data.PushBack(range);
 }
 
 void String::Append(const int8 number)
 {
-	data.Place(data.GetLength(), ' '); //Push space.
-	data.Resize(data.GetLength() + 4 + 1);
-	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%d", number) + 1);
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	ToString(number, range);
+	data.PushBack(range);
 }
 
 void String::Append(const uint16 number)
 {
-	data.Place(data.GetLength(), ' '); //Push space.
-	data.Resize(data.GetLength() + 6 + 1);
-	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%hu", number) + 1);
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	ToString(number, range);
+	data.PushBack(range);
 }
 
 void String::Append(const int16 number)
 {
-	data.Place(data.GetLength(), ' '); //Push space.
-	data.Resize(data.GetLength() + 7 + 1);
-	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%hi", number) + 1);
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	ToString(number, range);
+	data.PushBack(range);
 }
 
 void String::Append(const uint32 number)
 {
-	data.Place(data.GetLength(), ' '); //Push space.
-	data.Resize(data.GetLength() + 10 + 1);
-	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%lu", number) + 1);
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	ToString(number, range);
+	data.PushBack(range);
 }
 
 void String::Append(const int32 number)
 {
-	data.Place(data.GetLength(), ' '); //Push space.
-	data.Resize(data.GetLength() + 11 + 1);
-	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%d", number) + 1);
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	ToString(number, range);
+	data.PushBack(range);
 }
 
 void String::Append(const uint64 number)
 {
-	data.Place(data.GetLength(), ' '); //Push space.
-	data.Resize(data.GetLength() + 20 + 1);
-	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%llu", number) + 1);
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	ToString(number, range);
+	data.PushBack(range);
 }
 
 void String::Append(const int64 number)
 {
-	data.Place(data.GetLength(), ' '); //Push space.
-	data.Resize(data.GetLength() + 21 + 1);
-	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%lld", number) + 1);
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	ToString(number, range);
+	data.PushBack(range);
 }
 
 void String::Append(const float number)
 {
-	data.Place(data.GetLength(), ' '); //Push space.
-	data.Resize(data.GetLength() + 31 + 1);
-	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%f", number) + 1);
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	ToString(number, range);
+	data.PushBack(range);
 }
 
 void String::Append(const double number)
 {
-	data.Place(data.GetLength(), ' '); //Push space.
-	data.Resize(data.GetLength() + 61 + 1);
-	data.Resize(sprintf_s(data.GetData() + data.GetLength() - 1, data.GetCapacity() - data.GetLength() - 1, "%lf", number) + 1);
+	Ranger<string_type> range(data.begin() + data.GetLength(), data.end());
+	ToString(number, range);
+	data.PushBack(range);
 }
 
 void String::Insert(const char* cstring, const length_type index)
 {
-	data.Insert(index, cstring, StringLength(cstring));
+	data.Insert(index, cstring, stringLength(cstring));
 	return;
 }
 
@@ -198,8 +199,8 @@ void String::ReplaceAll(const char* a, const char* with)
 {
 	Array<uint32, 24, uint8> ocurrences; //cache ocurrences so as to not perform an array Resize every time we Find a match
 
-	auto a_length = StringLength(a) - 1;
-	auto with_length = StringLength(with) - 1;
+	auto a_length = stringLength(a) - 1;
+	auto with_length = stringLength(with) - 1;
 
 	uint32 i = 0;
 	

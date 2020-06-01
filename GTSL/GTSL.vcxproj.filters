@@ -255,12 +255,12 @@
     <ClInclude Include="GTSL\Console.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GTSL\StringCommon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\System.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Id.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Stream.cpp">
@@ -318,6 +318,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Console.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StringCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

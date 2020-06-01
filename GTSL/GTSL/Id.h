@@ -80,14 +80,4 @@ namespace GTSL
 
 		constexpr operator uint32() const noexcept { return hash; }
 	};
-
-	class Id16
-	{
-		uint16 hash = 0;
-		static uint16 hashString(uint32 stringLength, const char* str);
-	public:
-		Id16(const char* text);
-
-		operator uint16() const { return hash; }
-	};
 }
