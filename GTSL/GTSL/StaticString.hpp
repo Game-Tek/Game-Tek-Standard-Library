@@ -59,7 +59,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const char* cstring) noexcept
 		{
-			this->array.PushBack(Ranger<UTF8>(StringLength(cstring) - 1, cstring));
+			this->array.PushBack(Ranger<UTF8>(StringLength(cstring), cstring));
 			return *this;
 		}
 
