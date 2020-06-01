@@ -21,7 +21,7 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 		window->Win32_calculateMousePos(LOWORD(lParam), HIWORD(lParam), mousePos);
 		window->onMouseMove(mousePos); return 0;
 	}
-	case WM_MOUSEHWHEEL:
+	case WM_MOUSEWHEEL:
 	{
 		window->onMouseWheelMove(GET_WHEEL_DELTA_WPARAM(wParam)); return 0;
 	}
