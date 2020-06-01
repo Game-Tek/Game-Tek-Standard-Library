@@ -7,11 +7,10 @@
 namespace GTSL
 {
 	class File
-	{
-		void* fileHandle{ nullptr };
+	{		
 	public:
-
 		File() = default;
+		~File();
 
 		enum class OpenFileMode : uint8
 		{
@@ -29,7 +28,8 @@ namespace GTSL
 			BEGIN, CURRENT, END
 		};
 		void SetPointer(uint64 byte, uint64& newFilePointer, MoveFrom from);
-		
-		~File() = default;
+
+	private:
+		void* fileHandle{ nullptr };
 	};
 }

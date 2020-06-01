@@ -2,9 +2,16 @@
 
 #include <Windows.h>
 
+#include "GTSL/StaticString.hpp"
+
 using namespace GTSL;
 
-void File::OpenFile(const Ranger<char>& path, OpenFileMode openFileMode)
+File::~File()
+{
+	GTSL_ASSERT(fileHandle == nullptr, "File was not closed!")
+}
+
+void File::OpenFile(const Ranger<UTF8>& path, OpenFileMode openFileMode)
 {
 	uint64 open_mode{ 0 };
 
@@ -17,12 +24,18 @@ void File::OpenFile(const Ranger<char>& path, OpenFileMode openFileMode)
 		open_mode = open_mode | GENERIC_WRITE;
 	}
 
-	fileHandle = CreateFileA(path.begin(), open_mode, 0, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	StaticString<MAX_PATH> win32_path(path);
+	win32_path += '\0';
+	
+	fileHandle = CreateFileA(win32_path.begin(), open_mode, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 
 void File::CloseFile()
 {
 	CloseHandle(static_cast<HANDLE>(fileHandle));
+#if (_DEBUG)
+	fileHandle = nullptr;
+#endif
 }
 
 void File::WriteToFile(const Ranger<byte>& buffer, uint64& bytesWritten)
