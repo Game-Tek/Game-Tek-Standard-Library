@@ -60,7 +60,7 @@ namespace GTSL
 		{
 			if (this->data)
 			{
-				GTSL_ASSERT(this->data == nullptr, "Data is nullptr.")
+				GTSL_ASSERT(this->data != nullptr, "Data is nullptr.")
 				this->allocatorReference->Deallocate(this->capacity, alignof(T), this->data);
 				this->data = nullptr;
 			}
@@ -80,7 +80,7 @@ namespace GTSL
 				const length_type new_capacity = this->length * 2;
 				T* new_data = this->allocate(new_capacity);
 				copyArray(this->data, new_data, this->capacity);
-				GTSL_ASSERT(this->data == nullptr, "Data is nullptr.")
+				GTSL_ASSERT(this->data != nullptr, "Data is nullptr.")
 				this->allocatorReference->Deallocate(this->capacity, alignof(T), this->data);
 				this->data = new_data;
 			}
@@ -187,7 +187,7 @@ namespace GTSL
 		 */
 		Vector& operator=(const Vector& other)
 		{
-			GTSL_ASSERT(this == &other, "Assigning to self is not allowed!");
+			GTSL_ASSERT(this != &other, "Assigning to self is not allowed!");
 			allocatorReference = other.allocatorReference;
 			reallocateIfExceeds(other.length - this->length);
 			copyArray(other.data, this->data, other.length);
@@ -202,7 +202,7 @@ namespace GTSL
 		 */
 		Vector& operator=(Vector&& other) noexcept
 		{
-			GTSL_ASSERT(this == &other, "Assigning to self is not allowed!");
+			GTSL_ASSERT(this != &other, "Assigning to self is not allowed!");
 			allocatorReference = other.allocatorReference;
 			capacity = other.capacity;
 			length = other.length;
@@ -287,7 +287,7 @@ namespace GTSL
 		void Initialize(const length_type count, AllocatorReference* allocatorReference = nullptr)
 		{
 			this->allocatorReference = allocatorReference;
-			GTSL_ASSERT(this->data, "Array pointer is not null!")
+			GTSL_ASSERT(!this->data, "Array pointer is not null!")
 			this->data = allocate(count);
 			this->length = 0;
 		}
@@ -414,7 +414,7 @@ namespace GTSL
 		 */
 		void PopBack()
 		{
-			GTSL_ASSERT(this->length == 0, "Cannot pop back, there are no more elements!")
+			GTSL_ASSERT(this->length != 0, "Cannot pop back, there are no more elements!")
 			this->data[this->length].~T();
 			this->length -= 1;
 		}
@@ -566,7 +566,7 @@ namespace GTSL
 		 */
 		T& operator[](const length_type index) noexcept
 		{
-			GTSL_ASSERT(index > this->length, "Entered index is not accessible, array is not as large.")
+			GTSL_ASSERT(index < this->length, "Entered index is not accessible, array is not as large.")
 			return this->data[index];
 		}
 
@@ -577,7 +577,7 @@ namespace GTSL
 		 */
 		const T& operator[](const length_type index) const noexcept
 		{
-			GTSL_ASSERT(index > this->length, "Entered index is not accessible, array is not as large.")
+			GTSL_ASSERT(index < this->length, "Entered index is not accessible, array is not as large.")
 			return this->data[index];
 		}
 

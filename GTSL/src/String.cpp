@@ -1,6 +1,5 @@
 #include "GTSL/String.hpp"
 
-#include <cstdio>
 #include "GTSL/Array.hpp"
 #include "GTSL/Serialize.h"
 
@@ -29,7 +28,7 @@ String::String(const length_type length, const String& string, const length_type
 
 String& String::operator=(const char* cstring)
 {
-	data.Recreate(stringLength(cstring), cstring);
+	data.Recreate(StringLength(cstring), cstring);
 	return *this;
 }
 
@@ -44,7 +43,7 @@ String& String::operator+=(char c)
 String& String::operator+=(const char* cstring)
 {
 	data.PopBack();
-	data.PushBack(stringLength(cstring), cstring);
+	data.PushBack(StringLength(cstring), cstring);
 	return *this;
 }
 
@@ -77,8 +76,8 @@ bool String::NonSensitiveComp(const String& other) const
 void String::Append(const char* cstring)
 {
 	data.Place(data.GetLength(), ' '); //Push space.
-	data.PushBack(stringLength(cstring), cstring);
-	data.PushBack(stringLength(cstring), cstring);
+	data.PushBack(StringLength(cstring), cstring);
+	data.PushBack(StringLength(cstring), cstring);
 	return;
 }
 
@@ -166,7 +165,7 @@ void String::Append(const double number)
 
 void String::Insert(const char* cstring, const length_type index)
 {
-	data.Insert(index, cstring, stringLength(cstring));
+	data.Insert(index, cstring, StringLength(cstring));
 	return;
 }
 
@@ -199,8 +198,8 @@ void String::ReplaceAll(const char* a, const char* with)
 {
 	Array<uint32, 24, uint8> ocurrences; //cache ocurrences so as to not perform an array Resize every time we Find a match
 
-	auto a_length = stringLength(a) - 1;
-	auto with_length = stringLength(with) - 1;
+	auto a_length = StringLength(a) - 1;
+	auto with_length = StringLength(with) - 1;
 
 	uint32 i = 0;
 	

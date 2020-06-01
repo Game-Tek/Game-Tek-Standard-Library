@@ -71,7 +71,7 @@ namespace GTSL
 		static Delegate Create() { return Delegate(nullptr, functionCaller<FUNCTION>); }
 
 		template <typename LAMBDA>
-		static Delegate Create(const LAMBDA& instance) { return Delegate(static_cast<void*>(&instance), lambdaCaller<LAMBDA>); }
+		static Delegate Create(LAMBDA& instance) { return Delegate(static_cast<void*>(&instance), lambdaCaller<LAMBDA>); }
 
 		RET operator()(ARGS... args) const { return (*callerFunction)(callee, GTSL::MakeForwardReference<ARGS>(args)...); }
 

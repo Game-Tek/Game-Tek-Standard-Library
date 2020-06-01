@@ -211,7 +211,7 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 	
 	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.c_str(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, reinterpret_cast<HINSTANCE>(win32_native_handles.HINSTANCE), nullptr);
 
-	GTSL_ASSERT(!windowHandle, "Window failed to create!")
+	GTSL_ASSERT(windowHandle, "Window failed to create!")
 	
 	SetWindowLongPtrA(reinterpret_cast<HWND>(windowHandle), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 

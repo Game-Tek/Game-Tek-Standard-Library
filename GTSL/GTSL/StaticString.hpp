@@ -14,7 +14,7 @@ namespace GTSL
 	public:
 		constexpr StaticString() noexcept = default;
 
-		constexpr StaticString(const char* cstring) : array(Ranger<UTF8>(stringLength(cstring), cstring))
+		constexpr StaticString(const char* cstring) : array(Ranger<UTF8>(StringLength(cstring), cstring))
 		{
 		}
 
@@ -59,7 +59,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const char* cstring) noexcept
 		{
-			this->array.PushBack(Ranger<UTF8>(stringLength(cstring) - 1, cstring));
+			this->array.PushBack(Ranger<UTF8>(StringLength(cstring) - 1, cstring));
 			return *this;
 		}
 

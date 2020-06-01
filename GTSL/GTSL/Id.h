@@ -3,6 +3,7 @@
 #include "Core.h"
 
 #include "Ranger.h"
+#include "StringCommon.h"
 
 namespace GTSL
 {
@@ -52,6 +53,7 @@ namespace GTSL
 		
 		constexpr Id64(const Ranger<const UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
 		constexpr Id64(const Ranger<UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
+		constexpr Id64(const char* text) noexcept : hashValue(hashString(GTSL::Ranger<UTF8>(StringLength(text), text))) {}
 		constexpr Id64(const HashType id) noexcept : hashValue(id) {}
 		constexpr Id64(const Id64& other) noexcept = default;
 		constexpr Id64(Id64&& other) noexcept : hashValue(other.hashValue) { other.hashValue = 0; }
@@ -73,7 +75,7 @@ namespace GTSL
 	class Id32
 	{
 		uint32 hash = 0;
-		constexpr static uint32 hashString(uint32 stringLength, const char* str) noexcept;
+		//constexpr static uint32 hashString(uint32 stringLength, const char* str) noexcept;
 	public:
 		constexpr Id32(const char* text) noexcept;
 		constexpr Id32(uint32 length, const char* text) noexcept;
