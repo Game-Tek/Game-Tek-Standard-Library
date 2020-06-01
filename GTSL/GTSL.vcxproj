@@ -20,6 +20,7 @@
     <ClInclude Include="GTSL\BlockingQueue.h" />
     <ClInclude Include="GTSL\Buffer.h" />
     <ClInclude Include="GTSL\ConditionVariable.h" />
+    <ClInclude Include="GTSL\Console.h" />
     <ClInclude Include="GTSL\Core.h" />
     <ClInclude Include="GTSL\DLL.h" />
     <ClInclude Include="GTSL\File.h" />
@@ -92,6 +93,7 @@
     <ClInclude Include="Math\Vector4.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Console.cpp" />
     <ClCompile Include="src\DLL.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Bitscan.cpp" />
