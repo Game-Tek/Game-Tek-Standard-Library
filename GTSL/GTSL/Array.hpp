@@ -51,8 +51,9 @@ namespace GTSL
 
 		constexpr Array() noexcept = default;
 
-		constexpr Array(const std::initializer_list<T>& list) noexcept : length(list.size())
+		constexpr Array(std::initializer_list<T> list) noexcept : length(list.size())
 		{
+			GTSL_ASSERT(list.size() < CAPACITY, "Initializer list is bigger than array capacity!")
 			copyToData(list.begin(), this->length);
 		}
 
