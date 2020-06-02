@@ -53,17 +53,18 @@ namespace GTSL
 
 		constexpr Array(std::initializer_list<T> list) noexcept : length(list.size())
 		{
-			GTSL_ASSERT(list.size() < CAPACITY, "Initializer list is bigger than array capacity!")
+			GTSL_ASSERT(list.size() <= CAPACITY, "Initializer list is bigger than array capacity!")
 			copyToData(list.begin(), this->length);
 		}
 
 		constexpr explicit Array(const LT length) noexcept : length(length)
 		{
+			GTSL_ASSERT(length <= CAPACITY, "Array is not big enough to insert the elements requested!")
 		}
 
 		constexpr Array(const Ranger<T>& ranger) noexcept : length(ranger.ElementCount())
 		{
-			GTSL_ASSERT(ranger.ElementCount() < CAPACITY, "Array is not big enough to insert the elements requested!")
+			GTSL_ASSERT(ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
 			copyToData(ranger.begin(), ranger.ElementCount());
 		}
 
