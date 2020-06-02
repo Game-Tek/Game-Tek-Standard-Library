@@ -98,7 +98,7 @@ namespace GTSL
 		Delegate<void(Vector2)> onMouseMove;
 		Delegate<void(float)> onMouseWheelMove;
 		Delegate<void(KeyboardKeys, ButtonState)> onKeyEvent;
-		Delegate<void(uint16)> onCharEvent;
+		Delegate<void(uint32)> onCharEvent;
 		Delegate<void(uint16, uint16)> onWindowMove;
 	public:
 		Window() = default;
@@ -140,6 +140,7 @@ namespace GTSL
 		void SetOnMouseButtonClickDelegate(const decltype(onMouseButtonClick)& delegate) { onMouseButtonClick = delegate; }
 		void SetOnWindowResizeDelegate(const decltype(onResizeDelegate)& delegate) { onResizeDelegate = delegate; }
 		void SetOnCharEventDelegate(const decltype(onCharEvent)& delegate) { onCharEvent = delegate; }
+		void SetOnKeyEvent(const decltype(onKeyEvent)& delegate) { onKeyEvent = delegate; }
 
 		struct WindowState
 		{
