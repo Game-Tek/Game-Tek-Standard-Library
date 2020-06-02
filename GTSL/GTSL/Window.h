@@ -140,7 +140,7 @@ namespace GTSL
 		void SetOnMouseButtonClickDelegate(const decltype(onMouseButtonClick)& delegate) { onMouseButtonClick = delegate; }
 		void SetOnWindowResizeDelegate(const decltype(onResizeDelegate)& delegate) { onResizeDelegate = delegate; }
 		void SetOnCharEventDelegate(const decltype(onCharEvent)& delegate) { onCharEvent = delegate; }
-		void SetOnKeyEvent(const decltype(onKeyEvent)& delegate) { onKeyEvent = delegate; }
+		void SetOnKeyEventDelegate(const decltype(onKeyEvent)& delegate) { onKeyEvent = delegate; }
 
 		struct WindowState
 		{
