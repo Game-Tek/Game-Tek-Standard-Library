@@ -22,6 +22,10 @@ namespace GTSL
 		{
 		}
 
+		constexpr StaticString(const Ranger<const UTF8>& ranger) : array(ranger)
+		{
+		}
+
 		[[nodiscard]] UTF8* begin() { return this->array.begin(); }
 		[[nodiscard]] const UTF8* begin() const { return this->array.begin(); }
 		[[nodiscard]] UTF8* end() { return this->array.end(); }

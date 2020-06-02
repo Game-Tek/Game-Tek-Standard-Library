@@ -106,7 +106,7 @@ void GTSL::Window::Win32_calculateMousePos(const uint32 x, const uint32 y, GTSL:
 	mousePos.X = (x - halfX) / halfX; mousePos.Y = (halfY - y) / halfY;
 }
 
-void GTSL::Window::Win32_translateKeys(uint64 win32Key, uint64 context, KeyboardKeys& key)
+void GTSL::Window::Win32_translateKeys(const uint64 win32Key, uint64 context, KeyboardKeys& key)
 {
 	switch (win32Key)
 	{

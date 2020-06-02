@@ -104,7 +104,7 @@ namespace GTSL
 		Window() = default;
 		struct WindowCreateInfo
 		{
-			String Name;
+			Ranger<const UTF8> Name;
 			Extent2D Extent;
 			Window* ParentWindow = nullptr;
 			class Application* Application = nullptr;
