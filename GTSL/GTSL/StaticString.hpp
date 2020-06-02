@@ -36,8 +36,8 @@ namespace GTSL
 
 		void Resize(uint32 newLength) { this->array.Resize(newLength); }
 
-		GTSL::Ranger<UTF8> GetRanger() { return array.GetRanger(); }
 		operator GTSL::Ranger<UTF8>() const { return array; }
+		operator GTSL::Ranger<const UTF8>() const { return array; }
 
 		void Drop(const uint32 from)
 		{

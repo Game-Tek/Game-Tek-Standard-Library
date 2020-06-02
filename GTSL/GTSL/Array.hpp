@@ -46,8 +46,8 @@ namespace GTSL
 
 		[[nodiscard]] constexpr const T& back() const noexcept { return this->data[this->length * sizeof(T)]; }
 
-		Ranger<T> GetRanger() { return Ranger<T>(this->length, this->begin()); }
 		operator GTSL::Ranger<T>() const { return Ranger<T>(this->length, this->begin()); }
+		operator GTSL::Ranger<const T>() const { return Ranger<const T>(this->length, this->begin()); }
 
 		constexpr Array() noexcept = default;
 
