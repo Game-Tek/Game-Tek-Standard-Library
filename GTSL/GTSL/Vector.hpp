@@ -46,11 +46,11 @@ namespace GTSL
 		 */
 		T* allocate(const length_type elementCount)
 		{
-			void* data{ nullptr };
+			T* data{ nullptr };
 			uint64 allocated_size{ 0 };
-			this->allocatorReference->Allocate(elementCount * sizeof(T), alignof(T), &data, &allocated_size);
+			this->allocatorReference->Allocate(elementCount * sizeof(T), alignof(T), reinterpret_cast<void**>(&data), &allocated_size);
 			this->capacity = static_cast<length_type>(allocated_size / sizeof(T));
-			return static_cast<T*>(data);
+			return data;
 		}
 
 		/**
@@ -61,7 +61,7 @@ namespace GTSL
 			if (this->data)
 			{
 				GTSL_ASSERT(this->data != nullptr, "Data is nullptr.")
-				this->allocatorReference->Deallocate(this->capacity, alignof(T), this->data);
+				this->allocatorReference->Deallocate(this->capacity * sizeof(T), alignof(T), this->data);
 				this->data = nullptr;
 			}
 		}
@@ -81,7 +81,7 @@ namespace GTSL
 				T* new_data = this->allocate(new_capacity);
 				copyArray(this->data, new_data, this->capacity);
 				GTSL_ASSERT(this->data != nullptr, "Data is nullptr.")
-				this->allocatorReference->Deallocate(this->capacity, alignof(T), this->data);
+				this->allocatorReference->Deallocate(this->capacity * sizeof(T), alignof(T), this->data);
 				this->data = new_data;
 			}
 		}

@@ -256,7 +256,7 @@ void GTSL::Window::SetState(const WindowState& windowState)
 		//	ChangeDisplaySettingsA(nullptr, CDS_FULLSCREEN);
 		//}
 
-		::ShowWindow(reinterpret_cast<HWND>(windowHandle), SW_SHOWMAXIMIZED);
+		::ShowWindow(static_cast<HWND>(windowHandle), SW_SHOWMAXIMIZED);
 
 		windowSizeState = windowState.NewWindowSizeState;
 	}
