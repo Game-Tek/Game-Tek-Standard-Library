@@ -249,13 +249,13 @@
     <ClInclude Include="GTSL\Network\IPEndpoints.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\SIMD\SIMD128.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Console.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\StringCommon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\SIMD\SIMD128.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

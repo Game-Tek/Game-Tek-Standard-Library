@@ -4,7 +4,7 @@ namespace GTSL
 {
 
 	//Used to specify a rotation in 3D space with floating point precision.
-	class Quaternion
+	class alignas(16) Quaternion
 	{
 	public:
 		//X component of this quaternion.

@@ -5,7 +5,7 @@ extern void onAssert(bool condition, const char* text, int line, const char* fil
 #endif
 
 #ifdef _DEBUG
-#define GTSL_ASSERT(condition, text) onAssert(condition, text, __LINE__, __FILE__, __FUNCTION__);
+#define GTSL_ASSERT(condition, text) if(!(condition)) [[unlikely]] { onAssert(condition, text, __LINE__, __FILE__, __FUNCTION__); __debugbreak(); }
 #else
 #define GTSL_ASSERT(condition, text)
 #endif

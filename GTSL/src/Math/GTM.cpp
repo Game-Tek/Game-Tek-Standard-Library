@@ -5,128 +5,128 @@
 
 using namespace GTSL;
 
-float Math::Power(const float32 x, const float32 y) { return powf(x, y); }
+float32 Math::Power(const float32 x, const float32 y) { return powf(x, y); }
 
-float Math::Log10(const float32 x) { return log10f(x); }
+float32 Math::Log10(const float32 x) { return log10f(x); }
 
-float Math::Sine(const float32 Degrees) { return sinf(DegreesToRadians(Degrees)); }
+float32 Math::Sine(const float32 Degrees) { return sinf(DegreesToRadians(Degrees)); }
 
-double Math::Sine(const float64 Degrees) { return sin(DegreesToRadians(Degrees)); }
+float64 Math::Sine(const float64 Degrees) { return sin(DegreesToRadians(Degrees)); }
 
-float Math::Cosine(const float32 Degrees) { return cosf(DegreesToRadians(Degrees)); }
+float32 Math::Cosine(const float32 Degrees) { return cosf(DegreesToRadians(Degrees)); }
 
-double Math::Cosine(const float64 Degrees) { return cos(DegreesToRadians(Degrees)); }
+float64 Math::Cosine(const float64 Degrees) { return cos(DegreesToRadians(Degrees)); }
 
-float Math::Tangent(const float32 Degrees) { return tanf(DegreesToRadians(Degrees)); }
+float32 Math::Tangent(const float32 Degrees) { return tanf(DegreesToRadians(Degrees)); }
 
-double Math::Tangent(const float64 Degrees) { return tan(DegreesToRadians(Degrees)); }
+float64 Math::Tangent(const float64 Degrees) { return tan(DegreesToRadians(Degrees)); }
 
-float Math::ArcSine(const float32 A) {	return RadiansToDegrees(asin(A)); }
+float32 Math::ArcSine(const float32 A) {	return RadiansToDegrees(asin(A)); }
 
-float Math::ArcCosine(const float32 A) { return RadiansToDegrees(acos(A)); }
+float32 Math::ArcCosine(const float32 A) { return RadiansToDegrees(acos(A)); }
 
-float Math::ArcTangent(const float32 A) { return RadiansToDegrees(atan(A)); }
+float32 Math::ArcTangent(const float32 A) { return RadiansToDegrees(atan(A)); }
 
-float Math::ArcTan2(const float32 X, const float32 Y) { return RadiansToDegrees(atan2(Y, X)); }
+float32 Math::ArcTan2(const float32 X, const float32 Y) { return RadiansToDegrees(atan2(Y, X)); }
 
-float Math::LengthSquared(const Vector2& _A)
+float32 Math::LengthSquared(const Vector2& a)
 {
-	const SIMD128<float32> a(_A.X, _A.Y, 0.0f, 0.0f);
-	return SIMD128<float32>::DotProduct(a, a).GetElement<1>();
+	const SIMD128<float32> vec(a.X, a.Y, 0.0f, 0.0f);
+	return SIMD128<float32>::DotProduct(vec, vec).GetElement<1>();
 }
 
-float Math::LengthSquared(const Vector3& _A)
+float32 Math::LengthSquared(const Vector3& a)
 {
-	const SIMD128<float32> a(_A.X, _A.Y, _A.Z, 0.0f);
-	return SIMD128<float32>::DotProduct(a, a).GetElement<1>();
+	const SIMD128<float32> vec(a.X, a.Y, a.Z, 0.0f);
+	return SIMD128<float32>::DotProduct(vec, vec).GetElement<1>();
 }
 
-float Math::LengthSquared(const Vector4& _A)
+float32 Math::LengthSquared(const Vector4& a)
 {
-	const SIMD128<float32> a(AlignedPointer<const float32, 16>(&_A.X));
-	return SIMD128<float32>::DotProduct(a, a).GetElement<1>();
+	const SIMD128<float32> vec(AlignedPointer<const float32, 16>(&a.X));
+	return SIMD128<float32>::DotProduct(vec, vec).GetElement<1>();
 }
 
-Vector2 Math::Normalized(const Vector2& _A)
+Vector2 Math::Normalized(const Vector2& a)
 {
-	SIMD128<float32> a(_A.X, _A.Y, 0.0f, 0.0f);
-	const SIMD128<float32> length(Length(_A));
-	a /= length;
-	alignas(16) float vector[4];
-	a.CopyTo(AlignedPointer<float, 16>(vector));
+	SIMD128<float32> vec(a.X, a.Y, 0.0f, 0.0f);
+	const SIMD128<float32> length(Length(a));
+	vec /= length;
+	alignas(16) float32 vector[4];
+	vec.CopyTo(AlignedPointer<float32, 16>(vector));
 
 	return Vector2(vector[3], vector[2]);
 }
 
-void Math::Normalize(Vector2& _A)
+void Math::Normalize(Vector2& a)
 {
-	SIMD128<float32> a(_A.X, _A.Y, 0.0f, 0.0f);
-	const SIMD128<float32> length(Length(_A));
-	a /= length;
-	alignas(16) float vector[4];
-	a.CopyTo(AlignedPointer<float, 16>(vector));
-	_A.X = vector[3];
-	_A.Y = vector[2];
+	SIMD128<float32> vec(a.X, a.Y, 0.0f, 0.0f);
+	const SIMD128<float32> length(Length(a));
+	vec /= length;
+	alignas(16) float32 vector[4];
+	vec.CopyTo(AlignedPointer<float32, 16>(vector));
+	a.X = vector[3];
+	a.Y = vector[2];
 }
 
 Vector3 Math::Normalized(const Vector3& _A)
 {
-	SIMD128<float32> a(_A.X, _A.Y, _A.Z, 0.0f);
+	SIMD128<float32> vec(_A.X, _A.Y, _A.Z, 0.0f);
 	const SIMD128<float32> length(Length(_A));
 	alignas(16) float32 vector[4];
-	a /= length;
-	a.CopyTo(AlignedPointer<float, 16>(vector));
+	vec /= length;
+	vec.CopyTo(AlignedPointer<float32, 16>(vector));
 
 	return Vector3(vector[3], vector[2], vector[1]);
 }
 
-void Math::Normalize(Vector3& _A)
+void Math::Normalize(Vector3& a)
 {
-	SIMD128<float32> a(_A.X, _A.Y, _A.Z, 0.0f);
-	const SIMD128<float32> length(Length(_A));
-	a /= length;
-	alignas(16) float vector[4];
-	a.CopyTo(AlignedPointer<float32, 16>(vector));
-	_A.X = vector[3];
-	_A.Y = vector[2];
-	_A.Z = vector[1];
+	SIMD128<float32> vec(a.X, a.Y, a.Z, 0.0f);
+	const SIMD128<float32> length(Length(a));
+	vec /= length;
+	alignas(16) float32 vector[4];
+	vec.CopyTo(AlignedPointer<float32, 16>(vector));
+	a.X = vector[3];
+	a.Y = vector[2];
+	a.Z = vector[1];
 }
 
 Vector4 Math::Normalized(const Vector4& a)
 {
 	alignas(16) Vector4 result;
-	auto vec = SIMD128<float32>(UnalignedPointer<const float32>(&a.X));
+	auto vec = SIMD128<float32>(AlignedPointer<const float32, 16>(&a.X));
 	const SIMD128<float32> length(Length(a));
 	vec /= length;
 	vec.CopyTo(AlignedPointer<float32, 16>(&result.X));
 	return result;
 }
 
-void Math::Normalize(Vector4& _A)
+void Math::Normalize(Vector4& a)
 {
-	auto a = SIMD128<float32>(UnalignedPointer<const float32>(&_A.X)); const SIMD128<float32> length(Length(_A));
-	a /= length;
-	a.CopyTo(UnalignedPointer<float32>(&_A.X));
+	auto vec = SIMD128<float32>(AlignedPointer<const float32, 16>(&a.X)); const SIMD128<float32> length(Length(a));
+	vec /= length;
+	vec.CopyTo(AlignedPointer<float32, 16>(&a.X));
 }
 
-float Math::DotProduct(const Vector2& _A, const Vector2& _B)
+float32 Math::DotProduct(const Vector2& _A, const Vector2& _B)
 {
-	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, 0.0f, 0.0f), SIMD128<float32>(_B.X, _B.Y, 0.0f, 0.0f)).GetElement<1>();
+	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, 0.0f, 0.0f), SIMD128<float32>(_B.X, _B.Y, 0.0f, 0.0f)).GetElement<0>();
 }
 
-float Math::DotProduct(const Vector3& _A, const Vector3& _B)
+float32 Math::DotProduct(const Vector3& _A, const Vector3& _B)
 {
-	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, _A.Z, 0.0f), SIMD128<float32>(_B.X, _B.Y, _B.Z, 0.0f)).GetElement<1>();
+	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, _A.Z, 0.0f), SIMD128<float32>(_B.X, _B.Y, _B.Z, 0.0f)).GetElement<0>();
 }
 
-float Math::DotProduct(const Vector4& _A, const Vector4& _B)
+float32 Math::DotProduct(const Vector4& _A, const Vector4& _B)
 {
-	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, _A.Z, _A.W), SIMD128<float32>(_B.X, _B.Y, _B.Z, _A.W)).GetElement<1>();
+	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, _A.Z, _A.W), SIMD128<float32>(_B.X, _B.Y, _B.Z, _A.W)).GetElement<0>();
 }
 
 Vector3 Math::Cross(const Vector3& a, const Vector3& b)
 {
-	//alignas(16) float vector[4];
+	//alignas(16) float32 vector[4];
 	//
 	//const float4 a(_A.X, _A.Y, _A.Z, 1.0f);
 	//const float4 b(_B.X, _B.Y, _B.Z, 1.0f);
@@ -140,31 +140,31 @@ Vector3 Math::Cross(const Vector3& a, const Vector3& b)
 	return Vector3(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
 }
 
-float Math::DotProduct(const Quaternion& _A, const Quaternion& _B)
+float32 Math::DotProduct(const Quaternion& a, const Quaternion& b)
 {
-	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, _A.Z, _A.Q), SIMD128<float32>(_B.X, _B.Y, _B.Z, _A.Q)).GetElement<1>();
+	return SIMD128<float32>::DotProduct(SIMD128<float32>(a.X, a.Y, a.Z, a.Q), SIMD128<float32>(b.X, b.Y, b.Z, a.Q)).GetElement<0>();
 }
 
-float Math::LengthSquared(const Quaternion& _A)
+float32 Math::LengthSquared(const Quaternion& a)
 {
-	SIMD128<float32> a(UnalignedPointer<const float32>(&_A.X));
-	return SIMD128<float32>::DotProduct(a, a).GetElement<1>();
+	SIMD128<float32> vec(AlignedPointer<const float32, 16>(&a.X));
+	return SIMD128<float32>::DotProduct(vec, vec).GetElement<0>();
 }
 
-Quaternion Math::Normalized(const Quaternion& _A)
+Quaternion Math::Normalized(const Quaternion& a)
 {
 	alignas(16) Quaternion result;
-	auto a = SIMD128<float32>(UnalignedPointer<const float32>(&_A.X));
-	const SIMD128<float32> length(Length(_A));
-	a /= length;
-	a.CopyTo(AlignedPointer<float32, 16>(&result.X));
+	auto vec = SIMD128<float32>(AlignedPointer<const float32, 16>(&a.X));
+	const SIMD128<float32> length(Length(a));
+	vec /= length;
+	vec.CopyTo(AlignedPointer<float32, 16>(&result.X));
 	return result;
 }
 
-void Math::Normalize(Quaternion& _A)
+void Math::Normalize(Quaternion& a)
 {
-	auto a = SIMD128<float32>(UnalignedPointer<const float32>(&_A.X));
-	const SIMD128<float32> length(Length(_A));
-	a /= length;
-	a.CopyTo(UnalignedPointer<float32>(&_A.X));
+	auto vec = SIMD128<float32>(AlignedPointer<const float32, 16>(&a.X));
+	const SIMD128<float32> length(Length(a));
+	vec /= length;
+	vec.CopyTo(AlignedPointer<float32, 16>(&a.X));
 }

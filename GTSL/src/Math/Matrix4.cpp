@@ -93,14 +93,13 @@ Matrix4 Matrix4::operator*(const Matrix4& other) const
 	return Result;
 }
 
-Matrix4& Matrix4::operator*=(const float other)
+Matrix4& Matrix4::operator*=(const float32 other)
 {
 	const auto brod = SIMD128<float32>(other);
-	SIMD128<float32> row;
 	
 	for(uint8 i = 0; i < 4; ++i)
 	{
-		row = SIMD128<float32>(AlignedPointer<const float32, 16>(&array[i * 4]));
+		auto row = SIMD128<float32>(AlignedPointer<const float32, 16>(&array[i * 4]));
 		row *= brod;
 		row.CopyTo(AlignedPointer<float32, 16>(&array[i * 4]));
 	}
