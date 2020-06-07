@@ -348,7 +348,7 @@ namespace GTSL
 		{
 			reallocateIfExceeds(1);
 			::new(static_cast<void*>(this->data + this->length)) T(obj);
-			return this->length += 1;
+			return this->length++;
 		}
 
 		/**
@@ -360,27 +360,14 @@ namespace GTSL
 		{
 			reallocateIfExceeds(1);
 			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeTransferReference(obj));
-			return this->length += 1;
-		}
-
-		/**
-		 * \brief Places a copy of length elements copied from array At the back of the vector.
-		 * \param length Number o T type elements to copy from array.
-		 * \param array Pointer to the array to copy from.
-		 * \return Length of vector after inserting length elements.
-		 */
-		length_type PushBack(const length_type length, const T array[])
-		{
-			reallocateIfExceeds(length);
-			copyArray(array, getIterator(this->length), length);
-			return this->length += length;
+			return this->length++;
 		}
 
 		length_type PushBack(const Ranger<T>& ranger)
 		{
 			reallocateIfExceeds(ranger.ElementCount());
 			copyArray(ranger.begin(), getIterator(this->length), ranger.ElementCount());
-			return this->length += ranger.ElementCount();
+			return (this->length += ranger.ElementCount()) - ranger.ElementCount();
 		}
 		
 		/**
@@ -392,7 +379,7 @@ namespace GTSL
 		{
 			reallocateIfExceeds(this->length - other.length);
 			copyArray(other.data, getIterator(this->length), other.length);
-			return this->length += other.length;
+			return (this->length += other.length) - other.length;
 		}
 
 		/**
@@ -406,7 +393,7 @@ namespace GTSL
 		{
 			reallocateIfExceeds(1);
 			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeForwardReference<ARGS>(args)...);
-			return this->length += 1;
+			return this->length++;
 		}
 
 		/**
