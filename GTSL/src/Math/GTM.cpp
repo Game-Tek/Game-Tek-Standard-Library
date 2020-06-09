@@ -5,6 +5,10 @@
 
 using namespace GTSL;
 
+#if (_WIN64)
+void Math::RoundDown(const uint64 x, const uint32 multiple, uint32& quotient, uint32& remainder) { quotient = _udiv64(x, multiple, &remainder); }
+#endif
+
 float32 Math::Power(const float32 x, const float32 y) { return powf(x, y); }
 
 float32 Math::Log10(const float32 x) { return log10f(x); }
@@ -32,19 +36,19 @@ float32 Math::ArcTan2(const float32 X, const float32 Y) { return RadiansToDegree
 float32 Math::LengthSquared(const Vector2& a)
 {
 	const SIMD128<float32> vec(a.X, a.Y, 0.0f, 0.0f);
-	return SIMD128<float32>::DotProduct(vec, vec).GetElement<1>();
+	return SIMD128<float32>::DotProduct(vec, vec).GetElement<0>();
 }
 
 float32 Math::LengthSquared(const Vector3& a)
 {
 	const SIMD128<float32> vec(a.X, a.Y, a.Z, 0.0f);
-	return SIMD128<float32>::DotProduct(vec, vec).GetElement<1>();
+	return SIMD128<float32>::DotProduct(vec, vec).GetElement<0>();
 }
 
 float32 Math::LengthSquared(const Vector4& a)
 {
 	const SIMD128<float32> vec(AlignedPointer<const float32, 16>(&a.X));
-	return SIMD128<float32>::DotProduct(vec, vec).GetElement<1>();
+	return SIMD128<float32>::DotProduct(vec, vec).GetElement<0>();
 }
 
 Vector2 Math::Normalized(const Vector2& a)
@@ -138,6 +142,15 @@ Vector3 Math::Cross(const Vector3& a, const Vector3& b)
 	//
 
 	return Vector3(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
+}
+
+Vector4 Math::Abs(const Vector4& a)
+{
+	SIMD128<float32> vec(AlignedPointer<const float32, 16>(&a.X));
+	vec.Abs();
+	Vector4 result;
+	vec.CopyTo(AlignedPointer<float32, 16>(&result.X));
+	return result;
 }
 
 float32 Math::DotProduct(const Quaternion& a, const Quaternion& b)

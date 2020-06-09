@@ -94,8 +94,11 @@ namespace GTSL
 
 		static uint64 PowerOf2RoundUp(const uint64 number, const uint32 alignment) { return (number + alignment - 1) & -static_cast<int64>(alignment); }
 
+#if (!_WIN64)
 		static void RoundDown(const uint64 x, const uint64 multiple, uint64& quotient, uint64& remainder) { const uint64 rem = x % multiple; remainder = rem; quotient = x - rem; }
-		
+#endif
+		static void RoundDown(const uint64 x, const uint32 multiple, uint32& quotient, uint32& remainder);
+
 		/**
 		 * \brief Returns x to the y.
 		 * \param x number
@@ -272,66 +275,48 @@ namespace GTSL
 
 		/**
 		 * \brief Returns degrees converted to radians.
-		 * \param Degrees degrees to convert
+		 * \param degrees degrees to convert
 		 * \return Degrees as radians
 		 */
-		static float32 DegreesToRadians(const float32 Degrees) { return Degrees * static_cast<float32>(PI / 180.0); }
+		static float32 DegreesToRadians(const float32 degrees) { return degrees * static_cast<float32>(PI / 180.0); }
 
 		/**
 		 * \brief Returns degrees converted to radians.
-		 * \param Degrees degrees to convert
+		 * \param degrees degrees to convert
 		 * \return Degrees as radians
 		 */
-		static float64 DegreesToRadians(const float64 Degrees) { return Degrees * (PI / 180.0); }
+		static float64 DegreesToRadians(const float64 degrees) { return degrees * (PI / 180.0); }
 
 		/**
 		 * \brief Returns Radians converted to degrees.
-		 * \param Radians radians to convert.
+		 * \param radians radians to convert.
 		 * \return Radians as degrees.
 		 */
-		static float32 RadiansToDegrees(const float32 Radians) { return Radians * static_cast<float32>(180.0 / PI); }
+		static float32 RadiansToDegrees(const float32 radians) { return radians * static_cast<float32>(180.0 / PI); }
 
 		/**
 		 * \brief Returns Radians converted to degrees.
-		 * \param Radians radians to convert.
+		 * \param radians radians to convert.
 		 * \return Radians as degrees.
 		 */
-		static float64 RadiansToDegrees(const float64 Radians) { return Radians * (180.0 / PI); }
+		static float64 RadiansToDegrees(const float64 radians) { return radians * (180.0 / PI); }
 
 		//////////////////////////////////////////////////////////////
 		//						VECTOR MATH							//
 		//////////////////////////////////////////////////////////////
 
 		//Calculates the length of a 2D vector.
-		static float32 Length(const Vector2& _A)
-		{
-			return SquareRoot(LengthSquared(_A));
-		}
+		static float32 Length(const Vector2& _A) { return SquareRoot(LengthSquared(_A)); }
 
-		static float32 Length(const Vector2& _A, const Vector2& _B)
-		{
-			return SquareRoot(LengthSquared(_A - _B));
-		}
+		static float32 Length(const Vector2& _A, const Vector2& _B) { return SquareRoot(LengthSquared(_A - _B)); }
 
-		static float32 Length(const Vector3& _A)
-		{
-			return SquareRoot(LengthSquared(_A));
-		}
+		static float32 Length(const Vector3& _A) { return SquareRoot(LengthSquared(_A)); }
 
-		static float32 Length(const Vector3& _A, const Vector3& _B)
-		{
-			return SquareRoot(LengthSquared(_A - _B));
-		}
+		static float32 Length(const Vector3& _A, const Vector3& _B) { return SquareRoot(LengthSquared(_A - _B)); }
 
-		static float32 Length(const Vector4& _A)
-		{
-			return SquareRoot(LengthSquared(_A));
-		}
+		static float32 Length(const Vector4& _A) { return SquareRoot(LengthSquared(_A)); }
 
-		static float32 Length(const Vector4& _A, const Vector4& _B)
-		{
-			return SquareRoot(LengthSquared(_A - _B));
-		}
+		static float32 Length(const Vector4& _A, const Vector4& _B)	{ return SquareRoot(LengthSquared(_A - _B)); }
 
 		static float32 LengthSquared(const Vector2& a);
 
@@ -369,10 +354,7 @@ namespace GTSL
 			return Vector3(Abs(Vec1.X), Abs(Vec1.Y), Abs(Vec1.Z));
 		}
 
-		static Vector4 Abs(const Vector4& _A)
-		{
-			return Vector4(Abs(_A.X), Abs(_A.Y), Abs(_A.Z), Abs(_A.Z));
-		}
+		static Vector4 Abs(const Vector4& a);
 
 		static Vector2 Negated(const Vector2& Vec)
 		{
@@ -384,13 +366,7 @@ namespace GTSL
 			return Result;
 		}
 
-		static void Negate(Vector2& Vec)
-		{
-			Vec.X = -Vec.X;
-			Vec.Y = -Vec.Y;
-
-			return;
-		}
+		static void Negate(Vector2& Vec) { Vec.X = -Vec.X; Vec.Y = -Vec.Y; }
 
 		static Vector3 Negated(const Vector3& Vec)
 		{
@@ -403,14 +379,7 @@ namespace GTSL
 			return Result;
 		}
 
-		static void Negate(Vector3& Vec)
-		{
-			Vec.X = -Vec.X;
-			Vec.Y = -Vec.Y;
-			Vec.Z = -Vec.Z;
-
-			return;
-		}
+		static void Negate(Vector3& Vec) { Vec.X = -Vec.X; Vec.Y = -Vec.Y; Vec.Z = -Vec.Z; }
 
 		static Vector4 Negated(const Vector4& Vec)
 		{
