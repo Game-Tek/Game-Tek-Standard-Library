@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GTSL\Algorithm.h" />
     <ClInclude Include="GTSL\Allocator.h" />
     <ClInclude Include="GTSL\Application.h" />
     <ClInclude Include="GTSL\Array.hpp" />

@@ -6,6 +6,7 @@
 #include "Memory.h"
 #include "Ranger.h"
 #include <new>
+#include "Algorithm.h"
 
 #if (_DEBUG)
 #include "Assert.h"
@@ -52,7 +53,7 @@ namespace GTSL
 			
 			Iterator operator++()
 			{
-				auto range = map->getValuesRange(bucket);
+				auto range = map->getValuesBucket(bucket);
 				
 				if(index + 1 < bucketLength)
 				{
@@ -78,7 +79,7 @@ namespace GTSL
 
 			Iterator operator--()
 			{
-				auto range = map->getValuesRange(bucket);
+				auto range = map->getValuesBucket(bucket);
 				if(range.begin() + index == range.begin())
 				{
 					--bucket; index = 0;
@@ -94,8 +95,8 @@ namespace GTSL
 			Iterator operator++(int) { Iterator ret = *this; ++(*this); return ret; }
 			Iterator operator--(int) { Iterator ret = *this; --(*this); return ret; }
 			
-			T& operator*() const { return *(map->getValuesVector(bucket) + index); }
-			T* operator->() const { return &(map->getValuesVector(bucket) + index); }
+			T& operator*() const { return *(map->getValuesBucket(bucket) + index); }
+			T* operator->() const { return &(map->getValuesBucket(bucket) + index); }
 			
 			bool operator==(const Iterator& other) const { return bucket == other.bucket && index == other.index; }
 
@@ -142,52 +143,59 @@ namespace GTSL
 		template<typename... ARGS>
 		ref Emplace(AllocatorReference* allocatorReference, const key_type key, ARGS&&... args)
 		{
-			const auto index = modulo(key, this->capacity);
-			uint64& vector_length = getBucketLength(index);
-
+			const auto bucket = modulo(key, this->capacity);
+			uint64 place_index = getBucketLength(bucket)++;
+			if (place_index + 1 > this->capacity) { resize(allocatorReference); }
 #if (_DEBUG)
-			for (auto& key_in_collection : getKeysRange(index))
-			{
-				GTSL_ASSERT(key_in_collection != key, "Key already exists!")
-			}
+			GTSL_ASSERT(findKeyInBucket(bucket, key) == nullptr, "Key already exists!")
 #endif
-			
-			if (vector_length + 1 > this->capacity)
-			{
-				resize(allocatorReference);
-				vector_length = getBucketLength(index);
-			}
-
-			getKeysRange(index)[vector_length] = key;
-			::new(getValuesVector(index) + vector_length) T(MakeForwardReference<ARGS>(args)...);
-
-			auto result = makeRef(index, vector_length);
-			vector_length += 1;
-			return result;
+			getKeysBucket(bucket)[place_index] = key;
+			::new(getValuesBucket(bucket) + place_index) T(MakeForwardReference<ARGS>(args)...);
+			return makeRef(bucket, place_index);
 		}
 
 		T& At(const key_type key)
 		{
-			const auto index = modulo(key, capacity);
-
-			for (auto& key_candidate : getKeysRange(index))
-			{
-				if (key_candidate == key) { return getValuesRange(index)[&key_candidate - getKeysRange(index).begin()]; }
-			}
-
-			GTSL_ASSERT(false, "No element with that key!")
+			const auto bucket = modulo(key, capacity); const auto index = getIndexForKeyInBucket(bucket, key);
+			GTSL_ASSERT(index != 0xFFFFFFFF, "No element with that key!");
+			return getValuesBucket(bucket)[index];
 		}
 
-		T& operator[](const ref reference) { return *(getValuesVector(static_cast<uint32>(reference)) + (reference >> 32)); }
+		[[nodiscard]] ref GetReference(const key_type key) const
+		{
+			auto bucket = modulo(key, this->capacity);
+			GTSL_ASSERT(getIndexForKeyInBucket(bucket, key) != 0xFFFFFFFF, "Key doesn't exist!")
+			return makeRef(bucket, getIndexForKeyInBucket(bucket, key));
+		}
+		
+		T& operator[](const ref reference) { return getValuesBucket(static_cast<uint32>(reference))[(reference >> 32)]; }
 	private:
 		friend class Iterator<T>;
 		
 		uint32 capacity = 0;
 		byte* data = nullptr;
 
-		Ranger<key_type> getKeysRange(const uint32 index) { return Ranger<key_type>(getBucketLength(index), getKeyVector(index) + 1); }
+		[[nodiscard]] key_type* findKeyInBucket(const uint32 bucket, const key_type key) const
+		{
+			for(auto& e : getKeysBucket(bucket)) { if (e == key) { return &e; } }
+			return nullptr;
+		}
 
-		Ranger<T> getValuesRange(const uint32 index) { return Ranger<T>(getBucketLength(index), getValuesVector(index)); }
+		[[nodiscard]] uint32 getIndexForKeyInBucket(const uint32 bucket, const key_type key) const
+		{
+			for(auto& e : getKeysBucket(bucket)) { if (e == key) { return &e - getKeysBucket(bucket).begin(); } }
+			return 0xFFFFFFFF;
+		}
+		
+		T* findValueInBucket(const uint32 bucket, const key_type key) const
+		{
+			const auto pos = findKeyInBucket(bucket, key);
+			return getValuesBucket(bucket)[pos - getKeysBucket(bucket).begin()];
+		}
+
+		[[nodiscard]] Ranger<key_type> getKeysBucket(const uint32 bucket) const { return Ranger<key_type>(getBucketLength(bucket), getKeysBucketPointer(bucket) + 1); }
+
+		[[nodiscard]] Ranger<T> getValuesBucket(const uint32 bucket) const { return Ranger<T>(getBucketLength(bucket), getValuesBucketPointer(bucket)); }
 
 		static constexpr uint32 modulo(const key_type key, const uint32 size) { return key & (size - 1); }
 
@@ -198,12 +206,11 @@ namespace GTSL
 			copy(new_length, new_alloc);
 			deallocate(allocatorReference);
 			build(new_alloc, this->capacity, new_length);
-			this->data = new_alloc;
-			this->capacity = new_length;
+			this->data = new_alloc;	this->capacity = new_length;
 		}
 
-		static uint64 getKeyVectorAllocationSize(const uint32 length) { return (length + 1) * sizeof(key_type); }
-		static uint64 getKeysAllocationSize(const uint32 length) { return getKeyVectorAllocationSize(length) * length; }
+		static uint64 getKeyBucketAllocationSize(const uint32 length) { return (length + 1) * sizeof(key_type); }
+		static uint64 getKeysAllocationSize(const uint32 length) { return getKeyBucketAllocationSize(length) * length; }
 		
 		static uint64 getValuesVectorAllocationsSize(const uint32 length) { return length * sizeof(T); }
 		static uint64 getValuesAllocationsSize(const uint32 length) { return getValuesVectorAllocationsSize(length) * length; }
@@ -214,16 +221,12 @@ namespace GTSL
 		
 		byte* allocate(const uint64 newLength, AllocatorReference* allocatorReference)
 		{
-			uint64 allocated_size{ 0 };
-			void* memory{ nullptr };
+			uint64 allocated_size{ 0 };	void* memory{ nullptr };
 			allocatorReference->Allocate(getTotalAllocationSize(newLength), alignof(T), &memory, &allocated_size);
 			return static_cast<byte*>(memory);
 		}
 
-		void deallocate(AllocatorReference* allocatorReference)
-		{
-			allocatorReference->Deallocate(getTotalAllocationSize(this->capacity), alignof(T), this->data);
-		}
+		void deallocate(AllocatorReference* allocatorReference)	const { allocatorReference->Deallocate(getTotalAllocationSize(this->capacity), alignof(T), this->data); }
 
 		void build(byte* data, const uint32 oldLength, const uint32 newLength)
 		{
@@ -235,17 +238,32 @@ namespace GTSL
 			for (uint32 i = 0; i < this->capacity; ++i)
 			{
 				const auto length = getBucketLength(i);
-				Memory::MemCopy(getKeysAllocationSize(this->capacity), getKeyVector(i), to + getKeyVectorAllocationSize(newLength) * i);
-				Memory::MemCopy(getValuesAllocationsSize(this->capacity), getValuesVector(i), to + getKeysAllocationSize(newLength) + getValuesVectorAllocationsSize(newLength) * i);
+				Memory::MemCopy(getKeysAllocationSize(this->capacity), getKeysBucketPointer(i), to + getKeyBucketAllocationSize(newLength) * i);
+				Memory::MemCopy(getValuesAllocationsSize(this->capacity), getValuesBucketPointer(i), to + getKeysAllocationSize(newLength) + getValuesVectorAllocationsSize(newLength) * i);
 			}
 		}
 
-		key_type* getKeyVector(const uint32 index) { return &getBucketLength(this->data, this->capacity, index); }
+		[[nodiscard]] key_type* getKeysBucketPointer(const uint32 index) const { return &getBucketLength(this->data, this->capacity, index); }
 
-		uint64& getBucketLength(const uint32 index) { return getBucketLength(this->data, this->capacity, index); }
+		[[nodiscard]] uint64& getBucketLength(const uint32 index) const { return getBucketLength(this->data, this->capacity, index); }
 
-		T* getValuesVector(const uint32 index) { return reinterpret_cast<T*>(this->data + getKeysAllocationSize(this->capacity)) + index * this->capacity; }
+		T* getValuesBucketPointer(const uint32 index) const { return reinterpret_cast<T*>(this->data + getKeysAllocationSize(this->capacity)) + index * this->capacity; }
 
 		static ref makeRef(const uint32 vector, const uint32 index) { return static_cast<uint64>(index) << 32 | vector; }
+
+		template<typename TT, typename L>
+		friend void ForEach(FlatHashMap<TT>& collection, L&& lambda);
 	};
+
+	template<typename T, typename L>
+	void ForEach(FlatHashMap<T>& collection, L&& lambda)
+	{
+		for (uint32 i = 0; i < collection.capacity; ++i)
+		{
+			for (auto& e : collection.getValuesBucket(i))
+			{
+				lambda(e);
+			}
+		}
+	}
 }

@@ -35,6 +35,8 @@ namespace GTSL
 		[[nodiscard]] constexpr void* Data() noexcept { return from; }
 		[[nodiscard]] constexpr const void* Data() const noexcept { return from; }
 
+		T* operator+(const uint64 i) const { return this->from + i; }
+
 		T& operator[](const uint64 i) const { return this->from[i]; }
 	};
 }
