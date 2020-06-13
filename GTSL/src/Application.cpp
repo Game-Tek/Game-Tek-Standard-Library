@@ -62,7 +62,7 @@ void Application::GetNativeHandles(void* nativeHandles)
 	static_cast<Win32NativeHandles*>(nativeHandles)->HINSTANCE = static_cast<HMODULE>(handle);
 }
 
-uint8 Application::ThreadCount() noexcept {	SYSTEM_INFO system_info; GetSystemInfo(&system_info); return system_info.dwNumberOfProcessors; }
+uint8 Application::ThreadCount() noexcept {	SYSTEM_INFO system_info; GetSystemInfo(&system_info); return static_cast<uint8>(system_info.dwNumberOfProcessors); }
 
 StaticString<Application::MaxPathLength> Application::GetPathToExecutable() const
 {

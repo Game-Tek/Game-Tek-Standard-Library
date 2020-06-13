@@ -51,32 +51,24 @@ namespace GTSL
 		uint32 Size{ 0 };
 		uint32 Alignment{ 0 };
 		T* Data{ nullptr };
+
+		operator T*() const { return Data; }
+		T* operator->() const { return Data; }
+		T& operator*() const { return *Data; }
+
+		template<typename TT, typename... ARGS>
+		static Allocation<T> Create(const AllocatorReference& allocatorReference, ARGS&&... args)
+		{
+			Allocation<T> ret; ret.Size = sizeof(TT); ret.Alignment = alignof(TT);
+			allocatorReference.Allocate(sizeof(TT), alignof(TT), reinterpret_cast<void**>(&ret.Data));
+			::new(ret.Data) TT(MakeForwardReference<ARGS>(args)...); return ret;
+		}
 	};
 
 	template<typename T>
-	Allocation<T> NewVirtual(AllocatorReference* allocatorReference)
+	void Delete(const Allocation<T>& allocation, const AllocatorReference& allocatorReference)
 	{
-		Allocation<T> ret;
-		ret.Size = sizeof(T);
-		ret.Alignment = alignof(T);
-		allocatorReference->Allocate(sizeof(T), alignof(T), reinterpret_cast<void**>(&ret.Data));
-		::new(ret.Data) T();
-		return ret;
-	}
-
-	template<typename T>
-	T* New(AllocatorReference* allocatorReference)
-	{
-		T* ret{ nullptr }; uint64 allocated_size{ 0 };
-		allocatorReference->Allocate(sizeof(T), alignof(T), reinterpret_cast<void**>(&ret), &allocated_size);
-		::new(ret) T();
-		return ret;
-	}
-
-	template<typename T>
-	void Delete(const Allocation<T>& allocation, AllocatorReference* allocatorReference)
-	{
-		allocatorReference->Deallocate(allocation.Size, allocation.Alignment, static_cast<void*>(allocation.Data));
+		allocatorReference.Deallocate(allocation.Size, allocation.Alignment, static_cast<void*>(allocation.Data));
 	}
 
 	template<typename T>

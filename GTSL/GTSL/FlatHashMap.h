@@ -21,14 +21,14 @@ namespace GTSL
 		using key_type = uint64;
 		using ref = uint64;
 
-		FlatHashMap(const uint32 size, AllocatorReference* allocatorReference) : capacity(size)
+		FlatHashMap(const uint32 size, const AllocatorReference& allocatorReference) : capacity(size)
 		{
 			GTSL_ASSERT(size != 0 && (size & (size - 1)) == 0, "Size is not a power of two!")
-				this->data = allocate(size, allocatorReference);
+			this->data = allocate(size, allocatorReference);
 			build(this->data, 0, size);
 		}
 
-		void Free(AllocatorReference* allocatorReference)
+		void Free(const AllocatorReference& allocatorReference)
 		{
 			deallocate(allocatorReference);
 			this->data = nullptr;
@@ -141,7 +141,7 @@ namespace GTSL
 		}
 		
 		template<typename... ARGS>
-		T* Emplace(AllocatorReference* allocatorReference, const key_type key, ARGS&&... args)
+		T* Emplace(const AllocatorReference& allocatorReference, const key_type key, ARGS&&... args)
 		{
 			const auto bucket = modulo(key, this->capacity);
 			uint64 place_index = getBucketLength(bucket)++;
@@ -154,7 +154,7 @@ namespace GTSL
 		}
 
 		template<typename... ARGS>
-		T* Emplace(AllocatorReference* allocatorReference, const key_type key, const ref& reference, ARGS&&... args)
+		T* Emplace(const AllocatorReference& allocatorReference, const key_type key, const ref& reference, ARGS&&... args)
 		{
 			const auto bucket = modulo(key, this->capacity);
 			uint64 place_index = getBucketLength(bucket)++;
@@ -212,7 +212,7 @@ namespace GTSL
 
 		static constexpr uint32 modulo(const key_type key, const uint32 size) { return key & (size - 1); }
 
-		void resize(AllocatorReference* allocatorReference)
+		void resize(const AllocatorReference& allocatorReference)
 		{
 			auto new_length = this->capacity * 2;
 			auto new_alloc = allocate(new_length, allocatorReference);
@@ -232,14 +232,14 @@ namespace GTSL
 
 		static uint64& getBucketLength(byte* data, const uint32 capacity, const uint32 index) { return *(reinterpret_cast<key_type*>(data) + ((capacity + 1) * index)); }
 		
-		byte* allocate(const uint64 newLength, AllocatorReference* allocatorReference)
+		byte* allocate(const uint64 newLength, const AllocatorReference& allocatorReference)
 		{
 			uint64 allocated_size{ 0 };	void* memory{ nullptr };
-			allocatorReference->Allocate(getTotalAllocationSize(newLength), alignof(T), &memory, &allocated_size);
+			allocatorReference.Allocate(getTotalAllocationSize(newLength), alignof(T), &memory, &allocated_size);
 			return static_cast<byte*>(memory);
 		}
 
-		void deallocate(AllocatorReference* allocatorReference)	const { allocatorReference->Deallocate(getTotalAllocationSize(this->capacity), alignof(T), this->data); }
+		void deallocate(const AllocatorReference& allocatorReference) const { allocatorReference.Deallocate(getTotalAllocationSize(this->capacity), alignof(T), this->data); }
 
 		void build(byte* data, const uint32 oldLength, const uint32 newLength)
 		{

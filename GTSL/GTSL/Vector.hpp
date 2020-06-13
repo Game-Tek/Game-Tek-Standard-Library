@@ -367,7 +367,7 @@ namespace GTSL
 		{
 			reallocateIfExceeds(ranger.ElementCount());
 			copyArray(ranger.begin(), getIterator(this->length), ranger.ElementCount());
-			return (this->length += ranger.ElementCount()) - ranger.ElementCount();
+			return static_cast<uint32>((this->length += ranger.ElementCount()) - ranger.ElementCount());
 		}
 		
 		/**

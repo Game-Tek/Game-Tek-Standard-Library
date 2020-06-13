@@ -68,7 +68,7 @@ namespace GTSL
 			copyToData(ranger.begin(), ranger.ElementCount());
 		}
 
-		constexpr Array(const Ranger<const T>& ranger) noexcept : length(ranger.ElementCount())
+		constexpr Array(const Ranger<const T>& ranger) noexcept : length(static_cast<uint32>(ranger.ElementCount()))
 		{
 			GTSL_ASSERT(ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
 			copyToData(ranger.begin(), ranger.ElementCount());
