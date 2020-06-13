@@ -141,7 +141,7 @@ namespace GTSL
 		}
 		
 		template<typename... ARGS>
-		ref Emplace(AllocatorReference* allocatorReference, const key_type key, ARGS&&... args)
+		T* Emplace(AllocatorReference* allocatorReference, const key_type key, ARGS&&... args)
 		{
 			const auto bucket = modulo(key, this->capacity);
 			uint64 place_index = getBucketLength(bucket)++;
@@ -150,8 +150,21 @@ namespace GTSL
 			GTSL_ASSERT(findKeyInBucket(bucket, key) == nullptr, "Key already exists!")
 #endif
 			getKeysBucket(bucket)[place_index] = key;
-			::new(getValuesBucket(bucket) + place_index) T(MakeForwardReference<ARGS>(args)...);
-			return makeRef(bucket, place_index);
+			return ::new(getValuesBucket(bucket) + place_index) T(MakeForwardReference<ARGS>(args)...);
+		}
+
+		template<typename... ARGS>
+		T* Emplace(AllocatorReference* allocatorReference, const key_type key, const ref& reference, ARGS&&... args)
+		{
+			const auto bucket = modulo(key, this->capacity);
+			uint64 place_index = getBucketLength(bucket)++;
+			if (place_index + 1 > this->capacity) { resize(allocatorReference); }
+#if (_DEBUG)
+			GTSL_ASSERT(findKeyInBucket(bucket, key) == nullptr, "Key already exists!")
+#endif
+			getKeysBucket(bucket)[place_index] = key;
+			reference = makeRef(bucket, place_index);
+			return ::new(getValuesBucket(bucket) + place_index) T(MakeForwardReference<ARGS>(args)...);
 		}
 
 		T& At(const key_type key)
