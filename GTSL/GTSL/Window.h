@@ -97,7 +97,7 @@ namespace GTSL
 		 */
 		Delegate<void(Vector2)> onMouseMove;
 		Delegate<void(float)> onMouseWheelMove;
-		Delegate<void(KeyboardKeys, ButtonState)> onKeyEvent;
+		Delegate<void(KeyboardKeys, ButtonState, bool)> onKeyEvent;
 		Delegate<void(uint32)> onCharEvent;
 		Delegate<void(uint16, uint16)> onWindowMove;
 	public:

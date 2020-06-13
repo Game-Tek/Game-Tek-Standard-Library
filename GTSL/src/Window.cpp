@@ -53,13 +53,13 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	{
 		KeyboardKeys keyboard_keys;
 		Win32_translateKeys(wParam, lParam, keyboard_keys);
-		window->onKeyEvent(keyboard_keys, ButtonState::PRESSED);  return 0;
+		window->onKeyEvent(keyboard_keys, ButtonState::PRESSED, !((lParam >> 30) & 1));  return 0;
 	}
 	case WM_KEYUP:
 	{
 		KeyboardKeys keyboard_keys;
 		Win32_translateKeys(wParam, lParam, keyboard_keys);
-		window->onKeyEvent(keyboard_keys, ButtonState::RELEASED); return 0;
+		window->onKeyEvent(keyboard_keys, ButtonState::RELEASED, true); return 0;
 	}
 	case WM_CHAR:
 	{
