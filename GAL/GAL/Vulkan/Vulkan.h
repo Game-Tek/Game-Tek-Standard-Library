@@ -55,7 +55,7 @@ inline GAL::ImageFormat VkFormatToImageFormat(const VkFormat format)
 	}
 }
 
-inline VkFormat FormatToVkFormat(const GAL::ImageFormat imageFormat)
+inline VkFormat ImageFormatToVkFormat(const GAL::ImageFormat imageFormat)
 {
 	switch (imageFormat)
 	{
@@ -95,6 +95,32 @@ inline VkFormat FormatToVkFormat(const GAL::ImageFormat imageFormat)
 	case GAL::ImageFormat::DEPTH24_STENCIL8: return VK_FORMAT_D24_UNORM_S8_UINT;
 	case GAL::ImageFormat::DEPTH32_STENCIL8: return VK_FORMAT_D32_SFLOAT_S8_UINT;
 	default: return VK_FORMAT_UNDEFINED;
+	}
+}
+
+inline VkImageTiling ImageTilingToVkImageTiling(const GAL::ImageTiling imageTiling)
+{
+	switch (imageTiling)
+	{
+	case GAL::ImageTiling::LINEAR: return VK_IMAGE_TILING_LINEAR;
+	case GAL::ImageTiling::OPTIMAL: return VK_IMAGE_TILING_OPTIMAL;
+	default: return VK_IMAGE_TILING_MAX_ENUM;
+	}
+}
+
+inline VkFormatFeatureFlagBits ImageUseToVkFormatFeatureFlagBits(const GAL::ImageUse imageUse)
+{
+	switch (imageUse)
+	{
+	case GAL::ImageUse::TRANSFER_SOURCE: return VK_FORMAT_FEATURE_TRANSFER_SRC_BIT;
+	case GAL::ImageUse::TRANSFER_DESTINATION: return VK_FORMAT_FEATURE_TRANSFER_DST_BIT;
+	case GAL::ImageUse::SAMPLE: return VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
+	case GAL::ImageUse::STORAGE: return VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT;
+	case GAL::ImageUse::COLOR_ATTACHMENT: return VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
+	case GAL::ImageUse::DEPTH_STENCIL_ATTACHMENT: return VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	case GAL::ImageUse::TRANSIENT_ATTACHMENT: return VK_FORMAT_FEATURE_FLAG_BITS_MAX_ENUM;
+	case GAL::ImageUse::INPUT_ATTACHMENT: return VK_FORMAT_FEATURE_FLAG_BITS_MAX_ENUM;
+	default: return VK_FORMAT_FEATURE_FLAG_BITS_MAX_ENUM;
 	}
 }
 
@@ -282,5 +308,16 @@ inline VkPresentModeKHR PresentModeToVkPresentModeKHR(const GAL::PresentMode pre
 	case GAL::PresentMode::FIFO: return VK_PRESENT_MODE_FIFO_KHR;
 	case GAL::PresentMode::SWAP: return VK_PRESENT_MODE_MAILBOX_KHR;
 	default: return VK_PRESENT_MODE_MAX_ENUM_KHR;
+	}
+}
+
+inline VkBufferUsageFlags BufferTypeToVkBufferUsageFlags(const GAL::BufferType bufferType)
+{
+	switch (bufferType)
+	{
+	case GAL::BufferType::BUFFER_VERTEX: return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	case GAL::BufferType::BUFFER_INDEX: return VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+	case GAL::BufferType::BUFFER_UNIFORM: return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	default: ;
 	}
 }

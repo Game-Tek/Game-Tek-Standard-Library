@@ -30,6 +30,11 @@ namespace GAL
 		PRESENTATION
 	};
 
+	enum class ImageTiling : GTSL::uint8
+	{
+		LINEAR, OPTIMAL
+	};
+	
 	enum class ImageDimensions : GTSL::uint8
 	{
 		IMAGE_1D,
@@ -327,6 +332,49 @@ namespace GAL
 		}
 	}
 
+	inline GTSL::uint64 ImageFormatSize(const  ImageFormat imageFormat)
+	{
+		switch (imageFormat)
+		{
+		case ImageFormat::R_I8: break;
+		case ImageFormat::R_I16: break;
+		case ImageFormat::R_I32: break;
+		case ImageFormat::R_I64: break;
+		case ImageFormat::RG_I8: break;
+		case ImageFormat::RG_I16: break;
+		case ImageFormat::RG_I32: break;
+		case ImageFormat::RG_I64: break;
+		case ImageFormat::RGB_I8: break;
+		case ImageFormat::RGB_I16: break;
+		case ImageFormat::RGB_I32: break;
+		case ImageFormat::RGB_I64: break;
+		case ImageFormat::RGBA_I8: return 1 * 4;
+		case ImageFormat::RGBA_I16: break;
+		case ImageFormat::RGBA_I32: break;
+		case ImageFormat::RGBA_I64: break;
+		case ImageFormat::BGRA_I8: break;
+		case ImageFormat::BGR_I8: break;
+		case ImageFormat::R_F16: break;
+		case ImageFormat::R_F32: break;
+		case ImageFormat::R_F64: break;
+		case ImageFormat::RG_F16: break;
+		case ImageFormat::RG_F32: break;
+		case ImageFormat::RG_F64: break;
+		case ImageFormat::RGB_F16: break;
+		case ImageFormat::RGB_F32: break;
+		case ImageFormat::RGB_F64: break;
+		case ImageFormat::RGBA_F16: break;
+		case ImageFormat::RGBA_F32: break;
+		case ImageFormat::RGBA_F64: break;
+		case ImageFormat::DEPTH16: break;
+		case ImageFormat::DEPTH32: break;
+		case ImageFormat::DEPTH16_STENCIL8: break;
+		case ImageFormat::DEPTH24_STENCIL8: break;
+		case ImageFormat::DEPTH32_STENCIL8: break;
+		default: ;
+		}
+	}
+	
 #if (_WIN32)
 #define GAL_DEBUG_BREAK __debugbreak();
 #endif

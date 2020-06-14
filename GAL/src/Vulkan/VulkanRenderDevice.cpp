@@ -1,13 +1,11 @@
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
 #if (_WIN32)
-#include "windows.h"
-#include "vulkan/vulkan_win32.h"
+#include <windows.h>
+#include <vulkan/vulkan_win32.h>
 #endif
 
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
-
-#include <GTSL/FixedVector.hpp>
 #include "GAL/Vulkan/VulkanRenderMesh.h"
 #include "GAL/Vulkan/VulkanUniformBuffer.h"
 #include "GAL/Vulkan/VulkanTexture.h"
@@ -16,38 +14,8 @@
 #include "GAL/Vulkan/VulkanRenderTarget.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
 #include "GAL/Vulkan/VulkanRenderContext.h"
-#include <vector>
 
-VkFormat VulkanRenderDevice::FindSupportedFormat(const GTSL::FixedVector<VkFormat>& formats, const VkFormatFeatureFlags formatFeatureFlags, const VkImageTiling imageTiling) const
-{
-	VkFormatProperties format_properties;
-
-	bool isSupported = false;
-
-	for (auto& e : formats)
-	{
-		vkGetPhysicalDeviceFormatProperties(physicalDevice, e, &format_properties);
-
-		switch (imageTiling)
-		{
-		case VK_IMAGE_TILING_LINEAR:
-			isSupported = format_properties.linearTilingFeatures & formatFeatureFlags;
-			break;
-		case VK_IMAGE_TILING_OPTIMAL:
-			isSupported = format_properties.optimalTilingFeatures & formatFeatureFlags;
-			break;
-		}
-
-		if (isSupported)
-		{
-			return e;
-		}
-	}
-
-	return VK_FORMAT_UNDEFINED;
-}
-
-GTSL::uint32 VulkanRenderDevice::FindMemoryType(GTSL::uint32 memoryType, GTSL::uint32 memoryFlags) const
+GTSL::uint32 GAL::VulkanRenderDevice::FindMemoryType(GTSL::uint32 memoryType, GTSL::uint32 memoryFlags) const
 {
 	for (GTSL::uint32 i = 0; i < memoryProperties.memoryTypeCount; ++i)
 	{
@@ -57,7 +25,7 @@ GTSL::uint32 VulkanRenderDevice::FindMemoryType(GTSL::uint32 memoryType, GTSL::u
 	//BE_ASSERT(true, "Failed to find a suitable memory type!")
 }
 
-void VulkanRenderDevice::AllocateMemory(VkMemoryRequirements* memoryRequirements, GTSL::uint32 memoryPropertyFlag, VkDeviceMemory* deviceMemory) const
+void GAL::VulkanRenderDevice::AllocateMemory(VkMemoryRequirements* memoryRequirements, GTSL::uint32 memoryPropertyFlag, VkDeviceMemory* deviceMemory) const
 {
 	VkMemoryAllocateInfo vk_memory_allocate_info{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
 	vk_memory_allocate_info.allocationSize = memoryRequirements->size;
@@ -82,8 +50,59 @@ inline VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSev
 }
 #endif // BE_DEBUG
 
+GAL::VulkanRenderDevice::~VulkanRenderDevice()
+{
+	vkDeviceWaitIdle(device);
+	vkDestroyDevice(device, GetVkAllocationCallbacks());
+#if (_WIN32)
+	destroyDebugUtilsFunction(instance, debugMessenger, GetVkAllocationCallbacks());
+#endif
+	vkDestroyInstance(instance, GetVkAllocationCallbacks());
+}
 
-VulkanRenderDevice::VulkanRenderDevice(const RenderDeviceCreateInfo& renderDeviceCreateInfo) : vulkanQueues(renderDeviceCreateInfo.QueueCreateInfos->GetLength(), GetPersistentAllocationsAllocatorReference())
+bool GAL::VulkanRenderDevice::IsVulkanSupported()
+{
+#if (_WIN32)
+	return true;
+#endif
+}
+
+GAL::GPUInfo GAL::VulkanRenderDevice::GetGPUInfo()
+{
+	GAL::GPUInfo result;
+
+	result.GPUName = deviceProperties.deviceName;
+	result.DriverVersion = deviceProperties.vendorID;
+	result.APIVersion = deviceProperties.apiVersion;
+
+	return result;
+}
+
+GAL::ImageFormat GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(GTSL::Ranger<ImageFormat> candidates, const ImageUse imageUse, const ImageTiling imageTiling) const
+{
+	GTSL::Array<VkFormat, 32> formats;
+
+	for (auto& e : candidates) { formats.EmplaceBack(ImageFormatToVkFormat(e)); }
+
+	return VkFormatToImageFormat(FindSupportedVkFormat(formats, ImageUseToVkFormatFeatureFlagBits(imageUse), ImageTilingToVkImageTiling(imageTiling)));
+}
+
+GAL::VulkanRenderDevice::VulkanQueue::VulkanQueue(const CreateInfo& queueCreateInfo)
+{
+}
+
+void GAL::VulkanRenderDevice::VulkanQueue::Dispatch(const DispatchInfo& dispatchInfo)
+{
+	VkSubmitInfo vk_submit_info{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
+	vk_submit_info.commandBufferCount = 1;
+	auto vk_command_buffer = static_cast<GAL::VulkanCommandBuffer*>(dispatchInfo.CommandBuffer)->GetVkCommandBuffer();
+	vk_submit_info.pCommandBuffers = &vk_command_buffer;
+	GTSL::uint32 vk_pipeline_stage = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+	vk_submit_info.pWaitDstStageMask = &vk_pipeline_stage;
+	vkQueueSubmit(queue, 1, &vk_submit_info, nullptr);
+}
+
+GAL::VulkanRenderDevice::VulkanRenderDevice(const RenderDeviceCreateInfo& renderDeviceCreateInfo)
 {
 	VkApplicationInfo vk_application_info{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
 	vk_application_info.pNext = nullptr;
@@ -92,14 +111,14 @@ VulkanRenderDevice::VulkanRenderDevice(const RenderDeviceCreateInfo& renderDevic
 	vk_application_info.engineVersion = VK_MAKE_VERSION(0, 0, 1);
 	vk_application_info.pApplicationName = renderDeviceCreateInfo.ApplicationName.c_str();
 	vk_application_info.pEngineName = "Game-Tek | GAL";
-	
+
 	GTSL::Array<const char*, 32, GTSL::uint8> instance_layers = {
-#if (_DEBUG)
+#if(_DEBUG)
 		"VK_LAYER_LUNARG_standard_validation",
 		"VK_LAYER_LUNARG_parameter_validation",
 	};
 #else
-	};
+};
 #endif
 
 	GTSL::Array<const char*, 32, GTSL::uint8> extensions = {
@@ -124,7 +143,7 @@ VulkanRenderDevice::VulkanRenderDevice(const RenderDeviceCreateInfo& renderDevic
 	VK_CHECK(vkCreateInstance(&vk_instance_create_info, GetVkAllocationCallbacks(), &instance))
 
 #if (_DEBUG)
-	VkDebugUtilsMessengerCreateInfoEXT vk_debug_utils_messenger_create_info_EXT{};
+		VkDebugUtilsMessengerCreateInfoEXT vk_debug_utils_messenger_create_info_EXT {};
 	vk_debug_utils_messenger_create_info_EXT.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 	vk_debug_utils_messenger_create_info_EXT.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 	vk_debug_utils_messenger_create_info_EXT.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
@@ -204,93 +223,30 @@ VulkanRenderDevice::VulkanRenderDevice(const RenderDeviceCreateInfo& renderDevic
 	{
 		for (GTSL::uint8 j = 0; j < vk_device_queue_create_infos[i].queueCount; ++j)
 		{
-			VulkanQueue::VulkanQueueCreateInfo vulkan_queue_create_info;
-			vulkan_queue_create_info.FamilyIndex = vk_device_queue_create_infos[i].queueFamilyIndex;
-			vulkan_queue_create_info.QueueIndex = j;
-			vkGetDeviceQueue(device, vk_device_queue_create_infos[i].queueFamilyIndex, j, &vulkan_queue_create_info.Queue);
-			vulkanQueues.EmplaceBack(renderDeviceCreateInfo.QueueCreateInfos->At(i + j), vulkan_queue_create_info);
-			*renderDeviceCreateInfo.QueueCreateInfos->At(i).QueueToSet = &vulkanQueues[i + j];
+			static_cast<VulkanQueue*>(renderDeviceCreateInfo.Queues + i)->familyIndex = vk_device_queue_create_infos[i].queueFamilyIndex;
+			static_cast<VulkanQueue*>(renderDeviceCreateInfo.Queues + i)->queueIndex = j;
+			vkGetDeviceQueue(device, vk_device_queue_create_infos[i].queueFamilyIndex, j, &static_cast<VulkanQueue*>(renderDeviceCreateInfo.Queues + i)->queue);
 		}
 	}
 }
 
-VulkanRenderDevice::~VulkanRenderDevice()
+VkFormat GAL::VulkanRenderDevice::FindSupportedVkFormat(GTSL::Ranger<VkFormat> formats, VkFormatFeatureFlags formatFeatureFlags, VkImageTiling imageTiling) const
 {
-	vkDeviceWaitIdle(device);
-	vkDestroyDevice(device, GetVkAllocationCallbacks());
-#if (_WIN32)
-	destroyDebugUtilsFunction(instance, debugMessenger, GetVkAllocationCallbacks());
-#endif
-	vkDestroyInstance(instance, GetVkAllocationCallbacks());
-}
+	VkFormatProperties format_properties;
 
-bool VulkanRenderDevice::IsVulkanSupported()
-{
-#if (_WIN32)
-	return true;
-#endif
-}
+	for (auto& e : formats)
+	{
+		vkGetPhysicalDeviceFormatProperties(physicalDevice, e, &format_properties);
 
-GAL::GPUInfo VulkanRenderDevice::GetGPUInfo()
-{
-	GAL::GPUInfo result;
+		switch (imageTiling)
+		{
+		case VK_IMAGE_TILING_LINEAR:
+			if (format_properties.linearTilingFeatures & formatFeatureFlags) return e;
+			
+		case VK_IMAGE_TILING_OPTIMAL:
+			if (format_properties.optimalTilingFeatures & formatFeatureFlags) return e;
+		}
+	}
 
-	result.GPUName = deviceProperties.deviceName;
-	result.DriverVersion = deviceProperties.vendorID;
-	result.APIVersion = deviceProperties.apiVersion;
-
-	return result;
-}
-
-GAL::RenderMesh* VulkanRenderDevice::CreateRenderMesh(const GAL::RenderMesh::RenderMeshCreateInfo& renderMeshCreateInfo)
-{
-	void* m{ nullptr };
-	GTSL::uint64 a;
-	persistentAllocatorReference->Allocate(sizeof(VulkanRenderMesh), alignof(VulkanRenderMesh), &m, &a);
-	::new(m) VulkanRenderMesh(this, renderMeshCreateInfo);
-	return static_cast<GAL::RenderMesh*>(m);
-}
-
-GAL::UniformBuffer* VulkanRenderDevice::CreateUniformBuffer(const GAL::UniformBufferCreateInfo& uniformBufferCreateInfo)
-{
-	void* m{ nullptr };
-	GTSL::uint64 a;
-	persistentAllocatorReference->Allocate(sizeof(VulkanUniformBuffer), alignof(VulkanUniformBuffer), &m, &a);
-	::new(m) VulkanUniformBuffer(this, uniformBufferCreateInfo);
-	return static_cast<GAL::UniformBuffer*>(m);
-}
-
-GAL::RenderTarget* VulkanRenderDevice::CreateRenderTarget(const GAL::RenderTarget::RenderTargetCreateInfo& _ICI) { return new VulkanRenderTarget(this, _ICI); }
-
-GAL::Texture* VulkanRenderDevice::CreateTexture(const GAL::TextureCreateInfo& textureCreateInfo) { return new VulkanTexture(this, textureCreateInfo); }
-
-GAL::BindingsPool* VulkanRenderDevice::CreateBindingsPool(const GAL::BindingsPoolCreateInfo& bindingsPoolCreateInfo) { return new VulkanBindingsPool(this, bindingsPoolCreateInfo); }
-
-GAL::BindingsSet* VulkanRenderDevice::CreateBindingsSet(const GAL::BindingsSetCreateInfo& bindingsSetCreateInfo) { return new VulkanBindingsSet(this, bindingsSetCreateInfo); }
-
-GAL::GraphicsPipeline* VulkanRenderDevice::CreateGraphicsPipeline(const GAL::GraphicsPipelineCreateInfo& _GPCI) { return new VulkanGraphicsPipeline(this, _GPCI); }
-
-GAL::RenderPass* VulkanRenderDevice::CreateRenderPass(const GAL::RenderPassCreateInfo& renderPasCreateInfo) {	return new VulkanRenderPass(this, renderPasCreateInfo); }
-
-GAL::ComputePipeline* VulkanRenderDevice::CreateComputePipeline(const GAL::ComputePipelineCreateInfo& computePipelineCreateInfo) { return new VulkanComputePipeline(this, computePipelineCreateInfo); }
-
-GAL::Framebuffer* VulkanRenderDevice::CreateFramebuffer(const GAL::FramebufferCreateInfo& frameBufferCreateInfo) {	return new VulkanFramebuffer(this, frameBufferCreateInfo); }
-
-GAL::RenderContext* VulkanRenderDevice::CreateRenderContext(const GAL::RenderContextCreateInfo& renderContextCreateInfo) { return new VulkanRenderContext(this, renderContextCreateInfo); }
-
-GAL::CommandBuffer* VulkanRenderDevice::CreateCommandBuffer(const GAL::CommandBuffer::CommandBufferCreateInfo& commandBufferCreateInfo) { return new VulkanCommandBuffer(this, commandBufferCreateInfo); }
-
-VulkanRenderDevice::VulkanQueue::VulkanQueue(const QueueCreateInfo& queueCreateInfo, const VulkanQueueCreateInfo& vulkanQueueCreateInfo) : queue(vulkanQueueCreateInfo.Queue), queueIndex(vulkanQueueCreateInfo.QueueIndex), familyIndex(vulkanQueueCreateInfo.FamilyIndex)
-{
-}
-
-void VulkanRenderDevice::VulkanQueue::Dispatch(const DispatchInfo& dispatchInfo)
-{
-	VkSubmitInfo vk_submit_info{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-	vk_submit_info.commandBufferCount = 1;
-	auto vk_command_buffer = static_cast<VulkanCommandBuffer*>(dispatchInfo.CommandBuffer)->GetVkCommandBuffer();
-	vk_submit_info.pCommandBuffers = &vk_command_buffer;
-	GTSL::uint32 vk_pipeline_stage = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
-	vk_submit_info.pWaitDstStageMask = &vk_pipeline_stage;
-	vkQueueSubmit(queue, 1, &vk_submit_info, nullptr);
+	return VK_FORMAT_UNDEFINED;
 }

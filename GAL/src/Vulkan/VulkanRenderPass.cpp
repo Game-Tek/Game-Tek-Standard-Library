@@ -14,7 +14,7 @@ VulkanRenderPass::VulkanRenderPass(class VulkanRenderDevice * vulkanRenderDevice
 		for (GTSL::uint8 i = 0; i < Attachments.GetCapacity() - DSAA; i++)
 			//Loop through all color attachments(skip extra element for depth/stencil)
 		{
-			Attachments[i].format = FormatToVkFormat(renderPassCreateInfo.Descriptor.RenderPassColorAttachments[i]->AttachmentImage->GetFormat());
+			Attachments[i].format = ImageFormatToVkFormat(renderPassCreateInfo.Descriptor.RenderPassColorAttachments[i]->AttachmentImage->GetFormat());
 			Attachments[i].samples = VK_SAMPLE_COUNT_1_BIT; //Should match that of the SwapChain images.
 			Attachments[i].loadOp = RenderTargetLoadOperationsToVkAttachmentLoadOp(renderPassCreateInfo.Descriptor.RenderPassColorAttachments[i]->LoadOperation);
 			Attachments[i].storeOp = RenderTargetStoreOperationsToVkAttachmentStoreOp(renderPassCreateInfo.Descriptor.RenderPassColorAttachments[i]->StoreOperation);
@@ -27,7 +27,7 @@ VulkanRenderPass::VulkanRenderPass(class VulkanRenderDevice * vulkanRenderDevice
 		if (DSAA)
 		{
 			//Set depth/stencil element.
-			Attachments[Attachments.GetCapacity() - 1].format = FormatToVkFormat(renderPassCreateInfo.Descriptor.DepthStencilAttachment.AttachmentImage->GetFormat());
+			Attachments[Attachments.GetCapacity() - 1].format = ImageFormatToVkFormat(renderPassCreateInfo.Descriptor.DepthStencilAttachment.AttachmentImage->GetFormat());
 			Attachments[Attachments.GetCapacity() - 1].samples = VK_SAMPLE_COUNT_1_BIT;
 			Attachments[Attachments.GetCapacity() - 1].loadOp = RenderTargetLoadOperationsToVkAttachmentLoadOp(renderPassCreateInfo.Descriptor.DepthStencilAttachment.LoadOperation);
 			Attachments[Attachments.GetCapacity() - 1].storeOp = RenderTargetStoreOperationsToVkAttachmentStoreOp(renderPassCreateInfo.Descriptor.DepthStencilAttachment.StoreOperation);

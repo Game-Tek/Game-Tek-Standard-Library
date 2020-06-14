@@ -12,10 +12,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GAL\Bindings.h" />
+    <ClInclude Include="GAL\Buffer.h" />
     <ClInclude Include="GAL\CommandBuffer.h" />
     <ClInclude Include="GAL\ComputePipeline.h" />
     <ClInclude Include="GAL\Framebuffer.h" />
     <ClInclude Include="GAL\GraphicsPipeline.h" />
+    <ClInclude Include="GAL\Memory.h" />
     <ClInclude Include="GAL\RenderContext.h" />
     <ClInclude Include="GAL\RenderCore.h" />
     <ClInclude Include="GAL\RenderDevice.h" />
@@ -25,8 +27,10 @@
     <ClInclude Include="GAL\Texture.h" />
     <ClInclude Include="GAL\UniformBuffer.h" />
     <ClInclude Include="GAL\Vulkan\Vulkan.h" />
+    <ClInclude Include="GAL\Vulkan\VulkanMemory.h" />
     <ClInclude Include="GAL\Vulkan\VulkanBase.h" />
     <ClInclude Include="GAL\Vulkan\VulkanBindings.h" />
+    <ClInclude Include="GAL\Vulkan\VulkanBuffer.h" />
     <ClInclude Include="GAL\Vulkan\VulkanCommandBuffer.h" />
     <ClInclude Include="GAL\Vulkan\VulkanFramebuffer.h" />
     <ClInclude Include="GAL\Vulkan\VulkanPipelines.h" />
@@ -38,10 +42,12 @@
     <ClInclude Include="GAL\Vulkan\VulkanSwapchainImage.h" />
     <ClInclude Include="GAL\Vulkan\VulkanTexture.h" />
     <ClInclude Include="GAL\Vulkan\VulkanUniformBuffer.h" />
+    <ClInclude Include="src\Vulkan\VulkanMemory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\RenderDevice.cpp" />
     <ClCompile Include="src\Vulkan\VulkanBindings.cpp" />
+    <ClCompile Include="src\Vulkan\VulkanBuffer.cpp" />
     <ClCompile Include="src\Vulkan\VulkanCommandBuffer.cpp" />
     <ClCompile Include="src\Vulkan\VulkanFramebuffer.cpp" />
     <ClCompile Include="src\Vulkan\VulkanPipelines.cpp" />

@@ -4,18 +4,30 @@
 
 #include "Vulkan.h"
 
-class VulkanTexture : public GAL::Texture
+namespace GAL
 {
-	VkImage textureImage = nullptr;
-	VkDeviceMemory textureImageMemory = nullptr;
-	VkImageView textureImageView = nullptr;
-	VkSampler textureSampler = nullptr;
+	class VulkanTexture : public GAL::Texture
+	{
+	public:
+		explicit VulkanTexture(const CreateInfo& createInfo);
 
-public:
-	VulkanTexture(class VulkanRenderDevice* vulkanRenderDevice, const GAL::TextureCreateInfo& textureCreateInfo);
+		void Destroy(class GAL::RenderDevice* renderDevice) override;
 
-	void Destroy(class GAL::RenderDevice* renderDevice) override;
+		struct BindMemoryInfo : RenderInfo
+		{
+			class DeviceMemory* Memory{ nullptr };
+			GTSL::uint32 Offset{ 0 };
+		};
+		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;
 
-	[[nodiscard]] VkImageView GetImageView() const { return textureImageView; }
-	[[nodiscard]] VkSampler GetImageSampler() const { return textureSampler; }
-};
+		[[nodiscard]] VkImage GetVkImage() const { return textureImage; }
+		[[nodiscard]] VkImageView GetImageView() const { return textureImageView; }
+		[[nodiscard]] VkSampler GetImageSampler() const { return textureSampler; }
+
+	private:
+		VkImage textureImage = nullptr;
+		VkImageView textureImageView = nullptr;
+		VkSampler textureSampler = nullptr;
+
+	};
+}
