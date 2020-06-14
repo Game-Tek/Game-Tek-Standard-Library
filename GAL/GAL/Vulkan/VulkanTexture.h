@@ -6,7 +6,7 @@
 
 namespace GAL
 {
-	class VulkanTexture : public GAL::Texture
+	class VulkanTexture : public Texture
 	{
 	public:
 		explicit VulkanTexture(const CreateInfo& createInfo);
@@ -19,7 +19,7 @@ namespace GAL
 			GTSL::uint32 Offset{ 0 };
 		};
 		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;
-
+		
 		[[nodiscard]] VkImage GetVkImage() const { return textureImage; }
 		[[nodiscard]] VkImageView GetImageView() const { return textureImageView; }
 		[[nodiscard]] VkSampler GetImageSampler() const { return textureSampler; }

@@ -6,7 +6,7 @@
 
 namespace GAL
 {
-	class VulkanRenderDevice final : public GAL::RenderDevice
+	class VulkanRenderDevice final : public RenderDevice
 	{
 	public:
 		class VulkanQueue : public Queue

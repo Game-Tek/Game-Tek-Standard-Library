@@ -4,7 +4,7 @@
 
 #include <GTSL/Extent.h>
 
-#include "Buffer.h"
+#include "GTSL/Memory.h"
 
 namespace GAL
 {
@@ -20,9 +20,27 @@ namespace GAL
 			ImageFormat SourceImageFormat{ ImageFormat::RGBA_I8 };
 			GTSL::Extent2D Extent{ 1280, 720 };
 			GTSL::uint8 Anisotropy = 0;
+			ImageTiling ImageTiling;
 			class CommandBuffer* CommandBuffer = nullptr;
 		};
 		explicit Texture(const CreateInfo& textureCreateInfo);
+
+		static GTSL::uint64 GetTextureSize(const ImageFormat imageFormat, const GTSL::Extent2D extent)
+		{
+			return ImageFormatSize(imageFormat) * extent.Width * extent.Height;
+		}
+
+		static void ConvertImageFormat(const ImageFormat sourceImageFormat, const ImageFormat supportedImageFormat, const GTSL::Extent2D imageExtent, void* buffer)
+		{
+			const GTSL::uint64 originalTextureSize = Texture::GetTextureSize(sourceImageFormat, imageExtent);
+			const GTSL::uint64 supportedTextureSize = (originalTextureSize / ImageFormatSize(sourceImageFormat)) * ImageFormatSize(supportedImageFormat);
+
+			for (GTSL::uint64 i_target = 0, i_source = 0; i_target < supportedTextureSize; i_target += ImageFormatSize(supportedImageFormat), i_source += ImageFormatSize(sourceImageFormat))
+			{
+				GTSL::Memory::MemCopy(ImageFormatSize(sourceImageFormat), static_cast<char*>(buffer) + i_source, static_cast<char*>(buffer) + i_target);
+				static_cast<char*>(buffer)[i_target + 3] = 0;
+			}
+		}
 	};
 
 }

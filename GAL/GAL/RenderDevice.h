@@ -6,15 +6,6 @@
 
 #include "RenderCore.h"
 
-#include "RenderMesh.h"
-#include "UniformBuffer.h"
-#include "RenderTarget.h"
-#include "Texture.h"
-#include "Bindings.h"
-#include "GraphicsPipeline.h"
-#include "RenderPass.h"
-#include "RenderContext.h"
-#include "ComputePipeline.h"
 #include "Framebuffer.h"
 #include "CommandBuffer.h"
 #include <GTSL/Array.hpp>
@@ -77,9 +68,9 @@ namespace GAL
 		struct RenderDeviceCreateInfo
 		{
 			RenderAPI RenderingAPI;
-			GTSL::String ApplicationName;
+			GTSL::Ranger<GTSL::UTF8> ApplicationName;
 			GTSL::uint16 ApplicationVersion[3];
-			GTSL::Vector<Queue::CreateInfo>* QueueCreateInfos = nullptr;
+			GTSL::Ranger<Queue::CreateInfo> QueueCreateInfos;
 			GTSL::Ranger<Queue> Queues;
 		};
 		static RenderDevice* CreateRenderDevice(const RenderDeviceCreateInfo& renderDeviceCreateInfo);

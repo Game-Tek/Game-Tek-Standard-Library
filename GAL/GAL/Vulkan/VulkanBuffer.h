@@ -17,7 +17,7 @@ namespace GAL
 			GTSL::uint32 Offset{ 0 };
 		};
 		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;
-
+		
 		[[nodiscard]] VkBuffer GetVkBuffer() const { return buffer; }
 	private:
 		VkBuffer buffer{ 0 };

@@ -8,38 +8,39 @@
 #include "VulkanSwapchainImage.h"
 #include "VulkanBindings.h"
 
-#include <GTSL/Vector.hpp>
-
-
-class VulkanRenderContext final : public GAL::RenderContext
+namespace GAL
 {
-	VkSurfaceKHR surface = nullptr;
-	VkSwapchainKHR swapchain = nullptr;
+	class VulkanRenderContext final : public RenderContext
+	{
+	public:
+		VulkanRenderContext(const CreateInfo& createInfo);
+		~VulkanRenderContext() = default;
 
-	VkSurfaceFormatKHR surfaceFormat{};
-	VkPresentModeKHR presentMode{};
+		void Destroy(RenderDevice* renderDevice);
 
-	GTSL::Array<VkImage, 5, GTSL::uint8> vulkanSwapchainImages;
+		void OnResize(const ResizeInfo& _RI);
+		void AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
+		void Flush(const FlushInfo& flushInfo);
+		void Present(const PresentInfo& presentInfo);
 
-	GTSL::Array<VkSemaphore, 5, GTSL::uint8> imagesAvailable;
-	GTSL::Array<VkSemaphore, 5, GTSL::uint8> rendersFinished;
-	GTSL::Array<VkFence, 5, GTSL::uint8> inFlightFences;
-	
-	mutable GTSL::Vector<VulkanSwapchainImage> swapchainImages;
+		struct RenderTargetsInfo : RenderInfo
+		{		
+		};
+		GTSL::Array<VulkanRenderTarget, 5> GetRenderTargets(const RenderTargetsInfo& renderTargetsInfo);
+		
+	private:
+		VkSurfaceKHR surface = nullptr;
+		VkSwapchainKHR swapchain = nullptr;
+		VkSurfaceFormatKHR surfaceFormat{};
+		VkPresentModeKHR presentMode{};
 
-	
-	GTSL::uint8 imageIndex = 0;
+		GTSL::Array<VkSemaphore, 5, GTSL::uint8> imagesAvailable;
+		GTSL::Array<VkSemaphore, 5, GTSL::uint8> rendersFinished;
+		GTSL::Array<VkFence, 5, GTSL::uint8> inFlightFences;
 
-	VkSurfaceFormatKHR FindFormat(const VulkanRenderDevice* device, VkSurfaceKHR surface);
-	VkPresentModeKHR FindPresentMode(const VkPhysicalDevice _PD, VkSurfaceKHR _Surface);
-public:
-	VulkanRenderContext(VulkanRenderDevice* device, const GAL::RenderContextCreateInfo& renderContextCreateInfo);
-	~VulkanRenderContext() = default;
+		GTSL::uint8 imageIndex = 0;
 
-	void Destroy(GAL::RenderDevice* renderDevice) override;
-
-	void OnResize(const GAL::ResizeInfo& _RI) override;
-	void AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo) override;
-	void Flush(const FlushInfo& flushInfo) override;
-	void Present(const PresentInfo& presentInfo) override;
-};
+		VkSurfaceFormatKHR findFormat(const VulkanRenderDevice* device, VkSurfaceKHR surface);
+		VkPresentModeKHR findPresentMode(const VkPhysicalDevice _PD, VkSurfaceKHR _Surface);
+	};
+}

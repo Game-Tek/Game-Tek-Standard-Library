@@ -32,13 +32,6 @@ namespace GAL
 	};
 #endif
 	
-	struct RenderContextCreateInfo
-	{
-		GTSL::Extent2D SurfaceArea;
-		void* SystemData{ nullptr };
-		GTSL::uint8 DesiredFramesInFlight = 0;
-	};
-	
 	class RenderContext : public GALObject
 	{
 	protected:
@@ -47,32 +40,35 @@ namespace GAL
 
 		GTSL::Extent2D extent{ 0, 0 };
 
-		GTSL::Array<GAL::RenderTarget*, 5, GTSL::uint8> renderTargets;
-
 	public:
+		struct CreateInfo : RenderInfo
+		{
+			GTSL::Extent2D SurfaceArea;
+			void* SystemData{ nullptr };
+			GTSL::uint8 DesiredFramesInFlight = 0;
+		};
+		explicit RenderContext(const CreateInfo& createInfo);
 		virtual ~RenderContext() = default;
 
-		virtual void OnResize(const ResizeInfo& _RI) = 0;
+		void OnResize(const ResizeInfo& _RI);
 
 		struct AcquireNextImageInfo : RenderInfo
 		{
 		};
-		virtual void AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo) = 0;
+		void AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
 
 		struct FlushInfo : RenderInfo
 		{
 			Queue* Queue = nullptr;
 			class CommandBuffer* CommandBuffer = nullptr;
 		};
-		virtual void Flush(const FlushInfo& flushInfo) = 0;
+		void Flush(const FlushInfo& flushInfo);
 
 		struct PresentInfo : RenderInfo
 		{
 			Queue* Queue = nullptr;
 		};
-		virtual void Present(const PresentInfo& presentInfo) = 0;
-
-		[[nodiscard]] GTSL::Array<RenderTarget*, 5, GTSL::uint8> GetSwapchainRenderTargets() const { return renderTargets; }
+		void Present(const PresentInfo& presentInfo);
 
 		[[nodiscard]] GTSL::uint8 GetCurrentImage() const { return currentImage; }
 		[[nodiscard]] GTSL::uint8 GetMaxFramesInFlight() const { return maxFramesInFlight; }

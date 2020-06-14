@@ -8,7 +8,7 @@ namespace GAL
 {
 	class VulkanRenderDevice;
 
-	class VulkanCommandBuffer final : public GAL::CommandBuffer
+	class VulkanCommandBuffer final : public CommandBuffer
 	{
 	public:
 		explicit VulkanCommandBuffer(VulkanRenderDevice* renderDevice, const CommandBufferCreateInfo& commandBufferCreateInfo);
@@ -44,6 +44,12 @@ namespace GAL
 			GTSL::Extent3D Offset;
 		};
 		void CopyBufferToImage(const CopyBufferToImageInfo& copyImageToBufferInfo);
+
+		struct TransitionImageInfo : RenderInfo
+		{
+			
+		};
+		void TransitionImage(const TransitionImageInfo& transitionImageInfo);
 
 		[[nodiscard]] VkCommandBuffer GetVkCommandBuffer() const { return commandBuffer; }
 

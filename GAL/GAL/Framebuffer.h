@@ -22,27 +22,26 @@ namespace GAL
 		RenderTarget* Images = nullptr;
 	};
 
-	struct FramebufferCreateInfo
-	{
-		RenderPass* RenderPass = nullptr;
-		GTSL::Extent2D Extent = { 1280, 720 };
-		GTSL::FixedVector<RenderTarget*> Images;
-		GTSL::Vector<RGBA> ClearValues;
-	};
-
 	class Framebuffer : public GALObject
 	{
 	protected:
 		GTSL::Extent2D extent;
 		GTSL::uint8 attachmentCount = 0;
 	public:
-		explicit Framebuffer(const FramebufferCreateInfo& framebufferCreateInfo) : extent(framebufferCreateInfo.Extent)
+		struct CreateInfo : RenderInfo
+		{
+			RenderPass* RenderPass = nullptr;
+			GTSL::Extent2D Extent = { 1280, 720 };
+			GTSL::FixedVector<RenderTarget*> Images;
+			GTSL::Vector<RGBA> ClearValues;
+		};
+		explicit Framebuffer(const CreateInfo& createInfo) : extent(createInfo.Extent)
 		{
 		}
 
-		virtual ~Framebuffer() = default;
+		~Framebuffer() = default;
 
-		[[nodiscard]] const GTSL::Extent2D& GetExtent() const { return extent; }
+		[[nodiscard]] GTSL::Extent2D GetExtent() const { return extent; }
 		[[nodiscard]] GTSL::uint8 GetAttachmentCount() const { return attachmentCount; };
 	};
 }

@@ -3,14 +3,10 @@
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
 
-#include <GTSL/FixedVector.hpp>
-
 #include "GAL/Vulkan/VulkanMemory.h"
 
 GAL::VulkanTexture::VulkanTexture(const CreateInfo& createInfo) : Texture(createInfo)
 {
-	void* data = nullptr;
-	
 	VkImageCreateInfo vk_image_create_info{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	vk_image_create_info.imageType = VK_IMAGE_TYPE_2D;
 	vk_image_create_info.extent.width = createInfo.Extent.Width;
@@ -18,8 +14,8 @@ GAL::VulkanTexture::VulkanTexture(const CreateInfo& createInfo) : Texture(create
 	vk_image_create_info.extent.depth = 1;
 	vk_image_create_info.mipLevels = 1;
 	vk_image_create_info.arrayLayers = 1;
-	vk_image_create_info.format = supportedFormat;
-	vk_image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+	vk_image_create_info.format = ImageFormatToVkFormat(createInfo.SourceImageFormat);
+	vk_image_create_info.tiling = ImageTilingToVkImageTiling(createInfo.ImageTiling);
 	vk_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	vk_image_create_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	vk_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -89,7 +85,7 @@ GAL::VulkanTexture::VulkanTexture(const CreateInfo& createInfo) : Texture(create
 	VkImageViewCreateInfo vk_image_view_create_info{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	vk_image_view_create_info.image = textureImage;
 	vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	vk_image_view_create_info.format = supportedFormat;
+	vk_image_view_create_info.format = ImageFormatToVkFormat(createInfo.SourceImageFormat);
 	vk_image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
 	vk_image_view_create_info.subresourceRange.levelCount = 1;

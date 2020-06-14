@@ -7,37 +7,42 @@
 
 #include <GTSL/Vector.hpp>
 
-class VulkanShaders
+namespace GAL
 {
-public:
-	//takes an unitialized fvector
-	static void CompileShader(const GTSL::String& code, const GTSL::String& shaderName, GTSL::uint32 shaderStage, GTSL::Vector<GTSL::uint32>& result);
-};
+	class VulkanShaders
+	{
+	public:
+		//takes an unitialized fvector
+		static void CompileShader(GTSL::Ranger<GTSL::UTF8> code, GTSL::Ranger<GTSL::UTF8> shaderName, GTSL::uint32 shaderStage, GTSL::Vector<GTSL::uint32>& result);
+	};
 
-class VulkanGraphicsPipeline final : public GAL::GraphicsPipeline
-{
-	VkPipelineLayout vkPipelineLayout = nullptr;
-	VkPipeline vkPipeline = nullptr;
+	class VulkanGraphicsPipeline final : public GraphicsPipeline
+	{
+	public:
+		VulkanGraphicsPipeline(const GraphicsPipelineCreateInfo& _GPCI);
+		~VulkanGraphicsPipeline() = default;
 
-public:
-	VulkanGraphicsPipeline(class VulkanRenderDevice* vulkanRenderDevice, const GAL::GraphicsPipelineCreateInfo& _GPCI);
-	~VulkanGraphicsPipeline() = default;
+		void Destroy(RenderDevice* renderDevice);
 
-	void Destroy(GAL::RenderDevice* renderDevice) override;
+		[[nodiscard]] VkPipeline GetVkGraphicsPipeline() const { return pipeline; }
+		[[nodiscard]] VkPipelineLayout GetVkPipelineLayout() const { return pipelineLayout; }
 
-	[[nodiscard]] VkPipeline GetVkGraphicsPipeline() const { return vkPipeline; }
-	[[nodiscard]] VkPipelineLayout GetVkPipelineLayout() const { return vkPipelineLayout; }
-};
+	private:
+		VkPipelineLayout pipelineLayout = nullptr;
+		VkPipeline pipeline = nullptr;
+	};
 
-class VulkanComputePipeline final : public GAL::ComputePipeline
-{
-	VkPipeline vkPipeline = nullptr;
+	class VulkanComputePipeline final : public ComputePipeline
+	{
+	public:
+		VulkanComputePipeline(const ComputePipelineCreateInfo& computePipelineCreateInfo);
+		~VulkanComputePipeline() = default;
 
-public:
-	VulkanComputePipeline(class VulkanRenderDevice* vulkanRenderDevice, const GAL::ComputePipelineCreateInfo& computePipelineCreateInfo);
-	~VulkanComputePipeline() = default;
+		void Destroy(RenderDevice* renderDevice);
 
-	void Destroy(GAL::RenderDevice* renderDevice) override;
-	
-	[[nodiscard]] VkPipeline GetVkPipeline() const { return vkPipeline; }
-};
+		[[nodiscard]] VkPipeline GetVkPipeline() const { return pipeline; }
+
+	private:
+		VkPipeline pipeline = nullptr;
+	};
+}

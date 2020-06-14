@@ -332,6 +332,24 @@ namespace GAL
 		}
 	}
 
+	inline GTSL::uint64 ImageFormatChannelSize(const ImageFormat imageFormat)
+	{
+		switch (imageFormat)
+		{
+		case ImageFormat::RGBA_I8: return 1;
+		case ImageFormat::RGB_I8: return 1;
+		}
+	}
+
+	inline GTSL::uint64 ImageFormatChannelCount(const ImageFormat imageFormat)
+	{
+		switch (imageFormat)
+		{
+		case ImageFormat::RGBA_I8: return 4;
+		case ImageFormat::RGB_I8: return 3;
+		}
+	}
+	
 	inline GTSL::uint64 ImageFormatSize(const  ImageFormat imageFormat)
 	{
 		switch (imageFormat)
@@ -384,9 +402,6 @@ namespace GAL
 	protected:
 		~GALObject() = default;
 	public:
-		virtual void Destroy(class RenderDevice* renderDevice) = 0;
-
-		void GetSize(GTSL::uint64& size) const { size = sizeof(*this); }
-		void GetAlignment(GTSL::uint64& alignment) const { alignment = alignof(decltype(*this)); }
+		void Destroy(class RenderDevice* renderDevice);
 	};
 }

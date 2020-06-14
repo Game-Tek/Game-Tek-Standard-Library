@@ -14,6 +14,7 @@
 #include "GAL/Vulkan/VulkanRenderTarget.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
 #include "GAL/Vulkan/VulkanRenderContext.h"
+#include "GTSL/StaticString.hpp"
 
 GTSL::uint32 GAL::VulkanRenderDevice::FindMemoryType(GTSL::uint32 memoryType, GTSL::uint32 memoryFlags) const
 {
@@ -109,7 +110,9 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const RenderDeviceCreateInfo& render
 	vkEnumerateInstanceVersion(&vk_application_info.apiVersion);
 	vk_application_info.applicationVersion = VK_MAKE_VERSION(renderDeviceCreateInfo.ApplicationVersion[0], renderDeviceCreateInfo.ApplicationVersion[1], renderDeviceCreateInfo.ApplicationVersion[2]);
 	vk_application_info.engineVersion = VK_MAKE_VERSION(0, 0, 1);
-	vk_application_info.pApplicationName = renderDeviceCreateInfo.ApplicationName.c_str();
+	GTSL::StaticString<512> name(renderDeviceCreateInfo.ApplicationName);
+	name += '\0';
+	vk_application_info.pApplicationName = name.begin();
 	vk_application_info.pEngineName = "Game-Tek | GAL";
 
 	GTSL::Array<const char*, 32, GTSL::uint8> instance_layers = {
@@ -161,33 +164,33 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const RenderDeviceCreateInfo& render
 	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
 
 	VkPhysicalDeviceFeatures vk_physical_device_features{};
-	vk_physical_device_features.samplerAnisotropy = VK_TRUE;
-	vk_physical_device_features.shaderSampledImageArrayDynamicIndexing = VK_TRUE;
+	vk_physical_device_features.samplerAnisotropy = true;
+	vk_physical_device_features.shaderSampledImageArrayDynamicIndexing = true;
 
 	GTSL::Array<const char*, 32, GTSL::uint8> device_extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-	auto queue_create_infos = renderDeviceCreateInfo.QueueCreateInfos;
+	auto& queue_create_infos = renderDeviceCreateInfo.QueueCreateInfos;
 
-	GTSL::Vector<VkDeviceQueueCreateInfo> vk_device_queue_create_infos(queue_create_infos->GetLength(), queue_create_infos->GetLength(), GetTransientAllocationsAllocatorReference());
+	GTSL::Array<VkDeviceQueueCreateInfo, 16> vk_device_queue_create_infos(queue_create_infos.ElementCount());
 
 	GTSL::uint32 queue_families_count = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, nullptr);
 	//Get the amount of queue families there are in the physical device.
-	GTSL::Vector<VkQueueFamilyProperties> vk_queue_families_properties(queue_families_count, GetTransientAllocationsAllocatorReference());
+	GTSL::Array<VkQueueFamilyProperties, 32> vk_queue_families_properties(queue_families_count);
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, vk_queue_families_properties.GetData());
 
-	GTSL::Vector<bool> used_families(queue_families_count, GetTransientAllocationsAllocatorReference());
-	GTSL::Vector<VkQueueFlagBits> vk_queues_flag_bits(queue_families_count, queue_families_count, GetTransientAllocationsAllocatorReference());
+	GTSL::Array<bool, 32> used_families(queue_families_count);
+	GTSL::Array<VkQueueFlagBits, 32> vk_queues_flag_bits(queue_families_count);
 	{
 		GTSL::uint8 i = 0;
 		for (auto& e : vk_queues_flag_bits)
 		{
-			e = VkQueueFlagBits(queue_create_infos->At(i).Capabilities);
+			//e = VkQueueFlagBits(vk_queue_families_properties[i].Capabilities);
 			++i;
 		}
 	}
 
-	for (GTSL::uint8 q = 0; q < queue_create_infos->GetLength(); ++q)
+	for (GTSL::uint8 q = 0; q < queue_create_infos.ElementCount(); ++q)
 	{
 		for (GTSL::uint8 f = 0; f < queue_families_count; ++f)
 		{
@@ -196,11 +199,12 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const RenderDeviceCreateInfo& render
 				if (used_families[f])
 				{
 					++vk_device_queue_create_infos[f].queueCount;
-					vk_device_queue_create_infos[f].pQueuePriorities = &queue_create_infos->At(q).QueuePriority;
+					vk_device_queue_create_infos[f].pQueuePriorities = &queue_create_infos[q].QueuePriority;
 					break;
 				}
 
-				vk_device_queue_create_infos[f].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO; used_families[f] = true;
+				used_families[f] = true;
+				vk_device_queue_create_infos[f].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 				vk_device_queue_create_infos[f].pNext = nullptr;
 				vk_device_queue_create_infos[f].flags = 0;
 				vk_device_queue_create_infos[f].queueFamilyIndex = f;
@@ -219,7 +223,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const RenderDeviceCreateInfo& render
 
 	VK_CHECK(vkCreateDevice(physicalDevice, &vk_device_create_info, GetVkAllocationCallbacks(), &device));
 
-	for (GTSL::uint8 i = 0; i < renderDeviceCreateInfo.QueueCreateInfos->GetLength(); ++i)
+	for (GTSL::uint8 i = 0; i < renderDeviceCreateInfo.QueueCreateInfos.ElementCount(); ++i)
 	{
 		for (GTSL::uint8 j = 0; j < vk_device_queue_create_infos[i].queueCount; ++j)
 		{
@@ -230,7 +234,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const RenderDeviceCreateInfo& render
 	}
 }
 
-VkFormat GAL::VulkanRenderDevice::FindSupportedVkFormat(GTSL::Ranger<VkFormat> formats, VkFormatFeatureFlags formatFeatureFlags, VkImageTiling imageTiling) const
+VkFormat GAL::VulkanRenderDevice::FindSupportedVkFormat(GTSL::Ranger<VkFormat> formats, const VkFormatFeatureFlags formatFeatureFlags, const VkImageTiling imageTiling) const
 {
 	VkFormatProperties format_properties;
 

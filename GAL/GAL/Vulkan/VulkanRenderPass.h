@@ -4,15 +4,18 @@
 
 #include "GAL/Vulkan/Vulkan.h"
 
-class VulkanRenderPass final : public GAL::RenderPass
+namespace GAL
 {
-	VkRenderPass renderPass = nullptr;
+	class VulkanRenderPass final : public GAL::RenderPass
+	{
+	public:
+		explicit VulkanRenderPass(const CreateInfo& createInfo);
+		~VulkanRenderPass() = default;
 
-public:
-	VulkanRenderPass(class VulkanRenderDevice* vulkanRenderDevice, const GAL::RenderPassCreateInfo& renderPassDescriptor);
-	~VulkanRenderPass() = default;
+		void Destroy(class RenderDevice* renderDevice) const;
 
-	void Destroy(class GAL::RenderDevice* renderDevice) override;
-
-	[[nodiscard]] VkRenderPass GetVkRenderPass() const { return renderPass; }
-};
+		[[nodiscard]] VkRenderPass GetVkRenderPass() const { return renderPass; }
+	private:
+		VkRenderPass renderPass = nullptr;
+	};
+}

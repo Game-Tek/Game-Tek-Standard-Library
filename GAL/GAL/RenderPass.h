@@ -5,10 +5,11 @@
 
 #include <GTSL/Array.hpp>
 
-constexpr GTSL::uint8 ATTACHMENT_UNUSED = 255;
 
 namespace GAL
 {
+	constexpr GTSL::uint8 ATTACHMENT_UNUSED = 255;
+	
 	//Describes the reference to a render pass attachment for a sub pass.
 	struct AttachmentReference
 	{
@@ -36,13 +37,13 @@ namespace GAL
 	struct SubPassDescriptor
 	{
 		//Array of AttachmentsReferences for attachments which the subpass reads from.
-		GTSL::Array<AttachmentReference*, 8> ReadColorAttachments;
+		GTSL::Ranger<AttachmentReference> ReadColorAttachments;
 
 		//Array of AttachmentsReferences for attachments which the subpass writes to.
-		GTSL::Array<AttachmentReference*, 8> WriteColorAttachments;
+		GTSL::Ranger<AttachmentReference> WriteColorAttachments;
 
 		//Array of indices identifying attachments that are not used by this subpass, but whose contents MUST be preserved throughout the subpass.
-		GTSL::Array<GTSL::uint8, 8> PreserveAttachments;
+		GTSL::Ranger<GTSL::uint8> PreserveAttachments;
 
 		AttachmentReference* DepthAttachmentReference = nullptr;
 	};
@@ -51,23 +52,23 @@ namespace GAL
 	struct RenderPassDescriptor
 	{
 		//Array of pointer to images that will be used as attachments in the render pass.
-		GTSL::Array<AttachmentDescriptor*, 8> RenderPassColorAttachments;
+		GTSL::Ranger<AttachmentDescriptor> RenderPassColorAttachments;
 		//Pointer to an image that will be used as the depth stencil attachment in the render pass.
 		AttachmentDescriptor DepthStencilAttachment;
 
 		//Array of SubpassDescriptor used to describes the properties of every subpass in the renderpass.
-		GTSL::Array<SubPassDescriptor*, 8> SubPasses;
-	};
-
-	struct RenderPassCreateInfo
-	{
-		RenderPassDescriptor Descriptor;
+		GTSL::Ranger<SubPassDescriptor> SubPasses;
 	};
 
 	class RenderPass : public GALObject
 	{
 	public:
-		RenderPass() = default;
+		struct CreateInfo : RenderInfo
+		{
+			RenderPassDescriptor Descriptor;
+		};
+		explicit RenderPass(const CreateInfo& createInfo);
+		
 		virtual ~RenderPass() = default;
 	};
 

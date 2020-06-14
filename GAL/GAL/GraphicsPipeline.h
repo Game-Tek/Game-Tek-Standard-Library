@@ -1,11 +1,12 @@
 #pragma once
 
 #include "RenderCore.h"
-#include "RenderMesh.h"
 
 #include <GTSL/Array.hpp>
 #include <GTSL/String.hpp>
 #include <GTSL/Extent.h>
+
+#include "GTSL/FixedVector.hpp"
 
 namespace GAL
 {

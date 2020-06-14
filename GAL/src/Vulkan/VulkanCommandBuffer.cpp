@@ -125,58 +125,11 @@ void GAL::VulkanCommandBuffer::BindBindingsSet(const BindBindingsSetInfo& bindBi
 
 void GAL::VulkanCommandBuffer::CopyImage(const CopyImageInfo& copyImageInfo)
 {
-	//vkCmdCopyImage(commandBuffer, copyImageInfo, , , , , );
+	//vkCmdCopyImage(commandBuffer, static_cast<VulkanImage*>(copyImageInfo.SourceImage), , , , , );
 }
 
 void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& copyBufferToImageInfo)
 {
-	GTSL::FixedVector<VkFormat> formats(2, copyBufferToImageInfo.RenderDevice->GetTransientAllocationsAllocatorReference());
-	formats.EmplaceBack(ImageFormatToVkFormat(copyBufferToImageInfo.SourceImageFormat)); formats.EmplaceBack(VK_FORMAT_R8G8B8A8_UNORM);
-
-	auto originalFormat = ImageFormatToVkFormat(copyBufferToImageInfo.SourceImageFormat);
-	auto supportedFormat = static_cast<VulkanRenderDevice*>(copyBufferToImageInfo.RenderDevice)->FindSupportedVkFormat(formats, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, VK_IMAGE_TILING_OPTIMAL);
-
-	const GTSL::uint64 originalTextureSize = copyBufferToImageInfo.Extent.Width * copyBufferToImageInfo.Extent.Height * ImageFormatSize(copyBufferToImageInfo.SourceImageFormat);
-	GTSL::uint64 supportedTextureSize = 0;
-
-	if (originalFormat != supportedFormat)
-	{
-		switch (originalFormat)
-		{
-		case VK_FORMAT_R8G8B8_UNORM:
-			switch (supportedFormat)
-			{
-			case VK_FORMAT_R8G8B8A8_UNORM:
-				supportedTextureSize = (originalTextureSize / 3) * 4; break;
-			}
-		}
-	}
-	
-	if (originalFormat != supportedFormat)
-	{
-		switch (originalFormat)
-		{
-		case VK_FORMAT_R8G8B8_UNORM:
-			switch (supportedFormat)
-			{
-			case VK_FORMAT_R8G8B8A8_UNORM:
-	
-				for (GTSL::uint32 i = 0, i_n = 0; i < supportedTextureSize; i += 4, i_n += 3)
-				{
-					memcpy(static_cast<char*>(data) + i, static_cast<char*>(textureCreateInfo.ImageData) + i_n, 3);
-					static_cast<char*>(data)[i + 3] = 0;
-				}
-	
-				break;
-			}
-		}
-	}
-	else
-	{
-		supportedTextureSize = originalTextureSize;
-		memcpy(data, textureCreateInfo.ImageData, static_cast<size_t>(supportedTextureSize));
-	}
-	
 	VkBufferImageCopy region{};
 	region.bufferOffset = 0;
 	region.bufferRowLength = 0;
@@ -188,5 +141,5 @@ void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& co
 	region.imageOffset = { 0, 0, 0 };
 	//region.imageOffset = Extent3DToVkExtent3D(copyImageToBufferInfo.Offset);
 	region.imageExtent = Extent3DToVkExtent3D(copyBufferToImageInfo.Extent);
-	vkCmdCopyBufferToImage(commandBuffer, static_cast<VulkanBuffer*>(copyImageToBufferInfo.SourceBuffer)->GetVkBuffer(), static_cast<VulkanTexture*>(copyImageToBufferInfo.DestinationImage)->GetVkImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+	vkCmdCopyBufferToImage(commandBuffer, static_cast<VulkanBuffer*>(copyBufferToImageInfo.SourceBuffer)->GetVkBuffer(), static_cast<VulkanTexture*>(copyBufferToImageInfo.DestinationImage)->GetVkImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }

@@ -10,9 +10,7 @@
 
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
 
-using namespace GAL;
-
-VkSurfaceFormatKHR VulkanRenderContext::FindFormat(const VulkanRenderDevice* vulkanRenderDevice, VkSurfaceKHR surface)
+VkSurfaceFormatKHR GAL::VulkanRenderContext::findFormat(const VulkanRenderDevice* vulkanRenderDevice, VkSurfaceKHR surface)
 {
 	VkPhysicalDevice pd = vulkanRenderDevice->GetVkPhysicalDevice();
 	
@@ -36,7 +34,7 @@ VkSurfaceFormatKHR VulkanRenderContext::FindFormat(const VulkanRenderDevice* vul
 	return supported_surface_formats[0];
 }
 
-VkPresentModeKHR VulkanRenderContext::FindPresentMode(const VkPhysicalDevice _PD, VkSurfaceKHR _Surface)
+VkPresentModeKHR GAL::VulkanRenderContext::findPresentMode(const VkPhysicalDevice _PD, VkSurfaceKHR _Surface)
 {
 	GTSL::uint32 present_modes_count = 0;
 	vkGetPhysicalDeviceSurfacePresentModesKHR(_PD, _Surface, &present_modes_count, nullptr);
@@ -67,24 +65,24 @@ VkPresentModeKHR VulkanRenderContext::FindPresentMode(const VkPhysicalDevice _PD
 	return best_present_mode;
 }
 
-VulkanRenderContext::VulkanRenderContext(VulkanRenderDevice* vulkanRenderDevice, const RenderContextCreateInfo& renderContextCreateInfo)
+GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo) : RenderContext(createInfo)
 {
 	//BE_ASSERT(renderContextCreateInfo.DesiredFramesInFlight > vulkanSwapchainImages.GetCapacity(), "Requested swapchain image count is more than what the engine can handle, please request less.")
 	
-	extent = renderContextCreateInfo.SurfaceArea;
+	extent = createInfo.SurfaceArea;
 	
 	VkWin32SurfaceCreateInfoKHR vk_win32_surface_create_info_khr{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
-	vk_win32_surface_create_info_khr.hwnd = static_cast<WindowsWindowData*>(renderContextCreateInfo.SystemData)->WindowHandle;
-	vk_win32_surface_create_info_khr.hinstance = static_cast<WindowsWindowData*>(renderContextCreateInfo.SystemData)->InstanceHandle;
-	VK_CHECK(vkCreateWin32SurfaceKHR(vulkanRenderDevice->GetVkInstance(), &vk_win32_surface_create_info_khr, vulkanRenderDevice->GetVkAllocationCallbacks(), &surface));
+	vk_win32_surface_create_info_khr.hwnd = static_cast<WindowsWindowData*>(createInfo.SystemData)->WindowHandle;
+	vk_win32_surface_create_info_khr.hinstance = static_cast<WindowsWindowData*>(createInfo.SystemData)->InstanceHandle;
+	VK_CHECK(vkCreateWin32SurfaceKHR(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkInstance(), &vk_win32_surface_create_info_khr, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &surface));
 
-	surfaceFormat = FindFormat(vulkanRenderDevice, surface);
+	surfaceFormat = findFormat(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice), surface);
 	
-	presentMode = FindPresentMode(vulkanRenderDevice->GetVkPhysicalDevice(), surface);
+	presentMode = findPresentMode(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkPhysicalDevice(), surface);
 	
 	VkSwapchainCreateInfoKHR vk_swapchain_create_info_khr{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 	vk_swapchain_create_info_khr.surface = surface;
-	vk_swapchain_create_info_khr.minImageCount = renderContextCreateInfo.DesiredFramesInFlight;
+	vk_swapchain_create_info_khr.minImageCount = createInfo.DesiredFramesInFlight;
 	vk_swapchain_create_info_khr.imageFormat = surfaceFormat.format;
 	vk_swapchain_create_info_khr.imageColorSpace = surfaceFormat.colorSpace;
 	vk_swapchain_create_info_khr.imageExtent = Extent2DToVkExtent2D(extent);
@@ -100,15 +98,7 @@ VulkanRenderContext::VulkanRenderContext(VulkanRenderDevice* vulkanRenderDevice,
 	vk_swapchain_create_info_khr.clipped = VK_TRUE;
 	vk_swapchain_create_info_khr.oldSwapchain = nullptr;
 
-	VK_CHECK(vkCreateSwapchainKHR(vulkanRenderDevice->GetVkDevice(), &vk_swapchain_create_info_khr, vulkanRenderDevice->GetVkAllocationCallbacks(), &swapchain));
-
-	GTSL::uint32 swapchain_image_count = 0;
-	vkGetSwapchainImagesKHR(vulkanRenderDevice->GetVkDevice(), swapchain, &swapchain_image_count, nullptr);
-	//BE_ASSERT(swapchain_image_count > vulkanSwapchainImages.GetCapacity(), "Created swapchain images are more than what the engine can handle, please create less.")
-	vulkanSwapchainImages.Resize(swapchain_image_count);
-	VK_CHECK(vkGetSwapchainImagesKHR(vulkanRenderDevice->GetVkDevice(), swapchain, &swapchain_image_count, vulkanSwapchainImages.GetData()));
-	
-	maxFramesInFlight = static_cast<GTSL::uint8>(vulkanSwapchainImages.GetCapacity());
+	VK_CHECK(vkCreateSwapchainKHR(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_swapchain_create_info_khr, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &swapchain));
 	
 	VkSemaphoreCreateInfo vk_semaphore_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
@@ -117,30 +107,27 @@ VulkanRenderContext::VulkanRenderContext(VulkanRenderDevice* vulkanRenderDevice,
 
 	for (GTSL::uint8 i = 0; i < maxFramesInFlight; ++i)
 	{		
-		VK_CHECK(vkCreateSemaphore(vulkanRenderDevice->GetVkDevice(), &vk_semaphore_create_info, vulkanRenderDevice->GetVkAllocationCallbacks(), &imagesAvailable[i]));
-		VK_CHECK(vkCreateSemaphore(vulkanRenderDevice->GetVkDevice(), &vk_semaphore_create_info, vulkanRenderDevice->GetVkAllocationCallbacks(), &rendersFinished[i]));
-		VK_CHECK(vkCreateFence(vulkanRenderDevice->GetVkDevice(), &vk_fence_create_info, vulkanRenderDevice->GetVkAllocationCallbacks(), &inFlightFences[i]));
-
-		RenderTarget::RenderTargetCreateInfo image_create_info;
-		image_create_info.Extent = { extent.Width, extent.Height, 0 };
-		image_create_info.Format = VkFormatToImageFormat(surfaceFormat.format);
-		swapchainImages.EmplaceBack(vulkanRenderDevice, image_create_info, vulkanSwapchainImages[i]);
-	}
-
-	for (GTSL::uint8 i = 0; i < maxFramesInFlight; ++i)
-	{
-		renderTargets.PushBack(static_cast<RenderTarget*>(&swapchainImages[i]));
+		VK_CHECK(vkCreateSemaphore(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_semaphore_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &imagesAvailable[i]));
+		VK_CHECK(vkCreateSemaphore(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_semaphore_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &rendersFinished[i]));
+		VK_CHECK(vkCreateFence(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_fence_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &inFlightFences[i]));
 	}
 }
 
-void VulkanRenderContext::Destroy(RenderDevice* renderDevice)
+void GAL::VulkanRenderContext::Destroy(RenderDevice* renderDevice)
 {
 	const auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
 	vkDestroySwapchainKHR(vk_render_device->GetVkDevice(), swapchain, vk_render_device->GetVkAllocationCallbacks());
 	vkDestroySurfaceKHR(vk_render_device->GetVkInstance(), surface, vk_render_device->GetVkAllocationCallbacks());
+
+	for(GTSL::uint8 i = 0; i < maxFramesInFlight; ++i)
+	{
+		vkDestroySemaphore(vk_render_device->GetVkDevice(), imagesAvailable[i], vk_render_device->GetVkAllocationCallbacks());
+		vkDestroySemaphore(vk_render_device->GetVkDevice(), rendersFinished[i], vk_render_device->GetVkAllocationCallbacks());
+		vkDestroyFence(vk_render_device->GetVkDevice(), inFlightFences[i], vk_render_device->GetVkAllocationCallbacks());
+	}
 }
 
-void VulkanRenderContext::OnResize(const ResizeInfo& _RI)
+void GAL::VulkanRenderContext::OnResize(const ResizeInfo& _RI)
 {
 	extent = _RI.NewWindowSize;
 
@@ -165,7 +152,7 @@ void VulkanRenderContext::OnResize(const ResizeInfo& _RI)
 	vkCreateSwapchainKHR(static_cast<VulkanRenderDevice*>(_RI.RenderDevice)->GetVkDevice(), &vk_swapchain_create_info_khr, static_cast<VulkanRenderDevice*>(_RI.RenderDevice)->GetVkAllocationCallbacks(), &swapchain);
 }
 
-void VulkanRenderContext::AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo)
+void GAL::VulkanRenderContext::AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo)
 {
 	GTSL::uint32 image_index = 0;
 
@@ -175,7 +162,7 @@ void VulkanRenderContext::AcquireNextImage(const AcquireNextImageInfo& acquireNe
 	imageIndex = image_index;
 }
 
-void VulkanRenderContext::Flush(const FlushInfo& flushInfo)
+void GAL::VulkanRenderContext::Flush(const FlushInfo& flushInfo)
 {
 	vkWaitForFences(static_cast<VulkanRenderDevice*>(flushInfo.RenderDevice)->GetVkDevice(), 1, &inFlightFences[currentImage], true, ~0ULL);//Get current's frame fences and wait for it.
 	vkResetFences(static_cast<VulkanRenderDevice*>(flushInfo.RenderDevice)->GetVkDevice(), 1, &inFlightFences[currentImage]); //Then reset it.
@@ -208,7 +195,7 @@ void VulkanRenderContext::Flush(const FlushInfo& flushInfo)
 	vkResetCommandBuffer(command_buffer, 0);
 }
 
-void VulkanRenderContext::Present(const PresentInfo& presentInfo)
+void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)
 {
 	VkSemaphore wait_semaphores[] = { rendersFinished[currentImage] };
 
@@ -227,4 +214,28 @@ void VulkanRenderContext::Present(const PresentInfo& presentInfo)
 	vkQueuePresentKHR(static_cast<VulkanRenderDevice::VulkanQueue*>(presentInfo.Queue)->GetVkQueue(), &present_info);
 
 	currentImage = (currentImage + 1) % maxFramesInFlight;
+}
+
+GTSL::Array<GAL::VulkanRenderTarget, 5> GAL::VulkanRenderContext::GetRenderTargets(const RenderTargetsInfo& renderTargetsInfo)
+{
+	GTSL::Array<VulkanRenderTarget, 5> render_targets;
+	
+	GTSL::uint32 swapchain_image_count = 0;
+	vkGetSwapchainImagesKHR(static_cast<VulkanRenderDevice*>(renderTargetsInfo.RenderDevice)->GetVkDevice(), swapchain, &swapchain_image_count, nullptr);
+	render_targets.Resize(swapchain_image_count);
+
+	GTSL::Array<VkImage, 5> vk_images(swapchain_image_count);
+	VK_CHECK(vkGetSwapchainImagesKHR(static_cast<VulkanRenderDevice*>(renderTargetsInfo.RenderDevice)->GetVkDevice(), swapchain, &swapchain_image_count, vk_images.GetData()));
+
+	for(auto& e : render_targets)
+	{
+		VkImageViewCreateInfo vk_image_view_create_info{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+		vk_image_view_create_info.format = surfaceFormat.format;
+		vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		VK_CHECK(vkCreateImageView(static_cast<VulkanRenderDevice*>(renderTargetsInfo.RenderDevice)->GetVkDevice(), &vk_image_view_create_info, static_cast<VulkanRenderDevice*>(renderTargetsInfo.RenderDevice)->GetVkAllocationCallbacks(), &e.imageView));
+
+		e.image = vk_images[&e - render_targets.begin()];
+	}
+	
+	return render_targets;
 }

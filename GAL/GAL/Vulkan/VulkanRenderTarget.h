@@ -4,24 +4,26 @@
 
 #include "GAL/Vulkan/Vulkan.h"
 
-class VulkanRenderDevice;
-
-class VulkanRenderTargetBase : public GAL::RenderTarget
+namespace GAL
 {
-protected:
-	VkImageView imageView = nullptr;
-public:
-	VulkanRenderTargetBase(const RenderTargetCreateInfo& imageCreateInfo);
-	[[nodiscard]] virtual const VkImageView& GetVkImageView() const { return imageView; }
-};
+	class VulkanRenderTarget final : public RenderTarget
+	{
+		VkImageView imageView = nullptr;
+		VkImage image = nullptr;
 
-class VulkanRenderTarget final : public VulkanRenderTargetBase
-{
-	VkImage image = nullptr;
-	VkDeviceMemory imageMemory = nullptr;
+		friend class VulkanRenderContext;
+	public:
+		VulkanRenderTarget(const CreateInfo& imageCreateInfo);
+		void Destroy(GAL::RenderDevice* renderDevice) const;
 
-public:
-	VulkanRenderTarget(VulkanRenderDevice* device, const RenderTargetCreateInfo& imageCreateInfo);
+		struct BindMemoryInfo : RenderInfo
+		{
+			class DeviceMemory* Memory{ nullptr };
+			GTSL::uint32 Offset{ 0 };
+		};
+		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;
 
-	[[nodiscard]] VkImage GetVkImage() const { return image; }
-};
+		[[nodiscard]] VkImage GetVkImage() const { return image; }
+		[[nodiscard]] VkImageView GetVkImageView() const { return imageView; }
+	};
+}

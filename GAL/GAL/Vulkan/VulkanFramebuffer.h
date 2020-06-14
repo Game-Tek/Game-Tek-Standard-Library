@@ -4,19 +4,20 @@
 
 #include "vulkan/vulkan.h"
 
-#include <GTSL/Vector.hpp>
-
-class VulkanFramebuffer final : public GAL::Framebuffer
+namespace GAL
 {
-	GTSL::Vector<VkClearValue> clearValues;
-	VkFramebuffer framebuffer = nullptr;
+	class VulkanFramebuffer final : public Framebuffer
+	{
+	public:
+		explicit VulkanFramebuffer(const CreateInfo& createInfo);
+		~VulkanFramebuffer() = default;
 
-public:
-	VulkanFramebuffer(class VulkanRenderDevice* vulkanRenderDevice, const GAL::FramebufferCreateInfo& framebufferCreateInfo);
-	~VulkanFramebuffer() = default;
+		void Destroy(RenderDevice* renderDevice) const;
 
-	void Destroy(GAL::RenderDevice* renderDevice) override;
+		[[nodiscard]] VkFramebuffer GetVkFramebuffer() const { return framebuffer; }
 
-	[[nodiscard]] VkFramebuffer GetVkFramebuffer() const { return framebuffer; }
-	[[nodiscard]] const GTSL::Vector<VkClearValue>& GetClearValues() const { return clearValues; }
-};
+	private:
+		VkFramebuffer framebuffer = nullptr;
+
+	};
+}

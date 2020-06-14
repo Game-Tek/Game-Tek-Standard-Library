@@ -3,43 +3,11 @@
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
 #include <shaderc/shaderc.hpp>
-#include <GTSL/String.hpp>
 
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanRenderPass.h"
 
-void VulkanShaders::CompileShader(const GTSL::String& code, const GTSL::String& shaderName, GTSL::uint32 shaderStage, GTSL::Vector<GTSL::uint32>& result)
-{
-	shaderc_shader_kind shaderc_stage;
-
-	switch (shaderStage)
-	{
-		case VK_SHADER_STAGE_VERTEX_BIT: shaderc_stage = shaderc_vertex_shader;	break;
-		case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT: shaderc_stage = shaderc_tess_control_shader;	break;
-		case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT: shaderc_stage = shaderc_tess_evaluation_shader; break;
-		case VK_SHADER_STAGE_GEOMETRY_BIT: shaderc_stage = shaderc_geometry_shader;	break;
-		case VK_SHADER_STAGE_FRAGMENT_BIT: shaderc_stage = shaderc_fragment_shader;	break;
-		case VK_SHADER_STAGE_COMPUTE_BIT: shaderc_stage = shaderc_compute_shader; break;
-		default: shaderc_stage = shaderc_spirv_assembly; break;
-	}
-
-	const shaderc::Compiler shaderc_compiler;
-	shaderc::CompileOptions shaderc_compile_options;
-	shaderc_compile_options.SetTargetSpirv(shaderc_spirv_version_1_1);
-	shaderc_compile_options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
-	shaderc_compile_options.SetSourceLanguage(shaderc_source_language_glsl);
-	shaderc_compile_options.SetOptimizationLevel(shaderc_optimization_level_performance);
-	const auto shaderc_module = shaderc_compiler.CompileGlslToSpv(code.c_str(), shaderc_stage, shaderName.c_str(), shaderc_compile_options);
-
-	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success)
-	{
-		//BE_BASIC_LOG_ERROR("Failed to compile shader: %s. Errors: %s", shaderName.c_str(), shaderc_module.GetErrorMessage().c_str())
-	}
-
-	result.Initialize(shaderc_module.begin(), shaderc_module.end());
-}
-
-VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanRenderDevice* vulkanRenderDevice, const GAL::GraphicsPipelineCreateInfo& _GPCI)
+GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const GraphicsPipelineCreateInfo& _GPCI)
 {
 	//  VERTEX INPUT STATE
 
@@ -228,25 +196,55 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanRenderDevice* vulkanRenderD
 	vk_graphics_pipeline_create_info.pDepthStencilState = &vk_pipeline_depthstencil_state_create_info;
 	vk_graphics_pipeline_create_info.pColorBlendState = &vk_pipeline_colorblend_state_create_info;
 	vk_graphics_pipeline_create_info.pDynamicState = &vk_pipeline_dynamic_state_create_info;
-	vk_graphics_pipeline_create_info.layout = vkPipelineLayout;
+	vk_graphics_pipeline_create_info.layout = pipelineLayout;
 	vk_graphics_pipeline_create_info.renderPass = static_cast<VulkanRenderPass*>(_GPCI.RenderPass)->GetVkRenderPass();
 	vk_graphics_pipeline_create_info.subpass = 0;
-	vk_graphics_pipeline_create_info.basePipelineHandle = _GPCI.ParentPipeline ? static_cast<VulkanGraphicsPipeline*>(_GPCI.ParentPipeline)->vkPipeline	: nullptr; // Optional
+	vk_graphics_pipeline_create_info.basePipelineHandle = _GPCI.ParentPipeline ? static_cast<VulkanGraphicsPipeline*>(_GPCI.ParentPipeline)->pipeline : nullptr; // Optional
 	vk_graphics_pipeline_create_info.basePipelineIndex = _GPCI.ParentPipeline ? 0 : -1;
 
 	vkCreateGraphicsPipelines(static_cast<VulkanRenderDevice*>(_GPCI.RenderDevice)->GetVkDevice(), nullptr, 1, &vk_graphics_pipeline_create_info, vulkanRenderDevice->GetVkAllocationCallbacks(), &vkPipeline);
 }
 
-void VulkanGraphicsPipeline::Destroy(GAL::RenderDevice* renderDevice)
+void GAL::VulkanGraphicsPipeline::Destroy(GAL::RenderDevice* renderDevice)
 {
 	auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
-	vkDestroyPipeline(vk_render_device->GetVkDevice(), vkPipeline, vk_render_device->GetVkAllocationCallbacks());
-	vkDestroyPipelineLayout(vk_render_device->GetVkDevice(), vkPipelineLayout, vk_render_device->GetVkAllocationCallbacks());
+	vkDestroyPipeline(vk_render_device->GetVkDevice(), pipeline, vk_render_device->GetVkAllocationCallbacks());
+	vkDestroyPipelineLayout(vk_render_device->GetVkDevice(), pipelineLayout, vk_render_device->GetVkAllocationCallbacks());
 }
 
-void VulkanComputePipeline::Destroy(GAL::RenderDevice* renderDevice)
+void GAL::VulkanComputePipeline::Destroy(GAL::RenderDevice* renderDevice)
 {
 	auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
-	vkDestroyPipeline(vk_render_device->GetVkDevice(), vkPipeline, vk_render_device->GetVkAllocationCallbacks());
+	vkDestroyPipeline(vk_render_device->GetVkDevice(), pipeline, vk_render_device->GetVkAllocationCallbacks());
 }
 
+void GAL::VulkanShaders::CompileShader(GTSL::Ranger<GTSL::UTF8> code, GTSL::Ranger<GTSL::UTF8> shaderName, GTSL::uint32 shaderStage, GTSL::Vector<GTSL::uint32>& result)
+{
+	shaderc_shader_kind shaderc_stage;
+
+	switch (shaderStage)
+	{
+	case VK_SHADER_STAGE_VERTEX_BIT: shaderc_stage = shaderc_vertex_shader;	break;
+	case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT: shaderc_stage = shaderc_tess_control_shader;	break;
+	case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT: shaderc_stage = shaderc_tess_evaluation_shader; break;
+	case VK_SHADER_STAGE_GEOMETRY_BIT: shaderc_stage = shaderc_geometry_shader;	break;
+	case VK_SHADER_STAGE_FRAGMENT_BIT: shaderc_stage = shaderc_fragment_shader;	break;
+	case VK_SHADER_STAGE_COMPUTE_BIT: shaderc_stage = shaderc_compute_shader; break;
+	default: shaderc_stage = shaderc_spirv_assembly; break;
+	}
+
+	const shaderc::Compiler shaderc_compiler;
+	shaderc::CompileOptions shaderc_compile_options;
+	shaderc_compile_options.SetTargetSpirv(shaderc_spirv_version_1_1);
+	shaderc_compile_options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
+	shaderc_compile_options.SetSourceLanguage(shaderc_source_language_glsl);
+	shaderc_compile_options.SetOptimizationLevel(shaderc_optimization_level_performance);
+	const auto shaderc_module = shaderc_compiler.CompileGlslToSpv(code.begin(), shaderc_stage, shaderName.begin(), shaderc_compile_options);
+
+	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success)
+	{
+		//BE_BASIC_LOG_ERROR("Failed to compile shader: %s. Errors: %s", shaderName.c_str(), shaderc_module.GetErrorMessage().c_str())
+	}
+
+	result.Initialize(shaderc_module.begin(), shaderc_module.end());
+}
