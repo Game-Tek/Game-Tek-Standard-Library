@@ -29,14 +29,18 @@ namespace GAL
 			friend VulkanRenderDevice;
 		};
 
-		explicit VulkanRenderDevice(const RenderDeviceCreateInfo& renderDeviceCreateInfo);
+		explicit VulkanRenderDevice(const CreateInfo& createInfo);
 		~VulkanRenderDevice();
-
-		static bool IsVulkanSupported();
 
 		GPUInfo GetGPUInfo();
 
-		ImageFormat FindNearestSupportedImageFormat(GTSL::Ranger<ImageFormat> candidates, ImageUse imageUse, ImageTiling imageTiling) const;
+		struct FindSupportedImageFormat
+		{
+			GTSL::Ranger<ImageFormat> Candidates;
+			ImageUse ImageUse;
+			ImageTiling ImageTiling;
+		};
+		[[nodiscard]] ImageFormat FindNearestSupportedImageFormat(const FindSupportedImageFormat& findSupportedImageFormat) const;
 		
 		[[nodiscard]] VkInstance GetVkInstance() const { return instance; }
 		[[nodiscard]] VkPhysicalDevice GetVkPhysicalDevice() const { return physicalDevice; }
@@ -46,10 +50,6 @@ namespace GAL
 		[[nodiscard]] VkFormat FindSupportedVkFormat(GTSL::Ranger<VkFormat> formats, VkFormatFeatureFlags formatFeatureFlags, VkImageTiling imageTiling) const;
 
 		[[nodiscard]] const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const { return deviceProperties; }
-		void AllocateMemory(VkMemoryRequirements* memoryRequirements, GTSL::uint32 memoryPropertyFlag, VkDeviceMemory* deviceMemory) const;
-
-		void AllocateAndBindBuffer();
-		void AllocateAndBindImage();
 
 		[[nodiscard]] VkAllocationCallbacks* GetVkAllocationCallbacks() const { return nullptr; }
 
@@ -63,8 +63,6 @@ namespace GAL
 		VkInstance instance = nullptr;
 		VkPhysicalDevice physicalDevice = nullptr;
 		VkDevice device = nullptr;
-
-		GTSL::Vector<VulkanQueue> vulkanQueues;
 
 		VkAllocationCallbacks allocationCallbacks;
 

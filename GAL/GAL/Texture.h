@@ -12,7 +12,7 @@ namespace GAL
 	class Texture : public GALObject
 	{
 	public:
-		virtual ~Texture() = default;
+		~Texture() = default;
 
 		struct CreateInfo : RenderInfo
 		{	
@@ -32,7 +32,7 @@ namespace GAL
 
 		static void ConvertImageFormat(const ImageFormat sourceImageFormat, const ImageFormat supportedImageFormat, const GTSL::Extent2D imageExtent, void* buffer)
 		{
-			const GTSL::uint64 originalTextureSize = Texture::GetTextureSize(sourceImageFormat, imageExtent);
+			const GTSL::uint64 originalTextureSize = GetTextureSize(sourceImageFormat, imageExtent);
 			const GTSL::uint64 supportedTextureSize = (originalTextureSize / ImageFormatSize(sourceImageFormat)) * ImageFormatSize(supportedImageFormat);
 
 			for (GTSL::uint64 i_target = 0, i_source = 0; i_target < supportedTextureSize; i_target += ImageFormatSize(supportedImageFormat), i_source += ImageFormatSize(sourceImageFormat))

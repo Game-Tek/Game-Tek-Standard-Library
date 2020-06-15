@@ -12,6 +12,8 @@
 
 #include <GTSL/Extent.h>
 
+#include "GAL/RenderDevice.h"
+
 inline GAL::ImageFormat VkFormatToImageFormat(const VkFormat format)
 {
 	switch (format)
@@ -318,6 +320,17 @@ inline VkBufferUsageFlags BufferTypeToVkBufferUsageFlags(const GAL::BufferType b
 	case GAL::BufferType::BUFFER_VERTEX: return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 	case GAL::BufferType::BUFFER_INDEX: return VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 	case GAL::BufferType::BUFFER_UNIFORM: return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	default: ;
+	}
+}
+
+inline VkQueueFlags QueueCapabilitiesToVkQueueFlags(const GAL::QueueCapabilities capabilities)
+{
+	switch (capabilities)
+	{
+	case GAL::QueueCapabilities::GRAPHICS: return VK_QUEUE_GRAPHICS_BIT;
+	case GAL::QueueCapabilities::COMPUTE: return VK_QUEUE_COMPUTE_BIT;
+	case GAL::QueueCapabilities::TRANSFER: return VK_QUEUE_TRANSFER_BIT;
 	default: ;
 	}
 }

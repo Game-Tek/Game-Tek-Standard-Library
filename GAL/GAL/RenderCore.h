@@ -13,6 +13,11 @@ namespace GAL
 		RenderDevice* RenderDevice = nullptr;
 	};
 
+	enum class QueueCapabilities : GTSL::uint8
+	{
+		GRAPHICS = 1, COMPUTE = 2, TRANSFER = 4
+	};
+	
 	// IMAGE
 
 	//Specifies all available image layouts.
