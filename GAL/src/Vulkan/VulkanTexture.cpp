@@ -5,7 +5,7 @@
 
 #include "GAL/Vulkan/VulkanMemory.h"
 
-GAL::VulkanTexture::VulkanTexture(const CreateInfo& createInfo) : Texture(createInfo)
+GAL::VulkanTexture::VulkanTexture(const CreateInfo& createInfo) : Texture(createInfo), imageLayout(ImageLayoutToVkImageLayout(createInfo.Layout))
 {
 	VkImageCreateInfo vk_image_create_info{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	vk_image_create_info.imageType = VK_IMAGE_TYPE_2D;

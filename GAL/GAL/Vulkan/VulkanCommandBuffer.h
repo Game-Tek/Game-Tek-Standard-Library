@@ -13,26 +13,26 @@ namespace GAL
 	public:
 		explicit VulkanCommandBuffer(VulkanRenderDevice* renderDevice, const CommandBufferCreateInfo& commandBufferCreateInfo);
 
-		void BeginRecording(const BeginRecordingInfo& beginRecordingInfo) override;
-		void EndRecording(const EndRecordingInfo& endRecordingInfo) override;
+		void BeginRecording(const BeginRecordingInfo& beginRecordingInfo);
+		void EndRecording(const EndRecordingInfo& endRecordingInfo);
 
-		void BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo) override;
-		void AdvanceSubPass(const AdvanceSubpassInfo& advanceSubpassInfo) override;
-		void EndRenderPass(const EndRenderPassInfo& endRenderPassInfo) override;
+		void BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo);
+		void AdvanceSubPass(const AdvanceSubpassInfo& advanceSubpassInfo);
+		void EndRenderPass(const EndRenderPassInfo& endRenderPassInfo);
 
-		void BindGraphicsPipeline(const BindGraphicsPipelineInfo& bindGraphicsPipelineInfo) override;
-		void BindComputePipeline(const BindComputePipelineInfo& bindComputePipelineInfo) override;
+		void BindGraphicsPipeline(const BindGraphicsPipelineInfo& bindGraphicsPipelineInfo);
+		void BindComputePipeline(const BindComputePipelineInfo& bindComputePipelineInfo);
 
-		void BindMesh(const BindMeshInfo& bindMeshInfo) override;
+		void BindMesh(const BindMeshInfo& bindMeshInfo);
 
-		void UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo) override;
+		void UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo);
 
-		void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo) override;
-		void Dispatch(const DispatchInfo& dispatchInfo) override;
+		void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo);
+		void Dispatch(const DispatchInfo& dispatchInfo);
 
-		void BindBindingsSet(const BindBindingsSetInfo& bindBindingsSetInfo) override;
+		void BindBindingsSet(const BindBindingsSetInfo& bindBindingsSetInfo);
 
-		void CopyImage(const CopyImageInfo& copyImageInfo) override;
+		void CopyImage(const CopyImageInfo& copyImageInfo);
 
 		struct CopyBufferToImageInfo : RenderInfo
 		{

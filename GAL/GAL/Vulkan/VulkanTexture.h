@@ -11,7 +11,7 @@ namespace GAL
 	public:
 		explicit VulkanTexture(const CreateInfo& createInfo);
 
-		void Destroy(class GAL::RenderDevice* renderDevice) override;
+		void Destroy(class RenderDevice* renderDevice);
 
 		struct BindMemoryInfo : RenderInfo
 		{
@@ -23,11 +23,13 @@ namespace GAL
 		[[nodiscard]] VkImage GetVkImage() const { return textureImage; }
 		[[nodiscard]] VkImageView GetImageView() const { return textureImageView; }
 		[[nodiscard]] VkSampler GetImageSampler() const { return textureSampler; }
-
+		[[nodiscard]] VkImageLayout GetVkImageLayout() const { return imageLayout; }
+		
 	private:
 		VkImage textureImage = nullptr;
 		VkImageView textureImageView = nullptr;
 		VkSampler textureSampler = nullptr;
+		VkImageLayout imageLayout;
 
 	};
 }

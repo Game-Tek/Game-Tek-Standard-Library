@@ -33,53 +33,52 @@ namespace GAL
 		GTSL::uint8 DestinationSet = 0;
 	};
 
-
-	struct BindingsPoolCreateInfo : RenderInfo
-	{
-		GTSL::Array<BindingDescriptor, MAX_BINDINGS_PER_SET> BindingsSetLayout;
-		/**
-		 * \brief How many sets to allocate.
-		 */
-		GTSL::uint8 BindingsSetCount = 0;
-	};
-
 	class BindingsPool : public GALObject
 	{
 	public:
-		virtual ~BindingsPool() = default;
+		struct CreateInfo : RenderInfo
+		{
+			GTSL::Array<BindingDescriptor, MAX_BINDINGS_PER_SET> BindingsSetLayout;
+			/**
+			 * \brief How many sets to allocate.
+			 */
+			GTSL::uint8 BindingsSetCount = 0;
+		};
+		
+		~BindingsPool() = default;
 
 		struct FreeBindingsPoolInfo : RenderInfo
 		{
 		};
 
-		virtual void FreePool(const FreeBindingsPoolInfo& freeDescriptorPoolInfo) = 0;
+		void FreePool(const FreeBindingsPoolInfo& freeDescriptorPoolInfo);
 		
 		struct FreeBindingsSetInfo : RenderInfo
 		{
 			class BindingsSet* BindingsSet = nullptr;
 		};
-		virtual void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo) = 0;
-	};
-
-	struct BindingsSetCreateInfo : RenderInfo
-	{
-		/**
-		 * \brief Pointer to a binding pool to allocated the bindings set from.
-		 */
-		BindingsPool* BindingsPool = nullptr;
-		GTSL::Array<BindingDescriptor, MAX_BINDINGS_PER_SET> BindingsSetLayout;
-		/**
-		 * \brief How many sets to allocate.
-		 */
-		GTSL::uint8 BindingsSetCount = 0;
+		void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo);
 	};
 
 	class BindingsSet : public GALObject
 	{
 	public:
-		virtual ~BindingsSet() = default;
+		struct CreateInfo : RenderInfo
+		{
+			/**
+			 * \brief Pointer to a binding pool to allocated the bindings set from.
+			 */
+			BindingsPool* BindingsPool = nullptr;
+			GTSL::Array<BindingDescriptor, MAX_BINDINGS_PER_SET> BindingsSetLayout;
+			/**
+			 * \brief How many sets to allocate.
+			 */
+			GTSL::uint8 BindingsSetCount = 0;
+		};
+		
+		~BindingsSet() = default;
 
-		virtual void Update(const BindingsSetUpdateInfo& uniformLayoutUpdateInfo) = 0;
+		void Update(const BindingsSetUpdateInfo& uniformLayoutUpdateInfo);
 	};
 
 }

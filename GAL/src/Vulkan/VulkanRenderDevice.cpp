@@ -6,12 +6,8 @@
 #endif
 
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
-#include "GAL/Vulkan/VulkanRenderMesh.h"
-#include "GAL/Vulkan/VulkanUniformBuffer.h"
 #include "GAL/Vulkan/VulkanTexture.h"
-#include "GAL/Vulkan/VulkanRenderPass.h"
 #include "GAL/Vulkan/VulkanBindings.h"
-#include "GAL/Vulkan/VulkanRenderTarget.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
 #include "GAL/Vulkan/VulkanRenderContext.h"
 #include "GTSL/StaticString.hpp"

@@ -5,7 +5,6 @@
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanBuffer.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
-#include "GAL/Vulkan/VulkanRenderMesh.h"
 #include "GAL/Vulkan/VulkanRenderPass.h"
 #include "GAL/Vulkan/VulkanTexture.h"
 
@@ -43,8 +42,17 @@ void GAL::VulkanCommandBuffer::BeginRenderPass(const BeginRenderPassInfo& beginR
 {
 	VkRenderPassBeginInfo RenderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 	RenderPassBeginInfo.renderPass = static_cast<VulkanRenderPass*>(beginRenderPassInfo.RenderPass)->GetVkRenderPass();
-	RenderPassBeginInfo.pClearValues = static_cast<VulkanFramebuffer*>(beginRenderPassInfo.Framebuffer)->GetClearValues().GetData();
-	RenderPassBeginInfo.clearValueCount = static_cast<GTSL::uint32>(static_cast<VulkanFramebuffer*>(beginRenderPassInfo.Framebuffer)->GetClearValues().GetLength());
+	
+	GTSL::Array<VkClearValue, 32> vk_clear_clear_values(beginRenderPassInfo.ClearValues.ElementCount());
+	{
+		for(const auto& e : beginRenderPassInfo.ClearValues)
+		{
+			vk_clear_clear_values[&e - beginRenderPassInfo.ClearValues.begin()] = VkClearValue{ e.R, e.G, e.B, e.A };
+		}
+	}
+	
+	RenderPassBeginInfo.pClearValues = vk_clear_clear_values.begin();
+	RenderPassBeginInfo.clearValueCount = vk_clear_clear_values.GetLength();
 	RenderPassBeginInfo.framebuffer = static_cast<VulkanFramebuffer*>(beginRenderPassInfo.Framebuffer)->GetVkFramebuffer();
 	RenderPassBeginInfo.renderArea.extent = Extent2DToVkExtent2D(beginRenderPassInfo.RenderArea);
 	RenderPassBeginInfo.renderArea.offset = { 0, 0 };
@@ -83,13 +91,13 @@ void GAL::VulkanCommandBuffer::BindComputePipeline(const BindComputePipelineInfo
 
 void GAL::VulkanCommandBuffer::BindMesh(const BindMeshInfo& bindMeshInfo)
 {
-	const auto mesh = static_cast<VulkanRenderMesh*>(bindMeshInfo.Mesh);
-	VkDeviceSize offset = 0;
-
-	VkBuffer vertex_buffers = mesh->GetVkBuffer();
-
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertex_buffers, &offset);
-	vkCmdBindIndexBuffer(commandBuffer, mesh->GetVkBuffer(), mesh->GetIndexBufferOffset(), VK_INDEX_TYPE_UINT16);
+	////const auto mesh = static_cast<VulkanRenderMesh*>(bindMeshInfo.Mesh);
+	//VkDeviceSize offset = 0;
+	//
+	//VkBuffer vertex_buffers = mesh->GetVkBuffer();
+	//
+	//vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertex_buffers, &offset);
+	//vkCmdBindIndexBuffer(commandBuffer, mesh->GetVkBuffer(), mesh->GetIndexBufferOffset(), VK_INDEX_TYPE_UINT16);
 }
 
 void GAL::VulkanCommandBuffer::UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo)

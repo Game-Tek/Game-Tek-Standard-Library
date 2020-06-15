@@ -36,9 +36,7 @@
     <ClInclude Include="GAL\Vulkan\VulkanRenderDevice.h" />
     <ClInclude Include="GAL\Vulkan\VulkanRenderPass.h" />
     <ClInclude Include="GAL\Vulkan\VulkanRenderTarget.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanSwapchainImage.h" />
     <ClInclude Include="GAL\Vulkan\VulkanTexture.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanUniformBuffer.h" />
     <ClInclude Include="src\Vulkan\VulkanMemory.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -52,7 +50,6 @@
     <ClCompile Include="src\Vulkan\VulkanRenderDevice.cpp" />
     <ClCompile Include="src\Vulkan\VulkanRenderPass.cpp" />
     <ClCompile Include="src\Vulkan\VulkanRenderTarget.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanSwapchainImage.cpp" />
     <ClCompile Include="src\Vulkan\VulkanTexture.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

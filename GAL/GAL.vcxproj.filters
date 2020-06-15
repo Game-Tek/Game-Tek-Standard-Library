@@ -45,13 +45,7 @@
     <ClInclude Include="GAL\Vulkan\VulkanRenderTarget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GAL\Vulkan\VulkanSwapchainImage.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GAL\Vulkan\VulkanTexture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GAL\Vulkan\VulkanUniformBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GAL\Bindings.h">
@@ -126,9 +120,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Vulkan\VulkanRenderTarget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Vulkan\VulkanSwapchainImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Vulkan\VulkanTexture.cpp">

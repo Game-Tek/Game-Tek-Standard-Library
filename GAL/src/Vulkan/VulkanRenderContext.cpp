@@ -232,6 +232,12 @@ GTSL::Array<GAL::VulkanRenderTarget, 5> GAL::VulkanRenderContext::GetRenderTarge
 		VkImageViewCreateInfo vk_image_view_create_info{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 		vk_image_view_create_info.format = surfaceFormat.format;
 		vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		vk_image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
+		vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
+		vk_image_view_create_info.subresourceRange.layerCount = 1;
+		vk_image_view_create_info.subresourceRange.levelCount = 1;
+		
 		VK_CHECK(vkCreateImageView(static_cast<VulkanRenderDevice*>(renderTargetsInfo.RenderDevice)->GetVkDevice(), &vk_image_view_create_info, static_cast<VulkanRenderDevice*>(renderTargetsInfo.RenderDevice)->GetVkAllocationCallbacks(), &e.imageView));
 
 		e.image = vk_images[&e - render_targets.begin()];

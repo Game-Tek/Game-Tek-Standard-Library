@@ -5,11 +5,13 @@
 #include "vulkan/vulkan.h"
 
 #include "VulkanPipelines.h"
-#include "VulkanSwapchainImage.h"
 #include "VulkanBindings.h"
+#include "VulkanRenderTarget.h"
 
 namespace GAL
 {
+	class VulkanRenderDevice;
+
 	class VulkanRenderContext final : public RenderContext
 	{
 	public:
@@ -26,7 +28,7 @@ namespace GAL
 		struct RenderTargetsInfo : RenderInfo
 		{		
 		};
-		GTSL::Array<VulkanRenderTarget, 5> GetRenderTargets(const RenderTargetsInfo& renderTargetsInfo);
+		GTSL::Array<GAL::VulkanRenderTarget, 5> GetRenderTargets(const RenderTargetsInfo& renderTargetsInfo);
 		
 	private:
 		VkSurfaceKHR surface = nullptr;

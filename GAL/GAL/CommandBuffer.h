@@ -3,6 +3,8 @@
 #include <GTSL/Vector.hpp>
 #include <GTSL/Extent.h>
 
+#include "GTSL/RGBA.h"
+
 struct GTSL::Extent3D;
 
 namespace GAL
@@ -23,7 +25,7 @@ namespace GAL
 	class CommandBuffer
 	{
 	public:
-		virtual ~CommandBuffer() = default;
+		~CommandBuffer() = default;
 
 		struct CommandBufferCreateInfo
 		{
@@ -35,7 +37,7 @@ namespace GAL
 		struct BeginRecordingInfo
 		{};
 		//Starts recording of commands.
-		virtual void BeginRecording(const BeginRecordingInfo& beginRecordingInfo) = 0;
+		void BeginRecording(const BeginRecordingInfo& beginRecordingInfo);
 
 		
 		struct EndRecordingInfo
@@ -43,7 +45,7 @@ namespace GAL
 			
 		};
 		//Ends recording of commands.
-		virtual void EndRecording(const EndRecordingInfo& endRecordingInfo) = 0;
+		void EndRecording(const EndRecordingInfo& endRecordingInfo);
 
 		// COMMANDS
 
@@ -55,7 +57,7 @@ namespace GAL
 		{
 			RenderMesh* Mesh = nullptr;
 		};
-		virtual void BindMesh(const BindMeshInfo& bindMeshInfo) = 0;
+		void BindMesh(const BindMeshInfo& bindMeshInfo);
 
 		//    BIND PIPELINE COMMANDS
 
@@ -68,7 +70,7 @@ namespace GAL
 			Pipeline* Pipeline = nullptr;
 			GTSL::uint8 BindingsSetIndex = 0;
 		};
-		virtual void BindBindingsSet(const BindBindingsSetInfo& bindBindingsSetInfo) = 0;
+		void BindBindingsSet(const BindBindingsSetInfo& bindBindingsSetInfo);
 
 		struct UpdatePushConstantsInfo
 		{
@@ -77,7 +79,7 @@ namespace GAL
 			size_t Size = 0;
 			GTSL::byte* Data = nullptr;
 		};
-		virtual void UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo) = 0;
+		void UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo);
 
 		struct BindGraphicsPipelineInfo
 		{
@@ -85,14 +87,14 @@ namespace GAL
 			GTSL::Extent2D RenderExtent;
 		};
 		//Adds a BindGraphicsPipeline command to the command queue.
-		virtual void BindGraphicsPipeline(const BindGraphicsPipelineInfo& bindGraphicsPipelineInfo) = 0;
+		void BindGraphicsPipeline(const BindGraphicsPipelineInfo& bindGraphicsPipelineInfo);
 
 		struct BindComputePipelineInfo
 		{
 			ComputePipeline* Pipeline = nullptr;
 		};
 		//Adds a BindComputePipeline to the command queue.
-		virtual void BindComputePipeline(const BindComputePipelineInfo& bindComputePipelineInfo) = 0;
+		void BindComputePipeline(const BindComputePipelineInfo& bindComputePipelineInfo);
 
 
 		//  DRAW COMMANDS
@@ -103,7 +105,7 @@ namespace GAL
 			GTSL::uint32 IndexCount = 0;
 			GTSL::uint32 InstanceCount = 0;
 		};
-		virtual void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo) = 0;
+		void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo);
 
 		//  COMPUTE COMMANDS
 
@@ -112,7 +114,7 @@ namespace GAL
 			GTSL::Extent3D WorkGroups;
 		};
 		//Adds a Dispatch command to the command queue.
-		virtual void Dispatch(const DispatchInfo& dispatchInfo) = 0;
+		void Dispatch(const DispatchInfo& dispatchInfo);
 
 		//  RENDER PASS COMMANDS
 
@@ -121,26 +123,27 @@ namespace GAL
 			RenderPass* RenderPass = nullptr;
 			Framebuffer* Framebuffer = nullptr;
 			GTSL::Extent2D RenderArea;
+			GTSL::Ranger<RGBA> ClearValues;
 		};
 		//Adds a BeginRenderPass command to the command queue.
-		virtual void BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo) = 0;
+		void BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo);
 
 		struct AdvanceSubpassInfo
 		{
 			
 		};
 		//Adds a AdvanceSubPass command to the command buffer.
-		virtual void AdvanceSubPass(const AdvanceSubpassInfo& advanceSubpassInfo) = 0;
+		void AdvanceSubPass(const AdvanceSubpassInfo& advanceSubpassInfo);
 
 		struct EndRenderPassInfo
 		{
 			
 		};
 		//Adds a EndRenderPass command to the command queue.
-		virtual void EndRenderPass(const EndRenderPassInfo& endRenderPassInfo) = 0;
+		void EndRenderPass(const EndRenderPassInfo& endRenderPassInfo);
 
 		struct CopyImageInfo
 		{};
-		virtual void CopyImage(const CopyImageInfo& copyImageInfo) = 0;
+		void CopyImage(const CopyImageInfo& copyImageInfo);
 	};
 }

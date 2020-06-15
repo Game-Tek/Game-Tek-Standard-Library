@@ -19,7 +19,7 @@ namespace GAL
 	class VulkanGraphicsPipeline final : public GraphicsPipeline
 	{
 	public:
-		VulkanGraphicsPipeline(const GraphicsPipelineCreateInfo& _GPCI);
+		VulkanGraphicsPipeline(const CreateInfo& createInfo);
 		~VulkanGraphicsPipeline() = default;
 
 		void Destroy(RenderDevice* renderDevice);

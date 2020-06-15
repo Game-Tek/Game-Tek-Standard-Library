@@ -6,33 +6,40 @@
 
 #include <GTSL/Array.hpp>
 
-class VulkanBindingsPool final : public GAL::BindingsPool
+namespace GAL
 {
-	VkDescriptorPool vkDescriptorPool = nullptr;
+	class VulkanBindingsPool final : public BindingsPool
+	{
+	public:
+		VulkanBindingsPool(const CreateInfo& createInfo);
 
-public:
-	VulkanBindingsPool(class VulkanRenderDevice* device, const GAL::BindingsPoolCreateInfo& descriptorPoolCreateInfo);
+		void Destroy(class GAL::RenderDevice* renderDevice);
 
-	void Destroy(class GAL::RenderDevice* renderDevice) override;
+		void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo);
+		void FreePool(const FreeBindingsPoolInfo& freeDescriptorPoolInfo);
 
-	void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo) override;
-	void FreePool(const FreeBindingsPoolInfo& freeDescriptorPoolInfo) override;
+		[[nodiscard]] VkDescriptorPool GetVkDescriptorPool() const { return vkDescriptorPool; }
 
-	[[nodiscard]] VkDescriptorPool GetVkDescriptorPool() const { return vkDescriptorPool; }
-};
+	private:
+		VkDescriptorPool vkDescriptorPool = nullptr;
 
-class VulkanBindingsSet final : public GAL::BindingsSet
-{
-	VkDescriptorSetLayout vkDescriptorSetLayout = nullptr;
-	GTSL::Array<VkDescriptorSet, 4> vkDescriptorSets;
+	};
 
-public:
-	VulkanBindingsSet(class VulkanRenderDevice* device, const GAL::BindingsSetCreateInfo& descriptorSetCreateInfo);
+	class VulkanBindingsSet final : public BindingsSet
+	{
+	public:
+		VulkanBindingsSet(const CreateInfo& createInfo);
 
-	void Destroy(class GAL::RenderDevice* renderDevice) override;
+		void Destroy(class RenderDevice* renderDevice);
 
-	void Update(const GAL::BindingsSetUpdateInfo& uniformLayoutUpdateInfo) override;
+		void Update(const BindingsSetUpdateInfo& uniformLayoutUpdateInfo);
 
-	[[nodiscard]] VkDescriptorSetLayout GetVkDescriptorSetLayout() const { return vkDescriptorSetLayout; }
-	[[nodiscard]] const GTSL::Array<VkDescriptorSet, 4>& GetVkDescriptorSets() const { return vkDescriptorSets; }
-};
+		[[nodiscard]] VkDescriptorSetLayout GetVkDescriptorSetLayout() const { return vkDescriptorSetLayout; }
+		[[nodiscard]] const GTSL::Array<VkDescriptorSet, 4>& GetVkDescriptorSets() const { return vkDescriptorSets; }
+
+	private:
+		VkDescriptorSetLayout vkDescriptorSetLayout = nullptr;
+		GTSL::Array<VkDescriptorSet, 4> vkDescriptorSets;
+
+	};
+}
