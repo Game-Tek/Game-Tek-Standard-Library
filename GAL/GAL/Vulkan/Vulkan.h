@@ -3,7 +3,9 @@
 #include <GAL/ext/vulkan/vulkan.h>
 
 #if (_DEBUG)
-#define VK_CHECK(func) { if ((func) != VK_SUCCESS) { __debugbreak(); } }
+#define COMBINE(x, y) x ## y
+#define COMBINE2(x, y) COMBINE(x, y)
+#define VK_CHECK(func) VkResult COMBINE2(result, __LINE__) = VK_RESULT_MAX_ENUM; COMBINE2(result, __LINE__) = func; { if ((COMBINE2(result, __LINE__)) != VK_SUCCESS) { __debugbreak(); } }
 #else
 #define VK_CHECK(func) func
 #endif // (_DEBUG)
@@ -96,7 +98,7 @@ inline VkFormat ImageFormatToVkFormat(const GAL::ImageFormat imageFormat)
 	case GAL::ImageFormat::DEPTH16_STENCIL8: return VK_FORMAT_D16_UNORM_S8_UINT;
 	case GAL::ImageFormat::DEPTH24_STENCIL8: return VK_FORMAT_D24_UNORM_S8_UINT;
 	case GAL::ImageFormat::DEPTH32_STENCIL8: return VK_FORMAT_D32_SFLOAT_S8_UINT;
-	default: return VK_FORMAT_UNDEFINED;
+	default: return VK_FORMAT_MAX_ENUM;
 	}
 }
 
@@ -161,7 +163,7 @@ inline VkImageLayout ImageLayoutToVkImageLayout(const GAL::ImageLayout imageLayo
 	case GAL::ImageLayout::TRANSFER_DESTINATION: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	case GAL::ImageLayout::PREINITIALIZED: return VK_IMAGE_LAYOUT_PREINITIALIZED;
 	case GAL::ImageLayout::PRESENTATION: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-	default: return VK_IMAGE_LAYOUT_UNDEFINED;
+	default: return VK_IMAGE_LAYOUT_MAX_ENUM;
 	}
 }
 
@@ -237,7 +239,7 @@ inline VkFormat ShaderDataTypesToVkFormat(const GAL::ShaderDataTypes shaderDataT
 	case GAL::ShaderDataTypes::INT3: return VK_FORMAT_R32G32B32_SINT;
 	case GAL::ShaderDataTypes::INT4: return VK_FORMAT_R32G32B32A32_SINT;
 	case GAL::ShaderDataTypes::BOOL: return VK_FORMAT_R32_SINT;
-	default: return VK_FORMAT_UNDEFINED;
+	default: return VK_FORMAT_MAX_ENUM;
 	}
 }
 
@@ -298,9 +300,8 @@ inline VkCompareOp CompareOperationToVkCompareOp(const GAL::CompareOperation com
 	case GAL::CompareOperation::NOT_EQUAL: return VK_COMPARE_OP_NOT_EQUAL;
 	case GAL::CompareOperation::GREATER_OR_EQUAL: return VK_COMPARE_OP_GREATER_OR_EQUAL;
 	case GAL::CompareOperation::ALWAYS: return VK_COMPARE_OP_ALWAYS;
-	default: ;
+	default: return VK_COMPARE_OP_MAX_ENUM;
 	}
-	return {};
 }
 
 inline VkPresentModeKHR PresentModeToVkPresentModeKHR(const GAL::PresentMode presentMode)
@@ -320,17 +321,17 @@ inline VkBufferUsageFlags BufferTypeToVkBufferUsageFlags(const GAL::BufferType b
 	case GAL::BufferType::BUFFER_VERTEX: return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 	case GAL::BufferType::BUFFER_INDEX: return VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 	case GAL::BufferType::BUFFER_UNIFORM: return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-	default: ;
+	case GAL::BufferType::BUFFER_TRANSFER_SOURCE: return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	case GAL::BufferType::BUFFER_TRANSFER_DESTINATION: return VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	default: return VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM;
 	}
 }
 
 inline VkQueueFlags QueueCapabilitiesToVkQueueFlags(const GAL::QueueCapabilities capabilities)
 {
-	switch (capabilities)
-	{
-	case GAL::QueueCapabilities::GRAPHICS: return VK_QUEUE_GRAPHICS_BIT;
-	case GAL::QueueCapabilities::COMPUTE: return VK_QUEUE_COMPUTE_BIT;
-	case GAL::QueueCapabilities::TRANSFER: return VK_QUEUE_TRANSFER_BIT;
-	default: ;
-	}
+	VkQueueFlags vk_queue_flag_bits{ 0 };
+	if (static_cast<GTSL::uint8>(capabilities) & static_cast<GTSL::uint8>(GAL::QueueCapabilities::GRAPHICS)) { vk_queue_flag_bits |= VK_QUEUE_GRAPHICS_BIT; }
+	if (static_cast<GTSL::uint8>(capabilities) & static_cast<GTSL::uint8>(GAL::QueueCapabilities::COMPUTE)) { vk_queue_flag_bits |= VK_QUEUE_COMPUTE_BIT; }
+	if (static_cast<GTSL::uint8>(capabilities) & static_cast<GTSL::uint8>(GAL::QueueCapabilities::TRANSFER)) { vk_queue_flag_bits |= VK_QUEUE_TRANSFER_BIT; }
+	return vk_queue_flag_bits;
 }

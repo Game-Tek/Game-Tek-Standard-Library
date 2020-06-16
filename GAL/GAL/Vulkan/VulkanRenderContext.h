@@ -19,7 +19,7 @@ namespace GAL
 
 		void Destroy(class RenderDevice* renderDevice);
 
-		void OnResize(const ResizeInfo& onResizeInfo);
+		void Recreate(const RecreateInfo& resizeInfo);
 		void AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
 		void Flush(const FlushInfo& flushInfo);
 		void Present(const PresentInfo& presentInfo);

@@ -6,7 +6,6 @@
 #include <GAL/ext/vulkan/vulkan_win32.h>
 #endif
 
-#include "GAL/Vulkan/VulkanCommandBuffer.h"
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
 #include "GTSL/Console.h"
@@ -40,16 +39,6 @@ inline VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSev
 	return VK_FALSE;
 }
 #endif // BE_DEBUG
-
-GAL::VulkanRenderDevice::~VulkanRenderDevice()
-{
-	vkDeviceWaitIdle(device);
-	vkDestroyDevice(device, GetVkAllocationCallbacks());
-#if (_WIN32)
-	destroyDebugUtilsFunction(instance, debugMessenger, GetVkAllocationCallbacks());
-#endif
-	vkDestroyInstance(instance, GetVkAllocationCallbacks());
-}
 
 GAL::GPUInfo GAL::VulkanRenderDevice::GetGPUInfo()
 {
@@ -98,6 +87,8 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 
 	GTSL::Array<const char*, 32, GTSL::uint8> instance_layers{
 #if(_DEBUG)
+		"VK_LAYER_KHRONOS_validation",
+		"VK_LAYER_LUNARG_standard_validation",
 	};
 #else
 };
@@ -106,6 +97,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	GTSL::Array<const char*, 32, GTSL::uint8> instance_extensions{
 #if(_DEBUG)
 		VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+		VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
 #endif
 
 		VK_KHR_SURFACE_EXTENSION_NAME,
@@ -154,7 +146,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	vk_physical_device_features.samplerAnisotropy = true;
 	vk_physical_device_features.shaderSampledImageArrayDynamicIndexing = true;
 
-	GTSL::Array<const char*, 32, GTSL::uint8> device_extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+	GTSL::Array<const char*, 32, GTSL::uint8> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 	GTSL::Array<VkDeviceQueueCreateInfo, 16> vk_device_queue_create_infos(createInfo.QueueCreateInfos.ElementCount());
 
@@ -220,6 +212,16 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 			vkGetDeviceQueue(device, vk_device_queue_create_infos[i].queueFamilyIndex, j, &static_cast<VulkanQueue*>(createInfo.Queues[i])->queue);
 		}
 	}
+}
+
+GAL::VulkanRenderDevice::~VulkanRenderDevice()
+{
+	vkDeviceWaitIdle(device);
+	vkDestroyDevice(device, GetVkAllocationCallbacks());
+#if (_WIN32)
+	destroyDebugUtilsFunction(instance, debugMessenger, GetVkAllocationCallbacks());
+#endif
+	vkDestroyInstance(instance, GetVkAllocationCallbacks());
 }
 
 VkFormat GAL::VulkanRenderDevice::FindSupportedVkFormat(GTSL::Ranger<VkFormat> formats, const VkFormatFeatureFlags formatFeatureFlags, const VkImageTiling imageTiling) const

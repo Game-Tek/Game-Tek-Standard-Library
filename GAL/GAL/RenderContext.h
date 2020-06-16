@@ -28,17 +28,20 @@ namespace GAL
 		{
 			GTSL::Extent2D SurfaceArea;
 			GTSL::uint8 DesiredFramesInFlight = 0;
+			PresentMode PresentMode;
 			void* SystemData{ nullptr };
 		};
-		explicit RenderContext(const CreateInfo& createInfo);
+		//explicit RenderContext(const CreateInfo& createInfo);
 		
 		~RenderContext() = default;
 
-		struct ResizeInfo : RenderInfo
+		struct RecreateInfo : RenderInfo
 		{
 			GTSL::Extent2D NewWindowSize;
+			GTSL::uint8 DesiredFramesInFlight = 0;
+			PresentMode NewPresentMode;
 		};
-		void OnResize(const ResizeInfo& resizeInfo);
+		void Recreate(const RecreateInfo& resizeInfo);
 
 		struct AcquireNextImageInfo : RenderInfo
 		{
