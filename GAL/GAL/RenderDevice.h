@@ -29,7 +29,7 @@ namespace GAL
 	public:
 		struct CreateInfo
 		{
-			QueueCapabilities Capabilities;
+			GTSL::uint8 Capabilities{ 0 };
 			GTSL::float32 QueuePriority = 1.0f;
 		};
 

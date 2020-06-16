@@ -7,6 +7,42 @@
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanRenderPass.h"
 
+void GAL::VulkanShaders::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result)
+{
+	shaderc_shader_kind shaderc_stage;
+
+	switch (ShaderTypeToVkShaderStageFlagBits(shaderType))
+	{
+	case VK_SHADER_STAGE_VERTEX_BIT: shaderc_stage = shaderc_vertex_shader;	break;
+	case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT: shaderc_stage = shaderc_tess_control_shader;	break;
+	case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT: shaderc_stage = shaderc_tess_evaluation_shader; break;
+	case VK_SHADER_STAGE_GEOMETRY_BIT: shaderc_stage = shaderc_geometry_shader;	break;
+	case VK_SHADER_STAGE_FRAGMENT_BIT: shaderc_stage = shaderc_fragment_shader;	break;
+	case VK_SHADER_STAGE_COMPUTE_BIT: shaderc_stage = shaderc_compute_shader; break;
+	default: shaderc_stage = shaderc_spirv_assembly; break;
+	}
+
+	const shaderc::Compiler shaderc_compiler;
+	shaderc::CompileOptions shaderc_compile_options;
+	shaderc_compile_options.SetTargetSpirv(shaderc_spirv_version_1_5);
+	shaderc_compile_options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+
+	shaderc_source_language shaderc_source_language;
+	switch (shaderLanguage)
+	{
+	case ShaderLanguage::GLSL: shaderc_source_language = shaderc_source_language_glsl; break;
+	case ShaderLanguage::HLSL: shaderc_source_language = shaderc_source_language_hlsl; break;
+	}
+	
+	shaderc_compile_options.SetSourceLanguage(shaderc_source_language);
+	shaderc_compile_options.SetOptimizationLevel(shaderc_optimization_level_performance);
+	const auto shaderc_module = shaderc_compiler.CompileGlslToSpv(code.begin(), shaderc_stage, shaderName.begin(), shaderc_compile_options);
+
+	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success) { return; }
+
+	result.Initialize(reinterpret_cast<const GTSL::byte*>(shaderc_module.begin()), reinterpret_cast<const GTSL::byte*>(shaderc_module.end()) + sizeof(uint32_t));
+}
+
 GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo)
 {
 	//  VERTEX INPUT STATE
@@ -120,30 +156,23 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	GTSL::Array<VkPipelineShaderStageCreateInfo, GAL::MAX_SHADER_STAGES, GTSL::uint8> vk_pipeline_shader_stage_create_infos(createInfo.PipelineDescriptor.Stages.GetLength());
-	GTSL::Array<VkShaderModuleCreateInfo, GAL::MAX_SHADER_STAGES, GTSL::uint8> vk_shader_module_create_infos(createInfo.PipelineDescriptor.Stages.GetLength());
-	GTSL::Array<GTSL::Vector<GTSL::uint32>, GAL::MAX_SHADER_STAGES, GTSL::uint8> SPIRV(createInfo.PipelineDescriptor.Stages.GetLength());
-	GTSL::Array<VkShaderModule, GAL::MAX_SHADER_STAGES, GTSL::uint8> vk_shader_modules(createInfo.PipelineDescriptor.Stages.GetLength());
-
-	for (GTSL::uint8 i = 0; i < createInfo.PipelineDescriptor.Stages.GetLength(); ++i)
+	GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES, GTSL::uint8> vk_pipeline_shader_stage_create_infos(createInfo.PipelineDescriptor.Stages.ElementCount());
+	GTSL::Array<VkShaderModule, MAX_SHADER_STAGES, GTSL::uint8> vk_shader_modules(createInfo.PipelineDescriptor.Stages.ElementCount());
+	GTSL::Array<GTSL::StaticString<256>, MAX_SHADER_STAGES> shader_names(createInfo.PipelineDescriptor.Stages.ElementCount());
+	for (GTSL::uint8 i = 0; i < createInfo.PipelineDescriptor.Stages.ElementCount(); ++i)
 	{
+		VkShaderModuleCreateInfo vk_shader_module_create_info{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
+		vk_shader_module_create_info.codeSize = createInfo.PipelineDescriptor.Stages[i].ShaderData.Bytes();
+		vk_shader_module_create_info.pCode = reinterpret_cast<uint32_t*>(createInfo.PipelineDescriptor.Stages[i].ShaderData.begin());
+
+		vkCreateShaderModule(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_shader_module_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &vk_shader_modules[i]);
+		
+		shader_names[i] += '\0';
 		vk_pipeline_shader_stage_create_infos[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vk_pipeline_shader_stage_create_infos[i].pNext = nullptr;
 		vk_pipeline_shader_stage_create_infos[i].flags = 0;
 		vk_pipeline_shader_stage_create_infos[i].stage = ShaderTypeToVkShaderStageFlagBits(createInfo.PipelineDescriptor.Stages[i].Type);
-		vk_pipeline_shader_stage_create_infos[i].pName = "main";
-
-		//TODO: ask for shader name from outside
-		VulkanShaders::CompileShader(*createInfo.PipelineDescriptor.Stages[i].ShaderCode, GTSL::String("Shader", static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetPersistentAllocationsAllocatorReference()), vk_pipeline_shader_stage_create_infos[i].stage, SPIRV[i]);
-
-		vk_shader_module_create_infos[i].sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		vk_shader_module_create_infos[i].pNext = nullptr;
-		vk_shader_module_create_infos[i].flags = 0;
-		vk_shader_module_create_infos[i].codeSize = SPIRV[i].GetLengthSize();
-		vk_shader_module_create_infos[i].pCode = SPIRV[i].GetData();
-
-		vkCreateShaderModule(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_shader_module_create_infos[i], static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &vk_shader_modules[i]);
-
+		vk_pipeline_shader_stage_create_infos[i].pName = shader_names[i].begin();
 		vk_pipeline_shader_stage_create_infos[i].module = vk_shader_modules[i];
 		vk_pipeline_shader_stage_create_infos[i].pSpecializationInfo = nullptr;
 	}
@@ -168,7 +197,7 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 		vk_pipeline_layout_create_info.pPushConstantRanges = nullptr;
 	}
 
-	GTSL::Array<VkDescriptorSetLayout, 16> vk_descriptor_set_layouts(createInfo.BindingsSets.GetLength());
+	GTSL::Array<VkDescriptorSetLayout, 16> vk_descriptor_set_layouts(createInfo.BindingsSets.ElementCount());
 	{
 		GTSL::uint8 i = 0;
 		for (auto& e : vk_descriptor_set_layouts)
@@ -185,6 +214,8 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	vkCreatePipelineLayout(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_pipeline_layout_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipelineLayout);
 
 	VkGraphicsPipelineCreateInfo vk_graphics_pipeline_create_info{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
+	vk_graphics_pipeline_create_info.flags = createInfo.IsInheritable ? VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT : 0;
+	vk_graphics_pipeline_create_info.flags |= createInfo.ParentPipeline ? VK_PIPELINE_CREATE_DERIVATIVE_BIT : 0;
 	vk_graphics_pipeline_create_info.stageCount = vk_pipeline_shader_stage_create_infos.GetLength();
 	vk_graphics_pipeline_create_info.pStages = vk_pipeline_shader_stage_create_infos.GetData();
 	vk_graphics_pipeline_create_info.pVertexInputState = &vk_pipeline_vertex_input_state_create_info;
@@ -202,6 +233,20 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	vk_graphics_pipeline_create_info.basePipelineHandle = createInfo.ParentPipeline ? static_cast<VulkanGraphicsPipeline*>(createInfo.ParentPipeline)->pipeline : nullptr; // Optional
 	vk_graphics_pipeline_create_info.basePipelineIndex = createInfo.ParentPipeline ? 0 : -1;
 
+
+	if(createInfo.PipelineDescriptor.PipelineCache)
+	{
+		VkPipelineCache vk_pipeline_cache;
+		VkPipelineCacheCreateInfo vk_pipeline_cache_create_info{ VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO };
+		vk_pipeline_cache_create_info.initialDataSize = createInfo.PipelineDescriptor.PipelineCache.Bytes();
+		vk_pipeline_cache_create_info.pInitialData = createInfo.PipelineDescriptor.PipelineCache.begin();
+
+		vkCreatePipelineCache(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_pipeline_cache_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &vk_pipeline_cache);
+		vkCreateGraphicsPipelines(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), vk_pipeline_cache, 1, &vk_graphics_pipeline_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipeline);
+		vkDestroyPipelineCache(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), vk_pipeline_cache, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks());
+		return;
+	}
+	
 	vkCreateGraphicsPipelines(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), nullptr, 1, &vk_graphics_pipeline_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipeline);
 }
 
@@ -216,35 +261,4 @@ void GAL::VulkanComputePipeline::Destroy(GAL::RenderDevice* renderDevice)
 {
 	auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
 	vkDestroyPipeline(vk_render_device->GetVkDevice(), pipeline, vk_render_device->GetVkAllocationCallbacks());
-}
-
-void GAL::VulkanShaders::CompileShader(GTSL::Ranger<GTSL::UTF8> code, GTSL::Ranger<GTSL::UTF8> shaderName, GTSL::uint32 shaderStage, GTSL::Vector<GTSL::uint32>& result)
-{
-	shaderc_shader_kind shaderc_stage;
-
-	switch (shaderStage)
-	{
-	case VK_SHADER_STAGE_VERTEX_BIT: shaderc_stage = shaderc_vertex_shader;	break;
-	case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT: shaderc_stage = shaderc_tess_control_shader;	break;
-	case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT: shaderc_stage = shaderc_tess_evaluation_shader; break;
-	case VK_SHADER_STAGE_GEOMETRY_BIT: shaderc_stage = shaderc_geometry_shader;	break;
-	case VK_SHADER_STAGE_FRAGMENT_BIT: shaderc_stage = shaderc_fragment_shader;	break;
-	case VK_SHADER_STAGE_COMPUTE_BIT: shaderc_stage = shaderc_compute_shader; break;
-	default: shaderc_stage = shaderc_spirv_assembly; break;
-	}
-
-	const shaderc::Compiler shaderc_compiler;
-	shaderc::CompileOptions shaderc_compile_options;
-	shaderc_compile_options.SetTargetSpirv(shaderc_spirv_version_1_1);
-	shaderc_compile_options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
-	shaderc_compile_options.SetSourceLanguage(shaderc_source_language_glsl);
-	shaderc_compile_options.SetOptimizationLevel(shaderc_optimization_level_performance);
-	const auto shaderc_module = shaderc_compiler.CompileGlslToSpv(code.begin(), shaderc_stage, shaderName.begin(), shaderc_compile_options);
-
-	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success)
-	{
-		//BE_BASIC_LOG_ERROR("Failed to compile shader: %s. Errors: %s", shaderName.c_str(), shaderc_module.GetErrorMessage().c_str())
-	}
-
-	result.Initialize(shaderc_module.begin(), shaderc_module.end());
 }

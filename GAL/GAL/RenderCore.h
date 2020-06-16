@@ -177,6 +177,11 @@ namespace GAL
 
 	// SHADERS
 
+	enum class ShaderLanguage : GTSL::uint8
+	{
+		GLSL, HLSL
+	};
+	
 	enum class ShaderType : GTSL::uint8
 	{
 		ALL_STAGES,

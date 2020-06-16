@@ -27,12 +27,13 @@ namespace GAL
 	struct ShaderInfo
 	{
 		ShaderType Type = ShaderType::VERTEX_SHADER;
-		GTSL::String* ShaderCode = nullptr;
+		GTSL::Ranger<GTSL::UTF8> Name;
+		GTSL::Ranger<GTSL::byte> ShaderData;
 	};
 
 	struct PipelineDescriptor
 	{
-		GTSL::FixedVector<ShaderInfo> Stages;
+		GTSL::Ranger<ShaderInfo> Stages;
 		CullMode CullMode = CullMode::CULL_NONE;
 		bool DepthClampEnable = false;
 		bool BlendEnable = false;
@@ -40,6 +41,7 @@ namespace GAL
 		SampleCount RasterizationSamples = SampleCount::SAMPLE_COUNT_1;
 		CompareOperation DepthCompareOperation = CompareOperation::NEVER;
 		StencilOperations StencilOperations;
+		GTSL::Ranger<GTSL::byte> PipelineCache;
 	};
 
 	class RenderPass;
@@ -63,27 +65,27 @@ namespace GAL
 			GTSL::Extent2D SurfaceExtent;
 			GTSL::Ranger<ShaderDataTypes> VertexDescriptor;
 			PipelineDescriptor PipelineDescriptor;
+			bool IsInheritable = false;
 			GraphicsPipeline* ParentPipeline = nullptr;
 
 			PushConstant* PushConstant = nullptr;
-			GTSL::Array<class BindingsSet*, 16> BindingsSets;
+			GTSL::Ranger<class BindingsSet*> BindingsSets;
 		};
 
+		struct PipelineCache : RenderInfo
+		{
+			GTSL::Ranger<GTSL::byte> Data;
+		};
+		
 		static GTSL::uint32 GetVertexSize(GTSL::Ranger<ShaderDataTypes> vertex)
 		{
-			GTSL::uint32 size{ 0 };
-			for (auto& e : vertex) { size += ShaderDataTypesSize(e); }
-			return size;
+			GTSL::uint32 size{ 0 };	for (auto& e : vertex) { size += ShaderDataTypesSize(e); } return size;
 		}
 
 		static GTSL::uint32 GetByteOffsetToMember(const GTSL::uint8 member, GTSL::Ranger<ShaderDataTypes> vertex)
 		{
 			GTSL::uint32 offset{ 0 };
-			for(auto begin = vertex.begin(); begin != vertex.begin() + member; ++begin)
-			{
-				offset += ShaderDataTypesSize(*begin);
-			}
-
+			for(auto* begin = vertex.begin(); begin != vertex.begin() + member; ++begin) { offset += ShaderDataTypesSize(*begin); }
 			return offset;
 		}
 	};

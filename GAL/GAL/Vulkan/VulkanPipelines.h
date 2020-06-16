@@ -12,8 +12,7 @@ namespace GAL
 	class VulkanShaders
 	{
 	public:
-		//takes an unitialized fvector
-		static void CompileShader(GTSL::Ranger<GTSL::UTF8> code, GTSL::Ranger<GTSL::UTF8> shaderName, GTSL::uint32 shaderStage, GTSL::Vector<GTSL::uint32>& result);
+		static void CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result);
 	};
 
 	class VulkanGraphicsPipeline final : public GraphicsPipeline
