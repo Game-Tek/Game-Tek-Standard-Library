@@ -137,28 +137,28 @@ namespace GTSL
 
 		constexpr LT PushBack(const T& obj) noexcept
 		{
-			GTSL_ASSERT((this->length + 1) < CAPACITY, "Array is not long enough to insert any more elements!");
+			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
 			::new(static_cast<void*>(this->data + this->length)) T(obj);
 			return ++this->length;
 		}
 
 		constexpr LT PushBack(T&& obj) noexcept
 		{
-			GTSL_ASSERT((this->length + 1) < CAPACITY, "Array is not long enough to insert any more elements!");
+			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
 			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeTransferReference(obj));
 			return ++this->length;
 		}
 
 		constexpr LT PushBack(const Ranger<T>& ranger) noexcept
 		{
-			GTSL_ASSERT(ranger.ElementCount() < CAPACITY, "Array is not big enough to insert the elements requested!")
+			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
 			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
 			return this->length += ranger.ElementCount();
 		}
 
 		constexpr LT PushBack(const Ranger<const T>& ranger) noexcept
 		{
-			GTSL_ASSERT(ranger.ElementCount() < CAPACITY, "Array is not big enough to insert the elements requested!")
+			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
 			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
 			return this->length += ranger.ElementCount();
 		}
@@ -172,14 +172,14 @@ namespace GTSL
 		template<typename... ARGS>
 		constexpr LT EmplaceBack(ARGS&&... args)
 		{
-			GTSL_ASSERT((this->length + 1) < CAPACITY, "Array is not long enough to insert any more elements!");
+			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
 			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeForwardReference<ARGS>(args) ...);
 			return ++this->length;
 		}
 
 		constexpr void Resize(LT size)
 		{
-			GTSL_ASSERT(size < CAPACITY, "Requested size for array Resize is greater than Array's statically allocated size!");
+			GTSL_ASSERT(size <= CAPACITY, "Requested size for array Resize is greater than Array's statically allocated size!");
 			this->length = size;
 		}
 
