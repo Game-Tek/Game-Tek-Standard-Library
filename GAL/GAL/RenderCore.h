@@ -405,6 +405,7 @@ namespace GAL
 	class GALObject
 	{
 	protected:
+		GALObject() = default;
 		~GALObject() = default;
 	public:
 		void Destroy(class RenderDevice* renderDevice);

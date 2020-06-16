@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include <GAL/ext/vulkan/vulkan.h>
 
 #if (_DEBUG)
 #define VK_CHECK(func) { if ((func) != VK_SUCCESS) { __debugbreak(); } }

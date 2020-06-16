@@ -53,7 +53,7 @@ namespace GTSL
 		
 		constexpr Id64(const Ranger<const UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
 		constexpr Id64(const Ranger<UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
-		constexpr Id64(const char* text) noexcept : hashValue(hashString(GTSL::Ranger<UTF8>(StringLength(text), text))) {}
+		constexpr Id64(const char* text) noexcept : hashValue(hashString(GTSL::Ranger<const UTF8>(StringLength(text), text))) {}
 		constexpr Id64(const HashType id) noexcept : hashValue(id) {}
 		constexpr Id64(const Id64& other) noexcept = default;
 		constexpr Id64(Id64&& other) noexcept : hashValue(other.hashValue) { other.hashValue = 0; }

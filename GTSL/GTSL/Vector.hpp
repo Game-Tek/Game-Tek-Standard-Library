@@ -369,6 +369,13 @@ namespace GTSL
 			copyArray(ranger.begin(), getIterator(this->length), ranger.ElementCount());
 			return static_cast<uint32>((this->length += ranger.ElementCount()) - ranger.ElementCount());
 		}
+
+		length_type PushBack(const Ranger<const T>& ranger)
+		{
+			reallocateIfExceeds(ranger.ElementCount());
+			copyArray(ranger.begin(), getIterator(this->length), ranger.ElementCount());
+			return static_cast<uint32>((this->length += ranger.ElementCount()) - ranger.ElementCount());
+		}
 		
 		/**
 		 * \brief Places a copy of the elements from the passed in Vector At the end of the vector.

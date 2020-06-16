@@ -1,15 +1,13 @@
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
-#if (_WIN32)
-#include <windows.h>
-#include <vulkan/vulkan_win32.h>
+#if(_WIN64)
+#include <Windows.h>
+#include <GAL/ext/vulkan/vulkan_win32.h>
 #endif
 
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
-#include "GAL/Vulkan/VulkanTexture.h"
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
-#include "GAL/Vulkan/VulkanRenderContext.h"
 #include "GTSL/StaticString.hpp"
 
 GTSL::uint32 GAL::VulkanRenderDevice::FindMemoryType(GTSL::uint32 memoryType, GTSL::uint32 memoryFlags) const
@@ -68,7 +66,7 @@ GAL::ImageFormat GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const 
 	return VkFormatToImageFormat(FindSupportedVkFormat(formats, ImageUseToVkFormatFeatureFlagBits(findSupportedImageFormat.ImageUse), ImageTilingToVkImageTiling(findSupportedImageFormat.ImageTiling)));
 }
 
-void GAL::VulkanRenderDevice::VulkanQueue::Dispatch(const DispatchInfo& dispatchInfo)
+void GAL::VulkanQueue::Dispatch(const DispatchInfo& dispatchInfo)
 {
 	GTSL::Array<VkCommandBuffer, 16> vk_command_buffers(dispatchInfo.CommandBuffers.ElementCount());
 	

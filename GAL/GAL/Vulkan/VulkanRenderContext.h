@@ -2,7 +2,7 @@
 
 #include "GAL/RenderContext.h"
 
-#include "vulkan/vulkan.h"
+#include <GAL/ext/vulkan/vulkan.h>
 
 #include "VulkanPipelines.h"
 #include "VulkanBindings.h"
@@ -10,15 +10,14 @@
 
 namespace GAL
 {
-	class VulkanRenderDevice;
-
 	class VulkanRenderContext final : public RenderContext
 	{
 	public:
+		VulkanRenderContext() = default;
 		VulkanRenderContext(const CreateInfo& createInfo);
 		~VulkanRenderContext() = default;
 
-		void Destroy(RenderDevice* renderDevice);
+		void Destroy(class RenderDevice* renderDevice);
 
 		void OnResize(const ResizeInfo& _RI);
 		void AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
@@ -42,7 +41,7 @@ namespace GAL
 
 		GTSL::uint8 imageIndex = 0;
 
-		VkSurfaceFormatKHR findFormat(const VulkanRenderDevice* device, VkSurfaceKHR surface);
+		VkSurfaceFormatKHR findFormat(class VulkanRenderDevice* device, VkSurfaceKHR surface);
 		VkPresentModeKHR findPresentMode(const VkPhysicalDevice _PD, VkSurfaceKHR _Surface);
 	};
 }

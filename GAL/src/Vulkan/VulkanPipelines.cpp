@@ -2,7 +2,7 @@
 
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
-#include <shaderc/shaderc.hpp>
+#include <GAL/ext/shaderc/shaderc.hpp>
 
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanRenderPass.h"

@@ -2,13 +2,10 @@
 
 #include <GTSL/Core.h>
 
-#include <GTSL/String.hpp>
-
 #include "RenderCore.h"
 
 #include "Framebuffer.h"
 #include "CommandBuffer.h"
-#include <GTSL/Array.hpp>
 
 #include "GTSL/StaticString.hpp"
 
@@ -30,7 +27,7 @@ namespace GAL
 	class Queue
 	{
 	public:
-		struct CreateInfo : RenderInfo
+		struct CreateInfo
 		{
 			QueueCapabilities Capabilities;
 			GTSL::float32 QueuePriority = 1.0f;
@@ -43,8 +40,6 @@ namespace GAL
 		void Dispatch(const DispatchInfo& dispatchInfo);
 
 	private:
-		QueueCapabilities capabilities;
-
 		friend RenderDevice;
 	};
 
@@ -56,7 +51,7 @@ namespace GAL
 			GTSL::Ranger<GTSL::UTF8> ApplicationName;
 			GTSL::uint16 ApplicationVersion[3];
 			GTSL::Ranger<Queue::CreateInfo> QueueCreateInfos;
-			GTSL::Ranger<Queue*> Queues;
+			GTSL::Ranger<GAL::Queue*> Queues;
 		};
 		
 		[[nodiscard]] GTSL::AllocatorReference* GetPersistentAllocationsAllocatorReference() const { return persistentAllocatorReference; }

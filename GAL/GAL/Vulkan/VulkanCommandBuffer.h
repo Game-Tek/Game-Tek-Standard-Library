@@ -11,7 +11,7 @@ namespace GAL
 	class VulkanCommandBuffer final : public CommandBuffer
 	{
 	public:
-		explicit VulkanCommandBuffer(VulkanRenderDevice* renderDevice, const CommandBufferCreateInfo& commandBufferCreateInfo);
+		explicit VulkanCommandBuffer(const CreateInfo& commandBufferCreateInfo);
 
 		void BeginRecording(const BeginRecordingInfo& beginRecordingInfo);
 		void EndRecording(const EndRecordingInfo& endRecordingInfo);
@@ -34,21 +34,8 @@ namespace GAL
 
 		void CopyImage(const CopyImageInfo& copyImageInfo);
 
-		struct CopyBufferToImageInfo : RenderInfo
-		{
-			class Buffer* SourceBuffer{ nullptr };
-			ImageFormat SourceImageFormat;
-			class Texture* DestinationImage{ nullptr };
-
-			GTSL::Extent3D Extent;
-			GTSL::Extent3D Offset;
-		};
 		void CopyBufferToImage(const CopyBufferToImageInfo& copyImageToBufferInfo);
 
-		struct TransitionImageInfo : RenderInfo
-		{
-			
-		};
 		void TransitionImage(const TransitionImageInfo& transitionImageInfo);
 
 		[[nodiscard]] VkCommandBuffer GetVkCommandBuffer() const { return commandBuffer; }

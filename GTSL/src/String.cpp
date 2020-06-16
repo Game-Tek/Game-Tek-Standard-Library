@@ -31,7 +31,7 @@ String& String::operator+=(char c)
 
 String& String::operator+=(const char* cstring)
 {
-	data.PushBack(Ranger<UTF8>(StringLength(cstring), cstring));
+	data.PushBack(Ranger<const UTF8>(StringLength(cstring), cstring));
 	return *this;
 }
 
@@ -64,8 +64,8 @@ bool String::NonSensitiveComp(const String& other) const
 void String::Append(const char* cstring)
 {
 	data.Place(data.GetLength(), ' '); //Push space.
-	data.PushBack(Ranger<UTF8>(StringLength(cstring), cstring));
-	data.PushBack(Ranger<UTF8>(StringLength(cstring), cstring));
+	data.PushBack(Ranger<const UTF8>(StringLength(cstring), cstring));
+	data.PushBack(Ranger<const UTF8>(StringLength(cstring), cstring));
 	return;
 }
 

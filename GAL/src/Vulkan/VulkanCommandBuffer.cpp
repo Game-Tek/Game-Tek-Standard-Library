@@ -4,23 +4,23 @@
 
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanBuffer.h"
+#include "GAL/Vulkan/VulkanFramebuffer.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
 #include "GAL/Vulkan/VulkanRenderPass.h"
 #include "GAL/Vulkan/VulkanTexture.h"
 
-GAL::VulkanCommandBuffer::VulkanCommandBuffer(VulkanRenderDevice* renderDevice, const CommandBufferCreateInfo& commandBufferCreateInfo) : CommandBuffer(commandBufferCreateInfo)
+GAL::VulkanCommandBuffer::VulkanCommandBuffer(const CreateInfo& createInfo) : CommandBuffer(createInfo)
 {
 	VkCommandPoolCreateInfo vk_command_pool_create_info{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 	vk_command_pool_create_info;
 
-	vkCreateCommandPool(renderDevice->GetVkDevice(), &vk_command_pool_create_info, renderDevice->GetVkAllocationCallbacks(), &commandPool);
+	vkCreateCommandPool(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_command_pool_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &commandPool);
 
 	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
 	vk_command_buffer_allocate_info.commandPool = commandPool;
 	vk_command_buffer_allocate_info.commandBufferCount = 1;
-	vk_command_buffer_allocate_info.level = commandBufferCreateInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-	
-	vkAllocateCommandBuffers(renderDevice->GetVkDevice(), &vk_command_buffer_allocate_info, &commandBuffer);
+	vk_command_buffer_allocate_info.level = createInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+	vkAllocateCommandBuffers(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_command_buffer_allocate_info, &commandBuffer);
 }
 
 void GAL::VulkanCommandBuffer::BeginRecording(const BeginRecordingInfo& beginRecordingInfo)
@@ -28,6 +28,7 @@ void GAL::VulkanCommandBuffer::BeginRecording(const BeginRecordingInfo& beginRec
 	VkCommandBufferBeginInfo vk_command_buffer_begin_info{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 	vk_command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 	//Hint to primary buffer if this is secondary.
+	//vk_command_buffer_begin_info.pInheritanceInfo = static_cast<VulkanCommandBuffer*>(beginRecordingInfo.PrimaryCommandBuffer)->GetVkCommandBuffer();
 	vk_command_buffer_begin_info.pInheritanceInfo = nullptr;
 
 	vkBeginCommandBuffer(commandBuffer, &vk_command_buffer_begin_info);
@@ -117,13 +118,13 @@ void GAL::VulkanCommandBuffer::Dispatch(const DispatchInfo& dispatchInfo)
 
 void GAL::VulkanCommandBuffer::BindBindingsSet(const BindBindingsSetInfo& bindBindingsSetInfo)
 {
-	GTSL::Array<VkDescriptorSet, 8> descriptor_sets(bindBindingsSetInfo.BindingsSets->GetLength());
+	GTSL::Array<VkDescriptorSet, 32> descriptor_sets(bindBindingsSetInfo.BindingsSets.ElementCount());
 	{
 		GTSL::uint8 i = 0;
 
 		for (auto& e : descriptor_sets)
 		{
-			e = static_cast<VulkanBindingsSet*>((*bindBindingsSetInfo.BindingsSets)[i])->GetVkDescriptorSets()[bindBindingsSetInfo.BindingsSetIndex];
+			e = static_cast<VulkanBindingsSet*>(bindBindingsSetInfo.BindingsSets[i])->GetVkDescriptorSets()[bindBindingsSetInfo.BindingsSetIndex];
 			++i;
 		}
 	}

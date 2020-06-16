@@ -4,13 +4,13 @@
 
 #if (_WIN32)
 #define VK_USE_PLATFORM_WIN32_KHR
-#include <windows.h>
-#include <vulkan/vulkan_win32.h>
+#include <Windows.h>
+#include <GAL/ext/vulkan/vulkan_win32.h>
 #endif
 
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
 
-VkSurfaceFormatKHR GAL::VulkanRenderContext::findFormat(const VulkanRenderDevice* vulkanRenderDevice, VkSurfaceKHR surface)
+VkSurfaceFormatKHR GAL::VulkanRenderContext::findFormat(VulkanRenderDevice* vulkanRenderDevice, VkSurfaceKHR surface)
 {
 	VkPhysicalDevice pd = vulkanRenderDevice->GetVkPhysicalDevice();
 	
@@ -72,8 +72,8 @@ GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo) : Re
 	extent = createInfo.SurfaceArea;
 	
 	VkWin32SurfaceCreateInfoKHR vk_win32_surface_create_info_khr{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
-	vk_win32_surface_create_info_khr.hwnd = static_cast<WindowsWindowData*>(createInfo.SystemData)->WindowHandle;
-	vk_win32_surface_create_info_khr.hinstance = static_cast<WindowsWindowData*>(createInfo.SystemData)->InstanceHandle;
+	vk_win32_surface_create_info_khr.hwnd = static_cast<HWND>(static_cast<WindowsWindowData*>(createInfo.SystemData)->WindowHandle);
+	vk_win32_surface_create_info_khr.hinstance = static_cast<HINSTANCE>(static_cast<WindowsWindowData*>(createInfo.SystemData)->InstanceHandle);
 	VK_CHECK(vkCreateWin32SurfaceKHR(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkInstance(), &vk_win32_surface_create_info_khr, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &surface));
 
 	surfaceFormat = findFormat(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice), surface);
@@ -187,7 +187,7 @@ void GAL::VulkanRenderContext::Flush(const FlushInfo& flushInfo)
 		submit_info.pWaitDstStageMask = wait_stages;
 	}
 
-	vkQueueSubmit(reinterpret_cast<VulkanRenderDevice::VulkanQueue*>(flushInfo.Queue)->GetVkQueue(), 1, &submit_info, inFlightFences[currentImage]);
+	vkQueueSubmit(reinterpret_cast<VulkanQueue*>(flushInfo.Queue)->GetVkQueue(), 1, &submit_info, inFlightFences[currentImage]);
 
 	//Signal fence when execution of this queue has finished.
 	vkWaitForFences(static_cast<VulkanRenderDevice*>(flushInfo.RenderDevice)->GetVkDevice(), 1, &inFlightFences[currentImage], true, ~0ULL);
@@ -211,7 +211,7 @@ void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)
 		present_info.pResults = nullptr;
 	}
 
-	vkQueuePresentKHR(static_cast<VulkanRenderDevice::VulkanQueue*>(presentInfo.Queue)->GetVkQueue(), &present_info);
+	vkQueuePresentKHR(static_cast<VulkanQueue*>(presentInfo.Queue)->GetVkQueue(), &present_info);
 
 	currentImage = (currentImage + 1) % maxFramesInFlight;
 }

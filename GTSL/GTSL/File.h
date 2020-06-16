@@ -17,7 +17,7 @@ namespace GTSL
 			READ = 1,
 			WRITE = 2
 		};
-		void OpenFile(const Ranger<char>& path, OpenFileMode openFileMode);
+		void OpenFile(const Ranger<const UTF8>& path, OpenFileMode openFileMode);
 		void CloseFile();
 
 		void WriteToFile(const Ranger<byte>& buffer, uint64& bytesWritten);

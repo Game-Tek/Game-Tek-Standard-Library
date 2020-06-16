@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vulkan.h>
-
 #include "GAL/Memory.h"
+
+#include <GAL/ext/vulkan/vulkan.h>
 
 namespace GAL
 {

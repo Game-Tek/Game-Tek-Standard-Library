@@ -20,9 +20,13 @@ namespace GTSL
 		{
 		}
 
-		constexpr Ranger(size_t length, const T* start) noexcept : from(const_cast<T*>(start)), to(const_cast<T*>(start) + length)
+		constexpr Ranger(size_t length, T* start) noexcept : from(start), to(start + length)
 		{
 		}
+
+		//constexpr Ranger(size_t length, const T* start) noexcept : from(const_cast<T*>(start)), to(const_cast<T*>(start) + length)
+		//{
+		//}
 
 		constexpr T* begin() noexcept { return from; }
 		[[nodiscard]] constexpr const T* begin() const noexcept { return from; }

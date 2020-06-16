@@ -2,33 +2,35 @@
 
 #include "GAL/RenderDevice.h"
 
-#include "VulkanFramebuffer.h"
+#include <GAL/ext/vulkan/vulkan.h>
 
 namespace GAL
 {
+	class VulkanQueue final : public Queue
+	{
+	public:
+		VulkanQueue() = default;
+		VulkanQueue(const CreateInfo& createInfo);
+		~VulkanQueue() = default;
+
+		void Dispatch(const DispatchInfo& dispatchInfo);
+
+		[[nodiscard]] VkQueue GetVkQueue() const { return queue; }
+		[[nodiscard]] GTSL::uint32 GetQueueIndex() const { return queueIndex; }
+		[[nodiscard]] GTSL::uint32 GetFamilyIndex() const { return familyIndex; }
+
+	private:
+		VkQueue queue = nullptr;
+		GTSL::uint32 queueIndex = 0;
+		GTSL::uint32 familyIndex = 0;
+
+		friend class VulkanRenderDevice;
+	};
+	
 	class VulkanRenderDevice final : public RenderDevice
 	{
 	public:
-		class VulkanQueue : public Queue
-		{
-		public:
-			VulkanQueue(const CreateInfo& queueCreateInfo);
-			~VulkanQueue() = default;
-
-			void Dispatch(const DispatchInfo& dispatchInfo);
-
-			[[nodiscard]] VkQueue GetVkQueue() const { return queue; }
-			[[nodiscard]] GTSL::uint32 GetQueueIndex() const { return queueIndex; }
-			[[nodiscard]] GTSL::uint32 GetFamilyIndex() const { return familyIndex; }
-
-		private:
-			VkQueue queue = nullptr;
-			GTSL::uint32 queueIndex = 0;
-			GTSL::uint32 familyIndex = 0;
-
-			friend VulkanRenderDevice;
-		};
-
+		VulkanRenderDevice() = default;
 		explicit VulkanRenderDevice(const CreateInfo& createInfo);
 		~VulkanRenderDevice();
 
@@ -68,6 +70,5 @@ namespace GAL
 
 		VkPhysicalDeviceProperties deviceProperties;
 		VkPhysicalDeviceMemoryProperties memoryProperties;
-
 	};
 }

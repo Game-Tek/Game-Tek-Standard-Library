@@ -46,7 +46,7 @@ namespace GTSL
 
 		[[nodiscard]] constexpr const T& back() const noexcept { return this->data[this->length * sizeof(T)]; }
 
-		operator GTSL::Ranger<T>() const { return Ranger<T>(this->length, this->begin()); }
+		operator GTSL::Ranger<T>() { return Ranger<T>(this->length, this->begin()); }
 		operator GTSL::Ranger<const T>() const { return Ranger<const T>(this->length, this->begin()); }
 
 		constexpr Array() noexcept = default;
@@ -150,6 +150,13 @@ namespace GTSL
 		}
 
 		constexpr LT PushBack(const Ranger<T>& ranger) noexcept
+		{
+			GTSL_ASSERT(ranger.ElementCount() < CAPACITY, "Array is not big enough to insert the elements requested!")
+			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
+			return this->length += ranger.ElementCount();
+		}
+
+		constexpr LT PushBack(const Ranger<const T>& ranger) noexcept
 		{
 			GTSL_ASSERT(ranger.ElementCount() < CAPACITY, "Array is not big enough to insert the elements requested!")
 			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);

@@ -14,7 +14,7 @@ namespace GTSL
 	public:
 		constexpr StaticString() noexcept = default;
 
-		constexpr StaticString(const char* cstring) : array(Ranger<UTF8>(StringLength(cstring), cstring))
+		constexpr StaticString(const char* cstring) : array(Ranger<const UTF8>(StringLength(cstring), cstring))
 		{
 		}
 
@@ -36,7 +36,9 @@ namespace GTSL
 
 		void Resize(uint32 newLength) { this->array.Resize(newLength); }
 
+		operator GTSL::Ranger<UTF8>() { return array; }
 		operator GTSL::Ranger<UTF8>() const { return array; }
+		operator GTSL::Ranger<const UTF8>() { return array; }
 		operator GTSL::Ranger<const UTF8>() const { return array; }
 
 		void Drop(const uint32 from)
@@ -63,7 +65,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const char* cstring) noexcept
 		{
-			this->array.PushBack(Ranger<UTF8>(StringLength(cstring), cstring));
+			this->array.PushBack(Ranger<const UTF8>(StringLength(cstring), cstring));
 			return *this;
 		}
 

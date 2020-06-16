@@ -11,7 +11,7 @@ File::~File()
 	GTSL_ASSERT(fileHandle == nullptr, "File was not closed!")
 }
 
-void File::OpenFile(const Ranger<UTF8>& path, OpenFileMode openFileMode)
+void File::OpenFile(const Ranger<const UTF8>& path, OpenFileMode openFileMode)
 {
 	uint64 open_mode{ 0 };
 
@@ -26,7 +26,6 @@ void File::OpenFile(const Ranger<UTF8>& path, OpenFileMode openFileMode)
 
 	StaticString<MAX_PATH> win32_path(path);
 	win32_path += '\0';
-	
 	fileHandle = CreateFileA(win32_path.begin(), open_mode, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <GTSL/Vector.hpp>
+#include "RenderCore.h"
+
 #include <GTSL/Extent.h>
+#include <GTSL/Ranger.h>
 
 #include "GTSL/RGBA.h"
-
-struct GTSL::Extent3D;
 
 namespace GAL
 {
@@ -27,22 +27,26 @@ namespace GAL
 	public:
 		~CommandBuffer() = default;
 
-		struct CommandBufferCreateInfo
+		struct CreateInfo : RenderInfo
 		{
 			bool IsPrimary = true;
 		};
-		explicit CommandBuffer(const CommandBufferCreateInfo& commandBufferCreateInfo)
+		explicit CommandBuffer(const CreateInfo& commandBufferCreateInfo)
 		{};
 		
-		struct BeginRecordingInfo
-		{};
+		struct BeginRecordingInfo : RenderInfo
+		{
+			/**
+			 * \brief Pointer to primary/parent command buffer, can be null if this command buffer is primary/has no children.
+			 */
+			CommandBuffer* PrimaryCommandBuffer{ nullptr };
+		};
 		//Starts recording of commands.
 		void BeginRecording(const BeginRecordingInfo& beginRecordingInfo);
 
 		
-		struct EndRecordingInfo
+		struct EndRecordingInfo : RenderInfo
 		{
-			
 		};
 		//Ends recording of commands.
 		void EndRecording(const EndRecordingInfo& endRecordingInfo);
@@ -53,7 +57,7 @@ namespace GAL
 		//    BIND BUFFER COMMANDS
 
 		//Adds a BindMesh command to the command queue.
-		struct BindMeshInfo
+		struct BindMeshInfo : RenderInfo
 		{
 			RenderMesh* Mesh = nullptr;
 		};
@@ -63,16 +67,16 @@ namespace GAL
 
 		//Adds a BindBindingsSet to the command queue.
 
-		struct BindBindingsSetInfo
+		struct BindBindingsSetInfo : RenderInfo
 		{
-			GTSL::Vector<BindingsSet*>* BindingsSets = nullptr;
-			GTSL::Vector<GTSL::uint32>* Offsets = nullptr;
+			GTSL::Ranger<BindingsSet*> BindingsSets;
+			GTSL::Ranger<GTSL::uint32> Offsets;
 			Pipeline* Pipeline = nullptr;
 			GTSL::uint8 BindingsSetIndex = 0;
 		};
 		void BindBindingsSet(const BindBindingsSetInfo& bindBindingsSetInfo);
 
-		struct UpdatePushConstantsInfo
+		struct UpdatePushConstantsInfo : RenderInfo
 		{
 			GraphicsPipeline* Pipeline = nullptr;
 			size_t Offset = 0;
@@ -81,7 +85,7 @@ namespace GAL
 		};
 		void UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo);
 
-		struct BindGraphicsPipelineInfo
+		struct BindGraphicsPipelineInfo : RenderInfo
 		{
 			GraphicsPipeline* GraphicsPipeline = nullptr;
 			GTSL::Extent2D RenderExtent;
@@ -89,7 +93,7 @@ namespace GAL
 		//Adds a BindGraphicsPipeline command to the command queue.
 		void BindGraphicsPipeline(const BindGraphicsPipelineInfo& bindGraphicsPipelineInfo);
 
-		struct BindComputePipelineInfo
+		struct BindComputePipelineInfo : RenderInfo
 		{
 			ComputePipeline* Pipeline = nullptr;
 		};
@@ -100,7 +104,7 @@ namespace GAL
 		//  DRAW COMMANDS
 
 		//Adds a DrawIndexed command to the command queue.
-		struct DrawIndexedInfo
+		struct DrawIndexedInfo : RenderInfo
 		{
 			GTSL::uint32 IndexCount = 0;
 			GTSL::uint32 InstanceCount = 0;
@@ -109,7 +113,7 @@ namespace GAL
 
 		//  COMPUTE COMMANDS
 
-		struct DispatchInfo
+		struct DispatchInfo : RenderInfo
 		{
 			GTSL::Extent3D WorkGroups;
 		};
@@ -118,7 +122,7 @@ namespace GAL
 
 		//  RENDER PASS COMMANDS
 
-		struct BeginRenderPassInfo
+		struct BeginRenderPassInfo : RenderInfo
 		{
 			RenderPass* RenderPass = nullptr;
 			Framebuffer* Framebuffer = nullptr;
@@ -128,22 +132,38 @@ namespace GAL
 		//Adds a BeginRenderPass command to the command queue.
 		void BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo);
 
-		struct AdvanceSubpassInfo
+		struct AdvanceSubpassInfo : RenderInfo
 		{
 			
 		};
 		//Adds a AdvanceSubPass command to the command buffer.
 		void AdvanceSubPass(const AdvanceSubpassInfo& advanceSubpassInfo);
 
-		struct EndRenderPassInfo
+		struct EndRenderPassInfo : RenderInfo
 		{
 			
 		};
 		//Adds a EndRenderPass command to the command queue.
 		void EndRenderPass(const EndRenderPassInfo& endRenderPassInfo);
 
-		struct CopyImageInfo
+		struct CopyImageInfo : RenderInfo
 		{};
 		void CopyImage(const CopyImageInfo& copyImageInfo);
+
+		struct CopyBufferToImageInfo : RenderInfo
+		{
+			class Buffer* SourceBuffer{ nullptr };
+			ImageFormat SourceImageFormat;
+			class Texture* DestinationImage{ nullptr };
+
+			GTSL::Extent3D Extent;
+			GTSL::Extent3D Offset;
+		};
+		void CopyBufferToImage(const CopyBufferToImageInfo& copyImageToBufferInfo);
+
+		struct TransitionImageInfo : RenderInfo
+		{
+		};
+		void TransitionImage(const TransitionImageInfo& transitionImageInfo);
 	};
 }

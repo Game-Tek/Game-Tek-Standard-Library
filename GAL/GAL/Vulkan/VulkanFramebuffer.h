@@ -2,7 +2,7 @@
 
 #include "GAL/Framebuffer.h"
 
-#include "vulkan/vulkan.h"
+#include <GAL/ext/vulkan/vulkan.h>
 
 namespace GAL
 {

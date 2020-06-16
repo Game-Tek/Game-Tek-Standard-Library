@@ -3,13 +3,6 @@
 #include "RenderCore.h"
 
 #include <GTSL/Extent.h>
-#include <GTSL/Vector.hpp>
-#include <GTSL/Array.hpp>
-
-#if (_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#endif
 
 namespace GAL
 {
@@ -18,39 +11,33 @@ namespace GAL
 	class Queue;
 	class RenderTarget;
 
-	struct ResizeInfo
-	{
-		RenderDevice* RenderDevice = nullptr;
-		GTSL::Extent2D NewWindowSize;
-	};
-
 #if (_WIN32)
 	struct WindowsWindowData
 	{
-		HWND WindowHandle;
-		HINSTANCE InstanceHandle;
+		void* WindowHandle{nullptr};
+		void* InstanceHandle{nullptr};
 	};
 #endif
 	
 	class RenderContext : public GALObject
 	{
-	protected:
-		GTSL::uint8 currentImage = 0;
-		GTSL::uint8 maxFramesInFlight = 0;
-
-		GTSL::Extent2D extent{ 0, 0 };
-
 	public:
+		RenderContext() = default;
 		struct CreateInfo : RenderInfo
 		{
 			GTSL::Extent2D SurfaceArea;
-			void* SystemData{ nullptr };
 			GTSL::uint8 DesiredFramesInFlight = 0;
+			void* SystemData{ nullptr };
 		};
 		explicit RenderContext(const CreateInfo& createInfo);
-		virtual ~RenderContext() = default;
+		
+		~RenderContext() = default;
 
-		void OnResize(const ResizeInfo& _RI);
+		struct ResizeInfo : RenderInfo
+		{
+			GTSL::Extent2D NewWindowSize;
+		};
+		void OnResize(const ResizeInfo& resizeInfo);
 
 		struct AcquireNextImageInfo : RenderInfo
 		{
@@ -72,5 +59,11 @@ namespace GAL
 
 		[[nodiscard]] GTSL::uint8 GetCurrentImage() const { return currentImage; }
 		[[nodiscard]] GTSL::uint8 GetMaxFramesInFlight() const { return maxFramesInFlight; }
+
+	protected:
+		GTSL::uint8 currentImage = 0;
+		GTSL::uint8 maxFramesInFlight = 0;
+
+		GTSL::Extent2D extent{ 0, 0 };
 	};
 }

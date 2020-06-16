@@ -89,14 +89,14 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)bin\$(ProjectName)\</OutDir>
     <IntDir>$(SolutionDir)bin-int\$(ProjectName)\</IntDir>
-    <IncludePath>$(SolutionDir)GTSL;$(ProjectDir);$(ProjectDir)/ext;$(ProjectDir)/ext/vulkan;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)GTSL;$(ProjectDir);$(ProjectDir)/ext;$(ProjectDir)GAL/ext;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <TargetName>$(ProjectName)-$(Configuration)-$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)bin\$(ProjectName)\</OutDir>
     <IntDir>$(SolutionDir)bin-int\$(ProjectName)\</IntDir>
-    <IncludePath>$(SolutionDir)GTSL;$(ProjectDir);$(ProjectDir)/ext;$(ProjectDir)/ext/vulkan;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)GTSL;$(ProjectDir);$(ProjectDir)/ext;$(ProjectDir)GAL/ext;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <TargetName>$(ProjectName)-$(Configuration)-$(Platform)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -117,7 +117,7 @@
     </Link>
     <Lib>
       <AdditionalDependencies>$(SolutionDir)bin\GTSL\GTSL-$(Configuration)-$(Platform).lib;vulkan-1.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)ext;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)GAL\ext;</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -142,7 +142,7 @@
     </Link>
     <Lib>
       <AdditionalDependencies>$(SolutionDir)bin\GTSL\GTSL-$(Configuration)-$(Platform).lib;vulkan-1.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)ext;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)GAL\ext;</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
