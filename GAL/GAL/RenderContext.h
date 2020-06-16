@@ -23,6 +23,7 @@ namespace GAL
 	{
 	public:
 		RenderContext() = default;
+		
 		struct CreateInfo : RenderInfo
 		{
 			GTSL::Extent2D SurfaceArea;

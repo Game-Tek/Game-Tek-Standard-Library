@@ -5,9 +5,11 @@
 
 namespace GAL
 {
-	class Buffer
+	class Buffer : public GALObject
 	{
 	public:
+		Buffer() = default;
+		
 		struct CreateInfo final : RenderInfo
 		{
 			GTSL::uint32 Size{ 0 };

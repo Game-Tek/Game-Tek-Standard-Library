@@ -49,7 +49,7 @@ bool UDPSocket::Send(const SendInfo& sendInfo) const
 	addr.sin_addr.s_addr = htonl(sendInfo.Endpoint.IntFromAddress());
 	addr.sin_port = htons(sendInfo.Endpoint.Port);
 
-	const auto sent_bytes = sendto(handle, static_cast<const char*>(sendInfo.Buffer.Data()), sendInfo.Buffer.Bytes(), 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
+	const auto sent_bytes = sendto(handle, reinterpret_cast<const char*>(sendInfo.Buffer.begin()), sendInfo.Buffer.Bytes(), 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
 
 	return sent_bytes == static_cast<int32>(sendInfo.Buffer.Bytes());
 }
@@ -59,7 +59,7 @@ bool UDPSocket::Receive(const ReceiveInfo& receiveInfo) const
 	sockaddr_in from{};
 	socklen_t fromLength{ sizeof(from) };
 
-	const auto bytes_received = recvfrom(handle, static_cast<char*>(const_cast<void*>(receiveInfo.Buffer.Data())), receiveInfo.Buffer.Bytes(), 0, reinterpret_cast<sockaddr*>(&from), &fromLength);
+	const auto bytes_received = recvfrom(handle, reinterpret_cast<char*>(receiveInfo.Buffer.begin()), receiveInfo.Buffer.Bytes(), 0, reinterpret_cast<sockaddr*>(&from), &fromLength);
 
 	receiveInfo.Sender->AddressFromInt(ntohl(from.sin_addr.s_addr));
 	receiveInfo.Sender->Port = ntohs(from.sin_port);
@@ -100,7 +100,7 @@ bool TCPSocket::Send(const SendInfo& sendInfo) const
 	addr.sin_addr.s_addr = htonl(sendInfo.Endpoint.IntFromAddress());
 	addr.sin_port = htons(sendInfo.Endpoint.Port);
 
-	const auto sent_bytes = sendto(handle, static_cast<const char*>(sendInfo.Buffer.Data()), sendInfo.Buffer.Bytes(), 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
+	const auto sent_bytes = sendto(handle, reinterpret_cast<const char*>(sendInfo.Buffer.begin()), sendInfo.Buffer.Bytes(), 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
 
 	return sent_bytes == static_cast<int32>(sendInfo.Buffer.Bytes());
 }
@@ -110,7 +110,7 @@ bool TCPSocket::Receive(const ReceiveInfo& receiveInfo) const
 	sockaddr_in from{ 0 };
 	socklen_t from_length{ sizeof(sockaddr_in) };
 
-	const auto bytes_received = recvfrom(handle, static_cast<char*>(const_cast<void*>(receiveInfo.Buffer.Data())), receiveInfo.Buffer.Bytes(), 0, reinterpret_cast<sockaddr*>(&from), &from_length);
+	const auto bytes_received = recvfrom(handle, reinterpret_cast<char*>(receiveInfo.Buffer.begin()), receiveInfo.Buffer.Bytes(), 0, reinterpret_cast<sockaddr*>(&from), &from_length);
 
 	receiveInfo.Sender->AddressFromInt(ntohl(from.sin_addr.s_addr));
 	receiveInfo.Sender->Port = ntohs(from.sin_port);

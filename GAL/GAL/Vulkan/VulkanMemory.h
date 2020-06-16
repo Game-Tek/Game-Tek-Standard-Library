@@ -6,9 +6,10 @@
 
 namespace GAL
 {
-	class VulkanDeviceMemory : public DeviceMemory
+	class VulkanDeviceMemory final : public DeviceMemory
 	{
 	public:
+		VulkanDeviceMemory() = default;
 		VulkanDeviceMemory(const CreateInfo& createInfo);
 
 		[[nodiscard]] VkDeviceMemory GetVkDeviceMemory() const { return deviceMemory; }
@@ -25,6 +26,7 @@ namespace GAL
 
 		};
 		void Unmap(const UnmapInfo& unmapInfo) const;
+		
 	private:
 		VkDeviceMemory deviceMemory{ 0 };
 	};

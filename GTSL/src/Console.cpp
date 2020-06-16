@@ -5,36 +5,20 @@
 #include <Windows.h>
 #endif
 
-GTSL::Console::Console() : handle(GetStdHandle(STD_OUTPUT_HANDLE))
-{
-}
-
-GTSL::Console::Console(const Ranger<const UTF8>& text)
-{
-	AllocConsole();
-	handle = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTitleA(text.begin());
-}
-
-GTSL::Console::~Console()
-{
-	FreeConsole();
-}
-
-void GTSL::Console::Print(const Ranger<const UTF8>& text) const
+void GTSL::Console::Print(const Ranger<const UTF8>& text)
 {
 	DWORD chars_written{ 0 };
-	WriteConsoleA(handle, text.begin(), text.Bytes(), &chars_written, nullptr);
+	WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), text.begin(), text.Bytes(), &chars_written, nullptr);
 }
 
-void GTSL::Console::Read(Ranger<UTF8>& buffer) const
+void GTSL::Console::Read(Ranger<UTF8>& buffer)
 {
 	DWORD characters_read{ 0 };
 	ReadConsoleA(GetStdHandle(STD_INPUT_HANDLE), buffer.begin(), buffer.ElementCount(), &characters_read, nullptr);
 	buffer = Ranger<UTF8>(characters_read, buffer.begin());
 }
 
-void GTSL::Console::SetTextColor(const ConsoleTextColor textColor) const
+void GTSL::Console::SetTextColor(const ConsoleTextColor textColor)
 {
 	WORD color{ 0 };
 
@@ -49,5 +33,5 @@ void GTSL::Console::SetTextColor(const ConsoleTextColor textColor) const
 	default:						break;
 	}
 
-	SetConsoleTextAttribute(handle, color);
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 }

@@ -13,7 +13,7 @@ namespace GTSL
 	template <typename T, size_t CAPACITY, typename LT = uint32>
 	class Array
 	{
-		byte data[CAPACITY * sizeof(T)];
+		T data[CAPACITY];
 		LT length = 0;
 
 		constexpr void copyToData(const void* from, const LT length) noexcept
@@ -113,13 +113,13 @@ namespace GTSL
 		constexpr T& operator[](const LT i) noexcept
 		{
 			GTSL_ASSERT(i < CAPACITY, "Out of Bounds! Requested index is greater than the Array's statically allocated size!");
-			return reinterpret_cast<T&>(this->data[i]);
+			return this->data[i];
 		}
 
 		constexpr const T& operator[](const LT i) const noexcept
 		{
 			GTSL_ASSERT(i < CAPACITY, "Out of Bounds! Requested index is greater than the Array's statically allocated size!");
-			return reinterpret_cast<T&>(const_cast<byte&>(this->data[i]));
+			return this->data[i];
 		}
 
 		constexpr bool operator==(const Array& other)

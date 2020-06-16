@@ -8,21 +8,13 @@ namespace GTSL
 	class Console
 	{
 	public:
-		Console();
-		
-		Console(const Ranger<const UTF8>& text);
-
-		~Console();
-		
-		void Print(const Ranger<const UTF8>& text) const;
-		void Read(Ranger<UTF8>& buffer) const;
+		static void Print(const Ranger<const UTF8>& text);
+		static void Read(Ranger<UTF8>& buffer);
 
 		enum class ConsoleTextColor : uint8
 		{
 			WHITE, RED, YELLOW, GREEN, ORANGE, PURPLE
 		};
-		void SetTextColor(ConsoleTextColor textColor) const;
-	private:
-		void* handle{ nullptr };
+		static void SetTextColor(ConsoleTextColor textColor);
 	};
 }

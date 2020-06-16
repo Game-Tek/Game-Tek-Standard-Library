@@ -23,7 +23,7 @@ namespace GTSL
 		struct SendInfo
 		{
 			IPv4Endpoint Endpoint;
-			Ranger<byte> Buffer;
+			Ranger<const byte> Buffer;
 		};
 		[[nodiscard]] bool Send(const SendInfo& sendInfo) const;
 
@@ -51,7 +51,7 @@ namespace GTSL
 		struct SendInfo
 		{
 			IPv4Endpoint Endpoint;
-			Ranger<byte> Buffer;
+			Ranger<const byte> Buffer;
 		};
 		[[nodiscard]] bool Send(const SendInfo& sendInfo) const;
 

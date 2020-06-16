@@ -4,9 +4,11 @@
 
 namespace GAL
 {
-	class DeviceMemory
+	class DeviceMemory : GALObject
 	{
 	public:
+		DeviceMemory() = default;
+		
 		struct CreateInfo : RenderInfo
 		{
 			GTSL::uint32 Size{ 0 };

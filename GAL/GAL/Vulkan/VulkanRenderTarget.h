@@ -13,6 +13,7 @@ namespace GAL
 
 		friend class VulkanRenderContext;
 	public:
+		VulkanRenderTarget() = default;
 		VulkanRenderTarget(const CreateInfo& imageCreateInfo);
 		void Destroy(GAL::RenderDevice* renderDevice) const;
 

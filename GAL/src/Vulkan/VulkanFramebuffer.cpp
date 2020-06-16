@@ -7,22 +7,17 @@
 
 GAL::VulkanFramebuffer::VulkanFramebuffer(const CreateInfo& createInfo) : Framebuffer(createInfo)
 {
-	GTSL::Array<VkImageView, 64> result;
+	GTSL::Array<VkImageView, 64> result(createInfo.Images.ElementCount());
 
-	for (GTSL::uint8 i = 0; i < result.GetCapacity(); ++i)
+	for (auto& e : result)
 	{
-		result.PushBack(static_cast<VulkanRenderTarget*>(createInfo.Images[i])->GetVkImageView());
+		e = static_cast<VulkanRenderTarget*>(createInfo.Images[&e - result.begin()])->GetVkImageView();
 	}
 
-//for (GTSL::uint8 i = 0; i < createInfo.ClearValues.GetLength(); ++i)
-//{
-//	clearValues.EmplaceBack(VkClearValue{ { { createInfo.ClearValues[i].R, createInfo.ClearValues[i].G, createInfo.ClearValues[i].B, createInfo.ClearValues[i].A } } });
-//}
-
-	attachmentCount = createInfo.Images.GetLength();
+	attachmentCount = createInfo.Images.ElementCount();
 
 	VkFramebufferCreateInfo vk_framebuffer_create_info{ VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
-	vk_framebuffer_create_info.attachmentCount = createInfo.Images.GetLength();
+	vk_framebuffer_create_info.attachmentCount = createInfo.Images.ElementCount();
 	vk_framebuffer_create_info.width = createInfo.Extent.Width;
 	vk_framebuffer_create_info.height = createInfo.Extent.Height;
 	vk_framebuffer_create_info.layers = 1;

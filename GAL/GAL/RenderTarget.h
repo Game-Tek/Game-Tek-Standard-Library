@@ -6,10 +6,9 @@
 
 namespace GAL
 {
-	class RenderTarget
+	class RenderTarget : public GALObject
 	{
 	public:
-
 		struct CreateInfo : RenderInfo
 		{
 			GTSL::Extent3D Extent { 0, 0, 1 };
@@ -18,10 +17,8 @@ namespace GAL
 			ImageDimensions Dimensions { ImageDimensions::IMAGE_2D };
 			ImageUse Use { ImageUse::INPUT_ATTACHMENT };
 		};
-		explicit RenderTarget(const CreateInfo& createInfo) :
-			Format(createInfo.Format)
-		{
-		}
+		explicit RenderTarget(const CreateInfo& createInfo) : Format(createInfo.Format)
+		{}
 
 		RenderTarget() = default;
 
@@ -29,6 +26,5 @@ namespace GAL
 
 	protected:
 		GAL::ImageFormat Format{ GAL::ImageFormat::RGBA_I8 };
-
 	};
 }

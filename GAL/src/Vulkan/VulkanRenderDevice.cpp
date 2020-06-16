@@ -1,6 +1,7 @@
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
 #if(_WIN64)
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <GAL/ext/vulkan/vulkan_win32.h>
 #endif
@@ -8,6 +9,7 @@
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
+#include "GTSL/Console.h"
 #include "GTSL/StaticString.hpp"
 
 GTSL::uint32 GAL::VulkanRenderDevice::FindMemoryType(GTSL::uint32 memoryType, GTSL::uint32 memoryFlags) const
@@ -25,13 +27,16 @@ inline VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSev
 {
 	switch (messageSeverity)
 	{
-	//case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: BE_BASIC_LOG_MESSAGE("Vulkan: %s", pCallbackData->pMessage) break;
-	//case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: BE_BASIC_LOG_MESSAGE("Vulkan: %s", pCallbackData->pMessage) break;
-	//case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: BE_BASIC_LOG_WARNING("Vulkan: %s", pCallbackData->pMessage) break;
-	//case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: BE_BASIC_LOG_ERROR("Vulkan: %s, %s", pCallbackData->pObjects->pObjectName, pCallbackData->pMessage) break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: GTSL::Console::SetTextColor(GTSL::Console::ConsoleTextColor::WHITE); break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: GTSL::Console::SetTextColor(GTSL::Console::ConsoleTextColor::WHITE); break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:  GTSL::Console::SetTextColor(GTSL::Console::ConsoleTextColor::YELLOW); break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:  GTSL::Console::SetTextColor(GTSL::Console::ConsoleTextColor::RED); break;
 	default: break;
 	}
 
+	GTSL::Console::Print(GTSL::Ranger<const GTSL::UTF8>(GTSL::StringLength(pCallbackData->pMessage), pCallbackData->pMessage));
+	GTSL::Console::SetTextColor(GTSL::Console::ConsoleTextColor::WHITE);
+	
 	return VK_FALSE;
 }
 #endif // BE_DEBUG
@@ -91,16 +96,14 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	vk_application_info.pApplicationName = name.begin();
 	vk_application_info.pEngineName = "Game-Tek | GAL";
 
-	GTSL::Array<const char*, 32, GTSL::uint8> instance_layers = {
+	GTSL::Array<const char*, 32, GTSL::uint8> instance_layers{
 #if(_DEBUG)
-		"VK_LAYER_LUNARG_standard_validation",
-		"VK_LAYER_LUNARG_parameter_validation",
 	};
 #else
 };
 #endif
 
-	GTSL::Array<const char*, 32, GTSL::uint8> extensions = {
+	GTSL::Array<const char*, 32, GTSL::uint8> instance_extensions{
 #if(_DEBUG)
 		VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
@@ -112,23 +115,24 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 #endif
 	};
 
-	VkInstanceCreateInfo vk_instance_create_info{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
-	vk_instance_create_info.pApplicationInfo = &vk_application_info;
-	vk_instance_create_info.enabledLayerCount = instance_layers.GetLength();
-	vk_instance_create_info.ppEnabledLayerNames = instance_layers.GetData();
-	vk_instance_create_info.enabledExtensionCount = extensions.GetLength();
-	vk_instance_create_info.ppEnabledExtensionNames = extensions.GetData();
-
-	VK_CHECK(vkCreateInstance(&vk_instance_create_info, GetVkAllocationCallbacks(), &instance))
-
 #if (_DEBUG)
-		VkDebugUtilsMessengerCreateInfoEXT vk_debug_utils_messenger_create_info_EXT {};
+	VkDebugUtilsMessengerCreateInfoEXT vk_debug_utils_messenger_create_info_EXT{};
 	vk_debug_utils_messenger_create_info_EXT.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 	vk_debug_utils_messenger_create_info_EXT.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 	vk_debug_utils_messenger_create_info_EXT.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 	vk_debug_utils_messenger_create_info_EXT.pfnUserCallback = debugCallback;
 	vk_debug_utils_messenger_create_info_EXT.pUserData = nullptr; // Optional
 #endif
+
+	VkInstanceCreateInfo vk_instance_create_info{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
+	vk_instance_create_info.pNext = &vk_debug_utils_messenger_create_info_EXT;
+	vk_instance_create_info.pApplicationInfo = &vk_application_info;
+	vk_instance_create_info.enabledLayerCount = instance_layers.GetLength();
+	vk_instance_create_info.ppEnabledLayerNames = instance_layers.GetData();
+	vk_instance_create_info.enabledExtensionCount = instance_extensions.GetLength();
+	vk_instance_create_info.ppEnabledExtensionNames = instance_extensions.GetData();
+
+	VK_CHECK(vkCreateInstance(&vk_instance_create_info, GetVkAllocationCallbacks(), &instance))
 
 #if (_WIN32)
 	createDebugUtilsFunction = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
@@ -137,6 +141,13 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	createDebugUtilsFunction(instance, &vk_debug_utils_messenger_create_info_EXT, GetVkAllocationCallbacks(), &debugMessenger);
 #endif
 
+	uint32_t phsyical_device_count{ 0 };
+	vkEnumeratePhysicalDevices(instance, &phsyical_device_count, nullptr);
+	GTSL::Array<VkPhysicalDevice, 8> vk_physical_devices(phsyical_device_count);
+	vkEnumeratePhysicalDevices(instance, &phsyical_device_count, vk_physical_devices.begin());
+
+	physicalDevice = vk_physical_devices[0];
+
 	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
 
 	VkPhysicalDeviceFeatures vk_physical_device_features{};
@@ -144,7 +155,6 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	vk_physical_device_features.shaderSampledImageArrayDynamicIndexing = true;
 
 	GTSL::Array<const char*, 32, GTSL::uint8> device_extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-
 
 	GTSL::Array<VkDeviceQueueCreateInfo, 16> vk_device_queue_create_infos(createInfo.QueueCreateInfos.ElementCount());
 
@@ -155,6 +165,8 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, vk_queue_families_properties.GetData());
 
 	GTSL::Array<bool, 32> used_families(queue_families_count);
+	for (auto& e : used_families) { e = false; }
+
 	GTSL::Array<VkQueueFlagBits, 32> vk_queues_flag_bits(queue_families_count);
 	{
 		GTSL::uint8 i = 0;
@@ -165,25 +177,26 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 		}
 	}
 
-	for (GTSL::uint8 q = 0; q < vk_device_queue_create_infos.GetLength(); ++q)
+	for (GTSL::uint8 QUEUE = 0; QUEUE < vk_device_queue_create_infos.GetLength(); ++QUEUE)
 	{
-		for (GTSL::uint8 f = 0; f < queue_families_count; ++f)
+		for (GTSL::uint8 FAMILY = 0; FAMILY < queue_families_count; ++FAMILY)
 		{
-			if (vk_queue_families_properties[f].queueCount > 0 && vk_queue_families_properties[f].queueFlags & vk_queues_flag_bits[f])
+			if (vk_queue_families_properties[FAMILY].queueCount > 0 && vk_queue_families_properties[FAMILY].queueFlags & vk_queues_flag_bits[FAMILY]) //if family has vk_queue_flags_bits[FAMILY] create queue from this family
 			{
-				if (used_families[f])
+				if (used_families[FAMILY]) //if a queue is already being used from this family add another
 				{
-					vk_device_queue_create_infos[f].queueCount++;
-					vk_device_queue_create_infos[f].pQueuePriorities = &createInfo.QueueCreateInfos[q].QueuePriority;
+					vk_device_queue_create_infos[FAMILY].queueCount++;
+					vk_device_queue_create_infos[FAMILY].pQueuePriorities = &createInfo.QueueCreateInfos[QUEUE].QueuePriority;
 					break;
 				}
 
-				used_families[f] = true;
-				vk_device_queue_create_infos[f].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-				vk_device_queue_create_infos[f].pNext = nullptr;
-				vk_device_queue_create_infos[f].flags = 0;
-				vk_device_queue_create_infos[f].queueFamilyIndex = f;
-				vk_device_queue_create_infos[f].queueCount = 1;
+				vk_device_queue_create_infos[FAMILY].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+				vk_device_queue_create_infos[FAMILY].pNext = nullptr;
+				vk_device_queue_create_infos[FAMILY].flags = 0;
+				vk_device_queue_create_infos[FAMILY].queueFamilyIndex = FAMILY;
+				vk_device_queue_create_infos[FAMILY].queueCount = 1;
+				vk_device_queue_create_infos[FAMILY].pQueuePriorities = &createInfo.QueueCreateInfos[QUEUE].QueuePriority;
+				used_families[FAMILY] = true;
 				break;
 			}
 		}

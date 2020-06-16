@@ -4,8 +4,7 @@
 
 #include <GTSL/Extent.h>
 #include <GTSL/RGBA.h>
-#include <GTSL/FixedVector.hpp>
-#include <GTSL/Vector.hpp>
+#include <GTSL/Array.hpp>
 
 namespace GAL
 {
@@ -14,26 +13,22 @@ namespace GAL
 
 	struct FramebufferAttachments
 	{
-		GAL::ImageFormat ColorAttachmentsFormat[8] = {};
-		GTSL::uint8 ColorAttachmentsCount = 0;
-
-		GAL::ImageFormat DepthStencilFormat = GAL::ImageFormat::DEPTH16_STENCIL8;
-
+		GTSL::Array<ImageFormat, 8> ColorAttachmentsFormat;
+		ImageFormat DepthStencilFormat = ImageFormat::DEPTH16_STENCIL8;
 		RenderTarget* Images = nullptr;
 	};
 
 	class Framebuffer : public GALObject
 	{
-	protected:
-		GTSL::Extent2D extent;
-		GTSL::uint8 attachmentCount = 0;
 	public:
+		Framebuffer() = default;
+		
 		struct CreateInfo : RenderInfo
 		{
 			RenderPass* RenderPass = nullptr;
 			GTSL::Extent2D Extent = { 1280, 720 };
-			GTSL::FixedVector<RenderTarget*> Images;
-			GTSL::Vector<RGBA> ClearValues;
+			GTSL::Ranger<RenderTarget*> Images;
+			GTSL::Ranger<const RGBA> ClearValues;
 		};
 		explicit Framebuffer(const CreateInfo& createInfo) : extent(createInfo.Extent)
 		{
@@ -43,5 +38,9 @@ namespace GAL
 
 		[[nodiscard]] GTSL::Extent2D GetExtent() const { return extent; }
 		[[nodiscard]] GTSL::uint8 GetAttachmentCount() const { return attachmentCount; };
+
+	protected:
+		GTSL::Extent2D extent;
+		GTSL::uint8 attachmentCount = 0;
 	};
 }

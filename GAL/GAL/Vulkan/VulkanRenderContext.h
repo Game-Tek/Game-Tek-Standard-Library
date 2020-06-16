@@ -19,7 +19,7 @@ namespace GAL
 
 		void Destroy(class RenderDevice* renderDevice);
 
-		void OnResize(const ResizeInfo& _RI);
+		void OnResize(const ResizeInfo& onResizeInfo);
 		void AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
 		void Flush(const FlushInfo& flushInfo);
 		void Present(const PresentInfo& presentInfo);
@@ -27,7 +27,7 @@ namespace GAL
 		struct RenderTargetsInfo : RenderInfo
 		{		
 		};
-		GTSL::Array<GAL::VulkanRenderTarget, 5> GetRenderTargets(const RenderTargetsInfo& renderTargetsInfo);
+		GTSL::Array<VulkanRenderTarget, 5> GetRenderTargets(const RenderTargetsInfo& renderTargetsInfo);
 		
 	private:
 		VkSurfaceKHR surface = nullptr;
@@ -42,6 +42,6 @@ namespace GAL
 		GTSL::uint8 imageIndex = 0;
 
 		VkSurfaceFormatKHR findFormat(class VulkanRenderDevice* device, VkSurfaceKHR surface);
-		VkPresentModeKHR findPresentMode(const VkPhysicalDevice _PD, VkSurfaceKHR _Surface);
+		VkPresentModeKHR findPresentMode(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
 	};
 }

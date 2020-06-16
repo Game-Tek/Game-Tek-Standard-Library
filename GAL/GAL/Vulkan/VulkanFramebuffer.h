@@ -9,6 +9,7 @@ namespace GAL
 	class VulkanFramebuffer final : public Framebuffer
 	{
 	public:
+		VulkanFramebuffer() = default;
 		explicit VulkanFramebuffer(const CreateInfo& createInfo);
 		~VulkanFramebuffer() = default;
 

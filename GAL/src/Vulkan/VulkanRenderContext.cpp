@@ -34,13 +34,13 @@ VkSurfaceFormatKHR GAL::VulkanRenderContext::findFormat(VulkanRenderDevice* vulk
 	return supported_surface_formats[0];
 }
 
-VkPresentModeKHR GAL::VulkanRenderContext::findPresentMode(const VkPhysicalDevice _PD, VkSurfaceKHR _Surface)
+VkPresentModeKHR GAL::VulkanRenderContext::findPresentMode(const VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
 {
 	GTSL::uint32 present_modes_count = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(_PD, _Surface, &present_modes_count, nullptr);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &present_modes_count, nullptr);
 	GTSL::Array<VkPresentModeKHR, 10, GTSL::uint8> supported_present_modes(present_modes_count);
 	present_modes_count = supported_present_modes.GetCapacity();
-	vkGetPhysicalDeviceSurfacePresentModesKHR(_PD, _Surface, &present_modes_count, supported_present_modes.GetData());
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &present_modes_count, supported_present_modes.GetData());
 
 	GTSL::uint8 best_score = 0;
 	VkPresentModeKHR best_present_mode{};
@@ -127,9 +127,9 @@ void GAL::VulkanRenderContext::Destroy(RenderDevice* renderDevice)
 	}
 }
 
-void GAL::VulkanRenderContext::OnResize(const ResizeInfo& _RI)
+void GAL::VulkanRenderContext::OnResize(const ResizeInfo& onResizeInfo)
 {
-	extent = _RI.NewWindowSize;
+	extent = onResizeInfo.NewWindowSize;
 
 	VkSwapchainCreateInfoKHR vk_swapchain_create_info_khr{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 	vk_swapchain_create_info_khr.surface = surface;
@@ -149,7 +149,7 @@ void GAL::VulkanRenderContext::OnResize(const ResizeInfo& _RI)
 	vk_swapchain_create_info_khr.clipped = VK_TRUE;
 	vk_swapchain_create_info_khr.oldSwapchain = swapchain;
 
-	vkCreateSwapchainKHR(static_cast<VulkanRenderDevice*>(_RI.RenderDevice)->GetVkDevice(), &vk_swapchain_create_info_khr, static_cast<VulkanRenderDevice*>(_RI.RenderDevice)->GetVkAllocationCallbacks(), &swapchain);
+	vkCreateSwapchainKHR(static_cast<VulkanRenderDevice*>(onResizeInfo.RenderDevice)->GetVkDevice(), &vk_swapchain_create_info_khr, static_cast<VulkanRenderDevice*>(onResizeInfo.RenderDevice)->GetVkAllocationCallbacks(), &swapchain);
 }
 
 void GAL::VulkanRenderContext::AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo)

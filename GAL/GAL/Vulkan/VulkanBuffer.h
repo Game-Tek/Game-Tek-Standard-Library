@@ -6,9 +6,10 @@
 
 namespace GAL
 {
-	class VulkanBuffer : public Buffer
+	class VulkanBuffer final : public Buffer
 	{
 	public:
+		VulkanBuffer() = default;
 		VulkanBuffer(const CreateInfo& createInfo);
 
 		struct BindMemoryInfo : RenderInfo
