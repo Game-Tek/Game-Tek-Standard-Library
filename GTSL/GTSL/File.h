@@ -14,14 +14,13 @@ namespace GTSL
 
 		enum class OpenFileMode : uint8
 		{
-			READ = 1,
-			WRITE = 2
+			READ = 1, WRITE = 2
 		};
 		void OpenFile(const Ranger<const UTF8>& path, OpenFileMode openFileMode);
 		void CloseFile();
 
-		void WriteToFile(const Ranger<byte>& buffer, uint64& bytesWritten);
-		void ReadFromFile(const Ranger<byte>& buffer, uint64& bytesRead);
+		void WriteToFile(Ranger<const byte>& buffer);
+		void ReadFromFile(Ranger<byte>& buffer);
 		
 		enum class MoveFrom : uint8
 		{

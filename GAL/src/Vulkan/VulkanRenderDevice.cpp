@@ -159,13 +159,11 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	GTSL::Array<bool, 32> used_families(queue_families_count);
 	for (auto& e : used_families) { e = false; }
 
-	GTSL::Array<VkQueueFlagBits, 32> vk_queues_flag_bits(queue_families_count);
+	GTSL::Array<VkQueueFlags, 32> vk_queues_flag_bits(queue_families_count);
 	{
-		GTSL::uint8 i = 0;
 		for (auto& e : vk_queues_flag_bits)
 		{
-			e = VkQueueFlagBits(QueueCapabilitiesToVkQueueFlags(createInfo.QueueCreateInfos[i].Capabilities));
-			++i;
+			e = QueueCapabilitiesToVkQueueFlags(createInfo.QueueCreateInfos[&e - vk_queues_flag_bits.begin()].Capabilities);
 		}
 	}
 

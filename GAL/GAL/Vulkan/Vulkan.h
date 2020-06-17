@@ -327,11 +327,11 @@ inline VkBufferUsageFlags BufferTypeToVkBufferUsageFlags(const GAL::BufferType b
 	}
 }
 
-inline VkQueueFlags QueueCapabilitiesToVkQueueFlags(const GAL::QueueCapabilities capabilities)
+inline VkQueueFlags QueueCapabilitiesToVkQueueFlags(const GTSL::uint8 capabilities)
 {
 	VkQueueFlags vk_queue_flag_bits{ 0 };
-	if (static_cast<GTSL::uint8>(capabilities) & static_cast<GTSL::uint8>(GAL::QueueCapabilities::GRAPHICS)) { vk_queue_flag_bits |= VK_QUEUE_GRAPHICS_BIT; }
-	if (static_cast<GTSL::uint8>(capabilities) & static_cast<GTSL::uint8>(GAL::QueueCapabilities::COMPUTE)) { vk_queue_flag_bits |= VK_QUEUE_COMPUTE_BIT; }
-	if (static_cast<GTSL::uint8>(capabilities) & static_cast<GTSL::uint8>(GAL::QueueCapabilities::TRANSFER)) { vk_queue_flag_bits |= VK_QUEUE_TRANSFER_BIT; }
+	if (capabilities & static_cast<GTSL::uint8>(GAL::QueueCapabilities::GRAPHICS)) { vk_queue_flag_bits |= VK_QUEUE_GRAPHICS_BIT; }
+	if (capabilities & static_cast<GTSL::uint8>(GAL::QueueCapabilities::COMPUTE)) { vk_queue_flag_bits |= VK_QUEUE_COMPUTE_BIT; }
+	if (capabilities & static_cast<GTSL::uint8>(GAL::QueueCapabilities::TRANSFER)) { vk_queue_flag_bits |= VK_QUEUE_TRANSFER_BIT; }
 	return vk_queue_flag_bits;
 }

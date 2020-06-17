@@ -41,6 +41,6 @@ namespace GTSL
 		//T& operator[](const uint64 i) const { return this->from[i]; }
 
 	protected:
-		T* from = 0, * to = 0;
+		T* from = nullptr, * to = nullptr;
 	};
 }

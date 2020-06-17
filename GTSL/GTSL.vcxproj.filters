@@ -111,9 +111,6 @@
     <ClInclude Include="GTSL\Assert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\Bitscan.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Tuple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -259,6 +256,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\Algorithm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\Bitman.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
