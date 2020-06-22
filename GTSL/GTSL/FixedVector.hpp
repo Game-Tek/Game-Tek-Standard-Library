@@ -40,7 +40,7 @@ namespace GTSL
 
 		void freeArray()
 		{
-			this->allocatorReference->Deallocate(this->capacity, alignof(T), this->data);
+			this->allocatorReference->Deallocate(this->capacity * sizeof(T), alignof(T), this->data);
 			this->data = nullptr;
 		}
 
@@ -146,7 +146,7 @@ namespace GTSL
 		{
 		}
 
-		constexpr FixedVector(const std::initializer_list<T>& list) : capacity(list.size()), length(list.size()), data(this->allocate(list.size()))
+		constexpr FixedVector(std::initializer_list<T> list) : capacity(list.size()), length(list.size()), data(this->allocate(list.size()))
 		{
 			copyLength(this->length, list.begin());
 		}
