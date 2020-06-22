@@ -258,6 +258,9 @@
     <ClInclude Include="GTSL\Bitman.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GTSL\Atomic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\System.cpp">

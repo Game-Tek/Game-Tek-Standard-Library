@@ -16,6 +16,7 @@
     <ClInclude Include="GTSL\Application.h" />
     <ClInclude Include="GTSL\Array.hpp" />
     <ClInclude Include="GTSL\Assert.h" />
+    <ClInclude Include="GTSL\Atomic.hpp" />
     <ClInclude Include="GTSL\Bitfield.h" />
     <ClInclude Include="GTSL\Bitman.h" />
     <ClInclude Include="GTSL\BlockingQueue.h" />

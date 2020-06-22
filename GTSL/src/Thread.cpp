@@ -1,6 +1,7 @@
 #include "GTSL/Thread.h"
 
 #if (_WIN64)
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
 
@@ -26,7 +27,7 @@ void GTSL::Thread::SetPriority(const Priority threadPriority) const noexcept
 
 void GTSL::Thread::Join() const noexcept { WaitForSingleObject(handle, INFINITE); }
 
-void GTSL::Thread::Detach() { handle = nullptr; }
+void GTSL::Thread::Detach() noexcept { handle = nullptr; }
 
 GTSL::uint32 GTSL::Thread::GetId() const noexcept {	return GetThreadId(handle); }
 
