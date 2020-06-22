@@ -17,13 +17,13 @@ namespace GTSL
 		{
 		}
 
-		constexpr Ranger(size_t length, T* start) noexcept : from(start), to(start + length)
+		constexpr Ranger(uint64 length, T* start) noexcept : from(start), to(start + length)
 		{
 		}
 
 		constexpr T* begin() noexcept { return from; }
-		[[nodiscard]] constexpr T* begin() const noexcept { return from; }
 		constexpr T* end() noexcept { return to; }
+		[[nodiscard]] constexpr T* begin() const noexcept { return from; }
 		[[nodiscard]] constexpr T* end() const noexcept { return to; }
 
 		[[nodiscard]] constexpr uint64 Bytes() const noexcept { return ((to - from) * sizeof(type)); }

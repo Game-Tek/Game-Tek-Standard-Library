@@ -54,9 +54,6 @@
     <ClInclude Include="GTSL\RGB.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\RGBA.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Semaphore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
