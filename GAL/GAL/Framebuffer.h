@@ -3,8 +3,8 @@
 #include "RenderCore.h"
 
 #include <GTSL/Extent.h>
-#include <GTSL/RGBA.h>
 #include <GTSL/Array.hpp>
+#include <GTSL/RGB.h>
 
 namespace GAL
 {
@@ -28,7 +28,7 @@ namespace GAL
 			RenderPass* RenderPass = nullptr;
 			GTSL::Extent2D Extent = { 1280, 720 };
 			GTSL::Ranger<RenderTarget*> Images;
-			GTSL::Ranger<const RGBA> ClearValues;
+			GTSL::Ranger<const GTSL::RGBA> ClearValues;
 		};
 		explicit Framebuffer(const CreateInfo& createInfo) : extent(createInfo.Extent)
 		{

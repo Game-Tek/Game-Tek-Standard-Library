@@ -17,7 +17,7 @@ namespace GAL
 		struct CreateInfo : RenderInfo
 		{	
 			ImageLayout Layout{ ImageLayout::COLOR_ATTACHMENT };
-			ImageFormat SourceImageFormat{ ImageFormat::RGBA_I8 };
+			ImageFormat SourceFormat{ ImageFormat::RGBA_I8 };
 			GTSL::Extent2D Extent{ 1280, 720 };
 			GTSL::uint8 Anisotropy = 0;
 			ImageTiling ImageTiling;
@@ -25,20 +25,19 @@ namespace GAL
 		};
 		explicit Texture(const CreateInfo& textureCreateInfo);
 
-		static GTSL::uint64 GetTextureSize(const ImageFormat imageFormat, const GTSL::Extent2D extent)
+		static GTSL::uint64 GetTextureSize(const GTSL::uint8 textureFormatSize, const GTSL::Extent2D extent)
 		{
-			return ImageFormatSize(imageFormat) * extent.Width * extent.Height;
+			return static_cast<GTSL::uint16>(textureFormatSize) * extent.Width * extent.Height;
 		}
 
-		static void ConvertImageFormat(const ImageFormat sourceImageFormat, const ImageFormat supportedImageFormat, const GTSL::Extent2D imageExtent, void* buffer)
+		static void ConvertImageToFormat(const ImageFormat sourceImageFormat, const ImageFormat supportedImageFormat, const GTSL::Extent2D imageExtent, void* buffer)
 		{
-			const GTSL::uint64 originalTextureSize = GetTextureSize(sourceImageFormat, imageExtent);
-			const GTSL::uint64 supportedTextureSize = (originalTextureSize / ImageFormatSize(sourceImageFormat)) * ImageFormatSize(supportedImageFormat);
+			const auto source_format_size{ ImageFormatSize(sourceImageFormat) }; const auto target_format_size{ ImageFormatSize(supportedImageFormat) };
+			const GTSL::uint64 target_texture_size = GetTextureSize(target_format_size, imageExtent);
 
-			for (GTSL::uint64 i_target = 0, i_source = 0; i_target < supportedTextureSize; i_target += ImageFormatSize(supportedImageFormat), i_source += ImageFormatSize(sourceImageFormat))
+			for (GTSL::byte* target = nullptr, *source = nullptr; target < static_cast<GTSL::byte*>(buffer) + target_texture_size; target += target_format_size, source += source_format_size)
 			{
-				GTSL::Memory::MemCopy(ImageFormatSize(sourceImageFormat), static_cast<char*>(buffer) + i_source, static_cast<char*>(buffer) + i_target);
-				static_cast<char*>(buffer)[i_target + 3] = 0;
+				GTSL::MemCopy(source_format_size, source, target); *(target + 3) = 0;
 			}
 		}
 	};

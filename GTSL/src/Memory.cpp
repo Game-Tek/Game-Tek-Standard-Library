@@ -5,22 +5,32 @@
 
 using namespace GTSL;
 
-void Memory::Allocate(const uint64 size, void** data)
+void Allocate(const uint64 size, void** data)
 {
 	*data = std::malloc(size);
 }
 
-void Memory::Deallocate(const uint64 size, void* data)
+void Deallocate(const uint64 size, void* data)
 {
 	std::free(data);
 }
 
-void Memory::MemCopy(uint64 size, const void* from, void* to)
+void MemCopy(const uint64 size, const void* from, void* to)
 {
 	std::memcpy(to, from, size);
 }
 
-void Memory::SetZero(uint64 size, void* data)
+void SetMemory(const uint64 size, void* data, const int64 value)
 {
-	std::memset(data, 0, size);
+	std::memset(data, value, size);
+}
+
+void GTSL::MemCopy(Ranger<byte> range, void* to)
+{
+	std::memcpy(range, to, range.Bytes());
+}
+
+void GTSL::SetMemory(Ranger<byte> range, const int64 value)
+{
+	std::memset(range, value, range.Bytes());
 }

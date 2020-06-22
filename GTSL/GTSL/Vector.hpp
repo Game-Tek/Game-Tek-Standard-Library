@@ -36,7 +36,7 @@ namespace GTSL
 		 */
 		static void copyArray(const T* from, T* to, const length_type elementCount)
 		{
-			Memory::MemCopy(elementCount * sizeof(T), from, to);
+			MemCopy(elementCount * sizeof(T), from, to);
 		}
 
 		/**

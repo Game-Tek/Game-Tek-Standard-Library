@@ -48,7 +48,7 @@ void GAL::VulkanCommandBuffer::BeginRenderPass(const BeginRenderPassInfo& beginR
 	{
 		for(const auto& e : beginRenderPassInfo.ClearValues)
 		{
-			vk_clear_clear_values[&e - beginRenderPassInfo.ClearValues.begin()] = VkClearValue{ e.R, e.G, e.B, e.A };
+			vk_clear_clear_values[&e - beginRenderPassInfo.ClearValues.begin()] = VkClearValue{ e.R(), e.G(), e.B(), e.A() };
 		}
 	}
 	
@@ -120,12 +120,9 @@ void GAL::VulkanCommandBuffer::BindBindingsSet(const BindBindingsSetInfo& bindBi
 {
 	GTSL::Array<VkDescriptorSet, 32> descriptor_sets(bindBindingsSetInfo.BindingsSets.ElementCount());
 	{
-		GTSL::uint8 i = 0;
-
 		for (auto& e : descriptor_sets)
 		{
-			e = static_cast<VulkanBindingsSet*>(bindBindingsSetInfo.BindingsSets[i])->GetVkDescriptorSets()[bindBindingsSetInfo.BindingsSetIndex];
-			++i;
+			e = static_cast<VulkanBindingsSet*>(bindBindingsSetInfo.BindingsSets[&e - descriptor_sets.begin()])->GetVkDescriptorSets()[bindBindingsSetInfo.BindingsSetIndex];
 		}
 	}
 
@@ -150,5 +147,5 @@ void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& co
 	region.imageOffset = { 0, 0, 0 };
 	//region.imageOffset = Extent3DToVkExtent3D(copyImageToBufferInfo.Offset);
 	region.imageExtent = Extent3DToVkExtent3D(copyBufferToImageInfo.Extent);
-	vkCmdCopyBufferToImage(commandBuffer, static_cast<VulkanBuffer*>(copyBufferToImageInfo.SourceBuffer)->GetVkBuffer(), static_cast<VulkanTexture*>(copyBufferToImageInfo.DestinationImage)->GetVkImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+	vkCmdCopyBufferToImage(commandBuffer, static_cast<VulkanBuffer*>(copyBufferToImageInfo.SourceBuffer)->GetVkBuffer(), static_cast<VulkanTexture*>(copyBufferToImageInfo.DestinationImage)->GetVkImage(), ImageLayoutToVkImageLayout(copyBufferToImageInfo.ImageLayout), 1, &region);
 }

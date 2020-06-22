@@ -18,12 +18,12 @@ namespace GTSL
 
 		constexpr void copyToData(const void* from, const LT length) noexcept
 		{
-			Memory::MemCopy(length * sizeof(T), from, this->data);
+			MemCopy(length * sizeof(T), from, this->data);
 		}
 
 		void copy(const LT length, const void* from, void* to)
 		{
-			Memory::MemCopy(length * sizeof(T), from, to);
+			MemCopy(length * sizeof(T), from, to);
 		}
 
 	public:

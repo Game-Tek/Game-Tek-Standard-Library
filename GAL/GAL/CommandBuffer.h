@@ -5,7 +5,7 @@
 #include <GTSL/Extent.h>
 #include <GTSL/Ranger.h>
 
-#include "GTSL/RGBA.h"
+#include "GTSL/RGB.h"
 
 namespace GAL
 {
@@ -127,7 +127,7 @@ namespace GAL
 			RenderPass* RenderPass = nullptr;
 			Framebuffer* Framebuffer = nullptr;
 			GTSL::Extent2D RenderArea;
-			GTSL::Ranger<RGBA> ClearValues;
+			GTSL::Ranger<GTSL::RGBA> ClearValues;
 		};
 		//Adds a BeginRenderPass command to the command queue.
 		void BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo);
@@ -154,6 +154,7 @@ namespace GAL
 		{
 			class Buffer* SourceBuffer{ nullptr };
 			ImageFormat SourceImageFormat;
+			ImageLayout ImageLayout;
 			class Texture* DestinationImage{ nullptr };
 
 			GTSL::Extent3D Extent;

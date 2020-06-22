@@ -35,7 +35,7 @@ namespace GTSL
 
 		void copyLength(const length_type elements, const void* from)
 		{
-			Memory::MemCopy(sizeof(T) * elements, from, this->data);
+			MemCopy(sizeof(T) * elements, from, this->data);
 		}
 
 		void freeArray()
