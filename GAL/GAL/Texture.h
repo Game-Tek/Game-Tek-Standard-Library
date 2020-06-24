@@ -3,8 +3,9 @@
 #include "RenderCore.h"
 
 #include <GTSL/Extent.h>
-
-#include "GTSL/Memory.h"
+#include <GTSL/Memory.h>
+#include <GTSL/Math/Math.hpp>
+#include <GTSL/SIMD/SIMD128.hpp>
 
 namespace GAL
 {
@@ -27,17 +28,49 @@ namespace GAL
 
 		static GTSL::uint64 GetTextureSize(const GTSL::uint8 textureFormatSize, const GTSL::Extent2D extent)
 		{
-			return static_cast<GTSL::uint16>(textureFormatSize) * extent.Width * extent.Height;
+			return static_cast<GTSL::uint32>(textureFormatSize) * extent.Width * extent.Height;
 		}
 
-		static void ConvertImageToFormat(const ImageFormat sourceImageFormat, const ImageFormat supportedImageFormat, const GTSL::Extent2D imageExtent, void* buffer)
+		/**
+		 * \brief Assumes source and target image formats are different(wont't fail if they are the same but it will perform the conversion and copying), assumes target format has a higher channel count that source.
+		 * \param sourceImageFormat 
+		 * \param targetImageFormat 
+		 * \param imageExtent 
+		 * \param buffer 
+		 */
+		static void ConvertImageToFormat(const ImageFormat sourceImageFormat, const ImageFormat targetImageFormat, const GTSL::Extent2D imageExtent, GTSL::AlignedPointer<GTSL::byte, 16> buffer, GTSL::uint32 alphaValue)
 		{
-			const auto source_format_size{ ImageFormatSize(sourceImageFormat) }; const auto target_format_size{ ImageFormatSize(supportedImageFormat) };
+			const auto source_format_size{ ImageFormatSize(sourceImageFormat) }; const auto target_format_size{ ImageFormatSize(targetImageFormat) };
 			const GTSL::uint64 target_texture_size = GetTextureSize(target_format_size, imageExtent);
 
-			for (GTSL::byte* target = nullptr, *source = nullptr; target < static_cast<GTSL::byte*>(buffer) + target_texture_size; target += target_format_size, source += source_format_size)
+			auto byte3_channel_swap = [&]()
 			{
-				GTSL::MemCopy(source_format_size, source, target); *(target + 3) = 0;
+				GTSL::uint32 quot, rem;
+				GTSL::Math::RoundDown(GetTextureSize(source_format_size, imageExtent), 16, quot, rem);
+
+				GTSL::byte* begin = buffer;
+				
+				for (; begin < buffer + quot - 1; begin += GTSL::SIMD128<GTSL::uint8>::TypeElementsCount - 1)
+				{
+					GTSL::SIMD128<GTSL::uint8> ints{ GTSL::AlignedPointer<GTSL::uint8, 16>(begin) };
+					ints = GTSL::SIMD128<GTSL::uint8>::Shuffle<2, 1, 0, 5, 4, 3, 8, 7, 6, 11, 10, 9, 14, 13, 12, 15>(ints);
+					ints.CopyTo(GTSL::AlignedPointer<GTSL::uint8, 16>(begin));
+				}
+
+				for(; begin < static_cast<GTSL::byte*>(buffer) + quot + rem; begin += 3)
+				{
+					const auto orig = *begin; *begin = *(begin + 2); *(begin + 2) = orig;
+				}
+
+				for (GTSL::byte* target = static_cast<GTSL::byte*>(buffer) + target_texture_size, *source = static_cast<GTSL::byte*>(buffer); target > 0; target -= target_format_size, source += source_format_size)
+				{
+					GTSL::MemCopy(source_format_size, source, target); *(target + 3) = alphaValue;
+				}
+			};
+			
+			switch (ImageFormatChannelCount(sourceImageFormat))
+			{
+			case 3: byte3_channel_swap(); break;
 			}
 		}
 	};

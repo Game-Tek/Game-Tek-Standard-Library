@@ -1,6 +1,6 @@
 #include "GTSL/Math/Math.hpp"
 
-#include "GTSL/SIMD/SIMD128.h"
+#include "GTSL/SIMD/SIMD128.hpp"
 #include <cmath>
 
 using namespace GTSL;

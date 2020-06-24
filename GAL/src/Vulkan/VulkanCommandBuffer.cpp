@@ -12,8 +12,7 @@
 GAL::VulkanCommandBuffer::VulkanCommandBuffer(const CreateInfo& createInfo) : CommandBuffer(createInfo)
 {
 	VkCommandPoolCreateInfo vk_command_pool_create_info{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
-	vk_command_pool_create_info;
-
+	vk_command_pool_create_info.queueFamilyIndex = static_cast<VulkanQueue*>(createInfo.Queue)->GetFamilyIndex();
 	vkCreateCommandPool(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_command_pool_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &commandPool);
 
 	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
@@ -41,8 +40,8 @@ void GAL::VulkanCommandBuffer::EndRecording(const EndRecordingInfo& endRecording
 
 void GAL::VulkanCommandBuffer::BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo)
 {
-	VkRenderPassBeginInfo RenderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-	RenderPassBeginInfo.renderPass = static_cast<VulkanRenderPass*>(beginRenderPassInfo.RenderPass)->GetVkRenderPass();
+	VkRenderPassBeginInfo vk_render_pass_begin_info{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+	vk_render_pass_begin_info.renderPass = static_cast<VulkanRenderPass*>(beginRenderPassInfo.RenderPass)->GetVkRenderPass();
 	
 	GTSL::Array<VkClearValue, 32> vk_clear_clear_values(beginRenderPassInfo.ClearValues.ElementCount());
 	{
@@ -52,13 +51,13 @@ void GAL::VulkanCommandBuffer::BeginRenderPass(const BeginRenderPassInfo& beginR
 		}
 	}
 	
-	RenderPassBeginInfo.pClearValues = vk_clear_clear_values.begin();
-	RenderPassBeginInfo.clearValueCount = vk_clear_clear_values.GetLength();
-	RenderPassBeginInfo.framebuffer = static_cast<VulkanFramebuffer*>(beginRenderPassInfo.Framebuffer)->GetVkFramebuffer();
-	RenderPassBeginInfo.renderArea.extent = Extent2DToVkExtent2D(beginRenderPassInfo.RenderArea);
-	RenderPassBeginInfo.renderArea.offset = { 0, 0 };
+	vk_render_pass_begin_info.pClearValues = vk_clear_clear_values.begin();
+	vk_render_pass_begin_info.clearValueCount = vk_clear_clear_values.GetLength();
+	vk_render_pass_begin_info.framebuffer = static_cast<VulkanFramebuffer*>(beginRenderPassInfo.Framebuffer)->GetVkFramebuffer();
+	vk_render_pass_begin_info.renderArea.extent = Extent2DToVkExtent2D(beginRenderPassInfo.RenderArea);
+	vk_render_pass_begin_info.renderArea.offset = { 0, 0 };
 
-	vkCmdBeginRenderPass(commandBuffer, &RenderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBeginRenderPass(commandBuffer, &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 }
 
 void GAL::VulkanCommandBuffer::AdvanceSubPass(const AdvanceSubpassInfo& advanceSubpassInfo)
@@ -148,4 +147,24 @@ void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& co
 	//region.imageOffset = Extent3DToVkExtent3D(copyImageToBufferInfo.Offset);
 	region.imageExtent = Extent3DToVkExtent3D(copyBufferToImageInfo.Extent);
 	vkCmdCopyBufferToImage(commandBuffer, static_cast<VulkanBuffer*>(copyBufferToImageInfo.SourceBuffer)->GetVkBuffer(), static_cast<VulkanTexture*>(copyBufferToImageInfo.DestinationImage)->GetVkImage(), ImageLayoutToVkImageLayout(copyBufferToImageInfo.ImageLayout), 1, &region);
+}
+
+void GAL::VulkanCommandBuffer::TransitionImage(const TransitionImageInfo& transitionImageInfo)
+{	
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.oldLayout = ImageLayoutToVkImageLayout(transitionImageInfo.SourceLayout);
+	barrier.newLayout = ImageLayoutToVkImageLayout(transitionImageInfo.DestinationLayout);
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = static_cast<VulkanTexture*>(transitionImageInfo.Texture)->GetVkImage();
+	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = 1;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = 1;
+	barrier.srcAccessMask = AccessFlagsToVkAccessFlags(transitionImageInfo.SourceAccessFlags);
+	barrier.dstAccessMask = AccessFlagsToVkAccessFlags(transitionImageInfo.DestinationAccessFlags);
+	
+	vkCmdPipelineBarrier(commandBuffer, PipelineStageToVkPipelineStageFlags(transitionImageInfo.SourceStage), PipelineStageToVkPipelineStageFlags(transitionImageInfo.DestinationStage), 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }

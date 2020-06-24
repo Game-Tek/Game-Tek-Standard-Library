@@ -28,6 +28,8 @@ namespace GTSL
 		};
 		void SetPointer(uint64 byte, uint64& newFilePointer, MoveFrom from);
 
+		[[nodiscard]] uint64 GetFileSize() const;
+		
 	private:
 		void* fileHandle{ nullptr };
 	};

@@ -251,8 +251,8 @@ namespace GTSL
 			for (uint32 i = 0; i < this->capacity; ++i)
 			{
 				const auto length = getBucketLength(i);
-				Memory::MemCopy(getKeysAllocationSize(this->capacity), getKeysBucketPointer(i), to + getKeyBucketAllocationSize(newLength) * i);
-				Memory::MemCopy(getValuesAllocationsSize(this->capacity), getValuesBucketPointer(i), to + getKeysAllocationSize(newLength) + getValuesVectorAllocationsSize(newLength) * i);
+				MemCopy(getKeysAllocationSize(this->capacity), getKeysBucketPointer(i), to + getKeyBucketAllocationSize(newLength) * i);
+				MemCopy(getValuesAllocationsSize(this->capacity), getValuesBucketPointer(i), to + getKeysAllocationSize(newLength) + getValuesVectorAllocationsSize(newLength) * i);
 			}
 		}
 

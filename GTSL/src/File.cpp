@@ -51,3 +51,10 @@ void File::SetPointer(const uint64 byte, uint64& newFilePointer, MoveFrom from)
 	SetFilePointerEx(static_cast<HANDLE>(fileHandle), bytes, &bytes_moved, static_cast<uint8>(from));
 	newFilePointer = bytes_moved.QuadPart;
 }
+
+uint64 File::GetFileSize() const
+{
+	DWORD size;
+	::GetFileSize(fileHandle, &size);
+	return size;
+}

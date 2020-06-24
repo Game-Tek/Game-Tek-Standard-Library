@@ -10,7 +10,7 @@ namespace GTSL
 	class Application
 	{
 	public:
-		static constexpr uint16 MaxPathLength{ 1024 };
+		static constexpr uint16 MaxPathLength{ 260 };
 		
 	private:
 		void* handle{ nullptr };

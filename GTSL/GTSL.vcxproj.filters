@@ -198,9 +198,6 @@
     <ClInclude Include="GTSL\Math\Math.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\SIMD\uint32_16.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\StaticString.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -231,12 +228,6 @@
     <ClInclude Include="GTSL\FunctionPointer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\SIMD\uint64_2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GTSL\SIMD\SIMD.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\HashedVector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -249,9 +240,6 @@
     <ClInclude Include="GTSL\StringCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\SIMD\SIMD128.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Algorithm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -259,6 +247,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\Atomic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\SIMD\SIMD.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\SIMD\SIMD128.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

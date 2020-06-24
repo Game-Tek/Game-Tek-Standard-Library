@@ -1,8 +1,7 @@
 #pragma once
 
+#include "SIMD.hpp"
 #include <immintrin.h>
-
-#include "SIMD.h"
 
 //_mm_srlv_epi32, shift right by
 
@@ -148,7 +147,7 @@ namespace GTSL
 
 		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
 		template<uint8 A, uint8 B, uint8 C, uint8 D, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
-		[[nodiscard]] static SIMD128 Shuffle(const SIMD128& a, const SIMD128& b) { return _mm_shuffle_epi8(a.vector, SIMD128(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)); }
+		[[nodiscard]] static SIMD128 Shuffle(const SIMD128& a) { return _mm_shuffle_epi8(a.vector, SIMD128(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)); }
 
 		void Abs() { vector = _mm_abs_epi8(vector); }
 

@@ -167,6 +167,16 @@ inline VkImageLayout ImageLayoutToVkImageLayout(const GAL::ImageLayout imageLayo
 	}
 }
 
+inline VkPipelineStageFlags PipelineStageToVkPipelineStageFlags(const GAL::PipelineStage pipeline)
+{
+	return static_cast<VkPipelineStageFlags>(pipeline);
+}
+
+inline VkAccessFlags AccessFlagsToVkAccessFlags(const GAL::AccessFlags accessFlags)
+{
+	return static_cast<VkPipelineStageFlags>(accessFlags);
+}
+
 inline VkShaderStageFlagBits ShaderTypeToVkShaderStageFlagBits(const GAL::ShaderType shaderType)
 {
 	switch (shaderType)

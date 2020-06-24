@@ -12,7 +12,7 @@ namespace GTSL
 	void SetMemory(uint64 size, void* data, int64 value = 0);
 	void SetMemory(Ranger<byte> range, int64 value = 0);
 
-	inline void* AlignedPointer(const uint64 alignment, void* data)
+	inline void* AlignPointer(const uint64 alignment, void* data)
 	{
 		return reinterpret_cast<void*>(reinterpret_cast<uint64>(static_cast<byte*>(data) + (alignment - 1)) & ~(alignment - 1));
 	}

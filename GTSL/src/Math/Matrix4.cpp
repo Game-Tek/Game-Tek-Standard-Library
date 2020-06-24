@@ -2,7 +2,7 @@
 
 #include "GTSL/Math/Quaternion.h"
 #include "GTSL/Math/Math.hpp"
-#include "GTSL/SIMD/SIMD128.h"
+#include "GTSL/SIMD/SIMD128.hpp"
 
 using namespace GTSL;
 

@@ -635,12 +635,12 @@ namespace GTSL
 			Scale(_A, _B.Scale);
 		}
 
-		static void BuildPerspectiveMatrix(Matrix4& matrix, float32 fov, float32 aspectRatio, float32 near, float32 far)
+		static void BuildPerspectiveMatrix(Matrix4& matrix, const float32 fov, const float32 aspectRatio, const float32 nearPlane, const float32 farPlane)
 		{
 			//Tangent of half the vertical view angle.
-			const auto f = 1 / Math::Tangent(fov * 0.5f);
+			const auto f = 1 / Tangent(fov * 0.5f);
 
-			const auto far_m_near = far - near;
+			const auto far_m_near = farPlane - nearPlane;
 
 			//Zero to one
 			//Left handed
@@ -649,23 +649,23 @@ namespace GTSL
 
 			matrix(1, 1) = -f;
 
-			matrix(2, 2) = -((far + near) / far_m_near);
-			matrix(2, 3) = -((2.f * far * near) / far_m_near);
+			matrix(2, 2) = -((farPlane + nearPlane) / far_m_near);
+			matrix(2, 3) = -((2.f * farPlane * nearPlane) / far_m_near);
 
 			matrix(3, 2) = -1.0f;
 		}
 
-		static void MakeOrthoMatrix(Matrix4& matrix, float32 right, float32 left, float32 top, float32 bottom, float32 near, float32 far)
+		static void MakeOrthoMatrix(Matrix4& matrix, const float32 right, const float32 left, const float32 top, const float32 bottom, const float32 nearPlane, const float32 farPlane)
 		{
 			//Zero to one
 			//Left handed
 
 			matrix(0, 0) = static_cast<float32>(2) / (right - left);
 			matrix(1, 1) = static_cast<float32>(2) / (top - bottom);
-			matrix(2, 2) = static_cast<float32>(1) / (far - near);
+			matrix(2, 2) = static_cast<float32>(1) / (farPlane - nearPlane);
 			matrix(3, 0) = -(right + left) / (right - left);
 			matrix(3, 1) = -(top + bottom) / (top - bottom);
-			matrix(3, 2) = -near / (far - near);
+			matrix(3, 2) = -nearPlane / (farPlane - nearPlane);
 		}
 
 		static float32 Clamp(float32 _A, float32 _Min, float32 _Max)
@@ -679,14 +679,13 @@ namespace GTSL
 			return _Point - _Plane.Normal * T;
 		}
 
-		static float64 DistanceFromPointToPlane(const Vector3& _Point, const Plane& _Plane)
+		static float64 DistanceFromPointToPlane(const Vector3& point, const Plane& plane)
 		{
 			// return Dot(q, p.n) - p.d; if plane equation normalized (||p.n||==1)
-			return (DotProduct(_Plane.Normal, _Point) - _Plane.D) / DotProduct(_Plane.Normal, _Plane.Normal);
+			return (DotProduct(plane.Normal, point) - plane.D) / DotProduct(plane.Normal, plane.Normal);
 		}
 
-		static void ClosestPointOnLineSegmentToPoint(const Vector3& _C, const Vector3& _A, const Vector3& _B,
-			float32& _T, Vector3& _D)
+		static void ClosestPointOnLineSegmentToPoint(const Vector3& _C, const Vector3& _A, const Vector3& _B, float32& _T, Vector3& _D)
 		{
 			const Vector3 AB = _B - _A;
 			// Project c onto ab, computing parameterized position d(t) = a + t*(b – a)

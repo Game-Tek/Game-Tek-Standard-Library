@@ -13,8 +13,10 @@ namespace GTSL
 			GTSL_ASSERT(reinterpret_cast<uint64>(ptr) % ALIGNMENT == 0, "Expected aligned pointer is not aligned to boundaries!")
 		}
 
+		operator T*() { return pointer; }
 		operator T*() const { return pointer; }
 
+		[[nodiscard]] T* Get() { return pointer; }
 		[[nodiscard]] T* Get() const { return pointer; }
 		
 	protected:
@@ -28,8 +30,10 @@ namespace GTSL
 		{
 		}
 
+		operator T*() { return pointer; }
 		operator T*() const { return pointer; }
 
+		[[nodiscard]] T* Get() { return pointer; }
 		[[nodiscard]] T* Get() const { return pointer; }
 		
 	protected:

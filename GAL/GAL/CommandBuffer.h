@@ -4,8 +4,7 @@
 
 #include <GTSL/Extent.h>
 #include <GTSL/Ranger.h>
-
-#include "GTSL/RGB.h"
+#include <GTSL/RGB.h>
 
 namespace GAL
 {
@@ -30,6 +29,7 @@ namespace GAL
 		struct CreateInfo : RenderInfo
 		{
 			bool IsPrimary = true;
+			Queue* Queue{ nullptr };
 		};
 		explicit CommandBuffer(const CreateInfo& commandBufferCreateInfo)
 		{};
@@ -164,6 +164,10 @@ namespace GAL
 
 		struct TransitionImageInfo : RenderInfo
 		{
+			Texture* Texture{ nullptr };
+			ImageLayout SourceLayout, DestinationLayout;
+			PipelineStage SourceStage, DestinationStage;
+			AccessFlags SourceAccessFlags, DestinationAccessFlags;
 		};
 		void TransitionImage(const TransitionImageInfo& transitionImageInfo);
 	};
