@@ -1,8 +1,8 @@
 #include "GAL/Vulkan/VulkanFramebuffer.h"
 
+#include "GAL/Vulkan/VulkanImage.h"
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
-#include "GAL/Vulkan/VulkanRenderTarget.h"
 #include "GAL/Vulkan/VulkanRenderPass.h"
 
 GAL::VulkanFramebuffer::VulkanFramebuffer(const CreateInfo& createInfo) : Framebuffer(createInfo)
@@ -11,7 +11,7 @@ GAL::VulkanFramebuffer::VulkanFramebuffer(const CreateInfo& createInfo) : Frameb
 
 	for (auto& e : result)
 	{
-		e = static_cast<VulkanRenderTarget*>(createInfo.Images[&e - result.begin()])->GetVkImageView();
+		e = static_cast<VulkanImage*>(createInfo.Images[&e - result.begin()])->GetVkImageView();
 	}
 
 	attachmentCount = createInfo.Images.ElementCount();

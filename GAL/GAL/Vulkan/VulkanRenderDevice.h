@@ -13,7 +13,7 @@ namespace GAL
 		VulkanQueue(const CreateInfo& createInfo);
 		~VulkanQueue() = default;
 
-		void Dispatch(const DispatchInfo& dispatchInfo);
+		void Submit(const SubmitInfo& submitInfo);
 
 		[[nodiscard]] VkQueue GetVkQueue() const { return queue; }
 		[[nodiscard]] GTSL::uint32 GetQueueIndex() const { return queueIndex; }

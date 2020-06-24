@@ -22,6 +22,7 @@ namespace GAL
 		GTSL::StaticString<512> GPUName;
 		GTSL::uint32 DriverVersion;
 		GTSL::uint32 APIVersion;
+		GTSL::uint8 PipelineCacheUUID[16];
 	};
 
 	class Queue
@@ -33,11 +34,20 @@ namespace GAL
 			GTSL::float32 QueuePriority = 1.0f;
 		};
 
-		struct DispatchInfo : RenderInfo
+		struct SubmitInfo : RenderInfo
 		{
 			GTSL::Ranger<class CommandBuffer*> CommandBuffers;
+			GTSL::Ranger<class Semaphore*> SignalSemaphores;
+			GTSL::Ranger<GTSL::uint64> SignalValues;
+			GTSL::Ranger<class Semaphore*> WaitSemaphores;
+			GTSL::Ranger<GTSL::uint64> WaitValues;
+			/**
+			 * \brief Pipeline stages at which each corresponding semaphore wait will occur.
+			 */
+			GTSL::Ranger<GTSL::uint32> WaitPipelineStages;
+			class Fence* Fence{ nullptr };
 		};
-		void Dispatch(const DispatchInfo& dispatchInfo);
+		void Submit(const SubmitInfo& dispatchInfo);
 
 	private:
 		friend RenderDevice;

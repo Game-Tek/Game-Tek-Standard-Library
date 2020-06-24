@@ -15,7 +15,7 @@ namespace GAL
 	{
 		GTSL::Array<ImageFormat, 8> ColorAttachmentsFormat;
 		ImageFormat DepthStencilFormat = ImageFormat::DEPTH16_STENCIL8;
-		RenderTarget* Images = nullptr;
+		class Image* Images = nullptr;
 	};
 
 	class Framebuffer : public GALObject
@@ -27,7 +27,7 @@ namespace GAL
 		{
 			RenderPass* RenderPass = nullptr;
 			GTSL::Extent2D Extent = { 1280, 720 };
-			GTSL::Ranger<RenderTarget*> Images;
+			GTSL::Ranger<class Image*> Images;
 			GTSL::Ranger<const GTSL::RGBA> ClearValues;
 		};
 		explicit Framebuffer(const CreateInfo& createInfo) : extent(createInfo.Extent)

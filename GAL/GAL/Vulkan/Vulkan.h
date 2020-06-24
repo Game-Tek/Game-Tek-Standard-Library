@@ -128,6 +128,22 @@ inline VkFormatFeatureFlagBits ImageUseToVkFormatFeatureFlagBits(const GAL::Imag
 	}
 }
 
+VkImageUsageFlags ImageUseToVkImageUsageFlags(const GTSL::uint32 imageUses)
+{
+	VkImageUsageFlags vk_image_usage_flags{ 0 };
+
+	if (imageUses & static_cast<GTSL::uint32>(GAL::ImageUse::COLOR_ATTACHMENT)) vk_image_usage_flags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	if (imageUses & static_cast<GTSL::uint32>(GAL::ImageUse::DEPTH_STENCIL_ATTACHMENT)) vk_image_usage_flags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	if (imageUses & static_cast<GTSL::uint32>(GAL::ImageUse::INPUT_ATTACHMENT)) vk_image_usage_flags |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+	if (imageUses & static_cast<GTSL::uint32>(GAL::ImageUse::SAMPLE)) vk_image_usage_flags |= VK_IMAGE_USAGE_SAMPLED_BIT;
+	if (imageUses & static_cast<GTSL::uint32>(GAL::ImageUse::STORAGE)) vk_image_usage_flags |= VK_IMAGE_USAGE_STORAGE_BIT;
+	if (imageUses & static_cast<GTSL::uint32>(GAL::ImageUse::TRANSFER_SOURCE)) vk_image_usage_flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	if (imageUses & static_cast<GTSL::uint32>(GAL::ImageUse::TRANSFER_DESTINATION)) vk_image_usage_flags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+	if (imageUses & static_cast<GTSL::uint32>(GAL::ImageUse::TRANSIENT_ATTACHMENT)) vk_image_usage_flags |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
+
+	return vk_image_usage_flags;
+}
+
 inline VkAttachmentLoadOp RenderTargetLoadOperationsToVkAttachmentLoadOp(const GAL::RenderTargetLoadOperations renderTargetLoadOperations)
 {
 	switch (renderTargetLoadOperations)
@@ -167,7 +183,7 @@ inline VkImageLayout ImageLayoutToVkImageLayout(const GAL::ImageLayout imageLayo
 	}
 }
 
-inline VkPipelineStageFlags PipelineStageToVkPipelineStageFlags(const GAL::PipelineStage pipeline)
+inline VkPipelineStageFlags PipelineStageToVkPipelineStageFlags(const GTSL::uint32 pipeline)
 {
 	return static_cast<VkPipelineStageFlags>(pipeline);
 }

@@ -10,23 +10,27 @@
 namespace GAL
 {
 	//Represents a resource utilized by the rendering API for storing and referencing textures. Which are images which hold some information loaded from memory.
-	class Texture : public GALObject
+	class Image : public GALObject
 	{
 	public:
-		~Texture() = default;
+		Image() = default;
+		~Image() = default;
 
 		struct CreateInfo : RenderInfo
 		{	
-			ImageLayout Layout{ ImageLayout::COLOR_ATTACHMENT };
+			ImageLayout InitialLayout{ ImageLayout::COLOR_ATTACHMENT };
+			GTSL::uint32 ImageUses{ 0 };
 			ImageFormat SourceFormat{ ImageFormat::RGBA_I8 };
 			GTSL::Extent2D Extent{ 1280, 720 };
 			GTSL::uint8 Anisotropy = 0;
 			ImageTiling ImageTiling;
-			class CommandBuffer* CommandBuffer = nullptr;
+			ImageDimensions Dimensions;
+			GTSL::uint8 MipLevels{ 1 };
+			ImageType Type;
 		};
-		explicit Texture(const CreateInfo& textureCreateInfo);
+		explicit Image(const CreateInfo& textureCreateInfo);
 
-		static GTSL::uint64 GetTextureSize(const GTSL::uint8 textureFormatSize, const GTSL::Extent2D extent)
+		static GTSL::uint64 GetImageSize(const GTSL::uint8 textureFormatSize, const GTSL::Extent2D extent)
 		{
 			return static_cast<GTSL::uint32>(textureFormatSize) * extent.Width * extent.Height;
 		}
@@ -41,12 +45,12 @@ namespace GAL
 		static void ConvertImageToFormat(const ImageFormat sourceImageFormat, const ImageFormat targetImageFormat, const GTSL::Extent2D imageExtent, GTSL::AlignedPointer<GTSL::byte, 16> buffer, GTSL::uint32 alphaValue)
 		{
 			const auto source_format_size{ ImageFormatSize(sourceImageFormat) }; const auto target_format_size{ ImageFormatSize(targetImageFormat) };
-			const GTSL::uint64 target_texture_size = GetTextureSize(target_format_size, imageExtent);
+			const GTSL::uint64 target_texture_size = GetImageSize(target_format_size, imageExtent);
 
 			auto byte3_channel_swap = [&]()
 			{
 				GTSL::uint32 quot, rem;
-				GTSL::Math::RoundDown(GetTextureSize(source_format_size, imageExtent), 16, quot, rem);
+				GTSL::Math::RoundDown(GetImageSize(source_format_size, imageExtent), 16, quot, rem);
 
 				GTSL::byte* begin = buffer;
 				
@@ -75,4 +79,13 @@ namespace GAL
 		}
 	};
 
+	class Sampler : public GALObject
+	{
+	public:
+		struct CreateInfo : RenderInfo
+		{
+			GTSL::uint8 Anisotropy{ 0 };
+		};
+	protected:
+	};
 }

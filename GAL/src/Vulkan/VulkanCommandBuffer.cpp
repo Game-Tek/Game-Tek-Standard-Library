@@ -7,7 +7,7 @@
 #include "GAL/Vulkan/VulkanFramebuffer.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
 #include "GAL/Vulkan/VulkanRenderPass.h"
-#include "GAL/Vulkan/VulkanTexture.h"
+#include "GAL/Vulkan/VulkanImage.h"
 
 GAL::VulkanCommandBuffer::VulkanCommandBuffer(const CreateInfo& createInfo) : CommandBuffer(createInfo)
 {
@@ -146,7 +146,7 @@ void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& co
 	region.imageOffset = { 0, 0, 0 };
 	//region.imageOffset = Extent3DToVkExtent3D(copyImageToBufferInfo.Offset);
 	region.imageExtent = Extent3DToVkExtent3D(copyBufferToImageInfo.Extent);
-	vkCmdCopyBufferToImage(commandBuffer, static_cast<VulkanBuffer*>(copyBufferToImageInfo.SourceBuffer)->GetVkBuffer(), static_cast<VulkanTexture*>(copyBufferToImageInfo.DestinationImage)->GetVkImage(), ImageLayoutToVkImageLayout(copyBufferToImageInfo.ImageLayout), 1, &region);
+	vkCmdCopyBufferToImage(commandBuffer, static_cast<VulkanBuffer*>(copyBufferToImageInfo.SourceBuffer)->GetVkBuffer(), static_cast<VulkanImage*>(copyBufferToImageInfo.DestinationImage)->GetVkImage(), ImageLayoutToVkImageLayout(copyBufferToImageInfo.ImageLayout), 1, &region);
 }
 
 void GAL::VulkanCommandBuffer::TransitionImage(const TransitionImageInfo& transitionImageInfo)
@@ -157,7 +157,7 @@ void GAL::VulkanCommandBuffer::TransitionImage(const TransitionImageInfo& transi
 	barrier.newLayout = ImageLayoutToVkImageLayout(transitionImageInfo.DestinationLayout);
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.image = static_cast<VulkanTexture*>(transitionImageInfo.Texture)->GetVkImage();
+	barrier.image = static_cast<VulkanImage*>(transitionImageInfo.Texture)->GetVkImage();
 	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	barrier.subresourceRange.baseMipLevel = 0;
 	barrier.subresourceRange.levelCount = 1;

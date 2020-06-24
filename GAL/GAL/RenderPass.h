@@ -1,10 +1,7 @@
 #pragma once
 
 #include "RenderCore.h"
-#include "RenderTarget.h"
-
-#include <GTSL/Array.hpp>
-
+#include <GTSL/Ranger.h>
 
 namespace GAL
 {
@@ -22,7 +19,7 @@ namespace GAL
 	struct AttachmentDescriptor
 	{
 		//Pointer to the image this attachment refers to.
-		RenderTarget* AttachmentImage = nullptr;
+		class Image* AttachmentImage = nullptr;
 		//Defines the operation that should be run when the attachment is loaded for rendering.
 		RenderTargetLoadOperations LoadOperation = RenderTargetLoadOperations::UNDEFINED;
 		//Defines the operation that should be run when the attachment is done being rendered to.
@@ -63,13 +60,15 @@ namespace GAL
 	class RenderPass : public GALObject
 	{
 	public:
+		RenderPass() = default;
+		
 		struct CreateInfo : RenderInfo
 		{
 			RenderPassDescriptor Descriptor;
 		};
 		explicit RenderPass(const CreateInfo& createInfo);
 		
-		virtual ~RenderPass() = default;
+		~RenderPass() = default;
 	};
 
 }

@@ -4,6 +4,8 @@
 
 #include <GTSL/Extent.h>
 
+#include "GTSL/Ranger.h"
+
 namespace GAL
 {
 	class Window;
@@ -45,27 +47,21 @@ namespace GAL
 
 		struct AcquireNextImageInfo : RenderInfo
 		{
+			class Semaphore* Semaphore{ nullptr };
+			class Fence* Fence{ nullptr };
 		};
 		void AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
-
-		struct FlushInfo : RenderInfo
-		{
-			Queue* Queue = nullptr;
-			class CommandBuffer* CommandBuffer = nullptr;
-		};
-		void Flush(const FlushInfo& flushInfo);
 
 		struct PresentInfo : RenderInfo
 		{
 			Queue* Queue = nullptr;
+			GTSL::Ranger<class Semaphore*> WaitSemaphores;
 		};
 		void Present(const PresentInfo& presentInfo);
 
-		[[nodiscard]] GTSL::uint8 GetCurrentImage() const { return currentImage; }
 		[[nodiscard]] GTSL::uint8 GetMaxFramesInFlight() const { return maxFramesInFlight; }
 
 	protected:
-		GTSL::uint8 currentImage = 0;
 		GTSL::uint8 maxFramesInFlight = 0;
 
 		GTSL::Extent2D extent{ 0, 0 };

@@ -7,7 +7,9 @@
 #endif
 
 #include "GAL/Vulkan/VulkanBindings.h"
+#include "GAL/Vulkan/VulkanCommandBuffer.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
+#include "GAL/Vulkan/VulkanSynchronization.h"
 #include "GTSL/Console.h"
 #include "GTSL/StaticString.hpp"
 
@@ -47,7 +49,11 @@ GAL::GPUInfo GAL::VulkanRenderDevice::GetGPUInfo()
 	result.GPUName = deviceProperties.deviceName;
 	result.DriverVersion = deviceProperties.vendorID;
 	result.APIVersion = deviceProperties.apiVersion;
-
+	for(auto e : deviceProperties.pipelineCacheUUID)
+	{
+		result.PipelineCacheUUID[&e - deviceProperties.pipelineCacheUUID] = e;
+	}
+	
 	return result;
 }
 
@@ -60,17 +66,57 @@ GAL::ImageFormat GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const 
 	return VkFormatToImageFormat(FindSupportedVkFormat(formats, ImageUseToVkFormatFeatureFlagBits(findSupportedImageFormat.ImageUse), ImageTilingToVkImageTiling(findSupportedImageFormat.ImageTiling)));
 }
 
-void GAL::VulkanQueue::Dispatch(const DispatchInfo& dispatchInfo)
+void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 {
-	GTSL::Array<VkCommandBuffer, 16> vk_command_buffers(dispatchInfo.CommandBuffers.ElementCount());
+	GTSL::Array<VkCommandBuffer, 16> vk_command_buffers(submitInfo.CommandBuffers.ElementCount());
+	{
+		for(auto* e : submitInfo.CommandBuffers)
+		{
+			vk_command_buffers[&e - submitInfo.CommandBuffers.begin()] = static_cast<VulkanCommandBuffer*>(e)->GetVkCommandBuffer();
+		}
+	}
+	
+	GTSL::Array<VkSemaphore, 16> vk_signal_semaphores(submitInfo.SignalSemaphores.ElementCount());
+	{
+		for (auto* e : submitInfo.SignalSemaphores)
+		{
+			vk_signal_semaphores[&e - submitInfo.SignalSemaphores.begin()] = static_cast<VulkanSemaphore*>(e)->GetVkSemaphore();
+		}
+	}
+
+	GTSL::Array<VkSemaphore, 16> vk_wait_semaphores(submitInfo.WaitSemaphores.ElementCount());
+	{
+		for (auto* e : submitInfo.WaitSemaphores)
+		{
+			vk_wait_semaphores[&e - submitInfo.WaitSemaphores.begin()] = static_cast<VulkanSemaphore*>(e)->GetVkSemaphore();
+		}
+	}
+
+	VkTimelineSemaphoreSubmitInfo vk_timeline_semaphore_submit_info{ VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO };
+	vk_timeline_semaphore_submit_info.waitSemaphoreValueCount = vk_wait_semaphores.GetLength();
+	vk_timeline_semaphore_submit_info.pWaitSemaphoreValues = submitInfo.WaitValues.begin();
+	vk_timeline_semaphore_submit_info.signalSemaphoreValueCount = vk_signal_semaphores.GetLength();
+	vk_timeline_semaphore_submit_info.pSignalSemaphoreValues = submitInfo.SignalValues.begin();
 	
 	VkSubmitInfo vk_submit_info{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-	vk_submit_info.commandBufferCount = dispatchInfo.CommandBuffers.ElementCount();
-	vk_submit_info.pCommandBuffers = vk_command_buffers.begin();
-	GTSL::uint32 vk_pipeline_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
-	vk_submit_info.pWaitDstStageMask = &vk_pipeline_stage;
+	vk_submit_info.pNext = &vk_timeline_semaphore_submit_info;
 	
-	vkQueueSubmit(queue, 1, &vk_submit_info, nullptr);
+	vk_submit_info.commandBufferCount = vk_command_buffers.GetLength();
+	vk_submit_info.pCommandBuffers = vk_command_buffers.begin();
+
+	GTSL::Array<GTSL::uint32, 16, GTSL::uint8> vk_pipeline_stages(submitInfo.WaitPipelineStages.ElementCount());
+	{
+		for(auto e : submitInfo.WaitPipelineStages) { vk_pipeline_stages[&e - submitInfo.WaitPipelineStages.begin()] = PipelineStageToVkPipelineStageFlags(e); }
+	}
+	vk_submit_info.pWaitDstStageMask = vk_pipeline_stages.begin();
+	
+	vk_submit_info.signalSemaphoreCount = vk_signal_semaphores.GetLength();
+	vk_submit_info.pSignalSemaphores = vk_signal_semaphores.begin();
+
+	vk_submit_info.waitSemaphoreCount = vk_wait_semaphores.GetLength();
+	vk_submit_info.pWaitSemaphores = vk_wait_semaphores.begin();
+	
+	VK_CHECK(vkQueueSubmit(queue, 1, &vk_submit_info, static_cast<VulkanFence*>(submitInfo.Fence)->GetVkFence()));
 }
 
 GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
@@ -108,8 +154,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	};
 
 #if (_DEBUG)
-	VkDebugUtilsMessengerCreateInfoEXT vk_debug_utils_messenger_create_info_EXT{};
-	vk_debug_utils_messenger_create_info_EXT.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	VkDebugUtilsMessengerCreateInfoEXT vk_debug_utils_messenger_create_info_EXT{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
 	vk_debug_utils_messenger_create_info_EXT.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 	vk_debug_utils_messenger_create_info_EXT.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 	vk_debug_utils_messenger_create_info_EXT.pfnUserCallback = debugCallback;

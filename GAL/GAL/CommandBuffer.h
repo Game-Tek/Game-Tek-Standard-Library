@@ -155,7 +155,7 @@ namespace GAL
 			class Buffer* SourceBuffer{ nullptr };
 			ImageFormat SourceImageFormat;
 			ImageLayout ImageLayout;
-			class Texture* DestinationImage{ nullptr };
+			class Image* DestinationImage{ nullptr };
 
 			GTSL::Extent3D Extent;
 			GTSL::Extent3D Offset;
@@ -164,9 +164,9 @@ namespace GAL
 
 		struct TransitionImageInfo : RenderInfo
 		{
-			Texture* Texture{ nullptr };
+			Image* Texture{ nullptr };
 			ImageLayout SourceLayout, DestinationLayout;
-			PipelineStage SourceStage, DestinationStage;
+			GTSL::uint32 SourceStage, DestinationStage;
 			AccessFlags SourceAccessFlags, DestinationAccessFlags;
 		};
 		void TransitionImage(const TransitionImageInfo& transitionImageInfo);

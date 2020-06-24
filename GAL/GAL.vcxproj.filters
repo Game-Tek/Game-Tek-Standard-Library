@@ -42,12 +42,6 @@
     <ClInclude Include="GAL\Vulkan\VulkanRenderPass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GAL\Vulkan\VulkanRenderTarget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GAL\Vulkan\VulkanTexture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GAL\Bindings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -75,12 +69,6 @@
     <ClInclude Include="GAL\RenderPass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GAL\RenderTarget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GAL\Texture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GAL\Buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -94,6 +82,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Vulkan\VulkanMemory.cpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GAL\Synchronization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GAL\Vulkan\VulkanSynchronization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GAL\Vulkan\VulkanImage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GAL\Image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -122,13 +122,16 @@
     <ClCompile Include="src\Vulkan\VulkanRenderTarget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Vulkan\VulkanTexture.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\RenderDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Vulkan\VulkanBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Vulkan\VulkanSynchronization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Vulkan\VulkanImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

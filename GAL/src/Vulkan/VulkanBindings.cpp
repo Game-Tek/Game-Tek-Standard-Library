@@ -2,7 +2,7 @@
 
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
-#include "GAL/Vulkan/VulkanTexture.h"
+#include "GAL/Vulkan/VulkanImage.h"
 
 #include <GTSL/Vector.hpp>
 #include <GTSL/FixedVector.hpp>
@@ -109,9 +109,9 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& uniformLayoutUp
 		case GAL::BindingType::SAMPLED_IMAGE:
 
 			VkDescriptorImageInfo vk_descriptor_image_info;
-			vk_descriptor_image_info.imageView = static_cast<VulkanTexture*>(uniformLayoutUpdateInfo.BindingsSetLayout[i].BindingResource)->GetImageView();
-			vk_descriptor_image_info.imageLayout = static_cast<VulkanTexture*>(uniformLayoutUpdateInfo.BindingsSetLayout[i].BindingResource)->GetVkImageLayout();
-			vk_descriptor_image_info.sampler = static_cast<VulkanTexture*>(uniformLayoutUpdateInfo.BindingsSetLayout[i].BindingResource)->GetImageSampler();
+			vk_descriptor_image_info.imageView = static_cast<VulkanImage*>(uniformLayoutUpdateInfo.BindingsSetLayout[i].BindingResource)->GetVkImageView();
+			vk_descriptor_image_info.imageLayout = static_cast<VulkanImage*>(uniformLayoutUpdateInfo.BindingsSetLayout[i].BindingResource)->GetVkImageLayout();
+			vk_descriptor_image_info.sampler = static_cast<VulkanImage*>(uniformLayoutUpdateInfo.BindingsSetLayout[i].BindingResource)->GetImageSampler();
 
 			write_descriptors[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			write_descriptors[i].pNext = nullptr;

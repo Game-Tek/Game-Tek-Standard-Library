@@ -6,7 +6,7 @@
 
 #include "VulkanPipelines.h"
 #include "VulkanBindings.h"
-#include "VulkanRenderTarget.h"
+#include "VulkanImage.h"
 
 namespace GAL
 {
@@ -20,24 +20,26 @@ namespace GAL
 		void Destroy(class RenderDevice* renderDevice);
 
 		void Recreate(const RecreateInfo& resizeInfo);
-		void AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
-		void Flush(const FlushInfo& flushInfo);
+		/**
+		 * \brief  Acquires the next image in the swapchain queue to present to.
+		 * \param acquireNextImageInfo Information to perform image acquisition.
+		 * \return Returns true if the contexts needs to be recreated.
+		 */
+		bool AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
 		void Present(const PresentInfo& presentInfo);
 
-		struct RenderTargetsInfo : RenderInfo
+		[[nodiscard]] GTSL::uint8 GetCurrentImage() const { return imageIndex; }
+		
+		struct GetImagesInfo : RenderInfo
 		{		
 		};
-		GTSL::Array<VulkanRenderTarget, 5> GetRenderTargets(const RenderTargetsInfo& renderTargetsInfo);
+		GTSL::Array<VulkanImage, 5> GetImages(const GetImagesInfo& getImagesInfo);
 		
 	private:
 		VkSurfaceKHR surface = nullptr;
 		VkSwapchainKHR swapchain = nullptr;
 		VkSurfaceFormatKHR surfaceFormat{};
 		VkPresentModeKHR presentMode{};
-
-		GTSL::Array<VkSemaphore, 5, GTSL::uint8> imagesAvailable;
-		GTSL::Array<VkSemaphore, 5, GTSL::uint8> rendersFinished;
-		GTSL::Array<VkFence, 5, GTSL::uint8> inFlightFences;
 
 		GTSL::uint8 imageIndex = 0;
 
