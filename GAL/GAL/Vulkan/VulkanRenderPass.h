@@ -12,7 +12,7 @@ namespace GAL
 		explicit VulkanRenderPass(const CreateInfo& createInfo);
 		~VulkanRenderPass() = default;
 
-		void Destroy(class RenderDevice* renderDevice) const;
+		void Destroy(class RenderDevice* renderDevice);
 
 		[[nodiscard]] VkRenderPass GetVkRenderPass() const { return renderPass; }
 	private:

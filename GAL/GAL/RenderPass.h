@@ -10,7 +10,6 @@ namespace GAL
 	//Describes the reference to a render pass attachment for a sub pass.
 	struct AttachmentReference
 	{
-		//Id64 of the attachment (Index into RenderpassDescriptor::RenderPassColorAttachments).
 		GTSL::uint8 Index = ATTACHMENT_UNUSED;
 		//Layout of the attachment during the sub pass.
 		ImageLayout Layout = ImageLayout::COLOR_ATTACHMENT;
@@ -18,8 +17,7 @@ namespace GAL
 
 	struct AttachmentDescriptor
 	{
-		//Pointer to the image this attachment refers to.
-		class Image* AttachmentImage = nullptr;
+		ImageFormat Format;
 		//Defines the operation that should be run when the attachment is loaded for rendering.
 		RenderTargetLoadOperations LoadOperation = RenderTargetLoadOperations::UNDEFINED;
 		//Defines the operation that should be run when the attachment is done being rendered to.
@@ -52,6 +50,7 @@ namespace GAL
 		GTSL::Ranger<AttachmentDescriptor> RenderPassColorAttachments;
 		//Pointer to an image that will be used as the depth stencil attachment in the render pass.
 		AttachmentDescriptor DepthStencilAttachment;
+		bool DepthStencilAttachmentAvailable = false;
 
 		//Array of SubpassDescriptor used to describes the properties of every subpass in the renderpass.
 		GTSL::Ranger<SubPassDescriptor> SubPasses;

@@ -32,14 +32,14 @@ namespace GAL
 
 		void Destroy(class RenderDevice* renderDevice);
 
-		void Update(const BindingsSetUpdateInfo& uniformLayoutUpdateInfo);
+		void Update(const BindingsSetUpdateInfo& bindingsUpdateInfo);
 
-		[[nodiscard]] VkDescriptorSetLayout GetVkDescriptorSetLayout() const { return vkDescriptorSetLayout; }
-		[[nodiscard]] const GTSL::Array<VkDescriptorSet, 4>& GetVkDescriptorSets() const { return vkDescriptorSets; }
+		[[nodiscard]] VkDescriptorSetLayout GetVkDescriptorSetLayout() const { return descriptorSetLayout; }
+		[[nodiscard]] const GTSL::Array<VkDescriptorSet, 4>& GetVkDescriptorSets() const { return descriptorSets; }
 
 	private:
-		VkDescriptorSetLayout vkDescriptorSetLayout = nullptr;
-		GTSL::Array<VkDescriptorSet, 4> vkDescriptorSets;
+		VkDescriptorSetLayout descriptorSetLayout = nullptr;
+		GTSL::Array<VkDescriptorSet, 4> descriptorSets;
 
 	};
 }

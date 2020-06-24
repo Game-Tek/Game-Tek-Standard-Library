@@ -12,24 +12,34 @@ namespace GAL
 
 	struct BindingDescriptor
 	{
-		/**
-		 * \brief If binding is an array how many elements does it have.
-		 */
-		GTSL::uint8 ArrayLength = 0;
 		BindingType BindingType = BindingType::UNIFORM_BUFFER;
 		ShaderType ShaderStage = ShaderType::ALL_STAGES;
-		void* BindingResource = nullptr;
+	};
+	
+	struct ImageBindingDescriptor : BindingDescriptor
+	{
+		GTSL::Ranger<class Image*> Images;
+		GTSL::Ranger<class Sampler*> Samplers;
+		GTSL::Ranger<ImageLayout> Layouts;
+	};
+
+	struct BufferBindingDescriptor : BindingDescriptor
+	{
+		GTSL::Ranger<class Buffer*> Buffers;
+		GTSL::Ranger<GTSL::uint32> Offsets;
+		GTSL::Ranger<GTSL::uint32> Sizes;
 	};
 
 	struct BindingLayoutCreateInfo
 	{
-		GTSL::Array<BindingDescriptor, MAX_BINDINGS_PER_SET> BindingsSetLayout;
-		int DescriptorCount = 0;
+		GTSL::Array<ImageBindingDescriptor, MAX_BINDINGS_PER_SET> BindingsSetLayout;
+		GTSL::int32 DescriptorCount = 0;
 	};
 
 	struct BindingsSetUpdateInfo : RenderInfo
 	{
-		GTSL::Array<BindingDescriptor, MAX_BINDINGS_PER_SET> BindingsSetLayout;
+		GTSL::Array<ImageBindingDescriptor, MAX_BINDINGS_PER_SET> ImageBindingsSetLayout;
+		GTSL::Array<BufferBindingDescriptor, MAX_BINDINGS_PER_SET> BufferBindingsSetLayout;
 		GTSL::uint8 DestinationSet = 0;
 	};
 
@@ -38,7 +48,7 @@ namespace GAL
 	public:
 		struct CreateInfo : RenderInfo
 		{
-			GTSL::Array<BindingDescriptor, MAX_BINDINGS_PER_SET> BindingsSetLayout;
+			GTSL::Array<ImageBindingDescriptor, MAX_BINDINGS_PER_SET> BindingsSetLayout;
 			/**
 			 * \brief How many sets to allocate.
 			 */
@@ -69,7 +79,10 @@ namespace GAL
 			 * \brief Pointer to a binding pool to allocated the bindings set from.
 			 */
 			BindingsPool* BindingsPool = nullptr;
-			GTSL::Array<BindingDescriptor, MAX_BINDINGS_PER_SET> BindingsSetLayout;
+			
+			GTSL::Ranger<BindingDescriptor> BindingsSetLayout;
+			GTSL::Ranger<GTSL::uint8> BindingsSetBindingCount;
+			
 			/**
 			 * \brief How many sets to allocate.
 			 */

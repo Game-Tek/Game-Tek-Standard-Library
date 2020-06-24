@@ -5,16 +5,13 @@
 
 GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo) : RenderPass(createInfo)
 {
-	bool DSAA = createInfo.Descriptor.DepthStencilAttachment.AttachmentImage;
+	const bool depth_attachment = createInfo.Descriptor.DepthStencilAttachmentAvailable;
 
-	GTSL::Array<VkAttachmentDescription, 64> vk_attachment_descriptions(createInfo.Descriptor.RenderPassColorAttachments.ElementCount() + DSAA);
-	//Take into account depth/stencil attachment
+	GTSL::Array<VkAttachmentDescription, 64> vk_attachment_descriptions(createInfo.Descriptor.RenderPassColorAttachments.ElementCount() + depth_attachment);
 
-	//Set color attachments.
-	for (GTSL::uint8 i = 0; i < vk_attachment_descriptions.GetLength() - DSAA; ++i)
-		//Loop through all color attachments(skip extra element for depth/stencil)
+	for (GTSL::uint8 i = 0; i < vk_attachment_descriptions.GetLength() - depth_attachment; ++i)
 	{
-		vk_attachment_descriptions[i].format = ImageFormatToVkFormat(createInfo.Descriptor.RenderPassColorAttachments[i].AttachmentImage->GetFormat());
+		vk_attachment_descriptions[i].format = ImageFormatToVkFormat(createInfo.Descriptor.RenderPassColorAttachments[i].Format);
 		vk_attachment_descriptions[i].samples = VK_SAMPLE_COUNT_1_BIT; //TODO: Should match that of the SwapChain images.
 		vk_attachment_descriptions[i].loadOp = RenderTargetLoadOperationsToVkAttachmentLoadOp(createInfo.Descriptor.RenderPassColorAttachments[i].LoadOperation);
 		vk_attachment_descriptions[i].storeOp = RenderTargetStoreOperationsToVkAttachmentStoreOp(createInfo.Descriptor.RenderPassColorAttachments[i].StoreOperation);
@@ -23,11 +20,10 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo) : RenderPa
 		vk_attachment_descriptions[i].initialLayout = ImageLayoutToVkImageLayout(createInfo.Descriptor.RenderPassColorAttachments[i].InitialLayout);
 		vk_attachment_descriptions[i].finalLayout = ImageLayoutToVkImageLayout(createInfo.Descriptor.RenderPassColorAttachments[i].FinalLayout);
 	}
-
-	if (DSAA)
+	if (depth_attachment)
 	{
 		//Set depth/stencil element.
-		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].format = ImageFormatToVkFormat(createInfo.Descriptor.DepthStencilAttachment.AttachmentImage->GetFormat());
+		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].format = ImageFormatToVkFormat(createInfo.Descriptor.DepthStencilAttachment.Format);
 		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].samples = VK_SAMPLE_COUNT_1_BIT;
 		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].loadOp = RenderTargetLoadOperationsToVkAttachmentLoadOp(createInfo.Descriptor.DepthStencilAttachment.LoadOperation);
 		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].storeOp = RenderTargetStoreOperationsToVkAttachmentStoreOp(createInfo.Descriptor.DepthStencilAttachment.StoreOperation);
@@ -113,9 +109,8 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo) : RenderPa
 		}
 	}
 
-	//Describe each subpass.
 	GTSL::Array<VkSubpassDescription, 64> vk_subpass_descriptions(createInfo.Descriptor.SubPasses.ElementCount());
-	for (GTSL::uint8 SUBPASS = 0; SUBPASS < vk_subpass_descriptions.GetLength(); ++SUBPASS) //Loop through each subpass.
+	for (GTSL::uint8 SUBPASS = 0; SUBPASS < vk_subpass_descriptions.GetLength(); ++SUBPASS)
 	{
 		vk_subpass_descriptions[SUBPASS].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		vk_subpass_descriptions[SUBPASS].colorAttachmentCount = write_attachments_count;
@@ -150,7 +145,7 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo) : RenderPa
 	}
 
 	VkRenderPassCreateInfo vk_renderpass_create_info{ VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
-	vk_renderpass_create_info.attachmentCount = createInfo.Descriptor.RenderPassColorAttachments.ElementCount() + DSAA;
+	vk_renderpass_create_info.attachmentCount = createInfo.Descriptor.RenderPassColorAttachments.ElementCount() + depth_attachment;
 	vk_renderpass_create_info.pAttachments = vk_attachment_descriptions.GetData();
 	vk_renderpass_create_info.subpassCount = createInfo.Descriptor.SubPasses.ElementCount();
 	vk_renderpass_create_info.pSubpasses = vk_subpass_descriptions.GetData();
@@ -160,7 +155,7 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo) : RenderPa
 	vkCreateRenderPass(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_renderpass_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &renderPass);
 }
 
-void GAL::VulkanRenderPass::Destroy(GAL::RenderDevice* renderDevice) const
+void GAL::VulkanRenderPass::Destroy(GAL::RenderDevice* renderDevice)
 {
 	auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
 	vkDestroyRenderPass(vk_render_device->GetVkDevice(), renderPass, vk_render_device->GetVkAllocationCallbacks());
