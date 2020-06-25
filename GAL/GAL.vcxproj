@@ -116,7 +116,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>$(SolutionDir)bin\GTSL\GTSL-$(Configuration)-$(Platform).lib;vulkan-1.lib</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)GAL\ext;</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
@@ -141,7 +141,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>$(SolutionDir)bin\GTSL\GTSL-$(Configuration)-$(Platform).lib;vulkan-1.lib</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)GAL\ext;</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
