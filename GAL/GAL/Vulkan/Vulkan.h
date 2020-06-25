@@ -128,7 +128,7 @@ inline VkFormatFeatureFlagBits ImageUseToVkFormatFeatureFlagBits(const GAL::Imag
 	}
 }
 
-VkImageUsageFlags ImageUseToVkImageUsageFlags(const GTSL::uint32 imageUses)
+inline VkImageUsageFlags ImageUseToVkImageUsageFlags(const GTSL::uint32 imageUses)
 {
 	VkImageUsageFlags vk_image_usage_flags{ 0 };
 

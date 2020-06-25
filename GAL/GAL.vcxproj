@@ -49,7 +49,6 @@
     <ClCompile Include="src\Vulkan\VulkanRenderContext.cpp" />
     <ClCompile Include="src\Vulkan\VulkanRenderDevice.cpp" />
     <ClCompile Include="src\Vulkan\VulkanRenderPass.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanRenderTarget.cpp" />
     <ClCompile Include="src\Vulkan\VulkanSynchronization.cpp" />
     <ClCompile Include="src\Vulkan\VulkanImage.cpp" />
   </ItemGroup>

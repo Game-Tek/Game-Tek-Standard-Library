@@ -30,7 +30,6 @@ namespace GTSL
 
 		operator GTSL::Ranger<UTF8>() { return array; }
 		operator GTSL::Ranger<UTF8>() const { return array; }
-		operator GTSL::Ranger<const UTF8>() { return array; }
 		operator GTSL::Ranger<const UTF8>() const { return array; }
 
 		void Drop(const uint32 from) { this->array.Resize(from); }
@@ -54,7 +53,7 @@ namespace GTSL
 			this->array.PushBack(Ranger<const UTF8>(StringLength(cstring), cstring)); return *this;
 		}
 
-		constexpr StaticString& operator+=(const Ranger<UTF8>& ranger)
+		constexpr StaticString& operator+=(const Ranger<const UTF8>& ranger)
 		{
 			this->array.PushBack(ranger); return *this;
 		}

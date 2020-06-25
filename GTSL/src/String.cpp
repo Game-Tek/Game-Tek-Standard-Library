@@ -76,7 +76,7 @@ void String::Append(const String& string)
 	return;
 }
 
-void String::Append(const Ranger<UTF8>& ranger)
+void String::Append(const Ranger<const UTF8>& ranger)
 {
 	data.PushBack(ranger);
 }

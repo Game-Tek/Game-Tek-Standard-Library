@@ -97,7 +97,7 @@ namespace GTSL
 		//Places the String after this String with a space in the middle.
 		void Append(const String& string);
 
-		void Append(const Ranger<UTF8>& ranger);
+		void Append(const Ranger<const UTF8>& ranger);
 
 		void Append(uint8 number);
 		void Append(int8 number);

@@ -6,6 +6,7 @@ namespace GTSL
 {	
 	struct TextureCoordinates2D
 	{
+		TextureCoordinates2D() = default;
 		TextureCoordinates2D(const float32 u, const float32 v) noexcept : array{ u, v } {}
 
 		float32& U() { return array[0]; }
@@ -19,9 +20,10 @@ namespace GTSL
 		float32 array[2]{ 0.0f };
 	};
 
-	struct TextureCoordinate3D
+	struct TextureCoordinates3D
 	{
-		TextureCoordinate3D(const float32 u, const float32 v, const float32 w) noexcept : array{ u, v, w } {}
+		TextureCoordinates3D() = default;
+		TextureCoordinates3D(const float32 u, const float32 v, const float32 w) noexcept : array{ u, v, w } {}
 		
 		float32& U() { return array[0]; }
 		float32& V() { return array[1]; }
