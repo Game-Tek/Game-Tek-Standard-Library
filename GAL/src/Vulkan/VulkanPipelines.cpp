@@ -63,9 +63,9 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 
 	VkPipelineVertexInputStateCreateInfo vk_pipeline_vertex_input_state_create_info{ VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
 	vk_pipeline_vertex_input_state_create_info.vertexBindingDescriptionCount = vk_vertex_input_binding_descriptions.GetLength();
-	vk_pipeline_vertex_input_state_create_info.pVertexBindingDescriptions = vk_vertex_input_binding_descriptions.GetData();
+	vk_pipeline_vertex_input_state_create_info.pVertexBindingDescriptions = vk_vertex_input_binding_descriptions.begin();
 	vk_pipeline_vertex_input_state_create_info.vertexAttributeDescriptionCount = vk_vertex_input_attribute_descriptions.GetLength();
-	vk_pipeline_vertex_input_state_create_info.pVertexAttributeDescriptions = vk_vertex_input_attribute_descriptions.GetData();
+	vk_pipeline_vertex_input_state_create_info.pVertexAttributeDescriptions = vk_vertex_input_attribute_descriptions.begin();
 
 	//  INPUT ASSEMBLY STATE
 	VkPipelineInputAssemblyStateCreateInfo vk_pipeline_input_assembly_state_create_info{ VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
@@ -152,12 +152,12 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	VkPipelineDynamicStateCreateInfo vk_pipeline_dynamic_state_create_info{ VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
 	GTSL::Array<VkDynamicState, 1> vk_dynamic_states = { VK_DYNAMIC_STATE_VIEWPORT };
 	vk_pipeline_dynamic_state_create_info.dynamicStateCount = vk_dynamic_states.GetCapacity();
-	vk_pipeline_dynamic_state_create_info.pDynamicStates = vk_dynamic_states.GetData();
+	vk_pipeline_dynamic_state_create_info.pDynamicStates = vk_dynamic_states.begin();
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES, GTSL::uint8> vk_pipeline_shader_stage_create_infos(createInfo.PipelineDescriptor.Stages.ElementCount());
-	GTSL::Array<VkShaderModule, MAX_SHADER_STAGES, GTSL::uint8> vk_shader_modules(createInfo.PipelineDescriptor.Stages.ElementCount());
+	GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vk_pipeline_shader_stage_create_infos(createInfo.PipelineDescriptor.Stages.ElementCount());
+	GTSL::Array<VkShaderModule, MAX_SHADER_STAGES> vk_shader_modules(createInfo.PipelineDescriptor.Stages.ElementCount());
 	GTSL::Array<GTSL::StaticString<256>, MAX_SHADER_STAGES> shader_names(createInfo.PipelineDescriptor.Stages.ElementCount());
 	for (GTSL::uint8 i = 0; i < createInfo.PipelineDescriptor.Stages.ElementCount(); ++i)
 	{
@@ -209,7 +209,7 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 
 	vk_pipeline_layout_create_info.setLayoutCount = vk_descriptor_set_layouts.GetLength();
 	//What sets this pipeline layout uses.
-	vk_pipeline_layout_create_info.pSetLayouts = vk_descriptor_set_layouts.GetData();
+	vk_pipeline_layout_create_info.pSetLayouts = vk_descriptor_set_layouts.begin();
 
 	vkCreatePipelineLayout(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_pipeline_layout_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipelineLayout);
 
@@ -217,7 +217,7 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	vk_graphics_pipeline_create_info.flags = createInfo.IsInheritable ? VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT : 0;
 	vk_graphics_pipeline_create_info.flags |= createInfo.ParentPipeline ? VK_PIPELINE_CREATE_DERIVATIVE_BIT : 0;
 	vk_graphics_pipeline_create_info.stageCount = vk_pipeline_shader_stage_create_infos.GetLength();
-	vk_graphics_pipeline_create_info.pStages = vk_pipeline_shader_stage_create_infos.GetData();
+	vk_graphics_pipeline_create_info.pStages = vk_pipeline_shader_stage_create_infos.begin();
 	vk_graphics_pipeline_create_info.pVertexInputState = &vk_pipeline_vertex_input_state_create_info;
 	vk_graphics_pipeline_create_info.pInputAssemblyState = &vk_pipeline_input_assembly_state_create_info;
 	vk_graphics_pipeline_create_info.pTessellationState = &vk_pipeline_tessellation_state_create_info;

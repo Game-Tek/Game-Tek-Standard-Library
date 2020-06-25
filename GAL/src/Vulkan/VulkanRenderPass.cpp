@@ -114,12 +114,12 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo) : RenderPa
 	{
 		vk_subpass_descriptions[SUBPASS].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		vk_subpass_descriptions[SUBPASS].colorAttachmentCount = write_attachments_count;
-		vk_subpass_descriptions[SUBPASS].pColorAttachments = write_attachments_references.GetData() + SUBPASS;
+		vk_subpass_descriptions[SUBPASS].pColorAttachments = write_attachments_references.begin() + SUBPASS;
 		vk_subpass_descriptions[SUBPASS].inputAttachmentCount = read_attachments_count;
-		vk_subpass_descriptions[SUBPASS].pInputAttachments = read_attachments_references.GetData() + SUBPASS;
+		vk_subpass_descriptions[SUBPASS].pInputAttachments = read_attachments_references.begin() + SUBPASS;
 		vk_subpass_descriptions[SUBPASS].pResolveAttachments = nullptr;
 		vk_subpass_descriptions[SUBPASS].preserveAttachmentCount = 0; //PreserveAttachmentsCount;
-		vk_subpass_descriptions[SUBPASS].pPreserveAttachments = preserve_attachments_indices.GetData() + SUBPASS;
+		vk_subpass_descriptions[SUBPASS].pPreserveAttachments = preserve_attachments_indices.begin() + SUBPASS;
 		vk_subpass_descriptions[SUBPASS].pDepthStencilAttachment = &depth_attachment_references[SUBPASS];
 	}
 
@@ -146,11 +146,11 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo) : RenderPa
 
 	VkRenderPassCreateInfo vk_renderpass_create_info{ VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
 	vk_renderpass_create_info.attachmentCount = createInfo.Descriptor.RenderPassColorAttachments.ElementCount() + depth_attachment;
-	vk_renderpass_create_info.pAttachments = vk_attachment_descriptions.GetData();
+	vk_renderpass_create_info.pAttachments = vk_attachment_descriptions.begin();
 	vk_renderpass_create_info.subpassCount = createInfo.Descriptor.SubPasses.ElementCount();
-	vk_renderpass_create_info.pSubpasses = vk_subpass_descriptions.GetData();
+	vk_renderpass_create_info.pSubpasses = vk_subpass_descriptions.begin();
 	vk_renderpass_create_info.dependencyCount = array_length;
-	vk_renderpass_create_info.pDependencies = vk_subpass_dependencies.GetData();
+	vk_renderpass_create_info.pDependencies = vk_subpass_dependencies.begin();
 
 	vkCreateRenderPass(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_renderpass_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &renderPass);
 }

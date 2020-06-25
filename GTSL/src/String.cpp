@@ -183,7 +183,7 @@ void String::ReplaceAll(const char a, const char with)
 
 void String::ReplaceAll(const char* a, const char* with)
 {
-	Array<uint32, 24, uint8> ocurrences; //cache ocurrences so as to not perform an array Resize every time we Find a match
+	Array<uint32, 24> ocurrences; //cache ocurrences so as to not perform an array Resize every time we Find a match
 
 	auto a_length = StringLength(a) - 1;
 	auto with_length = StringLength(with) - 1;

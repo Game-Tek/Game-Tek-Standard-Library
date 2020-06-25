@@ -19,9 +19,9 @@ VkSurfaceFormatKHR GAL::VulkanRenderContext::findFormat(VulkanRenderDevice* vulk
 	
 	GTSL::uint32 formats_count = 0;
 	vkGetPhysicalDeviceSurfaceFormatsKHR(pd, surface, &formats_count, nullptr);
-	GTSL::Array<VkSurfaceFormatKHR, 50, GTSL::uint8> supported_surface_formats(formats_count);
+	GTSL::Array<VkSurfaceFormatKHR, 50> supported_surface_formats(formats_count);
 	formats_count = supported_surface_formats.GetCapacity();
-	vkGetPhysicalDeviceSurfaceFormatsKHR(pd, surface, &formats_count, supported_surface_formats.GetData());
+	vkGetPhysicalDeviceSurfaceFormatsKHR(pd, surface, &formats_count, supported_surface_formats.begin());
 	
 	//NASTY, REMOVE
 	VkBool32 supports = 0;
@@ -41,9 +41,9 @@ VkPresentModeKHR GAL::VulkanRenderContext::findPresentMode(const VkPhysicalDevic
 {
 	GTSL::uint32 present_modes_count = 0;
 	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &present_modes_count, nullptr);
-	GTSL::Array<VkPresentModeKHR, 10, GTSL::uint8> supported_present_modes(present_modes_count);
+	GTSL::Array<VkPresentModeKHR, 10> supported_present_modes(present_modes_count);
 	present_modes_count = supported_present_modes.GetCapacity();
-	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &present_modes_count, supported_present_modes.GetData());
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &present_modes_count, supported_present_modes.begin());
 
 	GTSL::uint8 best_score = 0;
 	VkPresentModeKHR best_present_mode{};
@@ -184,7 +184,7 @@ GTSL::Array<GAL::VulkanImage, 5> GAL::VulkanRenderContext::GetImages(const GetIm
 	vulkan_images.Resize(swapchain_image_count);
 
 	GTSL::Array<VkImage, 5> vk_images(swapchain_image_count);
-	VK_CHECK(vkGetSwapchainImagesKHR(static_cast<VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), swapchain, &swapchain_image_count, vk_images.GetData()));
+	VK_CHECK(vkGetSwapchainImagesKHR(static_cast<VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), swapchain, &swapchain_image_count, vk_images.begin()));
 
 	for(auto& e : vulkan_images)
 	{

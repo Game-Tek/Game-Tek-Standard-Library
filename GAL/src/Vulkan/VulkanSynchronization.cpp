@@ -17,7 +17,7 @@ void GAL::VulkanFence::Destroy(RenderDevice* renderDevice)
 
 void GAL::VulkanFence::WaitForFences(const WaitForFencesInfo& waitForFencesInfo)
 {
-	GTSL::Array<VkFence, 32, GTSL::uint8> vk_fences;
+	GTSL::Array<VkFence, 32> vk_fences;
 	{
 		for (auto& e : waitForFencesInfo.Fences)
 		{

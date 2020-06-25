@@ -104,7 +104,7 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 	vk_submit_info.commandBufferCount = vk_command_buffers.GetLength();
 	vk_submit_info.pCommandBuffers = vk_command_buffers.begin();
 
-	GTSL::Array<GTSL::uint32, 16, GTSL::uint8> vk_pipeline_stages(submitInfo.WaitPipelineStages.ElementCount());
+	GTSL::Array<GTSL::uint32, 16> vk_pipeline_stages(submitInfo.WaitPipelineStages.ElementCount());
 	{
 		for(auto e : submitInfo.WaitPipelineStages) { vk_pipeline_stages[&e - submitInfo.WaitPipelineStages.begin()] = PipelineStageToVkPipelineStageFlags(e); }
 	}
@@ -131,7 +131,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	vk_application_info.pApplicationName = name.begin();
 	vk_application_info.pEngineName = "Game-Tek | GAL";
 
-	GTSL::Array<const char*, 32, GTSL::uint8> instance_layers{
+	GTSL::Array<const char*, 32> instance_layers{
 #if(_DEBUG)
 		"VK_LAYER_KHRONOS_validation",
 		"VK_LAYER_LUNARG_standard_validation",
@@ -140,7 +140,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 };
 #endif
 
-	GTSL::Array<const char*, 32, GTSL::uint8> instance_extensions{
+	GTSL::Array<const char*, 32> instance_extensions{
 #if(_DEBUG)
 		VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 		VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
@@ -165,9 +165,9 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	vk_instance_create_info.pNext = &vk_debug_utils_messenger_create_info_EXT;
 	vk_instance_create_info.pApplicationInfo = &vk_application_info;
 	vk_instance_create_info.enabledLayerCount = instance_layers.GetLength();
-	vk_instance_create_info.ppEnabledLayerNames = instance_layers.GetData();
+	vk_instance_create_info.ppEnabledLayerNames = instance_layers.begin();
 	vk_instance_create_info.enabledExtensionCount = instance_extensions.GetLength();
-	vk_instance_create_info.ppEnabledExtensionNames = instance_extensions.GetData();
+	vk_instance_create_info.ppEnabledExtensionNames = instance_extensions.begin();
 
 	VK_CHECK(vkCreateInstance(&vk_instance_create_info, GetVkAllocationCallbacks(), &instance))
 
@@ -191,7 +191,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	vk_physical_device_features.samplerAnisotropy = true;
 	vk_physical_device_features.shaderSampledImageArrayDynamicIndexing = true;
 
-	GTSL::Array<const char*, 32, GTSL::uint8> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+	GTSL::Array<const char*, 32> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 	GTSL::Array<VkDeviceQueueCreateInfo, 16> vk_device_queue_create_infos(createInfo.QueueCreateInfos.ElementCount());
 
@@ -199,7 +199,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, nullptr);
 	//Get the amount of queue families there are in the physical device.
 	GTSL::Array<VkQueueFamilyProperties, 32> vk_queue_families_properties(queue_families_count);
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, vk_queue_families_properties.GetData());
+	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, vk_queue_families_properties.begin());
 
 	GTSL::Array<bool, 32> used_families(queue_families_count);
 	for (auto& e : used_families) { e = false; }
@@ -239,10 +239,10 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 
 	VkDeviceCreateInfo vk_device_create_info{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
 	vk_device_create_info.queueCreateInfoCount = vk_device_queue_create_infos.GetLength();
-	vk_device_create_info.pQueueCreateInfos = vk_device_queue_create_infos.GetData();
+	vk_device_create_info.pQueueCreateInfos = vk_device_queue_create_infos.begin();
 	vk_device_create_info.pEnabledFeatures = &vk_physical_device_features;
 	vk_device_create_info.enabledExtensionCount = device_extensions.GetLength();
-	vk_device_create_info.ppEnabledExtensionNames = device_extensions.GetData();
+	vk_device_create_info.ppEnabledExtensionNames = device_extensions.begin();
 
 	VK_CHECK(vkCreateDevice(physicalDevice, &vk_device_create_info, GetVkAllocationCallbacks(), &device));
 

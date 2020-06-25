@@ -10,18 +10,18 @@
 
 namespace GTSL
 {
-	template <typename T, size_t CAPACITY, typename LT = uint32>
+	template <typename T, size_t CAPACITY>
 	class Array
 	{
+		uint32 length = 0;
 		T data[CAPACITY];
-		LT length = 0;
 
-		constexpr void copyToData(const void* from, const LT length) noexcept
+		constexpr void copyToData(const void* from, const uint64 length) noexcept
 		{
 			MemCopy(length * sizeof(T), from, this->data);
 		}
 
-		void copy(const LT length, const void* from, void* to)
+		void copy(const uint64 length, const void* from, void* to)
 		{
 			MemCopy(length * sizeof(T), from, to);
 		}
@@ -57,7 +57,7 @@ namespace GTSL
 			copyToData(list.begin(), this->length);
 		}
 
-		constexpr explicit Array(const LT length) noexcept : length(length)
+		constexpr explicit Array(const uint32 length) noexcept : length(length)
 		{
 			GTSL_ASSERT(length <= CAPACITY, "Array is not big enough to insert the elements requested!")
 		}
@@ -110,13 +110,13 @@ namespace GTSL
 			}
 		}
 
-		constexpr T& operator[](const LT i) noexcept
+		constexpr T& operator[](const uint32 i) noexcept
 		{
 			GTSL_ASSERT(i < CAPACITY, "Out of Bounds! Requested index is greater than the Array's statically allocated size!");
 			return this->data[i];
 		}
 
-		constexpr const T& operator[](const LT i) const noexcept
+		constexpr const T& operator[](const uint32 i) const noexcept
 		{
 			GTSL_ASSERT(i < CAPACITY, "Out of Bounds! Requested index is greater than the Array's statically allocated size!");
 			return this->data[i];
@@ -131,53 +131,46 @@ namespace GTSL
 			return true;
 		}
 
-		constexpr T* GetData() noexcept { return reinterpret_cast<T*>(&this->data); }
-
-		[[nodiscard]] constexpr const T* GetData() const noexcept { return reinterpret_cast<const T*>(this->data); }
-
-		constexpr LT PushBack(const T& obj) noexcept
+		constexpr uint32 PushBack(const T& obj) noexcept
 		{
 			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
 			::new(static_cast<void*>(this->data + this->length)) T(obj);
-			return ++this->length;
+			return this->length++;
 		}
 
-		constexpr LT PushBack(T&& obj) noexcept
+		constexpr uint32 PushBack(T&& obj) noexcept
 		{
 			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
 			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeTransferReference(obj));
-			return ++this->length;
+			return this->length++;
 		}
 
-		constexpr LT PushBack(const Ranger<T>& ranger) noexcept
+		constexpr uint32 PushBack(const Ranger<const T>& ranger) noexcept
 		{
 			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
 			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
-			return this->length += ranger.ElementCount();
+			auto ret = this->length += ranger.ElementCount();
+			this->length += ranger.ElementCount();
+			return ret;
 		}
 
-		constexpr LT PushBack(const Ranger<const T>& ranger) noexcept
-		{
-			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
-			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
-			return this->length += ranger.ElementCount();
-		}
-
-		constexpr LT Insert(const LT index, const Ranger<T>& ranger) noexcept
+		constexpr uint32 Insert(const uint32 index, const Ranger<const T>& ranger) noexcept
 		{
 			copy(ranger.ElementCount(), ranger.begin(), this->data + index);
-			return this->length += ranger.ElementCount();
+			auto ret = this->length += ranger.ElementCount();
+			this->length += ranger.ElementCount();
+			return ret;
 		}
 
 		template<typename... ARGS>
-		constexpr LT EmplaceBack(ARGS&&... args)
+		constexpr uint32 EmplaceBack(ARGS&&... args)
 		{
 			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
 			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeForwardReference<ARGS>(args) ...);
-			return ++this->length;
+			return this->length++;
 		}
 
-		constexpr void Resize(LT size)
+		constexpr void Resize(uint32 size)
 		{
 			GTSL_ASSERT(size <= CAPACITY, "Requested size for array Resize is greater than Array's statically allocated size!");
 			this->length = size;
@@ -190,8 +183,8 @@ namespace GTSL
 			--this->length;
 		}
 
-		[[nodiscard]] constexpr LT GetLength() const noexcept { return this->length; }
+		[[nodiscard]] constexpr uint32 GetLength() const noexcept { return this->length; }
 
-		[[nodiscard]] constexpr LT GetCapacity() const noexcept { return CAPACITY; }
+		[[nodiscard]] constexpr uint32 GetCapacity() const noexcept { return CAPACITY; }
 	};
 }

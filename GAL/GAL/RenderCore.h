@@ -406,7 +406,7 @@ namespace GAL
 		}
 	}
 
-	inline GTSL::uint64 ImageFormatChannelSize(const ImageFormat imageFormat)
+	inline GTSL::uint8 ImageFormatChannelSize(const ImageFormat imageFormat)
 	{
 		switch (imageFormat)
 		{
@@ -415,7 +415,7 @@ namespace GAL
 		}
 	}
 
-	inline GTSL::uint64 ImageFormatChannelCount(const ImageFormat imageFormat)
+	inline GTSL::uint8 ImageFormatChannelCount(const ImageFormat imageFormat)
 	{
 		switch (imageFormat)
 		{
@@ -424,7 +424,7 @@ namespace GAL
 		}
 	}
 	
-	inline GTSL::uint64 ImageFormatSize(const  ImageFormat imageFormat)
+	inline GTSL::uint8 ImageFormatSize(const  ImageFormat imageFormat)
 	{
 		switch (imageFormat)
 		{

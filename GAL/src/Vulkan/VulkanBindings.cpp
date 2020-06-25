@@ -31,7 +31,7 @@ GAL::VulkanBindingsPool::VulkanBindingsPool(const CreateInfo& createInfo)
 	//Is the total number of sets that can be allocated from the pool.
 	vk_descriptor_pool_create_info.maxSets = createInfo.BindingsSetCount;
 	vk_descriptor_pool_create_info.poolSizeCount = descriptor_pool_sizes.GetLength();
-	vk_descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.GetData();
+	vk_descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.begin();
 
 	vkCreateDescriptorPool(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_descriptor_pool_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &vkDescriptorPool);
 }
@@ -44,7 +44,7 @@ void GAL::VulkanBindingsPool::Destroy(GAL::RenderDevice* renderDevice)
 
 void GAL::VulkanBindingsPool::FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo)
 {
-	vkFreeDescriptorSets(static_cast<VulkanRenderDevice*>(freeBindingsSetInfo.RenderDevice)->GetVkDevice(), vkDescriptorPool, static_cast<VulkanBindingsSet*>(freeBindingsSetInfo.BindingsSet)->GetVkDescriptorSets().GetLength(), static_cast<VulkanBindingsSet*>(freeBindingsSetInfo.BindingsSet)->GetVkDescriptorSets().GetData());
+	vkFreeDescriptorSets(static_cast<VulkanRenderDevice*>(freeBindingsSetInfo.RenderDevice)->GetVkDevice(), vkDescriptorPool, static_cast<VulkanBindingsSet*>(freeBindingsSetInfo.BindingsSet)->GetVkDescriptorSets().GetLength(), static_cast<VulkanBindingsSet*>(freeBindingsSetInfo.BindingsSet)->GetVkDescriptorSets().begin());
 }
 
 void GAL::VulkanBindingsPool::FreePool(const FreeBindingsPoolInfo& freeDescriptorPoolInfo)
@@ -72,7 +72,7 @@ GAL::VulkanBindingsSet::VulkanBindingsSet(const CreateInfo& createInfo)
 	}
 
 	vk_descriptor_set_layout_create_info.bindingCount = descriptor_set_layout_bindings.GetLength();
-	vk_descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.GetData();
+	vk_descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.begin();
 
 	vkCreateDescriptorSetLayout(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_descriptor_set_layout_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &descriptorSetLayout);
 
@@ -81,11 +81,11 @@ GAL::VulkanBindingsSet::VulkanBindingsSet(const CreateInfo& createInfo)
 	vk_descriptor_set_allocate_info.descriptorSetCount = createInfo.BindingsSetCount;
 
 	GTSL::Array<VkDescriptorSetLayout, 32> vk_descriptor_set_layouts(createInfo.BindingsSetCount);
-	vk_descriptor_set_allocate_info.pSetLayouts = vk_descriptor_set_layouts.GetData();
+	vk_descriptor_set_allocate_info.pSetLayouts = vk_descriptor_set_layouts.begin();
 
 	descriptorSets.Resize(vk_descriptor_set_allocate_info.descriptorSetCount);
 
-	vkAllocateDescriptorSets(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(),	&vk_descriptor_set_allocate_info, descriptorSets.GetData());
+	vkAllocateDescriptorSets(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(),	&vk_descriptor_set_allocate_info, descriptorSets.begin());
 }
 
 void GAL::VulkanBindingsSet::Destroy(GAL::RenderDevice* renderDevice)
@@ -98,8 +98,8 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 {
 	GTSL::Array<VkWriteDescriptorSet, 32> write_descriptors;
 
-	GTSL::Array<GTSL::Array<VkDescriptorImageInfo, 16, GTSL::uint8>, 16, GTSL::uint8> vk_descriptor_image_infos;
-	GTSL::Array<GTSL::Array<VkDescriptorBufferInfo, 16, GTSL::uint8>, 16, GTSL::uint8> vk_descriptor_buffer_infos;
+	GTSL::Array<GTSL::Array<VkDescriptorImageInfo, 168>, 16> vk_descriptor_image_infos;
+	GTSL::Array<GTSL::Array<VkDescriptorBufferInfo, 16>, 16> vk_descriptor_buffer_infos;
 	
 	uint32_t write_descriptor_index = 0;
 	uint32_t image_set = 0;
@@ -157,5 +157,5 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 		write_descriptors[write_descriptor_index].pTexelBufferView = nullptr;
 	}
 
-	vkUpdateDescriptorSets(static_cast<VulkanRenderDevice*>(bindingsUpdateInfo.RenderDevice)->GetVkDevice(), write_descriptors.GetCapacity(), write_descriptors.GetData(), 0, nullptr);
+	vkUpdateDescriptorSets(static_cast<VulkanRenderDevice*>(bindingsUpdateInfo.RenderDevice)->GetVkDevice(), write_descriptors.GetCapacity(), write_descriptors.begin(), 0, nullptr);
 }

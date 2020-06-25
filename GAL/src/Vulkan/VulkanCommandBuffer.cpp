@@ -125,7 +125,7 @@ void GAL::VulkanCommandBuffer::BindBindingsSet(const BindBindingsSetInfo& bindBi
 		}
 	}
 
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,	static_cast<VulkanGraphicsPipeline*>(bindBindingsSetInfo.Pipeline)->GetVkPipelineLayout(), 0, descriptor_sets.GetLength(), descriptor_sets.GetData(), 0, 0);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,	static_cast<VulkanGraphicsPipeline*>(bindBindingsSetInfo.Pipeline)->GetVkPipelineLayout(), 0, descriptor_sets.GetLength(), descriptor_sets.begin(), 0, 0);
 }
 
 void GAL::VulkanCommandBuffer::CopyImage(const CopyImageInfo& copyImageInfo)

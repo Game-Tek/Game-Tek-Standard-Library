@@ -22,7 +22,7 @@ GAL::VulkanFramebuffer::VulkanFramebuffer(const CreateInfo& createInfo) : Frameb
 	vk_framebuffer_create_info.height = createInfo.Extent.Height;
 	vk_framebuffer_create_info.layers = 1;
 	vk_framebuffer_create_info.renderPass = static_cast<VulkanRenderPass*>(createInfo.RenderPass)->GetVkRenderPass();
-	vk_framebuffer_create_info.pAttachments = result.GetData();
+	vk_framebuffer_create_info.pAttachments = result.begin();
 
 	VK_CHECK(vkCreateFramebuffer(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_framebuffer_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &framebuffer));
 }
