@@ -145,11 +145,20 @@ namespace GTSL
 			return this->length++;
 		}
 
+		constexpr uint32 PushBack(const Ranger<T>& ranger) noexcept
+		{
+			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
+			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
+			auto ret = this->length + ranger.ElementCount();
+			this->length += ranger.ElementCount();
+			return ret;
+		}
+
 		constexpr uint32 PushBack(const Ranger<const T>& ranger) noexcept
 		{
 			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
 			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
-			auto ret = this->length += ranger.ElementCount();
+			auto ret = this->length + ranger.ElementCount();
 			this->length += ranger.ElementCount();
 			return ret;
 		}
@@ -157,7 +166,7 @@ namespace GTSL
 		constexpr uint32 Insert(const uint32 index, const Ranger<const T>& ranger) noexcept
 		{
 			copy(ranger.ElementCount(), ranger.begin(), this->data + index);
-			auto ret = this->length += ranger.ElementCount();
+			auto ret = this->length + ranger.ElementCount();
 			this->length += ranger.ElementCount();
 			return ret;
 		}
