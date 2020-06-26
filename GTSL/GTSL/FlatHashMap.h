@@ -21,6 +21,8 @@ namespace GTSL
 		using key_type = uint64;
 		using ref = uint64;
 
+		FlatHashMap() = default;
+		
 		FlatHashMap(const uint32 size, const AllocatorReference& allocatorReference) : capacity(size)
 		{
 			GTSL_ASSERT(size != 0 && (size & (size - 1)) == 0, "Size is not a power of two!")
