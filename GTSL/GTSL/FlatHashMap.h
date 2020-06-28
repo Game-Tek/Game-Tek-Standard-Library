@@ -183,6 +183,32 @@ namespace GTSL
 			deallocate(allocatorReference);
 			this->data = new_alloc; this->capacity = new_length;
 			build(new_length);
+
+			for(uint32 bucket = 0; bucket < this->capacity / 2; ++bucket)
+			{
+				auto element_index = 0;
+				
+				for(auto e : getKeysBucket(bucket))
+				{
+					auto new_bucket = modulo(e, this->capacity);
+					
+					if(new_bucket != bucket) //If after resizing, element would not still be in the same bucket, move it
+					{	
+						auto& current_bucket_length = getBucketLength(bucket); auto& new_bucket_length = getBucketLength(new_bucket);
+						
+						getKeysBucket(new_bucket)[new_bucket_length] = e;
+						MemCopy(sizeof(T), &getValuesBucket(bucket)[element_index], &getValuesBucket(bucket)[new_bucket_length]);
+						
+						MemCopy((current_bucket_length - element_index) * sizeof(key_type), getKeysBucket(bucket) + element_index + 1, getKeysBucket(bucket) + element_index);
+						MemCopy((current_bucket_length - element_index) * sizeof(T), getValuesBucket(bucket) + element_index + 1, getValuesBucket(bucket) + element_index);
+
+						--current_bucket_length;
+						++new_bucket;
+					}
+					
+					++element_index;
+				}
+			}
 		}
 
 		static uint64 getKeyBucketAllocationSize(const uint32 length) { return (length + 1) * sizeof(key_type); }
