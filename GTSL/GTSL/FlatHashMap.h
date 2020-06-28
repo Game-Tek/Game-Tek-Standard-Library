@@ -18,12 +18,6 @@ namespace GTSL
 	{
 	public:
 		using key_type = uint64;
-		struct ElementReference
-		{
-			ElementReference() = default;
-			ElementReference(const uint32 bucket, const uint8 element) : Bucket(bucket), Element(element) {}
-			uint32 Bucket : 26 = 0, Element : 6 = 0;
-		};
 
 		FlatHashMap() = default;
 
@@ -122,28 +116,10 @@ namespace GTSL
 		T* Emplace(const AllocatorReference& allocatorReference, const key_type key, ARGS&&... args)
 		{
 			const auto bucket = modulo(key, this->capacity);
-#if (_DEBUG)
 			GTSL_ASSERT(findKeyInBucket(bucket, key) == nullptr, "Key already exists!")
-#endif
-			
 			uint64 place_index = getBucketLength(bucket)++;
 			if (place_index + 1 > this->capacity) { resize(allocatorReference); }
 			getKeysBucket(bucket)[place_index] = key;
-			return ::new(getValuesBucket(bucket) + place_index) T(MakeForwardReference<ARGS>(args)...);
-		}
-
-		template<typename... ARGS>
-		T* Emplace(const AllocatorReference& allocatorReference, const key_type key, ElementReference& reference, ARGS&&... args)
-		{
-			const auto bucket = modulo(key, this->capacity);
-#if (_DEBUG)
-			GTSL_ASSERT(findKeyInBucket(bucket, key) == nullptr, "Key already exists!")
-#endif
-			
-			uint64 place_index = getBucketLength(bucket)++;
-			if (place_index + 1 > this->capacity) { resize(allocatorReference); }
-			getKeysBucket(bucket)[place_index] = key;
-			reference = ElementReference(bucket, place_index);
 			return ::new(getValuesBucket(bucket) + place_index) T(MakeForwardReference<ARGS>(args)...);
 		}
 
@@ -154,14 +130,16 @@ namespace GTSL
 			return getValuesBucket(bucket)[index];
 		}
 
-		[[nodiscard]] ElementReference GetReference(const key_type key) const
+		void Remove(const key_type key)
 		{
-			auto bucket = modulo(key, this->capacity);
-			GTSL_ASSERT(getIndexForKeyInBucket(bucket, key) != 0xFFFFFFFF, "Key doesn't exist!");
-			return ElementReference(bucket, getIndexForKeyInBucket(bucket, key));
+			auto bucket = modulo(key, this->capacity); auto index = getIndexForKeyInBucket(bucket, key);
+			key_type bucket_length = getBucketLength(bucket)--;
+			GTSL_ASSERT(findKeyInBucket(bucket, key) == nullptr, "Key doesn't exist!")
+			getKeysBucket(bucket)[index].~T();
+			MemCopy((bucket_length - index) * sizeof(key_type), getKeysBucket(bucket) + index + 1, getKeysBucket(bucket) + index);
+			MemCopy((bucket_length - index) * sizeof(T), getValuesBucket(bucket) + index + 1, getValuesBucket(bucket) + index);
 		}
-
-		T& operator[](const ElementReference reference) { return getValuesBucket(reference.Bucket)[reference.Element]; }
+		
 	private:
 		friend class Iterator<T>;
 
@@ -171,6 +149,18 @@ namespace GTSL
 
 		[[nodiscard]] key_type* findKeyInBucket(const uint32 bucket, const key_type key) const
 		{
+			//const auto simd_elements = modulo(getBucketLength(bucket), this->capacity);
+			//
+			//SIMD128<key_type> key_vector(key);
+			//
+			//for (uint32 i = 0; i < simd_elements; ++i)
+			//{
+			//	SIMD128<key_type> keys(UnalignedPointer<uint64>(getKeysBucket(bucket)));
+			//	auto res = keys == key_vector;
+			//	auto bb = res.GetElement<0>();
+			//	if(bb & key || cc & key)
+			//}
+			
 			for (auto& e : getKeysBucket(bucket)) { if (e == key) { return &e; } } return nullptr;
 		}
 
