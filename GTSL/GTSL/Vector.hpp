@@ -194,7 +194,7 @@ namespace GTSL
 		void Initialize(const GTSL::Ranger<const T>& ranger, const AllocatorReference& allocatorReference)
 		{
 			this->data = allocate(ranger.ElementCount(), allocatorReference);
-			copyArray(data, this->data, ranger.ElementCount());
+			copyArray(ranger.begin(), this->data, ranger.ElementCount());
 			this->length = ranger.ElementCount();
 		}
 

@@ -6,12 +6,16 @@
 
 #include <GTSL/Vector.hpp>
 
+namespace GTSL {
+	class String;
+}
+
 namespace GAL
 {
 	class VulkanShaders
 	{
 	public:
-		static void CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result, const GTSL::AllocatorReference& allocatorReference);
+		static bool CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result, GTSL::String& compilationResult, const GTSL::AllocatorReference& allocatorReference);
 	};
 
 	class VulkanGraphicsPipeline final : public GraphicsPipeline

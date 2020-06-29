@@ -6,11 +6,11 @@
 
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanRenderPass.h"
+#include "GTSL/String.hpp"
 
-void GAL::VulkanShaders::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName,
-                                       const ShaderType shaderType, const ShaderLanguage shaderLanguage,
-                                       GTSL::Vector<GTSL::byte>& result,
-                                       const GTSL::AllocatorReference& allocatorReference)
+bool GAL::VulkanShaders::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName,
+									   const ShaderType shaderType, const ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result,
+									   GTSL::String& compilationResult, const GTSL::AllocatorReference& allocatorReference)
 {
 	shaderc_shader_kind shaderc_stage;
 
@@ -27,7 +27,7 @@ void GAL::VulkanShaders::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL
 
 	const shaderc::Compiler shaderc_compiler;
 	shaderc::CompileOptions shaderc_compile_options;
-	shaderc_compile_options.SetTargetSpirv(shaderc_spirv_version_1_5);
+	shaderc_compile_options.SetTargetSpirv(shaderc_spirv_version_1_3);
 	shaderc_compile_options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
 
 	shaderc_source_language shaderc_source_language;
@@ -36,14 +36,20 @@ void GAL::VulkanShaders::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL
 	case ShaderLanguage::GLSL: shaderc_source_language = shaderc_source_language_glsl; break;
 	case ShaderLanguage::HLSL: shaderc_source_language = shaderc_source_language_hlsl; break;
 	}
-	
+
 	shaderc_compile_options.SetSourceLanguage(shaderc_source_language);
 	shaderc_compile_options.SetOptimizationLevel(shaderc_optimization_level_performance);
-	const auto shaderc_module = shaderc_compiler.CompileGlslToSpv(code.begin(), shaderc_stage, shaderName.begin(), shaderc_compile_options);
-
-	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success) { return; }
-
+	const auto shaderc_module = shaderc_compiler.CompileGlslToSpv(static_cast<const char*>(code.begin()), shaderc_stage, shaderName.begin(), shaderc_compile_options);
+	
+	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success)
+	{
+		auto res = shaderc_module.GetErrorMessage();
+		compilationResult = GTSL::String(GTSL::Ranger<const GTSL::UTF8>(shaderc_module.GetErrorMessage().length(), shaderc_module.GetErrorMessage().c_str()), allocatorReference);
+		return false;
+	}
+	
 	result.Initialize(GTSL::Ranger<const GTSL::byte>(reinterpret_cast<const GTSL::byte*>(shaderc_module.begin()), reinterpret_cast<const GTSL::byte*>(shaderc_module.end())), allocatorReference);
+	return true;
 }
 
 GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo)
@@ -161,7 +167,7 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 
 	GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vk_pipeline_shader_stage_create_infos(createInfo.PipelineDescriptor.Stages.ElementCount());
 	GTSL::Array<VkShaderModule, MAX_SHADER_STAGES> vk_shader_modules(createInfo.PipelineDescriptor.Stages.ElementCount());
-	GTSL::Array<GTSL::StaticString<256>, MAX_SHADER_STAGES> shader_names(createInfo.PipelineDescriptor.Stages.ElementCount());
+
 	for (GTSL::uint8 i = 0; i < createInfo.PipelineDescriptor.Stages.ElementCount(); ++i)
 	{
 		VkShaderModuleCreateInfo vk_shader_module_create_info{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
@@ -170,12 +176,11 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 
 		vkCreateShaderModule(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_shader_module_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &vk_shader_modules[i]);
 		
-		shader_names[i] += '\0';
 		vk_pipeline_shader_stage_create_infos[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vk_pipeline_shader_stage_create_infos[i].pNext = nullptr;
 		vk_pipeline_shader_stage_create_infos[i].flags = 0;
 		vk_pipeline_shader_stage_create_infos[i].stage = ShaderTypeToVkShaderStageFlagBits(createInfo.PipelineDescriptor.Stages[i].Type);
-		vk_pipeline_shader_stage_create_infos[i].pName = shader_names[i].begin();
+		vk_pipeline_shader_stage_create_infos[i].pName = "main";
 		vk_pipeline_shader_stage_create_infos[i].module = vk_shader_modules[i];
 		vk_pipeline_shader_stage_create_infos[i].pSpecializationInfo = nullptr;
 	}
@@ -250,7 +255,12 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 		return;
 	}
 	
-	vkCreateGraphicsPipelines(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), nullptr, 1, &vk_graphics_pipeline_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipeline);
+	VK_CHECK(vkCreateGraphicsPipelines(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), nullptr, 1, &vk_graphics_pipeline_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipeline));
+
+	for(auto& e : vk_shader_modules)
+	{
+		vkDestroyShaderModule(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), e, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks());
+	}
 }
 
 void GAL::VulkanGraphicsPipeline::Destroy(GAL::RenderDevice* renderDevice)

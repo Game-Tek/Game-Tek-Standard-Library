@@ -30,21 +30,21 @@ namespace GTSL
 		typedef T* iterator;
 		typedef const T* const_iterator;
 
-		[[nodiscard]] constexpr iterator begin() noexcept { return reinterpret_cast<iterator>(&this->data[0]); }
+		[[nodiscard]] constexpr iterator begin() noexcept { return reinterpret_cast<iterator>(this->data); }
 
-		[[nodiscard]] constexpr iterator end() noexcept { return reinterpret_cast<iterator>(&this->data[this->length * sizeof(T)]); }
+		[[nodiscard]] constexpr iterator end() noexcept { return reinterpret_cast<iterator>(this->data + this->length); }
 
-		[[nodiscard]] constexpr const_iterator begin() const noexcept { return reinterpret_cast<const_iterator>(&this->data[0]); }
+		[[nodiscard]] constexpr const_iterator begin() const noexcept { return reinterpret_cast<const_iterator>(this->data); }
 
-		[[nodiscard]] constexpr const_iterator end() const noexcept { return reinterpret_cast<const_iterator>(&this->data[this->length * sizeof(T)]); }
+		[[nodiscard]] constexpr const_iterator end() const noexcept { return reinterpret_cast<const_iterator>(this->data + this->length); }
 
 		constexpr T& front() noexcept { return this->data[0]; }
 
-		constexpr T& back() noexcept { return this->data[this->length * sizeof(T)]; }
+		constexpr T& back() noexcept { return this->data[this->length]; }
 
 		[[nodiscard]] constexpr const T& front() const noexcept { return this->data[0]; }
 
-		[[nodiscard]] constexpr const T& back() const noexcept { return this->data[this->length * sizeof(T)]; }
+		[[nodiscard]] constexpr const T& back() const noexcept { return this->data[this->length]; }
 
 		operator GTSL::Ranger<T>() { return Ranger<T>(this->length, this->begin()); }
 		operator GTSL::Ranger<const T>() const { return Ranger<const T>(this->length, this->begin()); }

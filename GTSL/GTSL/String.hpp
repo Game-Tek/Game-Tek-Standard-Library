@@ -21,7 +21,7 @@ namespace GTSL
 		//{
 		//}
 
-		String(const char* cstring, const AllocatorReference& allocatorReference) : data(GTSL::Ranger<const UTF8>(StringLength(cstring), cstring), allocatorReference) {}
+		String(const char* cstring, const AllocatorReference& allocatorReference) : data(GTSL::Ranger<const UTF8>(StringLength(cstring) + 1, cstring), allocatorReference) {}
 
 		/**
 		 * \brief Creates an String with enough space allocated for length elements.

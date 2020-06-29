@@ -12,7 +12,7 @@ namespace GTSL
 	public:
 		constexpr StaticString() noexcept = default;
 
-		constexpr StaticString(const char* string) : array(Ranger<const UTF8>(StringLength(string), string)) {}
+		constexpr StaticString(const char* string) : array(Ranger<const UTF8>(StringLength(string) + 1, string)) {}
 
 		constexpr StaticString(const Ranger<UTF8>& ranger) : array(ranger) {}
 
