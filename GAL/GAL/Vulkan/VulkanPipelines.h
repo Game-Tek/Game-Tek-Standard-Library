@@ -11,12 +11,13 @@ namespace GAL
 	class VulkanShaders
 	{
 	public:
-		static void CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result);
+		static void CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result, const GTSL::AllocatorReference& allocatorReference);
 	};
 
 	class VulkanGraphicsPipeline final : public GraphicsPipeline
 	{
 	public:
+		VulkanGraphicsPipeline() = default;
 		VulkanGraphicsPipeline(const CreateInfo& createInfo);
 		~VulkanGraphicsPipeline() = default;
 

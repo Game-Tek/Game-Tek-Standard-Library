@@ -7,7 +7,10 @@
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanRenderPass.h"
 
-void GAL::VulkanShaders::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result)
+void GAL::VulkanShaders::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName,
+                                       const ShaderType shaderType, const ShaderLanguage shaderLanguage,
+                                       GTSL::Vector<GTSL::byte>& result,
+                                       const GTSL::AllocatorReference& allocatorReference)
 {
 	shaderc_shader_kind shaderc_stage;
 
@@ -40,7 +43,7 @@ void GAL::VulkanShaders::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL
 
 	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success) { return; }
 
-	result.Initialize(reinterpret_cast<const GTSL::byte*>(shaderc_module.begin()), reinterpret_cast<const GTSL::byte*>(shaderc_module.end()) + sizeof(uint32_t));
+	result.Initialize(GTSL::Ranger<const GTSL::byte>(reinterpret_cast<const GTSL::byte*>(shaderc_module.begin()), reinterpret_cast<const GTSL::byte*>(shaderc_module.end())), allocatorReference);
 }
 
 GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo)

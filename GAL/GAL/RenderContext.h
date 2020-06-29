@@ -3,8 +3,7 @@
 #include "RenderCore.h"
 
 #include <GTSL/Extent.h>
-
-#include "GTSL/Ranger.h"
+#include <GTSL/Ranger.h>
 
 namespace GAL
 {
@@ -58,12 +57,5 @@ namespace GAL
 			GTSL::Ranger<class Semaphore> WaitSemaphores;
 		};
 		void Present(const PresentInfo& presentInfo);
-
-		[[nodiscard]] GTSL::uint8 GetMaxFramesInFlight() const { return maxFramesInFlight; }
-
-	protected:
-		GTSL::uint8 maxFramesInFlight = 0;
-
-		GTSL::Extent2D extent{ 0, 0 };
 	};
 }

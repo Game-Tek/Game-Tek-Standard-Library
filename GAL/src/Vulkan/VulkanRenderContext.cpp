@@ -50,6 +50,7 @@ VkPresentModeKHR GAL::VulkanRenderContext::findPresentMode(const VkPhysicalDevic
 	for (auto& e : supported_present_modes)
 	{
 		GTSL::uint8 score = 0;
+		
 		switch (e)
 		{
 		case VK_PRESENT_MODE_MAILBOX_KHR: score = 255; break;
@@ -72,8 +73,6 @@ GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo)
 {
 	//BE_ASSERT(renderContextCreateInfo.DesiredFramesInFlight > vulkanSwapchainImages.GetCapacity(), "Requested swapchain image count is more than what the engine can handle, please request less.")
 	
-	extent = createInfo.SurfaceArea;
-	
 	VkWin32SurfaceCreateInfoKHR vk_win32_surface_create_info_khr{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
 	vk_win32_surface_create_info_khr.hwnd = static_cast<HWND>(static_cast<WindowsWindowData*>(createInfo.SystemData)->WindowHandle);
 	vk_win32_surface_create_info_khr.hinstance = static_cast<HINSTANCE>(static_cast<WindowsWindowData*>(createInfo.SystemData)->InstanceHandle);
@@ -88,7 +87,7 @@ GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo)
 	vk_swapchain_create_info_khr.minImageCount = createInfo.DesiredFramesInFlight;
 	vk_swapchain_create_info_khr.imageFormat = surfaceFormat.format;
 	vk_swapchain_create_info_khr.imageColorSpace = surfaceFormat.colorSpace;
-	vk_swapchain_create_info_khr.imageExtent = Extent2DToVkExtent2D(extent);
+	vk_swapchain_create_info_khr.imageExtent = Extent2DToVkExtent2D(createInfo.SurfaceArea);
 	//The imageArrayLayers specifies the amount of layers each image consists of. This is always 1 unless you are developing a stereoscopic 3D application.
 	vk_swapchain_create_info_khr.imageArrayLayers = 1;
 	vk_swapchain_create_info_khr.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -113,14 +112,12 @@ void GAL::VulkanRenderContext::Destroy(RenderDevice* renderDevice)
 
 void GAL::VulkanRenderContext::Recreate(const RecreateInfo& resizeInfo)
 {
-	extent = resizeInfo.NewWindowSize;
-
 	VkSwapchainCreateInfoKHR vk_swapchain_create_info_khr{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 	vk_swapchain_create_info_khr.surface = surface;
 	vk_swapchain_create_info_khr.minImageCount = resizeInfo.DesiredFramesInFlight;
 	vk_swapchain_create_info_khr.imageFormat = surfaceFormat.format;
 	vk_swapchain_create_info_khr.imageColorSpace = surfaceFormat.colorSpace;
-	vk_swapchain_create_info_khr.imageExtent = Extent2DToVkExtent2D(extent);
+	vk_swapchain_create_info_khr.imageExtent = Extent2DToVkExtent2D(resizeInfo.NewWindowSize);
 	//The imageArrayLayers specifies the amount of layers each image consists of. This is always 1 unless you are developing a stereoscopic 3D application.
 	vk_swapchain_create_info_khr.imageArrayLayers = 1;
 	vk_swapchain_create_info_khr.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -151,11 +148,11 @@ void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)
 {
 	GTSL::uint32 image_index = imageIndex;
 
-	GTSL::Array<VkSemaphore, 16> vk_wait_semaphores(presentInfo.WaitSemaphores.ElementCount());
+	GTSL::Array<VkSemaphore, 16> vk_wait_semaphores(static_cast<GTSL::uint32>(presentInfo.WaitSemaphores.ElementCount()));
 	{
 		for (auto& e : presentInfo.WaitSemaphores)
 		{
-			vk_wait_semaphores[&e - presentInfo.WaitSemaphores.begin()] = static_cast<VulkanSemaphore&>(e).GetVkSemaphore();
+			vk_wait_semaphores[static_cast<GTSL::uint32>(&e - presentInfo.WaitSemaphores.begin())] = static_cast<VulkanSemaphore&>(e).GetVkSemaphore();
 		}
 	}
 	
@@ -199,7 +196,7 @@ GTSL::Array<GAL::VulkanImage, 5> GAL::VulkanRenderContext::GetImages(const GetIm
 		
 		VK_CHECK(vkCreateImageView(static_cast<VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), &vk_image_view_create_info, static_cast<VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkAllocationCallbacks(), &e.imageView));
 
-		e.image = vk_images[&e - vulkan_images.begin()];
+		e.image = vk_images[static_cast<GTSL::uint32>(&e - vulkan_images.begin())];
 	}
 	
 	return vulkan_images;

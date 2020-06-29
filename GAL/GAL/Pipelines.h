@@ -67,6 +67,8 @@ namespace GAL
 			PushConstant* PushConstant = nullptr;
 			GTSL::Ranger<class BindingsSet> BindingsSets;
 		};
+
+		GraphicsPipeline() = default;
 		
 		static GTSL::uint32 GetVertexSize(GTSL::Ranger<ShaderDataTypes> vertex)
 		{

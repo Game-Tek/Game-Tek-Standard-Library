@@ -21,27 +21,20 @@ namespace GTSL
 		//{
 		//}
 
-		String(const char* cstring, AllocatorReference* allocatorReference) : data(StringLength(cstring), cstring, allocatorReference) {}
+		String(const char* cstring, const AllocatorReference& allocatorReference) : data(GTSL::Ranger<const UTF8>(StringLength(cstring), cstring), allocatorReference) {}
 
 		/**
 		 * \brief Creates an String with enough space allocated for length elements.
 		 * \param length Amount of elements to allocate.
 		 */
-		explicit String(const length_type length, AllocatorReference* allocatorReference) : data(length, allocatorReference) {}
-
-		/**
-		 * \brief Creates an String from a length and an array. Assumes the array has no null terminator character. If the array you pass happens to have a null terminator you should insert one character less.
-		 * \param length length to use from the cstring array
-		 * \param cstring array to copy from
-		 */
-		String(length_type length, const char* cstring, AllocatorReference* allocatorReference);
+		explicit String(const length_type length, const AllocatorReference& allocatorReference) : data(length, allocatorReference) {}
 
 		/**
 		 * \brief Creates an String from a length and an String. Assumes the string has no null terminator character. If the string you pass happens to have a null terminator you should insert one character less.
 		 * \param length Length to use from the String.
 		 * \param string String to copy characters from.
 		 */
-		String(length_type length, const String& string, AllocatorReference* allocatorReference);
+		String(length_type length, const String& string, const AllocatorReference& allocatorReference);
 
 		/**
 		 * \brief Creates an String from a length an String and an offset. Assumes the string has no null terminator character. If the string you pass happens to have a null terminator you should insert one character less.
@@ -49,15 +42,14 @@ namespace GTSL
 		 * \param string String to copy from.
 		 * \param offset Offset from the start of the string to start copying from.
 		 */
-		String(length_type length, const String& string, length_type offset, AllocatorReference* allocatorReference);
+		String(length_type length, const String& string, length_type offset, const AllocatorReference& allocatorReference);
 
 		String(const String& other) = default;
 		String(String&& other) noexcept = default;
 		String& operator=(const String& other) = default;
 		String& operator=(String&& other) noexcept = default;
+		void Free(const AllocatorReference& allocatorReference) { data.Free(allocatorReference); }
 		~String() = default;
-
-		[[nodiscard]] AllocatorReference* GetAllocatorReference() const { return data.GetAllocatorReference(); }
 		
 		String& operator=(const char* cstring);
 		String& operator+=(char c);
@@ -83,7 +75,8 @@ namespace GTSL
 		//Returns the contents of this String as a C-String.
 		char* c_str() { return data.GetData(); }
 
-		operator Ranger<UTF8>() const { return Ranger<UTF8>(data); }
+		operator Ranger<UTF8>() { return Ranger<UTF8>(data); }
+		operator Ranger<const UTF8>() const { return Ranger<const UTF8>(data); }
 
 		[[nodiscard]] const char* c_str() const { return data.GetData(); }
 
@@ -93,22 +86,22 @@ namespace GTSL
 		[[nodiscard]] bool IsEmpty() const { return data.GetLength() == 0; }
 
 		//Places a the c-string after this String with a space in the middle.
-		void Append(const char* cstring);
+		void Append(const char* cstring, const AllocatorReference& allocatorReference);
 		//Places the String after this String with a space in the middle.
-		void Append(const String& string);
+		void Append(const String& string, const AllocatorReference& allocatorReference);
 
-		void Append(const Ranger<const UTF8>& ranger);
+		void Append(const Ranger<const UTF8>& ranger, const AllocatorReference& allocatorReference);
 
-		void Append(uint8 number);
-		void Append(int8 number);
-		void Append(uint16 number);
-		void Append(int16 number);
-		void Append(uint32 number);
-		void Append(int32 number);
-		void Append(uint64 number);
-		void Append(int64 number);
-		void Append(float number);
-		void Append(double number);
+		void Append(uint8 number, const AllocatorReference& allocatorReference);
+		void Append(int8 number, const AllocatorReference& allocatorReference);
+		void Append(uint16 number, const AllocatorReference& allocatorReference);
+		void Append(int16 number, const AllocatorReference& allocatorReference);
+		void Append(uint32 number, const AllocatorReference& allocatorReference);
+		void Append(int32 number, const AllocatorReference& allocatorReference);
+		void Append(uint64 number, const AllocatorReference& allocatorReference);
+		void Append(int64 number, const AllocatorReference& allocatorReference);
+		void Append(float32 number, const AllocatorReference& allocatorReference);
+		void Append(float64 number, const AllocatorReference& allocatorReference);
 
 		/**
 		 * \brief Places cstring At the specified index.
@@ -138,7 +131,7 @@ namespace GTSL
 		void Drop(length_type from);
 
 		void ReplaceAll(char a, char with);
-		void ReplaceAll(const char* a, const char* with);
+		void ReplaceAll(const char* a, const char* with, const AllocatorReference& allocatorReference);
 		
 	private:
 		Vector<string_type> data;

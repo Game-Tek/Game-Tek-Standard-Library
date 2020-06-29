@@ -5,39 +5,9 @@
 
 using namespace GTSL;
 
-String::String(const length_type length, const char* cstring, AllocatorReference* allocatorReference) : data(length, cstring, allocatorReference)
-{
-}
-
-String::String(const length_type length, const String& string, AllocatorReference* allocatorReference) : data(length, string.data.GetData(), allocatorReference)
-{
-}
-
-String::String(const length_type length, const String& string, const length_type offset, AllocatorReference* allocatorReference) : data(length, string.data.GetData() + offset, allocatorReference)
-{
-}
-
 String& String::operator=(const char* cstring)
 {
-	data.Recreate(StringLength(cstring), cstring);
 	return *this;
-}
-
-String& String::operator+=(char c)
-{
-	data.PushBack(c);
-	return *this;
-}
-
-String& String::operator+=(const char* cstring)
-{
-	data.PushBack(Ranger<const UTF8>(StringLength(cstring), cstring));
-	return *this;
-}
-
-String& String::operator+=(const String& string)
-{
-	data.PopBack(); data.PushBack(string.data); return *this;
 }
 
 bool String::operator==(const String& other) const
@@ -61,100 +31,94 @@ bool String::NonSensitiveComp(const String& other) const
 	return true;
 }
 
-void String::Append(const char* cstring)
+void String::Append(const char* cstring, const AllocatorReference& allocatorReference)
 {
 	data.Place(data.GetLength(), ' '); //Push space.
-	data.PushBack(Ranger<const UTF8>(StringLength(cstring), cstring));
-	data.PushBack(Ranger<const UTF8>(StringLength(cstring), cstring));
+	data.PushBack(Ranger<const UTF8>(StringLength(cstring), cstring), allocatorReference);
+	data.PushBack(Ranger<const UTF8>(StringLength(cstring), cstring), allocatorReference);
 	return;
 }
 
-void String::Append(const String& string)
+void String::Append(const String& string, const AllocatorReference& allocatorReference)
 {
 	data.Place(data.GetLength(), ' '); //Push space.
-	data.PushBack(string.data); //Push new string.
+	data.PushBack(string.data, allocatorReference); //Push new string.
 	return;
 }
 
-void String::Append(const Ranger<const UTF8>& ranger)
+void String::Append(const Ranger<const UTF8>& ranger, const AllocatorReference& allocatorReference)
 {
-	data.PushBack(ranger);
+	data.PushBack(ranger, allocatorReference);
 }
 
-void String::Append(const uint8 number)
+void String::Append(const uint8 number, const AllocatorReference& allocatorReference)
 {
 	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
-	data.PushBack(range);
+	data.PushBack(range, allocatorReference);
 }
 
-void String::Append(const int8 number)
+void String::Append(const int8 number, const AllocatorReference& allocatorReference)
 {
 	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
-	data.PushBack(range);
+	data.PushBack(range, allocatorReference);
 }
 
-void String::Append(const uint16 number)
+void String::Append(const uint16 number, const AllocatorReference& allocatorReference)
 {
 	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
-	data.PushBack(range);
+	data.PushBack(range, allocatorReference);
 }
 
-void String::Append(const int16 number)
+void String::Append(const int16 number, const AllocatorReference& allocatorReference)
 {
 	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
-	data.PushBack(range);
+	data.PushBack(range, allocatorReference);
 }
 
-void String::Append(const uint32 number)
+void String::Append(const uint32 number, const AllocatorReference& allocatorReference)
 {
 	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
-	data.PushBack(range);
+	data.PushBack(range, allocatorReference);
 }
 
-void String::Append(const int32 number)
+void String::Append(const int32 number, const AllocatorReference& allocatorReference)
 {
 	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
-	data.PushBack(range);
+	data.PushBack(range, allocatorReference);
 }
 
-void String::Append(const uint64 number)
+void String::Append(const uint64 number, const AllocatorReference& allocatorReference)
 {
 	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
-	data.PushBack(range);
+	data.PushBack(range, allocatorReference);
 }
 
-void String::Append(const int64 number)
+void String::Append(const int64 number, const AllocatorReference& allocatorReference)
 {
 	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
-	data.PushBack(range);
+	data.PushBack(range, allocatorReference);
 }
 
-void String::Append(const float number)
+void String::Append(const float32 number, const AllocatorReference& allocatorReference)
 {
 	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
-	data.PushBack(range);
+	data.PushBack(range, allocatorReference);
 }
 
-void String::Append(const double number)
+void String::Append(const float64 number, const AllocatorReference& allocatorReference)
 {
 	Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 	ToString(number, range);
-	data.PushBack(range);
-}
-
-void String::Insert(const char* cstring, const length_type index)
-{
-	data.Insert(index, cstring, StringLength(cstring));
-	return;
+	data.PushBack(range, allocatorReference);
 }
 
 String::length_type String::FindFirst(const char c) const
@@ -173,7 +137,7 @@ String::length_type String::FindLast(const char c) const
 
 void String::Drop(const length_type from)
 {
-	data.Resize(from);
+	data.ResizeDown(from);
 }
 
 void String::ReplaceAll(const char a, const char with)
@@ -181,7 +145,7 @@ void String::ReplaceAll(const char a, const char with)
 	for (auto& c : data) { if (c == a) { c = with; } }
 }
 
-void String::ReplaceAll(const char* a, const char* with)
+void String::ReplaceAll(const char* a, const char* with, const AllocatorReference& allocatorReference)
 {
 	Array<uint32, 24> ocurrences; //cache ocurrences so as to not perform an array Resize every time we Find a match
 
@@ -224,13 +188,12 @@ void String::ReplaceAll(const char* a, const char* with)
 
 		if (resize_size > 0)
 		{
-			data.Resize(data.GetLength() + resize_size);
+			data.Resize(data.GetLength() + resize_size, allocatorReference);
 		}
 
 		for (auto& e : ocurrences)
 		{
-			data.MakeSpace(e, with_length - a_length);
-			data.Place(with_length, with, e);
+			data.Insert(e, GTSL::Ranger<const UTF8>(with_length, with), allocatorReference);
 		}
 
 		if (i == data.GetLength() - 1) //if current index is last index in whole string break out of the loop
@@ -252,12 +215,12 @@ char String::toUpperCase(char c)
 	return c;
 }
 
-OutStream& GTSL::operator<<(OutStream& os, const String& string)
-{
-	os << string.data; return os;
-}
-
-InStream& GTSL::operator>>(InStream& inStream, String& string)
-{
-	inStream >> string.data; return inStream;
-}
+//OutStream& GTSL::operator<<(OutStream& os, const String& string)
+//{
+//	os << string.data; return os;
+//}
+//
+//InStream& GTSL::operator>>(InStream& inStream, String& string)
+//{
+//	inStream >> string.data; return inStream;
+//}

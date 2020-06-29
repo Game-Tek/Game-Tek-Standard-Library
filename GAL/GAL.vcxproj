@@ -115,7 +115,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)GAL\ext;</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
@@ -140,7 +141,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)GAL\ext;</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
