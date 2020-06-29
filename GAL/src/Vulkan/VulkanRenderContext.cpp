@@ -186,6 +186,7 @@ GTSL::Array<GAL::VulkanImage, 5> GAL::VulkanRenderContext::GetImages(const GetIm
 	for(auto& e : vulkan_images)
 	{
 		VkImageViewCreateInfo vk_image_view_create_info{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+		vk_image_view_create_info.image = vk_images[&e - vulkan_images.begin()];
 		vk_image_view_create_info.format = surfaceFormat.format;
 		vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		vk_image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;

@@ -9,6 +9,7 @@ namespace GAL
 	class VulkanRenderPass final : public GAL::RenderPass
 	{
 	public:
+		VulkanRenderPass() = default;
 		explicit VulkanRenderPass(const CreateInfo& createInfo);
 		~VulkanRenderPass() = default;
 

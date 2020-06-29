@@ -21,75 +21,7 @@ namespace GTSL
 		typedef T* iterator;
 		typedef const T* const_iterator;
 		typedef T value_type;
-		
-	private:
-		length_type capacity{ 0 };
-		length_type length{ 0 };
-		T* data{ nullptr };
 
-		/**
-		 * \brief Copies data from from to to.
-		 * \param from Pointer from where to grab the data.
-		 * \param to Pointer to write the data to.
-		 * \param elementCount How many elements of this vector's T to write to to.
-		 */
-		static void copyArray(const T* from, T* to, const length_type elementCount)
-		{
-			MemCopy(elementCount * sizeof(T), from, to);
-		}
-
-		/**
-		 * \brief Allocates a new a array of type T with enough space to hold elementCount elements.
-		 * \param elementCount How many elements of this vector's T to allocate space for.
-		 * \return T pointer to the newly allocated memory.
-		 */
-		T* allocate(const length_type elementCount, const AllocatorReference& allocatorReference)
-		{
-			T* data{ nullptr };
-			uint64 allocated_size{ 0 };
-			allocatorReference.Allocate(elementCount * sizeof(T), alignof(T), reinterpret_cast<void**>(&data), &allocated_size);
-			this->capacity = static_cast<length_type>(allocated_size / sizeof(T));
-			return data;
-		}
-
-		/**
-		 * \brief Deletes the data found At this vector's data and sets data as nullptr.
-		 */
-		void freeData(const AllocatorReference& allocatorReference)
-		{
-			if (this->data)
-			{
-				GTSL_ASSERT(this->data != nullptr, "Data is nullptr.")
-				allocatorReference.Deallocate(this->capacity * sizeof(T), alignof(T), this->data);
-				this->data = nullptr;
-			}
-		}
-
-		/**
-		 * \brief Reallocates this->data to a new array if (this->length + additionalElements) exceeds the allocated space.\n
-		 * Also deletes the data found At the old data.
-		 * Growth of the array is geometric.
-		 * \param additionalElements How many elements of this vector's T are you trying to check if fit in the already allocated array.\n
-		 * Number can be negative.
-		 */
-		void reallocate(const int64 additionalElements, const AllocatorReference& allocatorReference)
-		{
-			const length_type new_capacity = this->length * 2;
-			T* new_data = this->allocate(new_capacity, allocatorReference);
-			copyArray(this->data, new_data, this->capacity);
-			GTSL_ASSERT(this->data != nullptr, "Data is nullptr.")
-			allocatorReference.Deallocate(this->capacity * sizeof(T), alignof(T), this->data);
-			this->data = new_data;
-		}
-
-		/**
-		 * \brief Returns an iterator to an specified index. DOES NOT CHECK FOR BOUNDS, but underlying getter does, only in debug builds.
-		 * \param index Index to the element to be retrieved.
-		 * \return iterator to the element At index.
-		 */
-		iterator getIterator(const length_type index) noexcept { return &this->data[index]; }
-
-	public:
 		Vector() = default;
 
 		/**
@@ -359,11 +291,12 @@ namespace GTSL
 		 * \param obj Object to copy.
 		 * \return Returns the length of the vector after inserting.
 		 */
-		length_type Insert(const length_type index, const T& obj, const AllocatorReference& allocatorReference)
+		template<typename... ARGS>
+		length_type Insert(const AllocatorReference& allocatorReference, const length_type index, ARGS&&... args)
 		{
 			if (this->length + 1 > this->capacity) { reallocate(1, allocatorReference); }
 			copyArray(getIterator(index), getIterator(index + 1), this->length - index);
-			::new(static_cast<void*>(this->data + this->length)) T(obj);
+			::new(static_cast<void*>(this->data + this->length)) T(MakeForwardReference<ARGS>(args)...);
 			return this->length += 1;
 		}
 
@@ -528,5 +461,72 @@ namespace GTSL
 
 		[[nodiscard]] operator Ranger<T>() noexcept { return Ranger<T>(this->data, this->data + this->length); }
 		[[nodiscard]] operator Ranger<const T>() const noexcept { return Ranger<const T>(this->data, this->data + this->length); }
+
+	private:
+		length_type capacity{ 0 };
+		length_type length{ 0 };
+		T* data{ nullptr };
+
+		/**
+		 * \brief Copies data from from to to.
+		 * \param from Pointer from where to grab the data.
+		 * \param to Pointer to write the data to.
+		 * \param elementCount How many elements of this vector's T to write to to.
+		 */
+		static void copyArray(const T* from, T* to, const length_type elementCount)
+		{
+			MemCopy(elementCount * sizeof(T), from, to);
+		}
+
+		/**
+		 * \brief Allocates a new a array of type T with enough space to hold elementCount elements.
+		 * \param elementCount How many elements of this vector's T to allocate space for.
+		 * \return T pointer to the newly allocated memory.
+		 */
+		T* allocate(const length_type elementCount, const AllocatorReference& allocatorReference)
+		{
+			T* data{ nullptr };
+			uint64 allocated_size{ 0 };
+			allocatorReference.Allocate(elementCount * sizeof(T), alignof(T), reinterpret_cast<void**>(&data), &allocated_size);
+			this->capacity = static_cast<length_type>(allocated_size / sizeof(T));
+			return data;
+		}
+
+		/**
+		 * \brief Deletes the data found At this vector's data and sets data as nullptr.
+		 */
+		void freeData(const AllocatorReference& allocatorReference)
+		{
+			if (this->data)
+			{
+				GTSL_ASSERT(this->data != nullptr, "Data is nullptr.")
+					allocatorReference.Deallocate(this->capacity * sizeof(T), alignof(T), this->data);
+				this->data = nullptr;
+			}
+		}
+
+		/**
+		 * \brief Reallocates this->data to a new array if (this->length + additionalElements) exceeds the allocated space.\n
+		 * Also deletes the data found At the old data.
+		 * Growth of the array is geometric.
+		 * \param additionalElements How many elements of this vector's T are you trying to check if fit in the already allocated array.\n
+		 * Number can be negative.
+		 */
+		void reallocate(const int64 additionalElements, const AllocatorReference& allocatorReference)
+		{
+			const length_type new_capacity = this->length * 2;
+			T* new_data = this->allocate(new_capacity, allocatorReference);
+			copyArray(this->data, new_data, this->capacity);
+			GTSL_ASSERT(this->data != nullptr, "Data is nullptr.")
+				allocatorReference.Deallocate(this->capacity * sizeof(T), alignof(T), this->data);
+			this->data = new_data;
+		}
+
+		/**
+		 * \brief Returns an iterator to an specified index. DOES NOT CHECK FOR BOUNDS, but underlying getter does, only in debug builds.
+		 * \param index Index to the element to be retrieved.
+		 * \return iterator to the element At index.
+		 */
+		iterator getIterator(const length_type index) noexcept { return &this->data[index]; }
 	};
 }

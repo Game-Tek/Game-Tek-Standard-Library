@@ -65,7 +65,6 @@ namespace GAL
 		{
 			RenderPassDescriptor Descriptor;
 		};
-		explicit RenderPass(const CreateInfo& createInfo);
 		
 		~RenderPass() = default;
 	};

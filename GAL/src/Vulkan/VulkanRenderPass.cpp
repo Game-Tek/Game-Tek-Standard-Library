@@ -3,7 +3,7 @@
 #include <GTSL/Vector.hpp>
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
-GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo) : RenderPass(createInfo)
+GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 {
 	const bool depth_attachment = createInfo.Descriptor.DepthStencilAttachmentAvailable;
 
@@ -11,6 +11,7 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo) : RenderPa
 
 	for (GTSL::uint8 i = 0; i < vk_attachment_descriptions.GetLength() - depth_attachment; ++i)
 	{
+		vk_attachment_descriptions[i].flags = 0;
 		vk_attachment_descriptions[i].format = ImageFormatToVkFormat(createInfo.Descriptor.RenderPassColorAttachments[i].Format);
 		vk_attachment_descriptions[i].samples = VK_SAMPLE_COUNT_1_BIT; //TODO: Should match that of the SwapChain images.
 		vk_attachment_descriptions[i].loadOp = RenderTargetLoadOperationsToVkAttachmentLoadOp(createInfo.Descriptor.RenderPassColorAttachments[i].LoadOperation);
@@ -23,6 +24,7 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo) : RenderPa
 	if (depth_attachment)
 	{
 		//Set depth/stencil element.
+		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].flags = 0;
 		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].format = ImageFormatToVkFormat(createInfo.Descriptor.DepthStencilAttachment.Format);
 		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].samples = VK_SAMPLE_COUNT_1_BIT;
 		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].loadOp = RenderTargetLoadOperationsToVkAttachmentLoadOp(createInfo.Descriptor.DepthStencilAttachment.LoadOperation);
@@ -112,6 +114,7 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo) : RenderPa
 	GTSL::Array<VkSubpassDescription, 64> vk_subpass_descriptions(createInfo.Descriptor.SubPasses.ElementCount());
 	for (GTSL::uint8 SUBPASS = 0; SUBPASS < vk_subpass_descriptions.GetLength(); ++SUBPASS)
 	{
+		vk_subpass_descriptions[SUBPASS].flags = 0;
 		vk_subpass_descriptions[SUBPASS].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		vk_subpass_descriptions[SUBPASS].colorAttachmentCount = write_attachments_count;
 		vk_subpass_descriptions[SUBPASS].pColorAttachments = write_attachments_references.begin() + SUBPASS;
