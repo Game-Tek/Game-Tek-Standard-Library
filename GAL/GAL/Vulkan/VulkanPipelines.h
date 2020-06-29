@@ -1,7 +1,6 @@
 #pragma once
 
-#include "GAL/GraphicsPipeline.h"
-#include "GAL/ComputePipeline.h"
+#include "GAL/Pipelines.h"
 
 #include "Vulkan.h"
 
@@ -34,7 +33,7 @@ namespace GAL
 	class VulkanComputePipeline final : public ComputePipeline
 	{
 	public:
-		VulkanComputePipeline(const ComputePipelineCreateInfo& computePipelineCreateInfo);
+		VulkanComputePipeline(const CreateInfo& createInfo);
 		~VulkanComputePipeline() = default;
 
 		void Destroy(RenderDevice* renderDevice);

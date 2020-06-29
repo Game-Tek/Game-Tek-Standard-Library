@@ -153,9 +153,9 @@ void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)
 
 	GTSL::Array<VkSemaphore, 16> vk_wait_semaphores(presentInfo.WaitSemaphores.ElementCount());
 	{
-		for (auto* e : presentInfo.WaitSemaphores)
+		for (auto& e : presentInfo.WaitSemaphores)
 		{
-			vk_wait_semaphores[&e - presentInfo.WaitSemaphores.begin()] = static_cast<VulkanSemaphore*>(e)->GetVkSemaphore();
+			vk_wait_semaphores[&e - presentInfo.WaitSemaphores.begin()] = static_cast<VulkanSemaphore&>(e).GetVkSemaphore();
 		}
 	}
 	

@@ -14,9 +14,8 @@
     <ClInclude Include="GAL\Bindings.h" />
     <ClInclude Include="GAL\Buffer.h" />
     <ClInclude Include="GAL\CommandBuffer.h" />
-    <ClInclude Include="GAL\ComputePipeline.h" />
     <ClInclude Include="GAL\Framebuffer.h" />
-    <ClInclude Include="GAL\GraphicsPipeline.h" />
+    <ClInclude Include="GAL\Pipelines.h" />
     <ClInclude Include="GAL\Memory.h" />
     <ClInclude Include="GAL\RenderContext.h" />
     <ClInclude Include="GAL\RenderCore.h" />

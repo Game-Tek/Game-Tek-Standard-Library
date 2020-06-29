@@ -55,7 +55,7 @@ namespace GAL
 		struct PresentInfo : RenderInfo
 		{
 			Queue* Queue = nullptr;
-			GTSL::Ranger<class Semaphore*> WaitSemaphores;
+			GTSL::Ranger<class Semaphore> WaitSemaphores;
 		};
 		void Present(const PresentInfo& presentInfo);
 

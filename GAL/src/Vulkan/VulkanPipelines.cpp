@@ -202,7 +202,7 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 		GTSL::uint8 i = 0;
 		for (auto& e : vk_descriptor_set_layouts)
 		{
-			e = static_cast<VulkanBindingsSet*>(createInfo.BindingsSets[i])->GetVkDescriptorSetLayout();
+			e = static_cast<VulkanBindingsSet*>(createInfo.BindingsSets + i)->GetVkDescriptorSetLayout();
 			++i;
 		}
 	}

@@ -48,13 +48,7 @@
     <ClInclude Include="GAL\CommandBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GAL\ComputePipeline.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GAL\Framebuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GAL\GraphicsPipeline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GAL\RenderContext.h">
@@ -94,6 +88,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GAL\Image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GAL\Pipelines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,12 +1,8 @@
 #pragma once
 
 #include "RenderCore.h"
-
-#include <GTSL/Array.hpp>
-#include <GTSL/String.hpp>
 #include <GTSL/Extent.h>
-
-#include "GTSL/FixedVector.hpp"
+#include <GTSL/Ranger.h>
 
 namespace GAL
 {
@@ -27,7 +23,7 @@ namespace GAL
 	struct ShaderInfo
 	{
 		ShaderType Type = ShaderType::VERTEX_SHADER;
-		GTSL::Ranger<GTSL::UTF8> Name;
+		GTSL::Ranger<const GTSL::UTF8> Name;
 		GTSL::Ranger<GTSL::byte> ShaderData;
 	};
 
@@ -69,12 +65,7 @@ namespace GAL
 			GraphicsPipeline* ParentPipeline = nullptr;
 
 			PushConstant* PushConstant = nullptr;
-			GTSL::Ranger<class BindingsSet*> BindingsSets;
-		};
-
-		struct PipelineCache : RenderInfo
-		{
-			GTSL::Ranger<GTSL::byte> Data;
+			GTSL::Ranger<class BindingsSet> BindingsSets;
 		};
 		
 		static GTSL::uint32 GetVertexSize(GTSL::Ranger<ShaderDataTypes> vertex)
@@ -88,6 +79,14 @@ namespace GAL
 			for(auto* begin = vertex.begin(); begin != vertex.begin() + member; ++begin) { offset += ShaderDataTypesSize(*begin); }
 			return offset;
 		}
+	};
+
+	class ComputePipeline : public Pipeline
+	{
+	public:
+		struct CreateInfo : RenderInfo
+		{
+		};
 	};
 
 }
