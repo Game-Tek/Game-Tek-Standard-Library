@@ -21,9 +21,10 @@ namespace GAL
 	class RenderMesh;
 	class Queue;
 
-	class CommandBuffer
+	class CommandBuffer : public GALObject
 	{
 	public:
+		CommandBuffer() = default;
 		~CommandBuffer() = default;
 
 		struct CreateInfo : RenderInfo
@@ -31,8 +32,6 @@ namespace GAL
 			bool IsPrimary = true;
 			Queue* Queue{ nullptr };
 		};
-		explicit CommandBuffer(const CreateInfo& commandBufferCreateInfo)
-		{};
 		
 		struct BeginRecordingInfo : RenderInfo
 		{

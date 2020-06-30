@@ -12,6 +12,8 @@ namespace GAL
 		VulkanDeviceMemory() = default;
 		VulkanDeviceMemory(const CreateInfo& createInfo);
 
+		void Destroy(RenderDevice* renderDevice);
+		
 		[[nodiscard]] VkDeviceMemory GetVkDeviceMemory() const { return deviceMemory; }
 
 		struct MapInfo : RenderInfo

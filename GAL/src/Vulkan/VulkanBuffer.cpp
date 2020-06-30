@@ -8,7 +8,7 @@ GAL::VulkanBuffer::VulkanBuffer(const CreateInfo& createInfo) : Buffer(createInf
 {
 	VkBufferCreateInfo vk_buffer_create_info{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	vk_buffer_create_info.size = createInfo.Size;
-	vk_buffer_create_info.usage = BufferTypeToVkBufferUsageFlags(createInfo.BufferType);
+	vk_buffer_create_info.usage = createInfo.BufferType;
 
 	VK_CHECK(vkCreateBuffer(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_buffer_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &buffer))
 }

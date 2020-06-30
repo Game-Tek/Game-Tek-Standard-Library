@@ -29,7 +29,9 @@ namespace GAL
 		{
 			GTSL::Extent2D SurfaceArea;
 			GTSL::uint8 DesiredFramesInFlight = 0;
-			PresentMode PresentMode;
+			GTSL::uint32 PresentMode{ 0 };
+			GTSL::uint32 Format{ 0 };
+			GTSL::uint32 ColorSpace{ 0 };
 			void* SystemData{ nullptr };
 		};
 		//explicit RenderContext(const CreateInfo& createInfo);
@@ -38,9 +40,11 @@ namespace GAL
 
 		struct RecreateInfo : RenderInfo
 		{
-			GTSL::Extent2D NewWindowSize;
+			GTSL::Extent2D SurfaceArea;
 			GTSL::uint8 DesiredFramesInFlight = 0;
-			PresentMode NewPresentMode;
+			GTSL::uint32 PresentMode{ 0 };
+			GTSL::uint32 Format{ 0 };
+			GTSL::uint32 ColorSpace{ 0 };
 		};
 		void Recreate(const RecreateInfo& resizeInfo);
 

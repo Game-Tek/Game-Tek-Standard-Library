@@ -30,11 +30,14 @@ void GAL::VulkanFence::WaitForFences(const WaitForFencesInfo& waitForFencesInfo)
 
 GAL::VulkanSemaphore::VulkanSemaphore(const CreateInfo& createInfo)
 {
+	//VkSemaphoreCreateInfo vk_semaphore_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+	//VkSemaphoreTypeCreateInfo vk_semaphore_type_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO };
+	//vk_semaphore_type_create_info.semaphoreType = VK_SEMAPHORE_TYPE_;
+	//vk_semaphore_type_create_info.initialValue = createInfo.InitialValue;
+	//vk_semaphore_create_info.pNext = &vk_semaphore_type_create_info;
+
 	VkSemaphoreCreateInfo vk_semaphore_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-	VkSemaphoreTypeCreateInfo vk_semaphore_type_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO };
-	vk_semaphore_type_create_info.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
-	vk_semaphore_type_create_info.initialValue = createInfo.InitialValue;
-	vk_semaphore_create_info.pNext = &vk_semaphore_type_create_info;
+	//VkSemaphoreTypeCreateInfo vk_semaphore_type_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO };
 
 	VK_CHECK(vkCreateSemaphore(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_semaphore_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &semaphore));
 }

@@ -27,20 +27,10 @@ namespace GAL
 		{
 			RenderPass* RenderPass = nullptr;
 			GTSL::Extent2D Extent = { 1280, 720 };
-			GTSL::Ranger<class Image*> Images;
+			GTSL::Ranger<const class Image> Images;
 			GTSL::Ranger<const GTSL::RGBA> ClearValues;
 		};
-		explicit Framebuffer(const CreateInfo& createInfo) : extent(createInfo.Extent)
-		{
-		}
 
 		~Framebuffer() = default;
-
-		[[nodiscard]] GTSL::Extent2D GetExtent() const { return extent; }
-		[[nodiscard]] GTSL::uint8 GetAttachmentCount() const { return attachmentCount; };
-
-	protected:
-		GTSL::Extent2D extent;
-		GTSL::uint8 attachmentCount = 0;
 	};
 }

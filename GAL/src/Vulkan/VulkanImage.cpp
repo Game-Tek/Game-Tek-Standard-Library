@@ -14,10 +14,10 @@ GAL::VulkanImage::VulkanImage(const CreateInfo& createInfo) : Image(createInfo)
 	vk_image_create_info.extent.depth = 1;
 	vk_image_create_info.mipLevels = createInfo.MipLevels;
 	vk_image_create_info.arrayLayers = 1;
-	vk_image_create_info.format = ImageFormatToVkFormat(createInfo.SourceFormat);
-	vk_image_create_info.tiling = ImageTilingToVkImageTiling(createInfo.ImageTiling);
+	vk_image_create_info.format = static_cast<VkFormat>(createInfo.SourceFormat);
+	vk_image_create_info.tiling = static_cast<VkImageTiling>(createInfo.ImageTiling);
 	vk_image_create_info.initialLayout = ImageLayoutToVkImageLayout(createInfo.InitialLayout);
-	vk_image_create_info.usage = ImageUseToVkImageUsageFlags(createInfo.ImageUses);
+	vk_image_create_info.usage = createInfo.ImageUses;
 	vk_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 	vk_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	VK_CHECK(vkCreateImage(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_image_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &image));
@@ -25,7 +25,7 @@ GAL::VulkanImage::VulkanImage(const CreateInfo& createInfo) : Image(createInfo)
 	VkImageViewCreateInfo vk_image_view_create_info{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	vk_image_view_create_info.image = image;
 	vk_image_view_create_info.viewType = ImageDimensionsToVkImageViewType(createInfo.Dimensions);
-	vk_image_view_create_info.format = ImageFormatToVkFormat(createInfo.SourceFormat);
+	vk_image_view_create_info.format = static_cast<VkFormat>(createInfo.SourceFormat);
 	vk_image_view_create_info.subresourceRange.aspectMask = ImageTypeToVkImageAspectFlagBits(createInfo.Type);
 	vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
 	vk_image_view_create_info.subresourceRange.levelCount = createInfo.MipLevels;

@@ -75,11 +75,6 @@ namespace GAL
 		COMMAND_PREPROCESS_WRITE = 0x00040000,
 	};
 	
-	enum class QueueCapabilities : GTSL::uint8
-	{
-		GRAPHICS = 1, COMPUTE = 2, TRANSFER = 4
-	};
-	
 	// IMAGE
 
 	//Specifies all available image layouts.
@@ -96,11 +91,6 @@ namespace GAL
 		PREINITIALIZED,
 		PRESENTATION
 	};
-
-	enum class ImageTiling : GTSL::uint8
-	{
-		LINEAR, OPTIMAL
-	};
 	
 	enum class ImageDimensions : GTSL::uint8
 	{
@@ -116,93 +106,6 @@ namespace GAL
 		STENCIL,
 		DEPTH_STENCIL
 	};
-
-	enum class ImageUse : GTSL::uint8
-	{
-		TRANSFER_SOURCE,
-		TRANSFER_DESTINATION,
-		SAMPLE,
-		STORAGE,
-		COLOR_ATTACHMENT,
-		DEPTH_STENCIL_ATTACHMENT,
-		TRANSIENT_ATTACHMENT,
-		INPUT_ATTACHMENT
-	};
-
-	//Specifies all available color formats and depth/stencil formats.
-	//Usually you'll use the DEPTH16_STENCIL8 since it is sufficient form most use cases. If that is not precise enough use the DEPTH24_STENCIL8.
-	enum class ImageFormat : GTSL::uint8
-	{
-		//INTEGER
-
-		//R
-		R_I8,
-		R_I16,
-		R_I32,
-		R_I64,
-		//RG
-		RG_I8,
-		RG_I16,
-		RG_I32,
-		RG_I64,
-		//RBG
-		RGB_I8,
-		RGB_I16,
-		RGB_I32,
-		RGB_I64,
-		//RGBA
-		RGBA_I8,
-		RGBA_I16,
-		RGBA_I32,
-		RGBA_I64,
-		//RGBA
-		BGRA_I8,
-
-		BGR_I8,
-
-		//FLOATING POINT
-
-		//R
-		R_F16,
-		R_F32,
-		R_F64,
-		//RG
-		RG_F16,
-		RG_F32,
-		RG_F64,
-		//RBG
-		RGB_F16,
-		RGB_F32,
-		RGB_F64,
-		//RGBA
-		RGBA_F16,
-		RGBA_F32,
-		RGBA_F64,
-
-
-		//  DEPTH STENCIL
-
-		//A depth-only format with a 16 bit (2 byte) size.
-		DEPTH16,
-		//A depth-only format with a 32 (4 byte) bit size.
-		DEPTH32,
-		//A depth/stencil format with a 16 bit (2 byte) size depth part and an 8 bit (1 byte) size stencil part.
-		DEPTH16_STENCIL8,
-		//A depth/stencil format with a 24 bit (3 byte) size depth part and an 8 bit (1 byte) size stencil part.
-		DEPTH24_STENCIL8,
-		//A depth/stencil format with a 32 bit (4 byte) size depth part and an 8 bit (1 byte) size stencil part.
-		DEPTH32_STENCIL8
-	};
-
-	//Specifies all available color spaces.
-	enum class ColorSpace : GTSL::uint8
-	{
-		//The non linear SRGB color space is the most commonly used color space to display things on screen. Use this when you are not developing an HDR application.
-		NONLINEAR_SRGB,
-		//The HDR10 represents a 10 bit color space which allows for more color information / depth. Use this when you are developing an HDR application.
-		HDR10
-	};
-
 
 	// ATTACHMENTS
 
@@ -280,19 +183,6 @@ namespace GAL
 
 		TEXTURE_2D_CUBE,
 	};
-
-
-	// BUFFERS
-
-	enum class BufferType : GTSL::uint8
-	{
-		BUFFER_VERTEX,
-		BUFFER_INDEX,
-		BUFFER_UNIFORM,
-		BUFFER_TRANSFER_SOURCE,
-		BUFFER_TRANSFER_DESTINATION,
-	};
-
 
 	// PIPELINE
 
@@ -372,19 +262,49 @@ namespace GAL
 		INPUT_ATTACHMENT
 	};
 
-	/**
-	 * \brief Enumeration of all possible presentation modes, which define the order at which the rendered images are presented to the screen.
-	 */
-	enum class PresentMode : GTSL::uint8
+	enum class ImageFormat
 	{
-		/**
-		 * \brief All rendered images are queued in FIFO fashion and presented at V-BLANK. Best for when latency is not that important and energy consumption is.
-		 */
-		FIFO,
-		/**
-		 * \brief The last rendered image is the one which will be presented. Best for when latency is important and energy consumption is not.
-		 */
-		SWAP,
+		UNDEFINED = 0,
+
+		//INTEGER
+
+		//R
+		R_I8 = 9,
+		R_I16 = 70,
+		R_I32 = 98,
+		R_I64 = 110,
+		//RG
+		RG_I8 = 16,
+		RG_I16 = 77,
+		RG_I32 = 101,
+		RG_I64 = 113,
+		//RBG
+		RGB_I8 = 23,
+		RGB_I16 = 84,
+		RGB_I32 = 104,
+		RGB_I64 = 116,
+		//RGBA
+		RGBA_I8 = 37,
+		RGBA_I16 = 91,
+		RGBA_I32 = 107,
+		RGBA_I64 = 119,
+		//RGBA
+		BGRA_I8 = 44,
+
+		BGR_I8 = 30,
+
+		//  DEPTH STENCIL
+
+		//A depth-only format with a 16 bit (2 byte) size.
+		DEPTH16 = 124,
+		//A depth-only format with a 32 (4 byte) bit size.
+		DEPTH32 = 126,
+		//A depth/stencil format with a 16 bit (2 byte) size depth part and an 8 bit (1 byte) size stencil part.
+		DEPTH16_STENCIL8 = 128,
+		//A depth/stencil format with a 24 bit (3 byte) size depth part and an 8 bit (1 byte) size stencil part.
+		DEPTH24_STENCIL8 = 129,
+		//A depth/stencil format with a 32 bit (4 byte) size depth part and an 8 bit (1 byte) size stencil part.
+		DEPTH32_STENCIL8 = 130
 	};
 
 	inline GTSL::uint8 ShaderDataTypesSize(const ShaderDataTypes _SDT)
@@ -446,18 +366,6 @@ namespace GAL
 		case ImageFormat::RGBA_I64: break;
 		case ImageFormat::BGRA_I8: break;
 		case ImageFormat::BGR_I8: break;
-		case ImageFormat::R_F16: break;
-		case ImageFormat::R_F32: break;
-		case ImageFormat::R_F64: break;
-		case ImageFormat::RG_F16: break;
-		case ImageFormat::RG_F32: break;
-		case ImageFormat::RG_F64: break;
-		case ImageFormat::RGB_F16: break;
-		case ImageFormat::RGB_F32: break;
-		case ImageFormat::RGB_F64: break;
-		case ImageFormat::RGBA_F16: break;
-		case ImageFormat::RGBA_F32: break;
-		case ImageFormat::RGBA_F64: break;
 		case ImageFormat::DEPTH16: break;
 		case ImageFormat::DEPTH32: break;
 		case ImageFormat::DEPTH16_STENCIL8: break;

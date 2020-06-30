@@ -2,8 +2,6 @@
 
 #include "GAL/RenderContext.h"
 
-#include "Vulkan.h"
-
 #include "VulkanBindings.h"
 #include "VulkanImage.h"
 
@@ -31,20 +29,16 @@ namespace GAL
 		[[nodiscard]] GTSL::uint8 GetMaxFramesInFlight() const { return maxFramesInFlight; }
 		
 		struct GetImagesInfo : RenderInfo
-		{		
+		{
+			GTSL::uint32 SwapchainImagesFormat{ 0 };
 		};
 		GTSL::Array<VulkanImage, 5> GetImages(const GetImagesInfo& getImagesInfo);
 		
 	private:
-		VkSurfaceKHR surface = nullptr;
-		VkSwapchainKHR swapchain = nullptr;
-		VkSurfaceFormatKHR surfaceFormat{ VK_FORMAT_R8G8B8_UNORM, VK_COLORSPACE_SRGB_NONLINEAR_KHR };
-		VkPresentModeKHR presentMode{ VK_PRESENT_MODE_FIFO_KHR };
+		uint64_t surface{ 0 };
+		uint64_t swapchain{ 0 };
 
 		GTSL::uint8 imageIndex = 0;
 		GTSL::uint8 maxFramesInFlight = 0;
-
-		VkSurfaceFormatKHR findFormat(class VulkanRenderDevice* device, VkSurfaceKHR surface);
-		VkPresentModeKHR findPresentMode(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
 	};
 }

@@ -12,7 +12,7 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 	for (GTSL::uint8 i = 0; i < vk_attachment_descriptions.GetLength() - depth_attachment; ++i)
 	{
 		vk_attachment_descriptions[i].flags = 0;
-		vk_attachment_descriptions[i].format = ImageFormatToVkFormat(createInfo.Descriptor.RenderPassColorAttachments[i].Format);
+		vk_attachment_descriptions[i].format = static_cast<VkFormat>(createInfo.Descriptor.RenderPassColorAttachments[i].Format);
 		vk_attachment_descriptions[i].samples = VK_SAMPLE_COUNT_1_BIT; //TODO: Should match that of the SwapChain images.
 		vk_attachment_descriptions[i].loadOp = RenderTargetLoadOperationsToVkAttachmentLoadOp(createInfo.Descriptor.RenderPassColorAttachments[i].LoadOperation);
 		vk_attachment_descriptions[i].storeOp = RenderTargetStoreOperationsToVkAttachmentStoreOp(createInfo.Descriptor.RenderPassColorAttachments[i].StoreOperation);
@@ -25,7 +25,7 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 	{
 		//Set depth/stencil element.
 		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].flags = 0;
-		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].format = ImageFormatToVkFormat(createInfo.Descriptor.DepthStencilAttachment.Format);
+		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].format = static_cast<VkFormat>(createInfo.Descriptor.DepthStencilAttachment.Format);
 		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].samples = VK_SAMPLE_COUNT_1_BIT;
 		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].loadOp = RenderTargetLoadOperationsToVkAttachmentLoadOp(createInfo.Descriptor.DepthStencilAttachment.LoadOperation);
 		vk_attachment_descriptions[vk_attachment_descriptions.GetLength() - 1].storeOp = RenderTargetStoreOperationsToVkAttachmentStoreOp(createInfo.Descriptor.DepthStencilAttachment.StoreOperation);

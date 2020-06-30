@@ -20,10 +20,10 @@ namespace GAL
 		{	
 			ImageLayout InitialLayout{ ImageLayout::COLOR_ATTACHMENT };
 			GTSL::uint32 ImageUses{ 0 };
-			ImageFormat SourceFormat{ ImageFormat::RGBA_I8 };
+			GTSL::uint32 SourceFormat{ 0 };
 			GTSL::Extent2D Extent{ 1280, 720 };
 			GTSL::uint8 Anisotropy = 0;
-			ImageTiling ImageTiling;
+			GTSL::uint32 ImageTiling{ 0 };
 			ImageDimensions Dimensions;
 			GTSL::uint8 MipLevels{ 1 };
 			ImageType Type;

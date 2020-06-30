@@ -38,18 +38,17 @@ namespace GAL
 
 		struct FindSupportedImageFormat
 		{
-			GTSL::Ranger<ImageFormat> Candidates;
-			ImageUse ImageUse;
-			ImageTiling ImageTiling;
+			GTSL::Ranger<GTSL::uint32> Candidates;
+			GTSL::uint32 ImageUse{ 0 };
+			GTSL::uint32 ImageTiling{ 0 };
 		};
-		[[nodiscard]] ImageFormat FindNearestSupportedImageFormat(const FindSupportedImageFormat& findSupportedImageFormat) const;
+		[[nodiscard]] GTSL::uint32 FindNearestSupportedImageFormat(const FindSupportedImageFormat& findSupportedImageFormat) const;
 		
 		[[nodiscard]] VkInstance GetVkInstance() const { return instance; }
 		[[nodiscard]] VkPhysicalDevice GetVkPhysicalDevice() const { return physicalDevice; }
 		[[nodiscard]] VkDevice GetVkDevice() const { return device; }
 
 		[[nodiscard]] GTSL::uint32 FindMemoryType(GTSL::uint32 memoryType, GTSL::uint32 memoryFlags) const;
-		[[nodiscard]] VkFormat FindSupportedVkFormat(GTSL::Ranger<VkFormat> formats, VkFormatFeatureFlags formatFeatureFlags, VkImageTiling imageTiling) const;
 
 		[[nodiscard]] const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const { return deviceProperties; }
 

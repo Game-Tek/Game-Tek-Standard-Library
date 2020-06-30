@@ -3,13 +3,18 @@
 #include "GAL/Vulkan/Vulkan.h"
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
-GAL::VulkanDeviceMemory::VulkanDeviceMemory(const CreateInfo& createInfo) : DeviceMemory(createInfo)
+GAL::VulkanDeviceMemory::VulkanDeviceMemory(const CreateInfo& createInfo)
 {
 	VkMemoryAllocateInfo vk_memory_allocate_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
 	vk_memory_allocate_info.allocationSize = createInfo.Size;
-	vk_memory_allocate_info.memoryTypeIndex = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	vk_memory_allocate_info.memoryTypeIndex = createInfo.MemoryType;
 
 	vkAllocateMemory(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_memory_allocate_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &deviceMemory);
+}
+
+void GAL::VulkanDeviceMemory::Destroy(RenderDevice* renderDevice)
+{
+	vkFreeMemory(static_cast<VulkanRenderDevice*>(renderDevice)->GetVkDevice(), deviceMemory, static_cast<VulkanRenderDevice*>(renderDevice)->GetVkAllocationCallbacks());
 }
 
 void* GAL::VulkanDeviceMemory::Map(const MapInfo& mapInfo) const

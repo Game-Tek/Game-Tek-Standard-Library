@@ -57,13 +57,37 @@ GAL::GPUInfo GAL::VulkanRenderDevice::GetGPUInfo()
 	return result;
 }
 
-GAL::ImageFormat GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const FindSupportedImageFormat& findSupportedImageFormat) const
+GTSL::uint32 GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const FindSupportedImageFormat& findSupportedImageFormat) const
 {
-	GTSL::Array<VkFormat, 32> formats;
+	VkFormatProperties format_properties;
 
-	for (auto& e : findSupportedImageFormat.Candidates) { formats.EmplaceBack(ImageFormatToVkFormat(e)); }
+	VkFormatFeatureFlags features;
+	
+	switch (static_cast<VulkanImageUse>(findSupportedImageFormat.ImageUse))
+	{
+	case VulkanImageUse::TRANSFER_SOURCE: features = VK_FORMAT_FEATURE_TRANSFER_SRC_BIT; break;
+	case VulkanImageUse::TRANSFER_DESTINATION: features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT; break;
+	case VulkanImageUse::SAMPLE: features = VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT; break;
+	case VulkanImageUse::STORAGE: features = VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT; break;
+	case VulkanImageUse::COLOR_ATTACHMENT: features = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT; break;
+	case VulkanImageUse::DEPTH_STENCIL_ATTACHMENT: features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT; break;
+	case VulkanImageUse::TRANSIENT_ATTACHMENT: [[fallthrough]];
+	case VulkanImageUse::INPUT_ATTACHMENT: [[fallthrough]];
+	default: features = 0; break;
+	}
+	
+	for (auto e : findSupportedImageFormat.Candidates)
+	{
+		vkGetPhysicalDeviceFormatProperties(physicalDevice, static_cast<VkFormat>(e), &format_properties);
 
-	return VkFormatToImageFormat(FindSupportedVkFormat(formats, ImageUseToVkFormatFeatureFlagBits(findSupportedImageFormat.ImageUse), ImageTilingToVkImageTiling(findSupportedImageFormat.ImageTiling)));
+		switch (findSupportedImageFormat.ImageTiling)
+		{
+		case VK_IMAGE_TILING_LINEAR: if (format_properties.linearTilingFeatures & features) return e;
+		case VK_IMAGE_TILING_OPTIMAL: if (format_properties.optimalTilingFeatures & features) return e;
+		}
+	}
+
+	return VK_FORMAT_UNDEFINED;
 }
 
 void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
@@ -92,14 +116,14 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 		}
 	}
 
-	VkTimelineSemaphoreSubmitInfo vk_timeline_semaphore_submit_info{ VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO };
-	vk_timeline_semaphore_submit_info.waitSemaphoreValueCount = vk_wait_semaphores.GetLength();
-	vk_timeline_semaphore_submit_info.pWaitSemaphoreValues = submitInfo.WaitValues.begin();
-	vk_timeline_semaphore_submit_info.signalSemaphoreValueCount = vk_signal_semaphores.GetLength();
-	vk_timeline_semaphore_submit_info.pSignalSemaphoreValues = submitInfo.SignalValues.begin();
+	//VkTimelineSemaphoreSubmitInfo vk_timeline_semaphore_submit_info{ VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO };
+	//vk_timeline_semaphore_submit_info.waitSemaphoreValueCount = vk_wait_semaphores.GetLength();
+	//vk_timeline_semaphore_submit_info.pWaitSemaphoreValues = submitInfo.WaitValues.begin();
+	//vk_timeline_semaphore_submit_info.signalSemaphoreValueCount = vk_signal_semaphores.GetLength();
+	//vk_timeline_semaphore_submit_info.pSignalSemaphoreValues = submitInfo.SignalValues.begin();
 	
 	VkSubmitInfo vk_submit_info{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-	vk_submit_info.pNext = &vk_timeline_semaphore_submit_info;
+	//vk_submit_info.pNext = &vk_timeline_semaphore_submit_info;
 	
 	vk_submit_info.commandBufferCount = vk_command_buffers.GetLength();
 	vk_submit_info.pCommandBuffers = vk_command_buffers.begin();
@@ -191,7 +215,14 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	vk_physical_device_features.samplerAnisotropy = true;
 	vk_physical_device_features.shaderSampledImageArrayDynamicIndexing = true;
 
-	GTSL::Array<const char*, 32> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+	VkPhysicalDeviceTimelineSemaphoreFeatures timeline_semaphore_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES };
+	timeline_semaphore_features.pNext = &vk_physical_device_features;
+	timeline_semaphore_features.timelineSemaphore = true;
+
+	VkPhysicalDeviceFeatures2 extended_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+	extended_features.pNext = &timeline_semaphore_features;
+
+	GTSL::Array<const char*, 32> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME };
 
 	GTSL::Array<VkDeviceQueueCreateInfo, 16> vk_device_queue_create_infos(createInfo.QueueCreateInfos.ElementCount());
 
@@ -208,7 +239,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	{
 		for (auto& e : vk_queues_flag_bits)
 		{
-			e = QueueCapabilitiesToVkQueueFlags(createInfo.QueueCreateInfos[&e - vk_queues_flag_bits.begin()].Capabilities);
+			e = createInfo.QueueCreateInfos[&e - vk_queues_flag_bits.begin()].Capabilities;
 		}
 	}
 
@@ -238,9 +269,10 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	}
 
 	VkDeviceCreateInfo vk_device_create_info{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+	vk_device_create_info.pNext = nullptr; //extended features
 	vk_device_create_info.queueCreateInfoCount = vk_device_queue_create_infos.GetLength();
 	vk_device_create_info.pQueueCreateInfos = vk_device_queue_create_infos.begin();
-	vk_device_create_info.pEnabledFeatures = &vk_physical_device_features;
+	vk_device_create_info.pEnabledFeatures = &vk_physical_device_features; //because of next
 	vk_device_create_info.enabledExtensionCount = device_extensions.GetLength();
 	vk_device_create_info.ppEnabledExtensionNames = device_extensions.begin();
 
@@ -265,22 +297,4 @@ GAL::VulkanRenderDevice::~VulkanRenderDevice()
 	destroyDebugUtilsFunction(instance, debugMessenger, GetVkAllocationCallbacks());
 #endif
 	vkDestroyInstance(instance, GetVkAllocationCallbacks());
-}
-
-VkFormat GAL::VulkanRenderDevice::FindSupportedVkFormat(GTSL::Ranger<VkFormat> formats, const VkFormatFeatureFlags formatFeatureFlags, const VkImageTiling imageTiling) const
-{
-	VkFormatProperties format_properties;
-
-	for (auto& e : formats)
-	{
-		vkGetPhysicalDeviceFormatProperties(physicalDevice, e, &format_properties);
-
-		switch (imageTiling)
-		{
-			case VK_IMAGE_TILING_LINEAR: if (format_properties.linearTilingFeatures & formatFeatureFlags) return e;
-			case VK_IMAGE_TILING_OPTIMAL: if (format_properties.optimalTilingFeatures & formatFeatureFlags) return e;
-		}
-	}
-
-	return VK_FORMAT_UNDEFINED;
 }

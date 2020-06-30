@@ -188,7 +188,7 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 		vk_pipeline_shader_stage_create_infos[i].flags = 0;
 		vk_pipeline_shader_stage_create_infos[i].stage = ShaderTypeToVkShaderStageFlagBits(createInfo.PipelineDescriptor.Stages[i].Type);
 		vk_pipeline_shader_stage_create_infos[i].pName = "main";
-		vk_pipeline_shader_stage_create_infos[i].module = reinterpret_cast<VkShaderModule>(createInfo.PipelineDescriptor.Stages[i].Shader);
+		vk_pipeline_shader_stage_create_infos[i].module = static_cast<VulkanShader*>(createInfo.PipelineDescriptor.Stages[i].Shader)->GetVkShaderModule();
 		vk_pipeline_shader_stage_create_infos[i].pSpecializationInfo = nullptr;
 	}
 

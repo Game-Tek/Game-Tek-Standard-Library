@@ -13,9 +13,8 @@ namespace GAL
 		{
 			GTSL::uint32 Size{ 0 };
 			GTSL::uint32 Alignment{ 0 };
-
-			BufferType BufferUsage;
+			GTSL::uint32 MemoryType{ 0 };
+			GTSL::uint32 BufferUsage{ 0 };
 		};
-		DeviceMemory(const CreateInfo& createInfo);
 	};
 }

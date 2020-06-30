@@ -21,6 +21,9 @@ namespace GTSL
 		{
 		}
 
+		template<typename TT>
+		Ranger(const Ranger<TT>& other) noexcept : from(static_cast<T*>(other.begin())), to(static_cast<T*>(other.end())) {}
+		
 		constexpr T* begin() noexcept { return from; }
 		constexpr T* end() noexcept { return to; }
 		[[nodiscard]] constexpr T* begin() const noexcept { return from; }

@@ -5,24 +5,20 @@
 
 #include "GAL/Vulkan/VulkanRenderPass.h"
 
-GAL::VulkanFramebuffer::VulkanFramebuffer(const CreateInfo& createInfo) : Framebuffer(createInfo)
+GAL::VulkanFramebuffer::VulkanFramebuffer(const CreateInfo& createInfo)
 {
-	GTSL::Array<VkImageView, 64> result(createInfo.Images.ElementCount());
+	GTSL::Ranger<const VulkanImage> vulkan_images = GTSL::Ranger<const VulkanImage>(createInfo.Images);
+	GTSL::Array<VkImageView, 64> vk_image_views(vulkan_images.ElementCount());
 
-	for (auto& e : result)
-	{
-		e = static_cast<VulkanImage*>(createInfo.Images[&e - result.begin()])->GetVkImageView();
-	}
-
-	attachmentCount = createInfo.Images.ElementCount();
+	for (auto& e : vk_image_views) { e = vulkan_images.operator[](&e - vk_image_views.begin()).GetVkImageView(); }
 
 	VkFramebufferCreateInfo vk_framebuffer_create_info{ VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
-	vk_framebuffer_create_info.attachmentCount = createInfo.Images.ElementCount();
+	vk_framebuffer_create_info.attachmentCount = vulkan_images.ElementCount();
 	vk_framebuffer_create_info.width = createInfo.Extent.Width;
 	vk_framebuffer_create_info.height = createInfo.Extent.Height;
 	vk_framebuffer_create_info.layers = 1;
 	vk_framebuffer_create_info.renderPass = static_cast<VulkanRenderPass*>(createInfo.RenderPass)->GetVkRenderPass();
-	vk_framebuffer_create_info.pAttachments = result.begin();
+	vk_framebuffer_create_info.pAttachments = vk_image_views.begin();
 
 	VK_CHECK(vkCreateFramebuffer(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_framebuffer_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &framebuffer));
 }

@@ -17,7 +17,7 @@ namespace GAL
 
 	struct AttachmentDescriptor
 	{
-		ImageFormat Format;
+		GTSL::uint32 Format{ 0 };
 		//Defines the operation that should be run when the attachment is loaded for rendering.
 		RenderTargetLoadOperations LoadOperation = RenderTargetLoadOperations::UNDEFINED;
 		//Defines the operation that should be run when the attachment is done being rendered to.

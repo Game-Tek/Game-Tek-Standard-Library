@@ -11,8 +11,11 @@ namespace GAL
 	class VulkanCommandBuffer final : public CommandBuffer
 	{
 	public:
+		VulkanCommandBuffer() = default;
 		explicit VulkanCommandBuffer(const CreateInfo& commandBufferCreateInfo);
 
+		void Destroy(RenderDevice* renderDevice);
+		
 		void BeginRecording(const BeginRecordingInfo& beginRecordingInfo);
 		void EndRecording(const EndRecordingInfo& endRecordingInfo);
 

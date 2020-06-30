@@ -21,6 +21,9 @@ namespace GTSL
 
 	struct alignas(16) RGBA
 	{
+		RGBA() = default;
+		RGBA(const float32 r, const float32 g, const float32 b, const float32 a) : array{r, g, b, a} {}
+		
 		float32& R() { return array[0]; }
 		float32& G() { return array[1];	}
 		float32& B() { return array[2];	}

@@ -9,7 +9,7 @@
 #include "GAL/Vulkan/VulkanRenderPass.h"
 #include "GAL/Vulkan/VulkanImage.h"
 
-GAL::VulkanCommandBuffer::VulkanCommandBuffer(const CreateInfo& createInfo) : CommandBuffer(createInfo)
+GAL::VulkanCommandBuffer::VulkanCommandBuffer(const CreateInfo& createInfo)
 {
 	VkCommandPoolCreateInfo vk_command_pool_create_info{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 	vk_command_pool_create_info.queueFamilyIndex = static_cast<VulkanQueue*>(createInfo.Queue)->GetFamilyIndex();
@@ -20,6 +20,12 @@ GAL::VulkanCommandBuffer::VulkanCommandBuffer(const CreateInfo& createInfo) : Co
 	vk_command_buffer_allocate_info.commandBufferCount = 1;
 	vk_command_buffer_allocate_info.level = createInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 	vkAllocateCommandBuffers(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_command_buffer_allocate_info, &commandBuffer);
+}
+
+void GAL::VulkanCommandBuffer::Destroy(RenderDevice* renderDevice)
+{
+	vkFreeCommandBuffers(static_cast<VulkanRenderDevice*>(renderDevice)->GetVkDevice(), commandPool, 1, &commandBuffer);
+	vkDestroyCommandPool(static_cast<VulkanRenderDevice*>(renderDevice)->GetVkDevice(), commandPool, static_cast<VulkanRenderDevice*>(renderDevice)->GetVkAllocationCallbacks());
 }
 
 void GAL::VulkanCommandBuffer::BeginRecording(const BeginRecordingInfo& beginRecordingInfo)
