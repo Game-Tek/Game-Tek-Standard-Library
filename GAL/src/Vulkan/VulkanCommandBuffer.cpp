@@ -121,7 +121,7 @@ void GAL::VulkanCommandBuffer::BindBindingsSet(const BindBindingsSetInfo& bindBi
 	{
 		for (auto& e : descriptor_sets)
 		{
-			e = static_cast<VulkanBindingsSet*>(bindBindingsSetInfo.BindingsSets[&e - descriptor_sets.begin()])->GetVkDescriptorSets()[bindBindingsSetInfo.BindingsSetIndex];
+			e = static_cast<VulkanBindingsSet&>(bindBindingsSetInfo.BindingsSets[&e - descriptor_sets.begin()]).GetVkDescriptorSets()[bindBindingsSetInfo.BindingsSetIndex];
 		}
 	}
 

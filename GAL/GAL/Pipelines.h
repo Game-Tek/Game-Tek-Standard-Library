@@ -20,26 +20,15 @@ namespace GAL
 		StencilState Back;
 	};
 
-	struct ShaderInfo
+	class Shader : public GALObject
 	{
-		ShaderType Type = ShaderType::VERTEX_SHADER;
-		GTSL::Ranger<const GTSL::UTF8> Name;
-		GTSL::Ranger<GTSL::byte> ShaderData;
+	public:
+		struct CreateInfo : RenderInfo
+		{
+			GTSL::Ranger<GTSL::byte> ShaderData;
+		};
 	};
-
-	struct PipelineDescriptor
-	{
-		GTSL::Ranger<ShaderInfo> Stages;
-		CullMode CullMode = CullMode::CULL_NONE;
-		bool DepthClampEnable = false;
-		bool BlendEnable = false;
-		BlendOperation ColorBlendOperation = BlendOperation::ADD;
-		SampleCount RasterizationSamples = SampleCount::SAMPLE_COUNT_1;
-		CompareOperation DepthCompareOperation = CompareOperation::NEVER;
-		StencilOperations StencilOperations;
-		GTSL::Ranger<GTSL::byte> PipelineCache;
-	};
-
+	
 	class RenderPass;
 
 	class Pipeline : public GALObject
@@ -50,11 +39,29 @@ namespace GAL
 			size_t Size = 0;
 			ShaderType Stage = ShaderType::ALL_STAGES;
 		};
+
+		struct ShaderInfo
+		{
+			ShaderType Type = ShaderType::VERTEX_SHADER;
+			Shader* Shader = nullptr;
+		};
 	};
 	
 	class GraphicsPipeline : public Pipeline
 	{
 	public:
+		struct PipelineDescriptor
+		{
+			GTSL::Ranger<ShaderInfo> Stages;
+			CullMode CullMode = CullMode::CULL_NONE;
+			bool DepthClampEnable = false;
+			bool BlendEnable = false;
+			BlendOperation ColorBlendOperation = BlendOperation::ADD;
+			SampleCount RasterizationSamples = SampleCount::SAMPLE_COUNT_1;
+			CompareOperation DepthCompareOperation = CompareOperation::NEVER;
+			StencilOperations StencilOperations;
+		};
+		
 		struct CreateInfo : RenderInfo
 		{
 			RenderPass* RenderPass = nullptr;
@@ -66,6 +73,7 @@ namespace GAL
 
 			PushConstant* PushConstant = nullptr;
 			GTSL::Ranger<class BindingsSet> BindingsSets;
+			GTSL::Ranger<GTSL::byte> PipelineCache;
 		};
 
 		GraphicsPipeline() = default;

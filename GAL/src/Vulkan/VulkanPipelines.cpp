@@ -8,9 +8,23 @@
 #include "GAL/Vulkan/VulkanRenderPass.h"
 #include "GTSL/String.hpp"
 
-bool GAL::VulkanShaders::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName,
-									   const ShaderType shaderType, const ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result,
-									   GTSL::String& compilationResult, const GTSL::AllocatorReference& allocatorReference)
+GAL::VulkanShader::VulkanShader(const CreateInfo& createInfo)
+{
+	VkShaderModuleCreateInfo vk_shader_module_create_info{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
+	vk_shader_module_create_info.codeSize = createInfo.ShaderData.Bytes();
+	vk_shader_module_create_info.pCode = reinterpret_cast<uint32_t*>(createInfo.ShaderData.begin());
+
+	VK_CHECK(vkCreateShaderModule(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_shader_module_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &shaderModule));
+}
+
+void GAL::VulkanShader::Destroy(RenderDevice* renderDevice)
+{
+	vkDestroyShaderModule(static_cast<VulkanRenderDevice*>(renderDevice)->GetVkDevice(), shaderModule, static_cast<VulkanRenderDevice*>(renderDevice)->GetVkAllocationCallbacks());
+}
+
+bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName,
+                                      const ShaderType shaderType, const ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result,
+                                      GTSL::String& compilationResult, const GTSL::AllocatorReference& allocatorReference)
 {
 	shaderc_shader_kind shaderc_stage;
 
@@ -166,22 +180,15 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vk_pipeline_shader_stage_create_infos(createInfo.PipelineDescriptor.Stages.ElementCount());
-	GTSL::Array<VkShaderModule, MAX_SHADER_STAGES> vk_shader_modules(createInfo.PipelineDescriptor.Stages.ElementCount());
 
 	for (GTSL::uint8 i = 0; i < createInfo.PipelineDescriptor.Stages.ElementCount(); ++i)
-	{
-		VkShaderModuleCreateInfo vk_shader_module_create_info{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-		vk_shader_module_create_info.codeSize = createInfo.PipelineDescriptor.Stages[i].ShaderData.Bytes();
-		vk_shader_module_create_info.pCode = reinterpret_cast<uint32_t*>(createInfo.PipelineDescriptor.Stages[i].ShaderData.begin());
-
-		vkCreateShaderModule(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_shader_module_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &vk_shader_modules[i]);
-		
+	{		
 		vk_pipeline_shader_stage_create_infos[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vk_pipeline_shader_stage_create_infos[i].pNext = nullptr;
 		vk_pipeline_shader_stage_create_infos[i].flags = 0;
 		vk_pipeline_shader_stage_create_infos[i].stage = ShaderTypeToVkShaderStageFlagBits(createInfo.PipelineDescriptor.Stages[i].Type);
 		vk_pipeline_shader_stage_create_infos[i].pName = "main";
-		vk_pipeline_shader_stage_create_infos[i].module = vk_shader_modules[i];
+		vk_pipeline_shader_stage_create_infos[i].module = reinterpret_cast<VkShaderModule>(createInfo.PipelineDescriptor.Stages[i].Shader);
 		vk_pipeline_shader_stage_create_infos[i].pSpecializationInfo = nullptr;
 	}
 
@@ -242,12 +249,12 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	vk_graphics_pipeline_create_info.basePipelineIndex = createInfo.ParentPipeline ? 0 : -1;
 
 
-	if(createInfo.PipelineDescriptor.PipelineCache)
+	if(createInfo.PipelineCache)
 	{
 		VkPipelineCache vk_pipeline_cache;
 		VkPipelineCacheCreateInfo vk_pipeline_cache_create_info{ VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO };
-		vk_pipeline_cache_create_info.initialDataSize = createInfo.PipelineDescriptor.PipelineCache.Bytes();
-		vk_pipeline_cache_create_info.pInitialData = createInfo.PipelineDescriptor.PipelineCache.begin();
+		vk_pipeline_cache_create_info.initialDataSize = createInfo.PipelineCache.Bytes();
+		vk_pipeline_cache_create_info.pInitialData = createInfo.PipelineCache.begin();
 
 		vkCreatePipelineCache(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_pipeline_cache_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &vk_pipeline_cache);
 		vkCreateGraphicsPipelines(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), vk_pipeline_cache, 1, &vk_graphics_pipeline_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipeline);
@@ -256,21 +263,16 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	}
 	
 	VK_CHECK(vkCreateGraphicsPipelines(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), nullptr, 1, &vk_graphics_pipeline_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipeline));
-
-	for(auto& e : vk_shader_modules)
-	{
-		vkDestroyShaderModule(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), e, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks());
-	}
 }
 
-void GAL::VulkanGraphicsPipeline::Destroy(GAL::RenderDevice* renderDevice)
+void GAL::VulkanGraphicsPipeline::Destroy(RenderDevice* renderDevice)
 {
 	auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
 	vkDestroyPipeline(vk_render_device->GetVkDevice(), pipeline, vk_render_device->GetVkAllocationCallbacks());
 	vkDestroyPipelineLayout(vk_render_device->GetVkDevice(), pipelineLayout, vk_render_device->GetVkAllocationCallbacks());
 }
 
-void GAL::VulkanComputePipeline::Destroy(GAL::RenderDevice* renderDevice)
+void GAL::VulkanComputePipeline::Destroy(RenderDevice* renderDevice)
 {
 	auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
 	vkDestroyPipeline(vk_render_device->GetVkDevice(), pipeline, vk_render_device->GetVkAllocationCallbacks());

@@ -69,7 +69,7 @@ namespace GAL
 
 		struct BindBindingsSetInfo : RenderInfo
 		{
-			GTSL::Ranger<BindingsSet*> BindingsSets;
+			GTSL::Ranger<BindingsSet> BindingsSets;
 			GTSL::Ranger<GTSL::uint32> Offsets;
 			Pipeline* Pipeline = nullptr;
 			GTSL::uint8 BindingsSetIndex = 0;

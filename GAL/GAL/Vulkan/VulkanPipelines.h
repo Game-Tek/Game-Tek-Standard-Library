@@ -12,10 +12,18 @@ namespace GTSL {
 
 namespace GAL
 {
-	class VulkanShaders
+	class VulkanShader final : public Shader
 	{
 	public:
+		VulkanShader() = default;
+		explicit VulkanShader(const CreateInfo& createInfo);
+
+		void Destroy(RenderDevice* renderDevice);
+		
 		static bool CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result, GTSL::String& compilationResult, const GTSL::AllocatorReference& allocatorReference);
+
+	protected:
+		VkShaderModule shaderModule{ nullptr };
 	};
 
 	class VulkanGraphicsPipeline final : public GraphicsPipeline
