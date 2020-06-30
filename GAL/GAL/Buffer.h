@@ -16,9 +16,6 @@ namespace GAL
 			GTSL::uint32 Alignment{ 8 };
 			GTSL::uint32 BufferType{ 0 };
 		};
-		explicit Buffer(const CreateInfo& createInfo);
-
-		using BufferPointer = GTSL::uint64;
 		
 	private:
 	};

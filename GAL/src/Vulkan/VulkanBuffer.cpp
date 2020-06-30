@@ -4,7 +4,7 @@
 #include "GAL/Vulkan/VulkanMemory.h"
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
-GAL::VulkanBuffer::VulkanBuffer(const CreateInfo& createInfo) : Buffer(createInfo)
+GAL::VulkanBuffer::VulkanBuffer(const CreateInfo& createInfo)
 {
 	VkBufferCreateInfo vk_buffer_create_info{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	vk_buffer_create_info.size = createInfo.Size;
@@ -15,5 +15,6 @@ GAL::VulkanBuffer::VulkanBuffer(const CreateInfo& createInfo) : Buffer(createInf
 
 void GAL::VulkanBuffer::BindToMemory(const BindMemoryInfo& bindMemoryInfo) const
 {
-	vkBindBufferMemory(static_cast<VulkanRenderDevice*>(bindMemoryInfo.RenderDevice)->GetVkDevice(), buffer, static_cast<VulkanDeviceMemory*>(bindMemoryInfo.Memory)->GetVkDeviceMemory(), bindMemoryInfo.Offset);
+	vkBindBufferMemory(static_cast<VulkanRenderDevice*>(bindMemoryInfo.RenderDevice)->GetVkDevice(), buffer,
+	static_cast<VkDeviceMemory>(static_cast<VulkanDeviceMemory*>(bindMemoryInfo.Memory)->GetVkDeviceMemory()), bindMemoryInfo.Offset);
 }

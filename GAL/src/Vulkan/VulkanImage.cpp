@@ -5,7 +5,7 @@
 
 #include "GAL/Vulkan/VulkanMemory.h"
 
-GAL::VulkanImage::VulkanImage(const CreateInfo& createInfo) : Image(createInfo)
+GAL::VulkanImage::VulkanImage(const CreateInfo& createInfo)
 {
 	VkImageCreateInfo vk_image_create_info{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	vk_image_create_info.imageType = ImageDimensionsToVkImageType(createInfo.Dimensions);
@@ -43,7 +43,8 @@ void GAL::VulkanImage::Destroy(GAL::RenderDevice* renderDevice)
 
 void GAL::VulkanImage::BindToMemory(const BindMemoryInfo& bindMemoryInfo) const
 {
-	vkBindImageMemory(static_cast<VulkanRenderDevice*>(bindMemoryInfo.RenderDevice)->GetVkDevice(), image, static_cast<VulkanDeviceMemory*>(bindMemoryInfo.Memory)->GetVkDeviceMemory(), bindMemoryInfo.Offset);
+	vkBindImageMemory(static_cast<VulkanRenderDevice*>(bindMemoryInfo.RenderDevice)->GetVkDevice(), image,
+	static_cast<VkDeviceMemory>(static_cast<VulkanDeviceMemory*>(bindMemoryInfo.Memory)->GetVkDeviceMemory()), bindMemoryInfo.Offset);
 }
 
 GAL::VulkanSampler::VulkanSampler(const CreateInfo& createInfo)

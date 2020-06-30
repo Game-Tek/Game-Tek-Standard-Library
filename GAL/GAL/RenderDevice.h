@@ -36,10 +36,10 @@ namespace GAL
 
 		struct SubmitInfo : RenderInfo
 		{
-			GTSL::Ranger<class CommandBuffer*> CommandBuffers;
-			GTSL::Ranger<class Semaphore*> SignalSemaphores;
+			GTSL::Ranger<const class CommandBuffer> CommandBuffers;
+			GTSL::Ranger<const class Semaphore> SignalSemaphores;
 			GTSL::Ranger<GTSL::uint64> SignalValues;
-			GTSL::Ranger<class Semaphore*> WaitSemaphores;
+			GTSL::Ranger<const class Semaphore> WaitSemaphores;
 			GTSL::Ranger<GTSL::uint64> WaitValues;
 			/**
 			 * \brief Pipeline stages at which each corresponding semaphore wait will occur.
@@ -58,10 +58,10 @@ namespace GAL
 	public:
 		struct CreateInfo
 		{
-			GTSL::Ranger<GTSL::UTF8> ApplicationName;
+			GTSL::Ranger<const GTSL::UTF8> ApplicationName;
 			GTSL::uint16 ApplicationVersion[3];
 			GTSL::Ranger<Queue::CreateInfo> QueueCreateInfos;
-			GTSL::Ranger<GAL::Queue*> Queues;
+			GTSL::Ranger<Queue> Queues;
 		};
 		
 		[[nodiscard]] GTSL::AllocatorReference* GetPersistentAllocationsAllocatorReference() const { return persistentAllocatorReference; }

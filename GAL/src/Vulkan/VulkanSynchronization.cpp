@@ -5,7 +5,7 @@
 GAL::VulkanFence::VulkanFence(const CreateInfo& createInfo)
 {
 	VkFenceCreateInfo vk_fence_create_info{ VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
-	vk_fence_create_info.flags = createInfo.IsSignaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
+	vk_fence_create_info.flags = createInfo.IsSignaled;
 
 	VK_CHECK(vkCreateFence(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_fence_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &fence));
 }
@@ -17,15 +17,10 @@ void GAL::VulkanFence::Destroy(RenderDevice* renderDevice)
 
 void GAL::VulkanFence::WaitForFences(const WaitForFencesInfo& waitForFencesInfo)
 {
-	GTSL::Array<VkFence, 32> vk_fences;
-	{
-		for (auto& e : waitForFencesInfo.Fences)
-		{
-			vk_fences.EmplaceBack(static_cast<VulkanFence*>(e)->fence);
-		}
-	}
+	auto vulkan_fences = GTSL::Ranger<const VulkanFence>(waitForFencesInfo.Fences);
 
-	vkWaitForFences(static_cast<VulkanRenderDevice*>(waitForFencesInfo.RenderDevice)->GetVkDevice(), vk_fences.GetLength(), vk_fences.begin(), waitForFencesInfo.WaitForAll, waitForFencesInfo.Timeout);
+	vkWaitForFences(static_cast<VulkanRenderDevice*>(waitForFencesInfo.RenderDevice)->GetVkDevice(), static_cast<GTSL::uint32>(vulkan_fences.ElementCount()),
+	reinterpret_cast<const VkFence*>(vulkan_fences.begin()), waitForFencesInfo.WaitForAll, waitForFencesInfo.Timeout);
 }
 
 GAL::VulkanSemaphore::VulkanSemaphore(const CreateInfo& createInfo)

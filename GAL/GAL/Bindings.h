@@ -14,25 +14,26 @@ namespace GAL
 	{
 		BindingType BindingType = BindingType::UNIFORM_BUFFER;
 		ShaderType ShaderStage = ShaderType::ALL_STAGES;
+		GTSL::uint8 MaxNumberOfBindingsAllocatable{ 0 };
 	};
 	
 	struct ImageBindingDescriptor : BindingDescriptor
 	{
-		GTSL::Ranger<class Image*> Images;
-		GTSL::Ranger<class Sampler*> Samplers;
+		GTSL::Ranger<const class Image> Images;
+		GTSL::Ranger<const class Sampler> Samplers;
 		GTSL::Ranger<ImageLayout> Layouts;
 	};
 
 	struct BufferBindingDescriptor : BindingDescriptor
 	{
-		GTSL::Ranger<class Buffer*> Buffers;
+		GTSL::Ranger<const class Buffer> Buffers;
 		GTSL::Ranger<GTSL::uint32> Offsets;
 		GTSL::Ranger<GTSL::uint32> Sizes;
 	};
-
+	
 	struct BindingLayoutCreateInfo
 	{
-		GTSL::Array<ImageBindingDescriptor, MAX_BINDINGS_PER_SET> BindingsSetLayout;
+		GTSL::Ranger<BindingDescriptor> BindingsSetLayout;
 		GTSL::int32 DescriptorCount = 0;
 	};
 
@@ -40,7 +41,6 @@ namespace GAL
 	{
 		GTSL::Array<ImageBindingDescriptor, MAX_BINDINGS_PER_SET> ImageBindingsSetLayout;
 		GTSL::Array<BufferBindingDescriptor, MAX_BINDINGS_PER_SET> BufferBindingsSetLayout;
-		GTSL::uint8 DestinationSet = 0;
 	};
 
 	class BindingsPool : public GALObject
@@ -48,24 +48,15 @@ namespace GAL
 	public:
 		struct CreateInfo : RenderInfo
 		{
-			GTSL::Array<ImageBindingDescriptor, MAX_BINDINGS_PER_SET> BindingsSetLayout;
-			/**
-			 * \brief How many sets to allocate.
-			 */
-			GTSL::uint8 BindingsSetCount = 0;
+			GTSL::Ranger<BindingDescriptor> BindingsDescriptors;
+			GTSL::Ranger<class BindingsSet> BindingsSets;
 		};
 		
 		~BindingsPool() = default;
-
-		struct FreeBindingsPoolInfo : RenderInfo
-		{
-		};
-
-		void FreePool(const FreeBindingsPoolInfo& freeDescriptorPoolInfo);
 		
 		struct FreeBindingsSetInfo : RenderInfo
 		{
-			class BindingsSet* BindingsSet = nullptr;
+			GTSL::Ranger<class BindingsSet> BindingsSet;
 		};
 		void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo);
 	};
@@ -82,11 +73,6 @@ namespace GAL
 			
 			GTSL::Ranger<BindingDescriptor> BindingsSetLayout;
 			GTSL::Ranger<GTSL::uint8> BindingsSetBindingCount;
-			
-			/**
-			 * \brief How many sets to allocate.
-			 */
-			GTSL::uint8 BindingsSetCount = 0;
 		};
 		
 		~BindingsSet() = default;

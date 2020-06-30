@@ -72,7 +72,7 @@ namespace GAL
 			GraphicsPipeline* ParentPipeline = nullptr;
 
 			PushConstant* PushConstant = nullptr;
-			GTSL::Ranger<class BindingsSet> BindingsSets;
+			GTSL::Ranger<class BindingsPool> BindingsPools;
 			GTSL::Ranger<GTSL::byte> PipelineCache;
 		};
 

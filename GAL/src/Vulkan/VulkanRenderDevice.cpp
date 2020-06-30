@@ -92,29 +92,14 @@ GTSL::uint32 GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const Find
 
 void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 {
-	GTSL::Array<VkCommandBuffer, 16> vk_command_buffers(submitInfo.CommandBuffers.ElementCount());
+	GTSL::Array<VkCommandBuffer, 16> vk_command_buffers(static_cast<GTSL::uint32>(submitInfo.CommandBuffers.ElementCount()));
+	for(const auto& e : submitInfo.CommandBuffers)
 	{
-		for(auto* e : submitInfo.CommandBuffers)
-		{
-			vk_command_buffers[&e - submitInfo.CommandBuffers.begin()] = static_cast<VulkanCommandBuffer*>(e)->GetVkCommandBuffer();
-		}
+		vk_command_buffers[&e - submitInfo.CommandBuffers.begin()] = static_cast<const VulkanCommandBuffer&>(e).GetVkCommandBuffer();
 	}
 	
-	GTSL::Array<VkSemaphore, 16> vk_signal_semaphores(submitInfo.SignalSemaphores.ElementCount());
-	{
-		for (auto* e : submitInfo.SignalSemaphores)
-		{
-			vk_signal_semaphores[&e - submitInfo.SignalSemaphores.begin()] = static_cast<VulkanSemaphore*>(e)->GetVkSemaphore();
-		}
-	}
-
-	GTSL::Array<VkSemaphore, 16> vk_wait_semaphores(submitInfo.WaitSemaphores.ElementCount());
-	{
-		for (auto* e : submitInfo.WaitSemaphores)
-		{
-			vk_wait_semaphores[&e - submitInfo.WaitSemaphores.begin()] = static_cast<VulkanSemaphore*>(e)->GetVkSemaphore();
-		}
-	}
+	GTSL::Ranger<const VulkanSemaphore> vk_signal_semaphores(submitInfo.SignalSemaphores);
+	GTSL::Ranger<const VulkanSemaphore> vk_wait_semaphores(submitInfo.WaitSemaphores);
 
 	//VkTimelineSemaphoreSubmitInfo vk_timeline_semaphore_submit_info{ VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO };
 	//vk_timeline_semaphore_submit_info.waitSemaphoreValueCount = vk_wait_semaphores.GetLength();
@@ -134,11 +119,11 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 	}
 	vk_submit_info.pWaitDstStageMask = vk_pipeline_stages.begin();
 	
-	vk_submit_info.signalSemaphoreCount = vk_signal_semaphores.GetLength();
-	vk_submit_info.pSignalSemaphores = vk_signal_semaphores.begin();
+	vk_submit_info.signalSemaphoreCount = vk_signal_semaphores.ElementCount();
+	vk_submit_info.pSignalSemaphores = reinterpret_cast<const VkSemaphore*>(vk_signal_semaphores.begin());
 
-	vk_submit_info.waitSemaphoreCount = vk_wait_semaphores.GetLength();
-	vk_submit_info.pWaitSemaphores = vk_wait_semaphores.begin();
+	vk_submit_info.waitSemaphoreCount = vk_wait_semaphores.ElementCount();
+	vk_submit_info.pWaitSemaphores = reinterpret_cast<const VkSemaphore*>(vk_wait_semaphores.begin());
 	
 	VK_CHECK(vkQueueSubmit(queue, 1, &vk_submit_info, static_cast<VulkanFence*>(submitInfo.Fence)->GetVkFence()));
 }
@@ -195,7 +180,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 
 	VK_CHECK(vkCreateInstance(&vk_instance_create_info, GetVkAllocationCallbacks(), &instance))
 
-#if (_WIN32)
+#if (_DEBUG)
 	createDebugUtilsFunction = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
 	destroyDebugUtilsFunction = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
 
@@ -282,9 +267,9 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	{
 		for (GTSL::uint8 j = 0; j < vk_device_queue_create_infos[i].queueCount; ++j)
 		{
-			static_cast<VulkanQueue*>(createInfo.Queues[i])->familyIndex = vk_device_queue_create_infos[i].queueFamilyIndex;
-			static_cast<VulkanQueue*>(createInfo.Queues[i])->queueIndex = j;
-			vkGetDeviceQueue(device, vk_device_queue_create_infos[i].queueFamilyIndex, j, &static_cast<VulkanQueue*>(createInfo.Queues[i])->queue);
+			static_cast<VulkanQueue&>(createInfo.Queues[i]).familyIndex = vk_device_queue_create_infos[i].queueFamilyIndex;
+			static_cast<VulkanQueue&>(createInfo.Queues[i]).queueIndex = j;
+			vkGetDeviceQueue(device, vk_device_queue_create_infos[i].queueFamilyIndex, j, &static_cast<VulkanQueue&>(createInfo.Queues[i]).queue);
 		}
 	}
 }
@@ -293,7 +278,7 @@ GAL::VulkanRenderDevice::~VulkanRenderDevice()
 {
 	vkDeviceWaitIdle(device);
 	vkDestroyDevice(device, GetVkAllocationCallbacks());
-#if (_WIN32)
+#if (_DEBUG)
 	destroyDebugUtilsFunction(instance, debugMessenger, GetVkAllocationCallbacks());
 #endif
 	vkDestroyInstance(instance, GetVkAllocationCallbacks());

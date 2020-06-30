@@ -14,8 +14,6 @@
 
 #include <GTSL/Extent.h>
 
-#include "GAL/RenderDevice.h"
-
 namespace GAL
 {
 	inline VkAttachmentLoadOp RenderTargetLoadOperationsToVkAttachmentLoadOp(const RenderTargetLoadOperations renderTargetLoadOperations)
@@ -188,13 +186,13 @@ namespace GAL
 		}
 	}
 
-	enum class VulkanImageTiling
+	enum class VulkanImageTiling : GTSL::uint32
 	{
 		OPTIMAL = 0,
 		LINEAR = 1,
 	};
 	
-	enum class VulkanImageUse
+	enum class VulkanImageUse : GTSL::uint32
 	{
 		TRANSFER_SOURCE = 1,
 		TRANSFER_DESTINATION = 2,
@@ -206,13 +204,13 @@ namespace GAL
 		INPUT_ATTACHMENT = 128
 	};
 	
-	enum class VulkanColorSpace
+	enum class VulkanColorSpace : GTSL::uint32
 	{
 		//The non linear SRGB color space is the most commonly used color space to display things on screen. Use this when you are not developing an HDR application.
 		NONLINEAR_SRGB = 0,
 	};
 	
-	enum class VulkanFormat
+	enum class VulkanFormat : GTSL::uint32
 	{
 		UNDEFINED = 0,
 		
@@ -260,7 +258,7 @@ namespace GAL
 	/**
 	* \brief Enumeration of all possible presentation modes, which define the order at which the rendered images are presented to the screen.
 	*/
-	enum class VulkanPresentMode
+	enum class VulkanPresentMode : GTSL::uint32
 	{
 		/**
 		* \brief The last rendered image is the one which will be presented. Best for when latency is important and energy consumption is not.
@@ -272,7 +270,7 @@ namespace GAL
 		FIFO = 2,
 	};
 	
-	enum class VulkanBufferType
+	enum class VulkanBufferType : GTSL::uint32
 	{
 		TRANSFER_SOURCE = 1,
 		TRANSFER_DESTINATION = 2,
@@ -281,14 +279,14 @@ namespace GAL
 		VERTEX = 128,
 	};
 	
-	enum class VulkanQueueCapabilities
+	enum class VulkanQueueCapabilities : GTSL::uint32
 	{
 		GRAPHICS = 1,
 		COMPUTE = 2,
 		TRANSFER = 4
 	};
 	
-	enum class VulkanMemoryType
+	enum class VulkanMemoryType : GTSL::uint32
 	{
 		GPU = 1,
 		SHARED = 2,

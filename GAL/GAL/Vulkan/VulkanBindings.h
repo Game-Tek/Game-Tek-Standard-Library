@@ -4,8 +4,6 @@
 
 #include "Vulkan.h"
 
-#include <GTSL/Array.hpp>
-
 namespace GAL
 {
 	class VulkanBindingsPool final : public BindingsPool
@@ -13,33 +11,30 @@ namespace GAL
 	public:
 		VulkanBindingsPool(const CreateInfo& createInfo);
 
-		void Destroy(class GAL::RenderDevice* renderDevice);
+		void Destroy(class RenderDevice* renderDevice);
 
 		void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo);
-		void FreePool(const FreeBindingsPoolInfo& freeDescriptorPoolInfo);
 
 		[[nodiscard]] VkDescriptorPool GetVkDescriptorPool() const { return vkDescriptorPool; }
+		[[nodiscard]] VkDescriptorSetLayout GetVkDescriptorSetLayout() const { return descriptorSetLayout; }
 
 	private:
 		VkDescriptorPool vkDescriptorPool = nullptr;
-
+		VkDescriptorSetLayout descriptorSetLayout = nullptr;
 	};
 
 	class VulkanBindingsSet final : public BindingsSet
 	{
 	public:
-		VulkanBindingsSet(const CreateInfo& createInfo);
-
-		void Destroy(class RenderDevice* renderDevice);
+		VulkanBindingsSet() = default;
 
 		void Update(const BindingsSetUpdateInfo& bindingsUpdateInfo);
 
-		[[nodiscard]] VkDescriptorSetLayout GetVkDescriptorSetLayout() const { return descriptorSetLayout; }
-		[[nodiscard]] const GTSL::Array<VkDescriptorSet, 4>& GetVkDescriptorSets() const { return descriptorSets; }
+		[[nodiscard]] VkDescriptorSet GetVkDescriptorSets() const { return descriptorSet; }
 
 	private:
-		VkDescriptorSetLayout descriptorSetLayout = nullptr;
-		GTSL::Array<VkDescriptorSet, 4> descriptorSets;
+		VkDescriptorSet descriptorSet{ nullptr };
 
+		friend VulkanBindingsPool;
 	};
 }

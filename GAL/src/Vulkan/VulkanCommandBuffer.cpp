@@ -50,11 +50,10 @@ void GAL::VulkanCommandBuffer::BeginRenderPass(const BeginRenderPassInfo& beginR
 	vk_render_pass_begin_info.renderPass = static_cast<VulkanRenderPass*>(beginRenderPassInfo.RenderPass)->GetVkRenderPass();
 	
 	GTSL::Array<VkClearValue, 32> vk_clear_clear_values(beginRenderPassInfo.ClearValues.ElementCount());
+	
+	for(const auto& e : beginRenderPassInfo.ClearValues)
 	{
-		for(const auto& e : beginRenderPassInfo.ClearValues)
-		{
-			vk_clear_clear_values[&e - beginRenderPassInfo.ClearValues.begin()] = VkClearValue{ e.R(), e.G(), e.B(), e.A() };
-		}
+		vk_clear_clear_values[&e - beginRenderPassInfo.ClearValues.begin()] = VkClearValue{ e.R(), e.G(), e.B(), e.A() };
 	}
 	
 	vk_render_pass_begin_info.pClearValues = vk_clear_clear_values.begin();
@@ -123,15 +122,8 @@ void GAL::VulkanCommandBuffer::Dispatch(const DispatchInfo& dispatchInfo)
 
 void GAL::VulkanCommandBuffer::BindBindingsSet(const BindBindingsSetInfo& bindBindingsSetInfo)
 {
-	GTSL::Array<VkDescriptorSet, 32> descriptor_sets(bindBindingsSetInfo.BindingsSets.ElementCount());
-	{
-		for (auto& e : descriptor_sets)
-		{
-			e = static_cast<VulkanBindingsSet&>(bindBindingsSetInfo.BindingsSets[&e - descriptor_sets.begin()]).GetVkDescriptorSets()[bindBindingsSetInfo.BindingsSetIndex];
-		}
-	}
-
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,	static_cast<VulkanGraphicsPipeline*>(bindBindingsSetInfo.Pipeline)->GetVkPipelineLayout(), 0, descriptor_sets.GetLength(), descriptor_sets.begin(), 0, 0);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,	static_cast<VulkanGraphicsPipeline*>(bindBindingsSetInfo.Pipeline)->GetVkPipelineLayout(), 0,
+	bindBindingsSetInfo.BindingsSets.ElementCount(), reinterpret_cast<VkDescriptorSet*>(bindBindingsSetInfo.BindingsSets.begin()), 0, 0);
 }
 
 void GAL::VulkanCommandBuffer::CopyImage(const CopyImageInfo& copyImageInfo)
@@ -163,7 +155,7 @@ void GAL::VulkanCommandBuffer::TransitionImage(const TransitionImageInfo& transi
 	barrier.newLayout = ImageLayoutToVkImageLayout(transitionImageInfo.DestinationLayout);
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.image = static_cast<VulkanImage*>(transitionImageInfo.Texture)->GetVkImage();
+	barrier.image = static_cast<const VulkanImage*>(transitionImageInfo.Texture)->GetVkImage();
 	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	barrier.subresourceRange.baseMipLevel = 0;
 	barrier.subresourceRange.levelCount = 1;

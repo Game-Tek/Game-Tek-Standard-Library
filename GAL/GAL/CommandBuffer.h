@@ -163,7 +163,7 @@ namespace GAL
 
 		struct TransitionImageInfo : RenderInfo
 		{
-			Image* Texture{ nullptr };
+			const Image* Texture{ nullptr };
 			ImageLayout SourceLayout, DestinationLayout;
 			GTSL::uint32 SourceStage, DestinationStage;
 			AccessFlags SourceAccessFlags, DestinationAccessFlags;

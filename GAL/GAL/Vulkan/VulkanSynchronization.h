@@ -2,6 +2,7 @@
 
 #include "GAL/Synchronization.h"
 #include "Vulkan.h"
+#include "GTSL/Ranger.h"
 
 namespace GAL
 {
@@ -16,7 +17,7 @@ namespace GAL
 
 		struct WaitForFencesInfo : RenderInfo
 		{
-			GTSL::Ranger<Fence*> Fences;
+			GTSL::Ranger<const Fence> Fences;
 			GTSL::uint64 Timeout;
 			bool WaitForAll{ true };
 		};

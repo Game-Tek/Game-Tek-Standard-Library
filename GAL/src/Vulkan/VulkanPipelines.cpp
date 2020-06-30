@@ -212,12 +212,12 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 		vk_pipeline_layout_create_info.pPushConstantRanges = nullptr;
 	}
 
-	GTSL::Array<VkDescriptorSetLayout, 16> vk_descriptor_set_layouts(createInfo.BindingsSets.ElementCount());
+	GTSL::Array<VkDescriptorSetLayout, 16> vk_descriptor_set_layouts(createInfo.BindingsPools.ElementCount());
 	{
 		GTSL::uint8 i = 0;
 		for (auto& e : vk_descriptor_set_layouts)
 		{
-			e = static_cast<VulkanBindingsSet*>(createInfo.BindingsSets + i)->GetVkDescriptorSetLayout();
+			e = static_cast<VulkanBindingsPool&>(createInfo.BindingsPools[i]).GetVkDescriptorSetLayout();
 			++i;
 		}
 	}

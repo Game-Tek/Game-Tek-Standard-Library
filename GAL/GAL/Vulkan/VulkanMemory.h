@@ -2,17 +2,17 @@
 
 #include "GAL/Memory.h"
 
-#include <GAL/ext/vulkan/vulkan.h>
-
 namespace GAL
 {
 	class VulkanDeviceMemory final : public DeviceMemory
 	{
 	public:
+		using VkDeviceMemory = void*;
+		
 		VulkanDeviceMemory() = default;
 		VulkanDeviceMemory(const CreateInfo& createInfo);
 
-		void Destroy(RenderDevice* renderDevice);
+		void Destroy(class RenderDevice* renderDevice);
 		
 		[[nodiscard]] VkDeviceMemory GetVkDeviceMemory() const { return deviceMemory; }
 

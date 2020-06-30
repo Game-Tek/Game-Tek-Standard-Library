@@ -28,7 +28,6 @@ namespace GAL
 			GTSL::uint8 MipLevels{ 1 };
 			ImageType Type;
 		};
-		explicit Image(const CreateInfo& textureCreateInfo);
 
 		static GTSL::uint64 GetImageSize(const GTSL::uint8 textureFormatSize, const GTSL::Extent2D extent)
 		{
