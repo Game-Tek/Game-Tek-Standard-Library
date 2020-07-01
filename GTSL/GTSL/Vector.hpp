@@ -528,5 +528,8 @@ namespace GTSL
 		 * \return iterator to the element At index.
 		 */
 		iterator getIterator(const length_type index) noexcept { return &this->data[index]; }
+
+		friend void Insert(const Vector&, class Buffer&, const AllocatorReference&);
+		friend void Extract(Vector&, class Buffer&, const AllocatorReference&);
 	};
 }

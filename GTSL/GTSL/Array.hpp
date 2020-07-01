@@ -10,7 +10,7 @@
 
 namespace GTSL
 {
-	template <typename T, size_t CAPACITY>
+	template <typename T, uint32 CAPACITY>
 	class Array
 	{
 		uint32 length = 0;
@@ -76,6 +76,13 @@ namespace GTSL
 
 		constexpr Array(const Array& other) noexcept : length(other.length)
 		{
+			copyToData(other.data, other.length);
+		}
+
+		template<uint32 N>
+		constexpr Array(const Array<T, N>& other) noexcept : length(other.length)
+		{
+			GTSL_ASSERT(other.length <= CAPACITY, "Other array has more elements than this can handle.")
 			copyToData(other.data, other.length);
 		}
 

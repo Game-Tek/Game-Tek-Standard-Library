@@ -15,13 +15,19 @@ namespace GAL
 		void Destroy(RenderDevice* renderDevice);
 		[[nodiscard]] VkFence GetVkFence() const { return fence; }
 
-		struct WaitForFencesInfo : RenderInfo
+		struct WaitForFencesInfo final : RenderInfo
 		{
 			GTSL::Ranger<const Fence> Fences;
 			GTSL::uint64 Timeout;
 			bool WaitForAll{ true };
 		};
 		static void WaitForFences(const WaitForFencesInfo& waitForFencesInfo);
+
+		struct ResetFencesInfo final : RenderInfo
+		{
+			GTSL::Ranger<const Fence> Fences;
+		};
+		static void ResetFences(const ResetFencesInfo& resetFencesInfo);
 	private:
 		VkFence fence{ nullptr };
 	};

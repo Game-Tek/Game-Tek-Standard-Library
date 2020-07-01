@@ -41,6 +41,8 @@ namespace GAL
 
 		void TransitionImage(const TransitionImageInfo& transitionImageInfo);
 
+		void CopyBuffers(const CopyBuffersInfo& copyBuffersInfo);
+		
 		[[nodiscard]] VkCommandBuffer GetVkCommandBuffer() const { return commandBuffer; }
 
 	private:

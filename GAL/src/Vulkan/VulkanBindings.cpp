@@ -20,7 +20,7 @@ GAL::VulkanBindingsPool::VulkanBindingsPool(const CreateInfo& createInfo)
 	vk_descriptor_pool_create_info.poolSizeCount = descriptor_pool_sizes.GetLength();
 	vk_descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.begin();
 
-	vkCreateDescriptorPool(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_descriptor_pool_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &vkDescriptorPool);
+	vkCreateDescriptorPool(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_descriptor_pool_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &descriptorPool);
 
 	VkDescriptorSetLayoutCreateInfo vk_descriptor_set_layout_create_info{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
 
@@ -45,7 +45,7 @@ GAL::VulkanBindingsPool::VulkanBindingsPool(const CreateInfo& createInfo)
 	vkCreateDescriptorSetLayout(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_descriptor_set_layout_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &descriptorSetLayout);
 
 	VkDescriptorSetAllocateInfo vk_descriptor_set_allocate_info{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-	vk_descriptor_set_allocate_info.descriptorPool = vkDescriptorPool;
+	vk_descriptor_set_allocate_info.descriptorPool = descriptorPool;
 	vk_descriptor_set_allocate_info.descriptorSetCount = createInfo.BindingsSets.ElementCount();
 	vkAllocateDescriptorSets(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_descriptor_set_allocate_info, reinterpret_cast<VkDescriptorSet*>(createInfo.BindingsSets.begin()));
 }
@@ -54,12 +54,12 @@ void GAL::VulkanBindingsPool::Destroy(RenderDevice* renderDevice)
 {
 	const auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
 	vkDestroyDescriptorSetLayout(vk_render_device->GetVkDevice(), descriptorSetLayout, vk_render_device->GetVkAllocationCallbacks());
-	vkDestroyDescriptorPool(vk_render_device->GetVkDevice(), vkDescriptorPool, vk_render_device->GetVkAllocationCallbacks());
+	vkDestroyDescriptorPool(vk_render_device->GetVkDevice(), descriptorPool, vk_render_device->GetVkAllocationCallbacks());
 }
 
 void GAL::VulkanBindingsPool::FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo)
 {
-	vkFreeDescriptorSets(static_cast<VulkanRenderDevice*>(freeBindingsSetInfo.RenderDevice)->GetVkDevice(), vkDescriptorPool,
+	vkFreeDescriptorSets(static_cast<VulkanRenderDevice*>(freeBindingsSetInfo.RenderDevice)->GetVkDevice(), descriptorPool,
 	static_cast<GTSL::uint32>(freeBindingsSetInfo.BindingsSet.ElementCount()), reinterpret_cast<VkDescriptorSet*>(freeBindingsSetInfo.BindingsSet.begin()));
 }
 

@@ -249,6 +249,9 @@ namespace GTSL
 
 		template<typename TT, typename L>
 		friend void ForEach(FlatHashMap<TT>& collection, L&& lambda);
+
+		friend void Insert(const FlatHashMap&, class Buffer& bufer, const AllocatorReference&);
+		friend void Extract(FlatHashMap&, class Buffer& bufer, const AllocatorReference&);
 	};
 
 	template<typename T, typename L>

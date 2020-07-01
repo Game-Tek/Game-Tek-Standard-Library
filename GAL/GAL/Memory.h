@@ -4,7 +4,7 @@
 
 namespace GAL
 {
-	class DeviceMemory : GALObject
+	class DeviceMemory : public GALObject
 	{
 	public:
 		DeviceMemory() = default;

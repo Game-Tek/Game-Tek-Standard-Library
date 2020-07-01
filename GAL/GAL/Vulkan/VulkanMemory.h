@@ -10,6 +10,7 @@ namespace GAL
 		using VkDeviceMemory = void*;
 		
 		VulkanDeviceMemory() = default;
+		~VulkanDeviceMemory() = default;
 		VulkanDeviceMemory(const CreateInfo& createInfo);
 
 		void Destroy(class RenderDevice* renderDevice);
@@ -25,7 +26,6 @@ namespace GAL
 
 		struct UnmapInfo : RenderInfo
 		{
-
 		};
 		void Unmap(const UnmapInfo& unmapInfo) const;
 		

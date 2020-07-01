@@ -7,20 +7,30 @@
 #endif
 
 #include "GAL/Vulkan/VulkanBindings.h"
+#include "GAL/Vulkan/VulkanBuffer.h"
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
 #include "GAL/Vulkan/VulkanSynchronization.h"
 #include "GTSL/Console.h"
 #include "GTSL/StaticString.hpp"
 
-GTSL::uint32 GAL::VulkanRenderDevice::FindMemoryType(GTSL::uint32 memoryType, GTSL::uint32 memoryFlags) const
+void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(Buffer* buffer, BufferMemoryRequirements& bufferMemoryRequirements) const
+{
+	VkMemoryRequirements vk_memory_requirements;
+	vkGetBufferMemoryRequirements(device, static_cast<VulkanBuffer*>(buffer)->GetVkBuffer(), &vk_memory_requirements);
+	bufferMemoryRequirements.Alignment = vk_memory_requirements.alignment;
+	bufferMemoryRequirements.MemoryTypes = vk_memory_requirements.memoryTypeBits;
+	bufferMemoryRequirements.Size = vk_memory_requirements.size;
+}
+
+GTSL::uint32 GAL::VulkanRenderDevice::FindMemoryType(const GTSL::uint32 memoryType, const GTSL::uint32 memoryFlags) const
 {
 	for (GTSL::uint32 i = 0; i < memoryProperties.memoryTypeCount; ++i)
 	{
-		if (memoryType & (1 << i)) { return i; }
+		if (memoryType & (1 << i) && (memoryProperties.memoryTypes[i].propertyFlags & memoryFlags) == memoryFlags) { return i; }
 	}
 
-	//BE_ASSERT(true, "Failed to find a suitable memory type!")
+	return 0xffffffff;
 }
 
 #if (_DEBUG)

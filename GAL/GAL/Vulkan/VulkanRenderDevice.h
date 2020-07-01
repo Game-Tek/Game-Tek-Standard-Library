@@ -48,6 +48,8 @@ namespace GAL
 		[[nodiscard]] VkPhysicalDevice GetVkPhysicalDevice() const { return physicalDevice; }
 		[[nodiscard]] VkDevice GetVkDevice() const { return device; }
 
+		void GetBufferMemoryRequirements(class Buffer* buffer, BufferMemoryRequirements& bufferMemoryRequirements) const;
+		
 		[[nodiscard]] GTSL::uint32 FindMemoryType(GTSL::uint32 memoryType, GTSL::uint32 memoryFlags) const;
 
 		[[nodiscard]] const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const { return deviceProperties; }

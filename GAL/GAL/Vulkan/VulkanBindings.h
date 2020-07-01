@@ -15,11 +15,11 @@ namespace GAL
 
 		void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo);
 
-		[[nodiscard]] VkDescriptorPool GetVkDescriptorPool() const { return vkDescriptorPool; }
+		[[nodiscard]] VkDescriptorPool GetVkDescriptorPool() const { return descriptorPool; }
 		[[nodiscard]] VkDescriptorSetLayout GetVkDescriptorSetLayout() const { return descriptorSetLayout; }
 
 	private:
-		VkDescriptorPool vkDescriptorPool = nullptr;
+		VkDescriptorPool descriptorPool = nullptr;
 		VkDescriptorSetLayout descriptorSetLayout = nullptr;
 	};
 

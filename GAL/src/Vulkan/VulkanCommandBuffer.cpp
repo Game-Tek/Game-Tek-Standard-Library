@@ -166,3 +166,13 @@ void GAL::VulkanCommandBuffer::TransitionImage(const TransitionImageInfo& transi
 	
 	vkCmdPipelineBarrier(commandBuffer, PipelineStageToVkPipelineStageFlags(transitionImageInfo.SourceStage), PipelineStageToVkPipelineStageFlags(transitionImageInfo.DestinationStage), 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
+
+void GAL::VulkanCommandBuffer::CopyBuffers(const CopyBuffersInfo& copyBuffersInfo)
+{
+	VkBufferCopy vk_buffer_copy;
+	vk_buffer_copy.size = copyBuffersInfo.Size;
+	vk_buffer_copy.srcOffset = copyBuffersInfo.SourceOffset;
+	vk_buffer_copy.dstOffset = copyBuffersInfo.DestinationOffset;
+	vkCmdCopyBuffer(commandBuffer, static_cast<VulkanBuffer*>(copyBuffersInfo.Source)->GetVkBuffer(), static_cast<VulkanBuffer*>(copyBuffersInfo.Destination)->GetVkBuffer(),
+		1, &vk_buffer_copy);
+}
