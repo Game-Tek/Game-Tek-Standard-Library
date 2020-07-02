@@ -6,7 +6,7 @@
 
 namespace GAL
 {
-	class VulkanImage : public Image
+	class VulkanImage final : public Image
 	{
 	public:
 		VulkanImage() = default;
@@ -22,10 +22,24 @@ namespace GAL
 		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;
 		
 		[[nodiscard]] VkImage GetVkImage() const { return image; }
-		[[nodiscard]] VkImageView GetVkImageView() const { return imageView; }
 		
 	private:
 		VkImage image = nullptr;
+
+		friend class VulkanRenderContext;
+	};
+
+	class VulkanImageView final : public ImageView
+	{
+	public:
+		VulkanImageView() = default;
+		explicit VulkanImageView(const CreateInfo& createInfo);
+
+		void Destroy(RenderDevice* renderDevice);
+		
+		[[nodiscard]] VkImageView GetVkImageView() const { return imageView; }
+		
+	private:
 		VkImageView imageView = nullptr;
 
 		friend class VulkanRenderContext;

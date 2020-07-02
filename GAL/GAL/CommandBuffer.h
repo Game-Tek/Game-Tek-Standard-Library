@@ -59,6 +59,18 @@ namespace GAL
 			RenderMesh* Mesh = nullptr;
 		};
 
+		struct BindIndexBufferInfo final : RenderInfo
+		{
+			const class Buffer* Buffer{ nullptr };
+			GTSL::uint32 Offset{ 0 };
+		};
+
+		struct BindVertexBufferInfo final : RenderInfo
+		{
+			const class Buffer* Buffer{ nullptr };
+			GTSL::uint32 Offset{ 0 };
+		};
+		
 		//    BIND PIPELINE COMMANDS
 
 		//Adds a BindBindingsSet to the command queue.

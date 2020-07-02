@@ -105,6 +105,18 @@ void GAL::VulkanCommandBuffer::BindMesh(const BindMeshInfo& bindMeshInfo)
 	//vkCmdBindIndexBuffer(commandBuffer, mesh->GetVkBuffer(), mesh->GetIndexBufferOffset(), VK_INDEX_TYPE_UINT16);
 }
 
+void GAL::VulkanCommandBuffer::BindIndexBuffer(const BindIndexBufferInfo& buffer)
+{
+	vkCmdBindIndexBuffer(commandBuffer, static_cast<const VulkanBuffer*>(buffer.Buffer)->GetVkBuffer(), buffer.Offset, VK_INDEX_TYPE_UINT16);
+}
+
+void GAL::VulkanCommandBuffer::BindVertexBuffer(const BindVertexBufferInfo& buffer)
+{
+	auto* vk_buffer = static_cast<const VulkanBuffer*>(buffer.Buffer)->GetVkBuffer();
+	GTSL::uint64 offset = buffer.Offset;
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vk_buffer, &offset);
+}
+
 void GAL::VulkanCommandBuffer::UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo)
 {
 	vkCmdPushConstants(commandBuffer, static_cast<VulkanGraphicsPipeline*>(updatePushConstantsInfo.Pipeline)->GetVkPipelineLayout(), VK_SHADER_STAGE_ALL_GRAPHICS, updatePushConstantsInfo.Offset, updatePushConstantsInfo.Size, updatePushConstantsInfo.Data);

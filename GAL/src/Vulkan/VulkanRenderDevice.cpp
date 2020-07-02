@@ -282,6 +282,8 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 			vkGetDeviceQueue(device, vk_device_queue_create_infos[i].queueFamilyIndex, j, &static_cast<VulkanQueue&>(createInfo.Queues[i]).queue);
 		}
 	}
+
+	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
 }
 
 GAL::VulkanRenderDevice::~VulkanRenderDevice()

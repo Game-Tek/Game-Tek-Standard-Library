@@ -80,11 +80,11 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 		
 		image_set = vk_descriptor_image_infos.EmplaceBack();
 		
-		for(GTSL::uint8 i = 0; i < e.Images.ElementCount(); ++i)
+		for(GTSL::uint8 i = 0; i < e.ImageViews.ElementCount(); ++i)
 		{
 			vk_descriptor_image_infos[image_set].EmplaceBack();
 			
-			vk_descriptor_image_infos[image_set][i].imageView = static_cast<const VulkanImage&>(e.Images[i]).GetVkImageView();
+			vk_descriptor_image_infos[image_set][i].imageView = static_cast<const VulkanImageView&>(e.ImageViews[i]).GetVkImageView();
 			vk_descriptor_image_infos[image_set][i].imageLayout = ImageLayoutToVkImageLayout(e.Layouts[i]);
 			vk_descriptor_image_infos[image_set][i].sampler = static_cast<const VulkanSampler&>(e.Samplers[i]).GetVkSampler();
 		}
@@ -93,7 +93,7 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 		write_descriptors[write_descriptor_index].dstSet = descriptorSet;
 		write_descriptors[write_descriptor_index].dstBinding = write_descriptor_index;
 		write_descriptors[write_descriptor_index].dstArrayElement = 0;
-		write_descriptors[write_descriptor_index].descriptorCount = e.Images.ElementCount();
+		write_descriptors[write_descriptor_index].descriptorCount = e.ImageViews.ElementCount();
 		write_descriptors[write_descriptor_index].descriptorType = UniformTypeToVkDescriptorType(e.BindingType);
 		write_descriptors[write_descriptor_index].pImageInfo = vk_descriptor_image_infos[image_set].begin();
 		write_descriptors[write_descriptor_index].pBufferInfo = nullptr;

@@ -20,6 +20,9 @@ GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo)
 	vk_win32_surface_create_info_khr.hinstance = static_cast<HINSTANCE>(static_cast<WindowsWindowData*>(createInfo.SystemData)->InstanceHandle);
 	VK_CHECK(vkCreateWin32SurfaceKHR(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkInstance(), &vk_win32_surface_create_info_khr,
 		static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), reinterpret_cast<VkSurfaceKHR*>(&surface)));
+
+	VkBool32 supported = 0;
+	vkGetPhysicalDeviceSurfaceSupportKHR(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkPhysicalDevice(), 0, reinterpret_cast<VkSurfaceKHR>(surface), &supported);
 	
 	VkSwapchainCreateInfoKHR vk_swapchain_create_info_khr{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 	vk_swapchain_create_info_khr.surface = reinterpret_cast<VkSurfaceKHR>(surface);
@@ -48,6 +51,10 @@ void GAL::VulkanRenderContext::Destroy(RenderDevice* renderDevice)
 	const auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
 	vkDestroySwapchainKHR(vk_render_device->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain), vk_render_device->GetVkAllocationCallbacks());
 	vkDestroySurfaceKHR(vk_render_device->GetVkInstance(), reinterpret_cast<VkSurfaceKHR>(surface), vk_render_device->GetVkAllocationCallbacks());
+}
+
+void GAL::VulkanRenderContext::CheckSupported()
+{
 }
 
 void GAL::VulkanRenderContext::Recreate(const RecreateInfo& resizeInfo)
@@ -92,9 +99,9 @@ void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)
 	GTSL::uint32 image_index = imageIndex;
 
 	GTSL::Array<VkSemaphore, 16> vk_wait_semaphores(static_cast<GTSL::uint32>(presentInfo.WaitSemaphores.ElementCount()));
-	for (auto& e : presentInfo.WaitSemaphores)
+	for (const Semaphore& e : presentInfo.WaitSemaphores)
 	{
-		vk_wait_semaphores[static_cast<GTSL::uint32>(&e - presentInfo.WaitSemaphores.begin())] = static_cast<VulkanSemaphore&>(e).GetVkSemaphore();
+		vk_wait_semaphores[static_cast<GTSL::uint32>(&e - presentInfo.WaitSemaphores.begin())] = static_cast<const VulkanSemaphore&>(e).GetVkSemaphore();
 	}
 	
 	VkPresentInfoKHR present_info{ VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
@@ -112,9 +119,9 @@ void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)
 	imageIndex = (imageIndex + 1) % maxFramesInFlight;
 }
 
-GTSL::Array<GAL::VulkanImage, 5> GAL::VulkanRenderContext::GetImages(const GetImagesInfo& getImagesInfo)
+GTSL::Array<GAL::VulkanImageView, 5> GAL::VulkanRenderContext::GetImages(const GetImagesInfo& getImagesInfo)
 {
-	GTSL::Array<VulkanImage, 5> vulkan_images;
+	GTSL::Array<VulkanImageView, 5> vulkan_images;
 	
 	GTSL::uint32 swapchain_image_count = 0;
 	maxFramesInFlight = static_cast<GTSL::uint8>(swapchain_image_count);
@@ -131,6 +138,10 @@ GTSL::Array<GAL::VulkanImage, 5> GAL::VulkanRenderContext::GetImages(const GetIm
 		vk_image_view_create_info.image = vk_images[&e - vulkan_images.begin()];
 		vk_image_view_create_info.format = static_cast<VkFormat>(getImagesInfo.SwapchainImagesFormat);
 		vk_image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		vk_image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 		vk_image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
 		vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
@@ -138,8 +149,6 @@ GTSL::Array<GAL::VulkanImage, 5> GAL::VulkanRenderContext::GetImages(const GetIm
 		vk_image_view_create_info.subresourceRange.levelCount = 1;
 		
 		VK_CHECK(vkCreateImageView(static_cast<VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), &vk_image_view_create_info, static_cast<VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkAllocationCallbacks(), &e.imageView));
-
-		e.image = vk_images[static_cast<GTSL::uint32>(&e - vulkan_images.begin())];
 	}
 	
 	return vulkan_images;

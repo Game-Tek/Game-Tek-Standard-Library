@@ -12,6 +12,8 @@ namespace GAL
 		VulkanBuffer() = default;
 		VulkanBuffer(const CreateInfo& createInfo);
 
+		void Destroy(RenderDevice* renderDevice);
+		
 		struct BindMemoryInfo : RenderInfo
 		{
 			class DeviceMemory* Memory{ nullptr };

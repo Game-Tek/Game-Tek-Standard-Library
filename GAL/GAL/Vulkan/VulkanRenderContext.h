@@ -16,6 +16,8 @@ namespace GAL
 
 		void Destroy(class RenderDevice* renderDevice);
 
+		void CheckSupported();
+		
 		void Recreate(const RecreateInfo& resizeInfo);
 		/**
 		 * \brief  Acquires the next image in the swapchain queue to present to.
@@ -32,7 +34,7 @@ namespace GAL
 		{
 			GTSL::uint32 SwapchainImagesFormat{ 0 };
 		};
-		GTSL::Array<VulkanImage, 5> GetImages(const GetImagesInfo& getImagesInfo);
+		GTSL::Array<VulkanImageView, 5> GetImages(const GetImagesInfo& getImagesInfo);
 		
 	private:
 		uint64_t surface{ 0 };

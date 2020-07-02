@@ -28,6 +28,9 @@ namespace GAL
 
 		void BindMesh(const BindMeshInfo& bindMeshInfo);
 
+		void BindIndexBuffer(const BindIndexBufferInfo& buffer);
+		void BindVertexBuffer(const BindVertexBufferInfo& buffer);
+		
 		void UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo);
 
 		void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo);

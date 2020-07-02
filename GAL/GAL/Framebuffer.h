@@ -27,7 +27,7 @@ namespace GAL
 		{
 			RenderPass* RenderPass = nullptr;
 			GTSL::Extent2D Extent = { 1280, 720 };
-			GTSL::Ranger<const class Image> Images;
+			GTSL::Ranger<const class ImageView> ImageViews;
 			GTSL::Ranger<const GTSL::RGBA> ClearValues;
 		};
 

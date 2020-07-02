@@ -103,14 +103,10 @@ namespace GTSL
 			return *this;
 		}
 
-		void Free(const AllocatorReference& allocatorReference)
-		{
-			freeData(allocatorReference);
-		}
+		void Free(const AllocatorReference& allocatorReference) { for (auto& e : *this) { e.~T(); } freeData(allocatorReference); }
 		
 		~Vector()
 		{
-			for (auto& e : *this) { e.~T(); }
 			GTSL_ASSERT(!this->data, "Data was not freed!")
 		}
 		

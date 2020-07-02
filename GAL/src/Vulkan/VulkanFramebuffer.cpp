@@ -7,7 +7,7 @@
 
 GAL::VulkanFramebuffer::VulkanFramebuffer(const CreateInfo& createInfo)
 {
-	GTSL::Ranger<const VulkanImage> vulkan_images = GTSL::Ranger<const VulkanImage>(createInfo.Images);
+	auto vulkan_images = GTSL::Ranger<const VulkanImageView>(createInfo.ImageViews);
 	GTSL::Array<VkImageView, 64> vk_image_views(vulkan_images.ElementCount());
 
 	for (const auto& e : vulkan_images) { vk_image_views[&e - vulkan_images.begin()] = e.GetVkImageView(); }

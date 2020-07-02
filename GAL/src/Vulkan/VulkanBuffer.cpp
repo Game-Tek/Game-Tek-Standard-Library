@@ -13,6 +13,11 @@ GAL::VulkanBuffer::VulkanBuffer(const CreateInfo& createInfo)
 	VK_CHECK(vkCreateBuffer(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_buffer_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &buffer))
 }
 
+void GAL::VulkanBuffer::Destroy(RenderDevice* renderDevice)
+{
+	vkDestroyBuffer(static_cast<VulkanRenderDevice*>(renderDevice)->GetVkDevice(), buffer, static_cast<VulkanRenderDevice*>(renderDevice)->GetVkAllocationCallbacks());
+}
+
 void GAL::VulkanBuffer::BindToMemory(const BindMemoryInfo& bindMemoryInfo) const
 {
 	vkBindBufferMemory(static_cast<VulkanRenderDevice*>(bindMemoryInfo.RenderDevice)->GetVkDevice(), buffer,
