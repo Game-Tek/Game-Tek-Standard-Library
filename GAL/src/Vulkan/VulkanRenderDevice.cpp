@@ -102,7 +102,7 @@ GTSL::uint32 GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const Find
 
 void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 {
-	GTSL::Array<VkCommandBuffer, 16> vk_command_buffers(static_cast<GTSL::uint32>(submitInfo.CommandBuffers.ElementCount()));
+	GTSL::Array<VkCommandBuffer, 16> vk_command_buffers(static_cast<GTSL::uint32>(GTSL::Ranger<const VulkanCommandBuffer>(submitInfo.CommandBuffers).ElementCount()));
 	for(const auto& e : submitInfo.CommandBuffers)
 	{
 		vk_command_buffers[&e - submitInfo.CommandBuffers.begin()] = static_cast<const VulkanCommandBuffer&>(e).GetVkCommandBuffer();
@@ -125,7 +125,7 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 
 	GTSL::Array<GTSL::uint32, 16> vk_pipeline_stages(submitInfo.WaitPipelineStages.ElementCount());
 	{
-		for(auto e : submitInfo.WaitPipelineStages) { vk_pipeline_stages[&e - submitInfo.WaitPipelineStages.begin()] = PipelineStageToVkPipelineStageFlags(e); }
+		for(auto& e : submitInfo.WaitPipelineStages) { vk_pipeline_stages[&e - submitInfo.WaitPipelineStages.begin()] = PipelineStageToVkPipelineStageFlags(e); }
 	}
 	vk_submit_info.pWaitDstStageMask = vk_pipeline_stages.begin();
 	

@@ -16,5 +16,5 @@ namespace GTSL
 	void ToString(float32 num, Ranger<UTF8>& buffer);
 	void ToString(float64 num, Ranger<UTF8>& buffer);
 
-	constexpr uint32 StringLength(const char* text) noexcept { uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i; }
+	constexpr uint32 StringLength(const char* text) noexcept { uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i + 1; }
 }

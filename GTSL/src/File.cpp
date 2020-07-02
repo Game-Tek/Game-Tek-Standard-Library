@@ -20,12 +20,14 @@ void File::OpenFile(const Ranger<const UTF8>& path, OpenFileMode openFileMode)
 
 	StaticString<MAX_PATH> win32_path(path);
 	win32_path += '\0';
-	fileHandle = CreateFileA(win32_path.begin(), open_mode, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	fileHandle = CreateFileA(win32_path.begin(), open_mode, 0, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
 }
 
 void File::CloseFile()
 {
 	CloseHandle(static_cast<HANDLE>(fileHandle));
+	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
 #if (_DEBUG)
 	fileHandle = nullptr;
 #endif
@@ -35,6 +37,7 @@ void File::WriteToFile(Ranger<const byte>& buffer)
 {
 	DWORD bytes{ 0 };
 	WriteFile(static_cast<HANDLE>(fileHandle), buffer.begin(), buffer.Bytes(), &bytes, nullptr);
+	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
 	buffer = Ranger<const byte>(bytes, buffer.begin());
 }
 
@@ -42,6 +45,7 @@ void File::ReadFromFile(Ranger<byte>& buffer)
 {
 	DWORD bytes{ 0 };
 	ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin(), buffer.Bytes(), &bytes, nullptr);
+	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
 	buffer = Ranger<byte>(bytes, buffer.begin());
 }
 
@@ -54,7 +58,8 @@ void File::SetPointer(const uint64 byte, uint64& newFilePointer, MoveFrom from)
 
 uint64 File::GetFileSize() const
 {
-	DWORD size;
-	::GetFileSize(fileHandle, &size);
-	return size;
+	LARGE_INTEGER size;
+	GetFileSizeEx(fileHandle, &size);
+	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
+	return size.QuadPart;
 }

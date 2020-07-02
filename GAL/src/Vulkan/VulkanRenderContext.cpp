@@ -124,9 +124,10 @@ GTSL::Array<GAL::VulkanImageView, 5> GAL::VulkanRenderContext::GetImages(const G
 	GTSL::Array<VulkanImageView, 5> vulkan_images;
 	
 	GTSL::uint32 swapchain_image_count = 0;
-	maxFramesInFlight = static_cast<GTSL::uint8>(swapchain_image_count);
 	vkGetSwapchainImagesKHR(static_cast<VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain), &swapchain_image_count, nullptr);
 	vulkan_images.Resize(swapchain_image_count);
+	
+	maxFramesInFlight = static_cast<GTSL::uint8>(swapchain_image_count);
 
 	GTSL::Array<VkImage, 5> vk_images(swapchain_image_count);
 	VK_CHECK(vkGetSwapchainImagesKHR(static_cast<VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain),
