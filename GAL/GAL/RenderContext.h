@@ -59,6 +59,7 @@ namespace GAL
 		{
 			Queue* Queue = nullptr;
 			GTSL::Ranger<const class Semaphore> WaitSemaphores;
+			GTSL::uint8 ImageIndex{ 0 };
 		};
 		void Present(const PresentInfo& presentInfo);
 	};

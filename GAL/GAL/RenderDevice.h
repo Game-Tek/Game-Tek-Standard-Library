@@ -6,6 +6,7 @@
 
 #include "CommandBuffer.h"
 #include "GTSL/Allocator.h"
+#include "GTSL/Delegate.hpp"
 
 #include "GTSL/StaticString.hpp"
 
@@ -56,13 +57,19 @@ namespace GAL
 	class RenderDevice
 	{
 	public:
+		enum class MessageSeverity : GTSL::uint8 { MESSAGE, WARNING, ERROR };
+		
 		struct CreateInfo
 		{
 			GTSL::Ranger<const GTSL::UTF8> ApplicationName;
 			GTSL::uint16 ApplicationVersion[3];
 			GTSL::Ranger<Queue::CreateInfo> QueueCreateInfos;
 			GTSL::Ranger<Queue> Queues;
+			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
 		};
+		RenderDevice(const CreateInfo& createInfo) : debugPrintFunction(createInfo.DebugPrintFunction)
+		{
+		}
 
 		struct BufferMemoryRequirements
 		{
@@ -73,11 +80,15 @@ namespace GAL
 		
 		[[nodiscard]] GTSL::AllocatorReference* GetPersistentAllocationsAllocatorReference() const { return persistentAllocatorReference; }
 		[[nodiscard]] GTSL::AllocatorReference* GetTransientAllocationsAllocatorReference() const { return transientAllocatorReference; }
+
+		GTSL::Delegate<void(const char*, MessageSeverity)>& GetDebugPrintFunction() { return debugPrintFunction; }
 		
 	protected:
 		RenderDevice() = default;
 		~RenderDevice() = default;
 
+		GTSL::Delegate<void(const char*, MessageSeverity)> debugPrintFunction;
+		
 		GTSL::AllocatorReference* persistentAllocatorReference{ nullptr };
 		GTSL::AllocatorReference* transientAllocatorReference{ nullptr };
 

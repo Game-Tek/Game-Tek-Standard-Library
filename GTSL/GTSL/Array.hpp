@@ -13,19 +13,6 @@ namespace GTSL
 	template <typename T, uint32 CAPACITY>
 	class Array
 	{
-		uint32 length = 0;
-		T data[CAPACITY];
-
-		constexpr void copyToData(const void* from, const uint64 length) noexcept
-		{
-			MemCopy(length * sizeof(T), from, this->data);
-		}
-
-		void copy(const uint64 length, const void* from, void* to)
-		{
-			MemCopy(length * sizeof(T), from, to);
-		}
-
 	public:
 		typedef T* iterator;
 		typedef const T* const_iterator;
@@ -40,11 +27,11 @@ namespace GTSL
 
 		constexpr T& front() noexcept { return this->data[0]; }
 
-		constexpr T& back() noexcept { return this->data[this->length]; }
+		constexpr T& back() noexcept { return this->data[this->length - 1]; }
 
 		[[nodiscard]] constexpr const T& front() const noexcept { return this->data[0]; }
 
-		[[nodiscard]] constexpr const T& back() const noexcept { return this->data[this->length]; }
+		[[nodiscard]] constexpr const T& back() const noexcept { return this->data[this->length - 1]; }
 
 		operator GTSL::Ranger<T>() { return Ranger<T>(this->length, this->begin()); }
 		operator GTSL::Ranger<const T>() const { return Ranger<const T>(this->length, this->begin()); }
@@ -74,10 +61,7 @@ namespace GTSL
 			copyToData(ranger.begin(), ranger.ElementCount());
 		}
 
-		constexpr Array(const Array& other) noexcept : length(other.length)
-		{
-			copyToData(other.data, other.length);
-		}
+		constexpr Array(const Array& other) noexcept : length(other.length) { copyToData(other.data, other.length); }
 
 		template<uint32 N>
 		constexpr Array(const Array<T, N>& other) noexcept : length(other.length)
@@ -111,10 +95,7 @@ namespace GTSL
 
 		~Array()
 		{
-			for (auto& e : *this)
-			{
-				e.~T();
-			}
+			for (auto& e : *this) { e.~T(); }
 		}
 
 		constexpr T& operator[](const uint32 i) noexcept
@@ -156,7 +137,7 @@ namespace GTSL
 		{
 			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
 			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
-			auto ret = this->length + ranger.ElementCount();
+			auto ret = this->length;
 			this->length += ranger.ElementCount();
 			return ret;
 		}
@@ -165,7 +146,7 @@ namespace GTSL
 		{
 			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
 			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
-			auto ret = this->length + ranger.ElementCount();
+			auto ret = this->length;
 			this->length += ranger.ElementCount();
 			return ret;
 		}
@@ -173,7 +154,7 @@ namespace GTSL
 		constexpr uint32 Insert(const uint32 index, const Ranger<const T>& ranger) noexcept
 		{
 			copy(ranger.ElementCount(), ranger.begin(), this->data + index);
-			auto ret = this->length + ranger.ElementCount();
+			auto ret = this->length;
 			this->length += ranger.ElementCount();
 			return ret;
 		}
@@ -182,7 +163,7 @@ namespace GTSL
 		constexpr uint32 EmplaceBack(ARGS&&... args)
 		{
 			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
-			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeForwardReference<ARGS>(args) ...);
+			::new(this->data + this->length) T(GTSL::MakeForwardReference<ARGS>(args)...);
 			return this->length++;
 		}
 
@@ -202,5 +183,19 @@ namespace GTSL
 		[[nodiscard]] constexpr uint32 GetLength() const noexcept { return this->length; }
 
 		[[nodiscard]] constexpr uint32 GetCapacity() const noexcept { return CAPACITY; }
+
+	private:
+		uint32 length = 0;
+		T data[CAPACITY]{};
+
+		constexpr void copyToData(const void* from, const uint64 length) noexcept
+		{
+			MemCopy(length * sizeof(T), from, this->data);
+		}
+
+		void copy(const uint64 length, const void* from, void* to)
+		{
+			MemCopy(length * sizeof(T), from, to);
+		}
 	};
 }

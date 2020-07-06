@@ -33,21 +33,22 @@ GTSL::uint32 GAL::VulkanRenderDevice::FindMemoryType(const GTSL::uint32 memoryTy
 	return 0xffffffff;
 }
 
+#undef ERROR
+
 #if (_DEBUG)
 inline VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
+	auto* device = static_cast<GAL::VulkanRenderDevice*>(pUserData);
+	
 	switch (messageSeverity)
 	{
-	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: GTSL::Console::SetTextColor(GTSL::Console::ConsoleTextColor::WHITE); break;
-	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: GTSL::Console::SetTextColor(GTSL::Console::ConsoleTextColor::WHITE); break;
-	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:  GTSL::Console::SetTextColor(GTSL::Console::ConsoleTextColor::YELLOW); break;
-	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:  GTSL::Console::SetTextColor(GTSL::Console::ConsoleTextColor::RED); break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: device->GetDebugPrintFunction()(pCallbackData->pMessage, GAL::RenderDevice::MessageSeverity::MESSAGE); break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:  device->GetDebugPrintFunction()(pCallbackData->pMessage, GAL::RenderDevice::MessageSeverity::WARNING); break;
+	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:  device->GetDebugPrintFunction()(pCallbackData->pMessage, GAL::RenderDevice::MessageSeverity::ERROR); break;
 	default: break;
 	}
 
-	GTSL::Console::Print(GTSL::Ranger<const GTSL::UTF8>(GTSL::StringLength(pCallbackData->pMessage), pCallbackData->pMessage));
-	GTSL::Console::SetTextColor(GTSL::Console::ConsoleTextColor::WHITE);
-	
 	return VK_FALSE;
 }
 #endif // BE_DEBUG
@@ -100,16 +101,20 @@ GTSL::uint32 GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const Find
 	return VK_FORMAT_UNDEFINED;
 }
 
+void GAL::VulkanQueue::Wait() const { vkQueueWaitIdle(queue); }
+
 void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 {
-	GTSL::Array<VkCommandBuffer, 16> vk_command_buffers(static_cast<GTSL::uint32>(GTSL::Ranger<const VulkanCommandBuffer>(submitInfo.CommandBuffers).ElementCount()));
-	for(const auto& e : submitInfo.CommandBuffers)
+	auto vulkan_command_buffers = GTSL::Ranger<const VulkanCommandBuffer>(submitInfo.CommandBuffers);
+	
+	GTSL::Array<VkCommandBuffer, 16> vk_command_buffers(static_cast<GTSL::uint32>(vulkan_command_buffers.ElementCount()));
+	for(const auto& e : vulkan_command_buffers)
 	{
-		vk_command_buffers[&e - submitInfo.CommandBuffers.begin()] = static_cast<const VulkanCommandBuffer&>(e).GetVkCommandBuffer();
+		vk_command_buffers[&e - vulkan_command_buffers.begin()] = e.GetVkCommandBuffer();
 	}
 	
-	GTSL::Ranger<const VulkanSemaphore> vk_signal_semaphores(submitInfo.SignalSemaphores);
-	GTSL::Ranger<const VulkanSemaphore> vk_wait_semaphores(submitInfo.WaitSemaphores);
+	GTSL::Ranger<const VulkanSemaphore> vulkan_signal_semaphores(submitInfo.SignalSemaphores);
+	GTSL::Ranger<const VulkanSemaphore> vulkan_wait_semaphores(submitInfo.WaitSemaphores);
 
 	//VkTimelineSemaphoreSubmitInfo vk_timeline_semaphore_submit_info{ VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO };
 	//vk_timeline_semaphore_submit_info.waitSemaphoreValueCount = vk_wait_semaphores.GetLength();
@@ -129,16 +134,16 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 	}
 	vk_submit_info.pWaitDstStageMask = vk_pipeline_stages.begin();
 	
-	vk_submit_info.signalSemaphoreCount = vk_signal_semaphores.ElementCount();
-	vk_submit_info.pSignalSemaphores = reinterpret_cast<const VkSemaphore*>(vk_signal_semaphores.begin());
+	vk_submit_info.signalSemaphoreCount = vulkan_signal_semaphores.ElementCount();
+	vk_submit_info.pSignalSemaphores = reinterpret_cast<const VkSemaphore*>(vulkan_signal_semaphores.begin());
 
-	vk_submit_info.waitSemaphoreCount = vk_wait_semaphores.ElementCount();
-	vk_submit_info.pWaitSemaphores = reinterpret_cast<const VkSemaphore*>(vk_wait_semaphores.begin());
+	vk_submit_info.waitSemaphoreCount = vulkan_wait_semaphores.ElementCount();
+	vk_submit_info.pWaitSemaphores = reinterpret_cast<const VkSemaphore*>(vulkan_wait_semaphores.begin());
 	
-	VK_CHECK(vkQueueSubmit(queue, 1, &vk_submit_info, static_cast<VulkanFence*>(submitInfo.Fence)->GetVkFence()));
+	VK_CHECK(vkQueueSubmit(queue, 1, &vk_submit_info, submitInfo.Fence ? static_cast<VulkanFence*>(submitInfo.Fence)->GetVkFence() : nullptr));
 }
 
-GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
+GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : RenderDevice(createInfo)
 {
 	VkApplicationInfo vk_application_info{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
 	vk_application_info.pNext = nullptr;
@@ -177,7 +182,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo)
 	vk_debug_utils_messenger_create_info_EXT.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 	vk_debug_utils_messenger_create_info_EXT.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 	vk_debug_utils_messenger_create_info_EXT.pfnUserCallback = debugCallback;
-	vk_debug_utils_messenger_create_info_EXT.pUserData = nullptr; // Optional
+	vk_debug_utils_messenger_create_info_EXT.pUserData = this;
 #endif
 
 	VkInstanceCreateInfo vk_instance_create_info{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };

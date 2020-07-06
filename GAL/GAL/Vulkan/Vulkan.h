@@ -166,6 +166,7 @@ namespace GAL
 		{
 		case CullMode::CULL_BACK: return VK_CULL_MODE_BACK_BIT;
 		case CullMode::CULL_FRONT: return VK_CULL_MODE_FRONT_BIT;
+		case CullMode::CULL_NONE: return VK_CULL_MODE_NONE;
 		default: return VK_CULL_MODE_FLAG_BITS_MAX_ENUM;
 		}
 	}

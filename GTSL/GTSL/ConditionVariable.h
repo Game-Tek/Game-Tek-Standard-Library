@@ -1,31 +1,34 @@
 #pragma once
 
-#include <condition_variable>
+#include <synchapi.h>
 
 namespace GTSL
 {
-	class MultithreadNotification
+	class ConditionVariable
 	{
-		std::condition_variable conditionVariable;
-		std::mutex mutex;
-
 	public:
-		MultithreadNotification();
+		ConditionVariable()
+		{
+			InitializeCriticalSection(&criticalSection);
+			InitializeConditionVariable(&conditionVariable);
+		}
+
+		~ConditionVariable()
+		{
+			DeleteCriticalSection(&criticalSection);
+		}
 
 		void Wait()
 		{
-			std::unique_lock<std::mutex> lock(mutex);
-			conditionVariable.wait(lock);
+			SleepConditionVariableCS(&conditionVariable, &criticalSection, 0xFFFFFFFF);
 		}
 
-		void NotifyAll()
-		{
-			conditionVariable.notify_all();
-		}
+		void NotifyAll() { WakeAllConditionVariable(&conditionVariable); }
 
-		void NotifyOne()
-		{
-			conditionVariable.notify_one();
-		}
+		void NotifyOne() { WakeConditionVariable(&conditionVariable); }
+		
+	private:
+		CRITICAL_SECTION criticalSection;
+		CONDITION_VARIABLE conditionVariable;
 	};
 }

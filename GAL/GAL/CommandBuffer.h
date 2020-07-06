@@ -20,7 +20,7 @@ namespace GAL
 	struct BindBindingsSet;
 	class RenderMesh;
 	class Queue;
-
+	
 	class CommandBuffer : public GALObject
 	{
 	public:
@@ -30,7 +30,6 @@ namespace GAL
 		struct CreateInfo : RenderInfo
 		{
 			bool IsPrimary = true;
-			Queue* Queue{ nullptr };
 		};
 		
 		struct BeginRecordingInfo : RenderInfo
@@ -173,6 +172,17 @@ namespace GAL
 			GTSL::uint32 DestinationOffset{ 0 };
 
 			GTSL::uint32 Size{ 0 };
+		};
+	};
+
+	class CommandPool : public GALObject
+	{
+	public:
+		struct CreateInfo final : RenderInfo
+		{
+			const Queue* Queue{ nullptr };
+			bool IsPrimary = true;
+			GTSL::Ranger<class CommandBuffer> CommandBuffers;
 		};
 	};
 }

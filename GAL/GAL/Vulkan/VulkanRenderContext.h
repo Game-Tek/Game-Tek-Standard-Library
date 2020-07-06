@@ -24,11 +24,8 @@ namespace GAL
 		 * \param acquireNextImageInfo Information to perform image acquisition.
 		 * \return Returns true if the contexts needs to be recreated.
 		 */
-		bool AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
+		[[nodiscard]] GTSL::uint8 AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
 		void Present(const PresentInfo& presentInfo);
-
-		[[nodiscard]] GTSL::uint8 GetCurrentImage() const { return imageIndex; }
-		[[nodiscard]] GTSL::uint8 GetMaxFramesInFlight() const { return maxFramesInFlight; }
 		
 		struct GetImagesInfo : RenderInfo
 		{
@@ -39,8 +36,5 @@ namespace GAL
 	private:
 		uint64_t surface{ 0 };
 		uint64_t swapchain{ 0 };
-
-		GTSL::uint8 imageIndex = 0;
-		GTSL::uint8 maxFramesInFlight = 0;
 	};
 }

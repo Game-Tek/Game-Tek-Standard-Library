@@ -24,6 +24,7 @@
     <ClInclude Include="GTSL\ConditionVariable.h" />
     <ClInclude Include="GTSL\Console.h" />
     <ClInclude Include="GTSL\Core.h" />
+    <ClInclude Include="GTSL\DataSizes.h" />
     <ClInclude Include="GTSL\DLL.h" />
     <ClInclude Include="GTSL\File.h" />
     <ClInclude Include="GTSL\FixedVector.hpp" />
@@ -32,7 +33,6 @@
     <ClInclude Include="GTSL\FlatHashMap.h" />
     <ClInclude Include="GTSL\FlipFlop.h" />
     <ClInclude Include="GTSL\FunctionPointer.hpp" />
-    <ClInclude Include="GTSL\HashedVector.h" />
     <ClInclude Include="GTSL\Input.h" />
     <ClInclude Include="GTSL\Math\AxisAngle.h" />
     <ClInclude Include="GTSL\Math\Frustum.h" />

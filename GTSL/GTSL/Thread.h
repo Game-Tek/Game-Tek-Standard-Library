@@ -9,6 +9,8 @@ namespace GTSL
 	class Thread
 	{
 	public:
+		Thread() = default;
+		
 		template<typename T, typename... ARGS>
 		Thread(Delegate<T> delegate, ARGS&&... args) noexcept
 		{				

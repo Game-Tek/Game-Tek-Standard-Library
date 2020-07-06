@@ -12,9 +12,8 @@ namespace GAL
 	{
 	public:
 		VulkanCommandBuffer() = default;
-		explicit VulkanCommandBuffer(const CreateInfo& commandBufferCreateInfo);
 
-		void Destroy(RenderDevice* renderDevice);
+		explicit VulkanCommandBuffer(const VkCommandBuffer commandBuffer) : commandBuffer(commandBuffer) {}
 		
 		void BeginRecording(const BeginRecordingInfo& beginRecordingInfo);
 		void EndRecording(const EndRecordingInfo& endRecordingInfo);
@@ -25,8 +24,6 @@ namespace GAL
 
 		void BindGraphicsPipeline(const BindGraphicsPipelineInfo& bindGraphicsPipelineInfo);
 		void BindComputePipeline(const BindComputePipelineInfo& bindComputePipelineInfo);
-
-		void BindMesh(const BindMeshInfo& bindMeshInfo);
 
 		void BindIndexBuffer(const BindIndexBufferInfo& buffer);
 		void BindVertexBuffer(const BindVertexBufferInfo& buffer);
@@ -49,8 +46,29 @@ namespace GAL
 		[[nodiscard]] VkCommandBuffer GetVkCommandBuffer() const { return commandBuffer; }
 
 	private:
-		VkCommandPool commandPool = nullptr;
 		VkCommandBuffer commandBuffer = nullptr;
 
+	};
+
+	class VulkanCommandPool final : public CommandPool
+	{
+	public:
+		VulkanCommandPool() = default;
+		VulkanCommandPool(const CreateInfo& createInfo);
+
+		void ResetPool(RenderDevice* renderDevice) const;
+		
+		struct FreeCommandBuffers final : RenderInfo
+		{
+			GTSL::Ranger<CommandBuffer> CommandBuffers;
+		};
+		void FreeCommandBuffers(const FreeCommandBuffers& freeCommandBuffers) const;
+		
+		void Destroy(RenderDevice* renderDevice);
+
+		[[nodiscard]] VkCommandPool GetVkCommandPool() const { return commandPool; }
+		
+	private:
+		VkCommandPool commandPool = nullptr;
 	};
 }

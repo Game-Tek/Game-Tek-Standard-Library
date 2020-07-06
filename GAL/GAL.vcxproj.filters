@@ -75,9 +75,6 @@
     <ClInclude Include="GAL\Vulkan\VulkanMemory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Vulkan\VulkanMemory.cpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GAL\Synchronization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -126,6 +123,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Vulkan\VulkanImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Vulkan\VulkanMemory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
