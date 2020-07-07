@@ -159,9 +159,9 @@ GTSL::uint32 GAL::VulkanSurface::GetSupportedRenderContextFormat(VulkanRenderDev
 	GTSL::Array<VkSurfaceFormatKHR, 32> surface_formats(surface_formats_count);
 	vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice->GetVkPhysicalDevice(), (VkSurfaceKHR)surface, &surface_formats_count, surface_formats.begin());
 
-	for (auto e : surface_formats)
+	for (auto& e : surface_formats)
 	{
-		for (auto& p : formats) { if (e.colorSpace == p.First && e.format == p.Second) { return &e - surface_formats.begin(); } }
+		for (auto p : formats) { if (e.colorSpace == p.First && e.format == p.Second) { return &e - surface_formats.begin(); } }
 	}
 
 
@@ -184,5 +184,9 @@ bool GAL::VulkanSurface::IsSupported(VulkanRenderDevice* renderDevice)
 {
 	VkBool32 supported = 0;
 	vkGetPhysicalDeviceSurfaceSupportKHR(renderDevice->GetVkPhysicalDevice(), 0, reinterpret_cast<VkSurfaceKHR>(surface), &supported);
+
+	VkSurfaceCapabilitiesKHR surface_capabilities;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(renderDevice->GetVkPhysicalDevice(), (VkSurfaceKHR)surface, &surface_capabilities);
+
 	return supported;
 }
