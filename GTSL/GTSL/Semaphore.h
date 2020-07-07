@@ -10,6 +10,8 @@ namespace GTSL
     class Semaphore
     {
     public:
+        Semaphore() = default;
+
         explicit Semaphore(const int32 count) noexcept : count(count)
         {
             GTSL_ASSERT(count > -1, "Count must be more than -1.")
