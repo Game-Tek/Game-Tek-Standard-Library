@@ -46,7 +46,6 @@ namespace GTSL
         void Lock() noexcept { EnterCriticalSection(&criticalSection); }
         bool TryLock() noexcept { return TryEnterCriticalSection(&criticalSection); }
         void Unlock() noexcept { LeaveCriticalSection(&criticalSection); }
-
     private:
         CRITICAL_SECTION criticalSection;
     };
@@ -72,9 +71,13 @@ namespace GTSL
         explicit Lock(Mutex& mutex) noexcept : object(&mutex) { mutex.Lock(); }
         ~Lock() noexcept { object->Unlock(); }
 
+        operator const Mutex& () const { return *object; }
     private:
         Mutex* object = nullptr;
     };
+
+    template <class T>
+    Lock(T) -> Lock<T>;
 
     class ReadWriteMutex
     {
