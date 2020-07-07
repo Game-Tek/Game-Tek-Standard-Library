@@ -4,9 +4,35 @@
 
 #include "VulkanBindings.h"
 #include "VulkanImage.h"
+#include <GTSL\Pair.h>
 
 namespace GAL
 {
+	class VulkanSurface final : public Surface
+	{
+	public:
+		VulkanSurface() = default;
+		struct CreateInfo
+		{
+			class VulkanRenderDevice* RenderDevice{ nullptr };
+			void* SystemData{ nullptr };
+		};
+		VulkanSurface(const CreateInfo& createInfo);
+
+		void Destroy(class VulkanRenderDevice* renderDevice);
+
+		//colorspace / format
+		GTSL::uint32 GetSupportedRenderContextFormat(class VulkanRenderDevice* renderDevice, GTSL::Ranger<GTSL::Pair<GTSL::uint32, GTSL::uint32>> formats);
+
+		GTSL::uint32 GetSupportedPresentMode(class VulkanRenderDevice* renderDevice, GTSL::Ranger<GTSL::uint32> presentModes);
+
+		bool IsSupported(class VulkanRenderDevice* renderDevice);
+
+		void* GetVkSurface() const { return surface; }
+	private:
+		void* surface{ 0 };
+	};
+
 	class VulkanRenderContext final : public RenderContext
 	{
 	public:
@@ -15,8 +41,6 @@ namespace GAL
 		~VulkanRenderContext() = default;
 
 		void Destroy(class RenderDevice* renderDevice);
-
-		void CheckSupported();
 		
 		void Recreate(const RecreateInfo& resizeInfo);
 		/**
@@ -34,7 +58,6 @@ namespace GAL
 		GTSL::Array<VulkanImageView, 5> GetImages(const GetImagesInfo& getImagesInfo);
 		
 	private:
-		uint64_t surface{ 0 };
-		uint64_t swapchain{ 0 };
+		void* swapchain{ 0 };
 	};
 }

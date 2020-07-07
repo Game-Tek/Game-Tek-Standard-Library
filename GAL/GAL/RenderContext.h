@@ -20,6 +20,12 @@ namespace GAL
 	};
 #endif
 	
+	class Surface : public GALObject
+	{
+	public:
+		Surface() = default;
+	};
+
 	class RenderContext : public GALObject
 	{
 	public:
@@ -32,7 +38,8 @@ namespace GAL
 			GTSL::uint32 PresentMode{ 0 };
 			GTSL::uint32 Format{ 0 };
 			GTSL::uint32 ColorSpace{ 0 };
-			void* SystemData{ nullptr };
+			GTSL::uint32 ImageUses{ 0 };
+			Surface* Surface{ nullptr };
 		};
 		//explicit RenderContext(const CreateInfo& createInfo);
 		
@@ -45,6 +52,8 @@ namespace GAL
 			GTSL::uint32 PresentMode{ 0 };
 			GTSL::uint32 Format{ 0 };
 			GTSL::uint32 ColorSpace{ 0 };
+			GTSL::uint32 ImageUses{ 0 };
+			Surface* Surface{ nullptr };
 		};
 		void Recreate(const RecreateInfo& resizeInfo);
 

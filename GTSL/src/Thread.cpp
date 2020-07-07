@@ -5,7 +5,7 @@
 #include <Windows.h>
 #endif
 
-void* GTSL::Thread::createThread(void* function, void* data) noexcept { return CreateThread(0, 0, reinterpret_cast<unsigned long(*)(void*)>(function), data, 0, nullptr); }
+void* GTSL::Thread::createThread(unsigned long(*function)(void*), void* data) noexcept { return CreateThread(0, 0, function, data, 0, nullptr); }
 
 GTSL::uint32 GTSL::Thread::ThisTreadID() noexcept { return GetCurrentThreadId(); }
 

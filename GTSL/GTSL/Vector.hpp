@@ -460,6 +460,7 @@ namespace GTSL
 		[[nodiscard]] size_t GetRemainingLengthSize() const noexcept { return this->GetRemainingLength() * sizeof(T); }
 
 		[[nodiscard]] operator Ranger<T>() noexcept { return Ranger<T>(this->data, this->data + this->length); }
+		[[nodiscard]] operator Ranger<T>() const noexcept { return Ranger<T>(this->data, this->data + this->length); }
 		[[nodiscard]] operator Ranger<const T>() const noexcept { return Ranger<const T>(this->data, this->data + this->length); }
 
 	private:

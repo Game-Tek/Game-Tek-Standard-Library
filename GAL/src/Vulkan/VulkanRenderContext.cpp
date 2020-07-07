@@ -15,24 +15,15 @@
 
 GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo)
 {
-	VkWin32SurfaceCreateInfoKHR vk_win32_surface_create_info_khr{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
-	vk_win32_surface_create_info_khr.hwnd = static_cast<HWND>(static_cast<WindowsWindowData*>(createInfo.SystemData)->WindowHandle);
-	vk_win32_surface_create_info_khr.hinstance = static_cast<HINSTANCE>(static_cast<WindowsWindowData*>(createInfo.SystemData)->InstanceHandle);
-	VK_CHECK(vkCreateWin32SurfaceKHR(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkInstance(), &vk_win32_surface_create_info_khr,
-		static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), reinterpret_cast<VkSurfaceKHR*>(&surface)));
-
-	VkBool32 supported = 0;
-	vkGetPhysicalDeviceSurfaceSupportKHR(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkPhysicalDevice(), 0, reinterpret_cast<VkSurfaceKHR>(surface), &supported);
-	
 	VkSwapchainCreateInfoKHR vk_swapchain_create_info_khr{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-	vk_swapchain_create_info_khr.surface = reinterpret_cast<VkSurfaceKHR>(surface);
+	vk_swapchain_create_info_khr.surface = reinterpret_cast<VkSurfaceKHR>(static_cast<VulkanSurface*>(createInfo.Surface)->GetVkSurface());
 	vk_swapchain_create_info_khr.minImageCount = createInfo.DesiredFramesInFlight;
 	vk_swapchain_create_info_khr.imageFormat = static_cast<VkFormat>(createInfo.Format);
 	vk_swapchain_create_info_khr.imageColorSpace = static_cast<VkColorSpaceKHR>(createInfo.ColorSpace);
 	vk_swapchain_create_info_khr.imageExtent = Extent2DToVkExtent2D(createInfo.SurfaceArea);
 	//The imageArrayLayers specifies the amount of layers each image consists of. This is always 1 unless you are developing a stereoscopic 3D application.
 	vk_swapchain_create_info_khr.imageArrayLayers = 1;
-	vk_swapchain_create_info_khr.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	vk_swapchain_create_info_khr.imageUsage = createInfo.ImageUses;
 	vk_swapchain_create_info_khr.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	vk_swapchain_create_info_khr.queueFamilyIndexCount = 0;
 	vk_swapchain_create_info_khr.pQueueFamilyIndices = nullptr;
@@ -50,24 +41,19 @@ void GAL::VulkanRenderContext::Destroy(RenderDevice* renderDevice)
 {
 	const auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
 	vkDestroySwapchainKHR(vk_render_device->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain), vk_render_device->GetVkAllocationCallbacks());
-	vkDestroySurfaceKHR(vk_render_device->GetVkInstance(), reinterpret_cast<VkSurfaceKHR>(surface), vk_render_device->GetVkAllocationCallbacks());
-}
-
-void GAL::VulkanRenderContext::CheckSupported()
-{
 }
 
 void GAL::VulkanRenderContext::Recreate(const RecreateInfo& resizeInfo)
 {
 	VkSwapchainCreateInfoKHR vk_swapchain_create_info_khr{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-	vk_swapchain_create_info_khr.surface = reinterpret_cast<VkSurfaceKHR>(surface);
+	vk_swapchain_create_info_khr.surface = reinterpret_cast<VkSurfaceKHR>(static_cast<VulkanSurface*>(resizeInfo.Surface)->GetVkSurface());
 	vk_swapchain_create_info_khr.minImageCount = resizeInfo.DesiredFramesInFlight;
 	vk_swapchain_create_info_khr.imageFormat = static_cast<VkFormat>(resizeInfo.Format);
 	vk_swapchain_create_info_khr.imageColorSpace = static_cast<VkColorSpaceKHR>(resizeInfo.ColorSpace);
 	vk_swapchain_create_info_khr.imageExtent = Extent2DToVkExtent2D(resizeInfo.SurfaceArea);
 	//The imageArrayLayers specifies the amount of layers each image consists of. This is always 1 unless you are developing a stereoscopic 3D application.
 	vk_swapchain_create_info_khr.imageArrayLayers = 1;
-	vk_swapchain_create_info_khr.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	vk_swapchain_create_info_khr.imageUsage = resizeInfo.ImageUses;
 	vk_swapchain_create_info_khr.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	vk_swapchain_create_info_khr.queueFamilyIndexCount = 0;
 	vk_swapchain_create_info_khr.pQueueFamilyIndices = nullptr;
@@ -149,4 +135,54 @@ GTSL::Array<GAL::VulkanImageView, 5> GAL::VulkanRenderContext::GetImages(const G
 	}
 	
 	return vulkan_images;
+}
+
+GAL::VulkanSurface::VulkanSurface(const CreateInfo& createInfo)
+{
+	VkWin32SurfaceCreateInfoKHR vk_win32_surface_create_info_khr{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
+	vk_win32_surface_create_info_khr.hwnd = static_cast<HWND>(static_cast<WindowsWindowData*>(createInfo.SystemData)->WindowHandle);
+	vk_win32_surface_create_info_khr.hinstance = static_cast<HINSTANCE>(static_cast<WindowsWindowData*>(createInfo.SystemData)->InstanceHandle);
+	VK_CHECK(vkCreateWin32SurfaceKHR(createInfo.RenderDevice->GetVkInstance(), &vk_win32_surface_create_info_khr,
+		createInfo.RenderDevice->GetVkAllocationCallbacks(), reinterpret_cast<VkSurfaceKHR*>(&surface)));
+}
+
+void GAL::VulkanSurface::Destroy(VulkanRenderDevice* renderDevice)
+{
+	vkDestroySurfaceKHR(renderDevice->GetVkInstance(), (VkSurfaceKHR)surface, renderDevice->GetVkAllocationCallbacks());
+}
+
+GTSL::uint32 GAL::VulkanSurface::GetSupportedRenderContextFormat(VulkanRenderDevice* renderDevice, GTSL::Ranger<GTSL::Pair<GTSL::uint32, GTSL::uint32>> formats)
+{
+	GTSL::uint32 surface_formats_count = 0;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice->GetVkPhysicalDevice(), (VkSurfaceKHR)surface, &surface_formats_count, nullptr);
+
+	GTSL::Array<VkSurfaceFormatKHR, 32> surface_formats(surface_formats_count);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice->GetVkPhysicalDevice(), (VkSurfaceKHR)surface, &surface_formats_count, surface_formats.begin());
+
+	for (auto e : surface_formats)
+	{
+		for (auto& p : formats) { if (e.colorSpace == p.First && e.format == p.Second) { return &e - surface_formats.begin(); } }
+	}
+
+
+	return 0xFFFFFFFF;
+}
+
+GTSL::uint32 GAL::VulkanSurface::GetSupportedPresentMode(VulkanRenderDevice* renderDevice, GTSL::Ranger<GTSL::uint32> presentModes)
+{
+	GTSL::uint32 present_modes_count = 0;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice->GetVkPhysicalDevice(), (VkSurfaceKHR)surface, &present_modes_count, nullptr);
+	GTSL::Array<VkPresentModeKHR, 8> present_modes(present_modes_count);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice->GetVkPhysicalDevice(), (VkSurfaceKHR)surface, &present_modes_count, present_modes.begin());
+
+	for (auto& present_mode : present_modes) { for (auto p_m : presentModes) { if (present_mode == p_m) { return &present_mode - present_modes.begin(); } } }
+
+	return 0xFFFFFFFF;
+}
+
+bool GAL::VulkanSurface::IsSupported(VulkanRenderDevice* renderDevice)
+{
+	VkBool32 supported = 0;
+	vkGetPhysicalDeviceSurfaceSupportKHR(renderDevice->GetVkPhysicalDevice(), 0, reinterpret_cast<VkSurfaceKHR>(surface), &supported);
+	return supported;
 }

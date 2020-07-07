@@ -64,10 +64,10 @@ namespace GTSL
 		constexpr Array(const Array& other) noexcept : length(other.length) { copyToData(other.data, other.length); }
 
 		template<uint32 N>
-		constexpr Array(const Array<T, N>& other) noexcept : length(other.length)
+		constexpr Array(const Array<T, N>& other) noexcept : length(other.GetLength())
 		{
-			GTSL_ASSERT(other.length <= CAPACITY, "Other array has more elements than this can handle.")
-			copyToData(other.data, other.length);
+			GTSL_ASSERT(other.GetLength() <= CAPACITY, "Other array has more elements than this can handle.")
+			copyToData(other.begin(), other.GetLength());
 		}
 
 		constexpr Array(Array&& other) noexcept : length(other.length)

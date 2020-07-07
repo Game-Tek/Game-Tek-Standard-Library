@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Core.h"
 #include <type_traits>
 #include <atomic>
@@ -11,9 +12,7 @@ namespace GTSL
 	class BlockingQueue
 	{
 	public:
-		template<typename Q = T>
-		typename std::enable_if<std::is_copy_constructible<Q>::value, void>::
-		type Push(const T& item)
+		void Push(const T& item)
 		{
 			{
 				std::unique_lock lock(mutex);
@@ -22,9 +21,7 @@ namespace GTSL
 			ready.notify_one();
 		}
 
-		template<typename Q = T>
-		typename std::enable_if<std::is_move_constructible<Q>::value, void>::
-			type Push(T&& item)
+		void Push(T&& item)
 		{
 			{
 				std::unique_lock lock(mutex);
@@ -33,9 +30,7 @@ namespace GTSL
 			ready.notify_one();
 		}
 
-		template<typename Q = T>
-		typename std::enable_if<std::is_copy_constructible<Q>::value, bool>::
-			type TryPush(const T& item)
+		bool TryPush(const T& item)
 		{
 			{
 				std::unique_lock lock(mutex, std::try_to_lock);
@@ -46,9 +41,7 @@ namespace GTSL
 			return true;
 		}
 
-		template<typename Q = T>
-		typename std::enable_if<std::is_move_constructible<Q>::value, bool>::
-			type TryPush(T&& item)
+		bool TryPush(T&& item)
 		{
 			{
 				std::unique_lock lock(mutex, std::try_to_lock);
@@ -60,9 +53,7 @@ namespace GTSL
 			return true;
 		}
 
-		template<typename Q = T>
-		typename std::enable_if<std::is_copy_assignable<Q>::value && !std::is_move_assignable<Q>::value, bool>::
-			type Pop(T& item)
+		bool Pop(T& item)
 		{
 			std::unique_lock lock(mutex);
 			while (queue.empty() && !done) { ready.wait(lock); }
@@ -72,39 +63,12 @@ namespace GTSL
 			return true;
 		}
 
-		template<typename Q = T>
-		typename std::enable_if<std::is_move_assignable<Q>::value, bool>::
-		type
-		Pop(T& item)
-		{
-			std::unique_lock lock(mutex);
-			while (queue.empty() && !done) { ready.wait(lock); }
-			if (queue.empty()) { return false; }
-			item = GTSL::MakeTransferReference(queue.front());
-			queue.pop();
-			return true;
-		}
-
-		template<typename Q = T>
-		typename std::enable_if<std::is_copy_assignable<Q>::value && !std::is_move_assignable<Q>::value, bool>::
-			type TryPop(T& item)
+		bool TryPop(T& item)
 		{
 			std::unique_lock lock(mutex, std::try_to_lock);
 			if (!lock || queue.empty())
 				return false;
 			item = queue.front();
-			queue.pop();
-			return true;
-		}
-
-		template<typename Q = T>
-		typename std::enable_if<typename std::is_move_assignable<Q>::value, bool>::
-		type TryPop(T& item)
-		{
-			std::unique_lock lock(mutex, std::try_to_lock);
-			if (!lock || queue.empty())
-				return false;
-			item = std::move(queue.front());
 			queue.pop();
 			return true;
 		}

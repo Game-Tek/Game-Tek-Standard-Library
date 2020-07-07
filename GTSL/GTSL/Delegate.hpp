@@ -25,6 +25,8 @@ namespace GTSL
 	public:
 		using call_signature = RET(*)(ARGS...);
 
+		using return_type = RET;
+		
 	private:
 		RET(*callerFunction)(void*, ARGS&& ...) { nullptr };
 		void* callee{ nullptr };
@@ -36,6 +38,15 @@ namespace GTSL
 	public:
 		Delegate() = default;
 		~Delegate() = default;
+
+		Delegate(const Delegate& another) noexcept : callerFunction(another.callerFunction), callee(another.callee)
+		{
+		}
+
+		Delegate(Delegate&& another) noexcept : callerFunction(another.callerFunction), callee(another.callee)
+		{
+			another.callee = nullptr; another.callerFunction = nullptr;
+		}
 
 		//template <RET(*FUNCTION)(PARAMS ...)>
 		//explicit Delegate() : callerFunction(&functionCaller<FUNCTION>), callee(nullptr)
@@ -55,7 +66,18 @@ namespace GTSL
 
 		operator bool() const noexcept { return callerFunction; }
 
-		Delegate& operator =(const Delegate& another) = default;
+		Delegate& operator=(const Delegate& another)
+		{
+			callee = another.callee; callerFunction = another.callerFunction;
+			return *this;
+		}
+		
+		Delegate& operator=(Delegate&& another) noexcept
+		{
+			callee = another.callee; callerFunction = another.callerFunction;
+			another.callee = nullptr; another.callerFunction = nullptr;
+			return *this;
+		}
 
 		template <typename LAMBDA> // template instantiation is not needed, will be deduced (inferred):
 		Delegate& operator=(const LAMBDA& instance) { callee = static_cast<void*>(&instance); callerFunction = lambdaCaller<LAMBDA>; return *this; }
