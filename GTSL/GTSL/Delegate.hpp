@@ -27,15 +27,6 @@ namespace GTSL
 
 		using return_type = RET;
 		
-	private:
-		RET(*callerFunction)(void*, ARGS&& ...) { nullptr };
-		void* callee{ nullptr };
-
-
-		Delegate(void* calee, decltype(callerFunction) cF) : callerFunction(cF), callee(calee)
-		{
-		}
-	public:
 		Delegate() = default;
 		~Delegate() = default;
 
@@ -91,7 +82,7 @@ namespace GTSL
 		template <class T, RET(T::* CONST_METHOD)(ARGS...) const>
 		static Delegate Create(T const* instance) { return Delegate(const_cast<T*>(instance), constMethodCaller<T, CONST_METHOD>); }
 
-		template <RET(*FUNCTION)(ARGS ...)>
+		template <RET(*FUNCTION)(ARGS...)>
 		static Delegate Create() { return Delegate(nullptr, functionCaller<FUNCTION>); }
 
 		template <typename LAMBDA>
@@ -99,7 +90,14 @@ namespace GTSL
 
 		RET operator()(ARGS... args) const { return (*callerFunction)(callee, GTSL::MakeForwardReference<ARGS>(args)...); }
 
-	private:
+	private:		
+		RET(*callerFunction)(void*, ARGS&&...) { nullptr };
+		void* callee{ nullptr };
+
+		Delegate(void* callee, decltype(callerFunction) cF) : callerFunction(cF), callee(callee)
+		{
+		}
+		
 		template <class T, RET(T::* METHOD)(ARGS ...)>
 		static RET methodCaller(void* callee, ARGS&&... params) { return (static_cast<T*>(callee)->*METHOD)(GTSL::MakeForwardReference<ARGS>(params)...); }
 

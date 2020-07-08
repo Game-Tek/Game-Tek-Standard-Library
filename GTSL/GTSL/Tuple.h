@@ -4,59 +4,79 @@
 
 namespace GTSL
 {
-	template <uint64 I, typename T, typename... ARGS>
-	struct ExtractTypeAt
-	{
-		using type = typename ExtractTypeAt<I - 1, ARGS...>::type;
-	};
-
-	template<typename T, typename ...ARGS>
-	struct ExtractTypeAt<0, T, ARGS...>
-	{
-		using type = T;
-	};
-
 	template<typename... ARGS> class Tuple;
 
-	template<>
-	class Tuple<> {};
-
-	template<typename T, typename... TYPES>
-	class Tuple<T, TYPES...> : public Tuple<TYPES...>
+	template <> class Tuple<> {};
+	
+	template<typename T>
+	class Tuple<T>
 	{
 	public:
-		template<typename... ARGS>
-		Tuple(ARGS&&... args) : Tuple<T, TYPES...>(GTSL::MakeForwardReference<ARGS>(args)...)
+		Tuple() = default;
+		Tuple(T&& arg) : element(GTSL::MakeForwardReference<T>(arg))
 		{}
+		
+		T element;
+	};
+	
+	template<typename T, typename... TYPES>
+	class Tuple<T, TYPES...>
+	{
+	public:
+		Tuple() = default;
+		Tuple(T&& arg, TYPES&&... types) : element(GTSL::MakeForwardReference<T>(arg)), rest(GTSL::MakeForwardReference<TYPES>(types)...)
+		{}
+		
+		T element;
+		Tuple<TYPES...> rest;
+	};
 
-		Tuple(const Tuple& other) = default;
-		Tuple(Tuple&& other) = default;
-		Tuple& operator=(const Tuple& other) = default;
-		Tuple& operator=(Tuple&& other) = default;
+	template<uint64 N, typename T>
+	struct TupleElement;
+	
+	template<uint64 N, typename T, typename... TYPES>
+	struct TupleElement<N, Tuple<T, TYPES...>> : TupleElement<N - 1, Tuple<TYPES...>>{};
 
-		template <typename... ARGS>
-		friend bool operator==(Tuple<ARGS...>& t1, Tuple<ARGS...>& t2)
+	template<typename T, typename... TYPES>
+	struct TupleElement<0, Tuple<T, TYPES...>> { using type = T; };
+
+	template <uint64 N>
+	struct TupleAccessor
+	{
+		template <class... TYPES>
+		static inline typename TupleElement<N, Tuple<TYPES...> >::type& Get(Tuple<TYPES...>& t)
 		{
-			return compareTuple<sizeof...(ARGS) - 1>(t1, t2);
+			return TupleAccessor<N - 1>::Get(t.rest);
 		}
 
-	private:
-		T element;
-		
-		template <size_t I, typename ...ARGS>
-		bool compareTuple(Tuple<ARGS...>& t1, Tuple<ARGS...>& t2)
+		template <class... TYPES>
+		static inline const typename TupleElement<N, Tuple<TYPES...> >::type& Get(const Tuple<TYPES...>& t)
 		{
-			if constexpr (I == 0)
-			{
-				return Get<0>(t1) == Get<0>(t2);
-			}
-			else
-			{
-				return Get<I>(t1) == Get<I>(t2) && compareTuple<I - 1>(t1, t2);
-			}
+			return TupleAccessor<N - 1>::Get(t.rest);
 		}
 	};
 
+	template <>
+	struct TupleAccessor<0>
+	{
+		template <class... Ts>
+		static inline typename TupleElement<0, Tuple<Ts...> >::type& Get(Tuple<Ts...>& t)
+		{
+			return t.element;
+		}
+
+		template <class... Ts>
+		static inline const typename TupleElement<0, Tuple<Ts...> >::type& Get(const Tuple<Ts...>& t)
+		{
+			return t.element;
+		}
+	};
+
+	template<uint64 N, typename... ARGS>
+	auto& Get(Tuple<ARGS...>& tuple)
+	{
+	}
+	
 	template <class... ARGS>
 	Tuple(ARGS...)->Tuple<ARGS...>;
 
