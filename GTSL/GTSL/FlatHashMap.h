@@ -21,18 +21,18 @@ namespace GTSL
 
 		FlatHashMap() = default;
 
-		FlatHashMap(const uint32 size, const AllocatorReference& allocatorReference) : capacity(size)
+		FlatHashMap(const uint32 size, const AllocatorReference& allocatorReference) : capacity(size), loadFactor(0.5f)
 		{
 			GTSL_ASSERT(size != 0 && (size & (size - 1)) == 0, "Size is not a power of two!");
-			GTSL_ASSERT(size * loadFactor != 0, "Size and load factor combination leads to empty buckets!")
+			GTSL_ASSERT(static_cast<uint32>(size * this->loadFactor) != 0, "Size and load factor combination leads to empty buckets!")
 			this->data = allocate(size, allocatorReference, getMaxBucketLength()); build(0, getMaxBucketLength());
 		}
 
 		FlatHashMap(const uint32 size, const float32 loadFactor, const AllocatorReference& allocatorReference) : capacity(size), loadFactor(loadFactor)
 		{
 			GTSL_ASSERT(size != 0 && (size & (size - 1)) == 0, "Size is not a power of two!");
-			GTSL_ASSERT(loadFactor < 1.0f && loadFactor > 0.0f, "Invalid load factor!");
-			GTSL_ASSERT(size * loadFactor != 0, "Size and load factor combination leads to empty buckets!")
+			GTSL_ASSERT(this->loadFactor < 1.0f && this->loadFactor > 0.0f, "Invalid load factor!");
+			GTSL_ASSERT(static_cast<uint32>(size * this->loadFactor) != 0, "Size and load factor combination leads to empty buckets!")
 			this->data = allocate(size, allocatorReference, getMaxBucketLength()); build(0, getMaxBucketLength());
 		}
 
@@ -126,7 +126,7 @@ namespace GTSL
 		{
 			const auto max_bucket_length = getMaxBucketLength();
 			const auto bucket = modulo(key, this->capacity);
-			GTSL_ASSERT(findKeyInBucket(bucket, key) == nullptr, "Key already exists!")
+			GTSL_ASSERT(findKeyInBucket(bucket, key, max_bucket_length) == nullptr, "Key already exists!")
 			uint64 place_index = getBucketLength(bucket, max_bucket_length)++;
 			if (place_index + 1 > max_bucket_length) { resize(allocatorReference, max_bucket_length); }
 			getKeysBucket(bucket, max_bucket_length)[place_index] = key;
@@ -146,7 +146,7 @@ namespace GTSL
 			const auto max_bucket_length = getMaxBucketLength();
 			auto bucket = modulo(key, this->capacity); auto index = getIndexForKeyInBucket(bucket, key, max_bucket_length);
 			key_type bucket_length = getBucketLength(bucket, max_bucket_length)--;
-			GTSL_ASSERT(findKeyInBucket(bucket, key) == nullptr, "Key doesn't exist!")
+			GTSL_ASSERT(findKeyInBucket(bucket, key, max_bucket_length) == nullptr, "Key doesn't exist!")
 			getKeysBucket(bucket, max_bucket_length)[index].~T();
 			MemCopy((bucket_length - index) * sizeof(key_type), getKeysBucket(bucket, max_bucket_length) + index + 1, getKeysBucket(bucket, max_bucket_length) + index);
 			MemCopy((bucket_length - index) * sizeof(T), getValuesBucket(bucket, max_bucket_length) + index + 1, getValuesBucket(bucket, max_bucket_length) + index);
@@ -190,11 +190,11 @@ namespace GTSL
 		void resize(const AllocatorReference& allocatorReference, const uint32 maxBucketLength)
 		{
 			auto new_capacity = this->capacity * 2;
-			auto new_alloc = allocate(new_capacity, allocatorReference);
+			auto new_alloc = allocate(new_capacity, allocatorReference, maxBucketLength);
 			copy(new_capacity, new_alloc, maxBucketLength);
 			deallocate(allocatorReference, maxBucketLength);
 			this->data = new_alloc; this->capacity = new_capacity;
-			build(this->capacity / 2);
+			build(this->capacity / 2, maxBucketLength);
 
 			for(uint32 bucket = 0; bucket < this->capacity / 2; ++bucket)
 			{
