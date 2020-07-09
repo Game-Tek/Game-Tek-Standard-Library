@@ -27,6 +27,13 @@ namespace GTSL
 			this->data = allocate(size, allocatorReference); build(0);
 		}
 
+		FlatHashMap(const uint32 size, const float32 loadFactor, const AllocatorReference& allocatorReference) : capacity(size), loadFactor(loadFactor)
+		{
+			GTSL_ASSERT(size != 0 && (size & (size - 1)) == 0, "Size is not a power of two!");
+			GTSL_ASSERT(loadFactor < 1.0f && loadFactor > 0.0f, "Invalid load factor!");
+			this->data = allocate(size, allocatorReference); build(0);
+		}
+
 		void Free(const AllocatorReference& allocatorReference) { deallocate(allocatorReference); this->data = nullptr; }
 
 		~FlatHashMap() { GTSL_ASSERT(!this->data, "Data was not freed!") }
@@ -118,7 +125,7 @@ namespace GTSL
 			const auto bucket = modulo(key, this->capacity);
 			GTSL_ASSERT(findKeyInBucket(bucket, key) == nullptr, "Key already exists!")
 			uint64 place_index = getBucketLength(bucket)++;
-			if (place_index + 1 > this->capacity) { resize(allocatorReference); }
+			if (place_index + 1 > this->capacity * loadFactor) { resize(allocatorReference); }
 			getKeysBucket(bucket)[place_index] = key;
 			return ::new(getValuesBucket(bucket) + place_index) T(MakeForwardReference<ARGS>(args)...);
 		}
@@ -145,7 +152,7 @@ namespace GTSL
 
 		byte* data = nullptr;
 		uint32 capacity = 0;
-		uint8 loadFactor = 0;
+		float32 loadFactor = 0.5f;
 
 		[[nodiscard]] key_type* findKeyInBucket(const uint32 bucket, const key_type key) const
 		{
@@ -177,12 +184,12 @@ namespace GTSL
 
 		void resize(const AllocatorReference& allocatorReference)
 		{
-			auto new_length = this->capacity * 2;
-			auto new_alloc = allocate(new_length, allocatorReference);
-			copy(new_length, new_alloc);
+			auto new_capacity = this->capacity * 2;
+			auto new_alloc = allocate(new_capacity, allocatorReference);
+			copy(new_capacity, new_alloc);
 			deallocate(allocatorReference);
-			this->data = new_alloc; this->capacity = new_length;
-			build(new_length);
+			this->data = new_alloc; this->capacity = new_capacity;
+			build(this->capacity / 2);
 
 			for(uint32 bucket = 0; bucket < this->capacity / 2; ++bucket)
 			{
@@ -212,32 +219,32 @@ namespace GTSL
 		}
 
 		static uint64 getKeyBucketAllocationSize(const uint32 length) { return (length + 1) * sizeof(key_type); }
-		static uint64 getKeysAllocationSize(const uint32 length) { return getKeyBucketAllocationSize(length) * length; }
+		static uint64 getKeysAllocationSize(const uint32 length, const float32 loadFactor) { return getKeyBucketAllocationSize(length * loadFactor) * length; }
 
 		static uint64 getValuesVectorAllocationsSize(const uint32 length) { return length * sizeof(T); }
-		static uint64 getValuesAllocationsSize(const uint32 length) { return getValuesVectorAllocationsSize(length) * length; }
+		static uint64 getValuesAllocationsSize(const uint32 length, const float32 loadFactor) { return getValuesVectorAllocationsSize(length * loadFactor) * length; }
 
-		static uint64 getTotalAllocationSize(const uint32 length) { return getKeysAllocationSize(length) + getValuesAllocationsSize(length); }
+		static uint64 getTotalAllocationSize(const uint32 length, const float32 loadFactor) { return getKeysAllocationSize(length, loadFactor) + getValuesAllocationsSize(length, loadFactor); }
 
 		static uint64& getBucketLength(byte* data, const uint32 capacity, const uint32 index) { return *(reinterpret_cast<key_type*>(data) + ((capacity + 1) * index)); }
 
 		byte* allocate(const uint64 newLength, const AllocatorReference& allocatorReference)
 		{
 			uint64 allocated_size{ 0 };	void* memory{ nullptr };
-			allocatorReference.Allocate(getTotalAllocationSize(newLength), alignof(T), &memory, &allocated_size);
+			allocatorReference.Allocate(getTotalAllocationSize(newLength, loadFactor), alignof(T), &memory, &allocated_size);
 			return static_cast<byte*>(memory);
 		}
 
 		void deallocate(const AllocatorReference& allocatorReference) const { allocatorReference.Deallocate(getTotalAllocationSize(this->capacity), alignof(T), this->data); }
 
-		void build(const uint32 oldLength) { for (uint32 i = oldLength; i < this->capacity; ++i) { getBucketLength(i) = 0; } }
+		void build(const uint32 oldCapacity) { for (uint32 i = oldCapacity; i < this->capacity; ++i) { getBucketLength(i) = 0; } }
 
-		void copy(const uint64 newLength, byte* to)
+		void copy(const uint64 newCapacity, byte* to)
 		{
 			for (uint32 i = 0; i < this->capacity; ++i)
 			{
-				MemCopy(getKeysAllocationSize(this->capacity), getKeysBucketPointer(i), to + getKeyBucketAllocationSize(newLength) * i);
-				MemCopy(getValuesAllocationsSize(this->capacity), getValuesBucketPointer(i), to + getKeysAllocationSize(newLength) + getValuesVectorAllocationsSize(newLength) * i);
+				MemCopy(getKeysAllocationSize(this->capacity), getKeysBucketPointer(i), to + getKeyBucketAllocationSize(newCapacity) * i);
+				MemCopy(getValuesAllocationsSize(this->capacity), getValuesBucketPointer(i), to + getKeysAllocationSize(newCapacity, loadFactor) + getValuesVectorAllocationsSize(newCapacity) * i);
 			}
 		}
 
