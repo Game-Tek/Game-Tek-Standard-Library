@@ -3,7 +3,6 @@
 #include "Core.h"
 
 #include "Delegate.hpp"
-#include "Input.h"
 #include "Math/Vector2.h"
 
 #if (_WIN32)
@@ -24,7 +23,6 @@ namespace GTSL
 #if (_WIN32)
 		XINPUT_STATE input_state{};
 		uint8 controllerId{ 0 };
-		static constexpr ButtonState intToGamepadButtonState(const int a) noexcept { return static_cast<ButtonState>(!a); }
 #endif
 
 	public:
@@ -42,28 +40,28 @@ namespace GTSL
 		 * \brief This delegate is called when the right trigger of the gamepad changes it's state in respect to the last update to the gamepad query.
 		 * The first float represents the current value and the second float represents the delta from the last update to the gamepad query.
 		 */
-		Delegate<void(Side, float, float)> OnTriggersChange;
+		Delegate<void(Side, float32)> OnTriggersChange;
 		/**
 		 * \brief This delegate is called when the right stick of the gamepad changes it's state in respect to the last update to the gamepad query.
 		 * The first two floats represent the current X; Y of the stick and the two other floats represent the delta X;Y in respect to
 		 * the last update to this gamepad query.
 		 */
-		Delegate<void(Side, Vector2, Vector2)> OnSticksMove;
+		Delegate<void(Side, Vector2)> OnSticksMove;
 
-		Delegate<void(Side, ButtonState)> OnMenuButtonsChange;
+		Delegate<void(Side, bool)> OnMenuButtonsChange;
 		
-		Delegate<void(Side, ButtonState)> OnHatsChange;
+		Delegate<void(Side, bool)> OnHatsChange;
 
-		Delegate<void(Side, ButtonState)> OnSticksChange;
+		Delegate<void(Side, bool)> OnSticksChange;
 		
-		Delegate<void(GamepadButtonPosition, ButtonState)> OnDPadChange;
-		Delegate<void(GamepadButtonPosition, ButtonState)> OnRightButtonsChange;
+		Delegate<void(GamepadButtonPosition, bool)> OnDPadChange;
+		Delegate<void(GamepadButtonPosition, bool)> OnFrontButtonsChange;
 
 		/**
 		 * \brief Checks state of gamepad to see what changed. During this call all parameters that changed will produce an event call.
 		 * \param connected Returns true if the gamepad is connected, false otherwise.
 		 */
-		void Update(bool& connected) noexcept;
+		static void Update(GamepadQuery& gamepadQuery, bool& connected, uint8 controllerId) noexcept;
 
 		struct GamepadVibration
 		{

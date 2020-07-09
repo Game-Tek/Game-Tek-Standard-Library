@@ -33,7 +33,6 @@
     <ClInclude Include="GTSL\FlatHashMap.h" />
     <ClInclude Include="GTSL\FlipFlop.h" />
     <ClInclude Include="GTSL\FunctionPointer.hpp" />
-    <ClInclude Include="GTSL\Input.h" />
     <ClInclude Include="GTSL\Math\AxisAngle.h" />
     <ClInclude Include="GTSL\Math\Frustum.h" />
     <ClInclude Include="GTSL\Math\Math.hpp" />

@@ -7,109 +7,105 @@
 
 using namespace GTSL;
 
-void GamepadQuery::Update(bool& connected) noexcept
+void GamepadQuery::Update(GamepadQuery& gamepadQuery, bool& connected, const uint8 controllerId) noexcept
 {
 	XINPUT_STATE xinput_state;
 
-	if (XInputGetState(controllerId, &xinput_state) != ERROR_SUCCESS)
-	{
-		connected = false;
-		return;
-	}
-	
+	if (XInputGetState(controllerId, &xinput_state) != ERROR_SUCCESS) { connected = false; return; }
+
 	connected = true;
 
-	if (xinput_state.Gamepad.bLeftTrigger != input_state.Gamepad.bLeftTrigger)
+	if (xinput_state.Gamepad.bLeftTrigger != gamepadQuery.input_state.Gamepad.bLeftTrigger)
 	{
-		OnTriggersChange(Side::LEFT, static_cast<float>(xinput_state.Gamepad.bLeftTrigger) / 255.0f, static_cast<float>(input_state.Gamepad.bLeftTrigger - xinput_state.Gamepad.bLeftTrigger) / 255.0f);
+		gamepadQuery.OnTriggersChange(Side::LEFT, static_cast<float>(xinput_state.Gamepad.bLeftTrigger) / 255.0f);
 	}
 
-	if (xinput_state.Gamepad.bRightTrigger != input_state.Gamepad.bRightTrigger)
+	if (xinput_state.Gamepad.bRightTrigger != gamepadQuery.input_state.Gamepad.bRightTrigger)
 	{
-		OnTriggersChange(Side::RIGHT, static_cast<float>(xinput_state.Gamepad.bRightTrigger) / 255.0f, static_cast<float>(input_state.Gamepad.bRightTrigger - xinput_state.Gamepad.bRightTrigger) / 255.0f);
+		gamepadQuery.OnTriggersChange(Side::RIGHT, static_cast<float>(xinput_state.Gamepad.bRightTrigger) / 255.0f);
 	}
 
-	if (xinput_state.Gamepad.sThumbLX != input_state.Gamepad.sThumbLX || xinput_state.Gamepad.sThumbLY != input_state.Gamepad.sThumbLY)
+	if (xinput_state.Gamepad.sThumbLX != gamepadQuery.input_state.Gamepad.sThumbLX || xinput_state.Gamepad.sThumbLY != gamepadQuery.input_state.Gamepad.sThumbLY)
 	{
-		OnSticksMove(Side::LEFT, { static_cast<float>(xinput_state.Gamepad.sThumbLX) / 32768.f, static_cast<float>(xinput_state.Gamepad.sThumbLY) / 32768.f }, { static_cast<float>(xinput_state.Gamepad.sThumbLX - input_state.Gamepad.sThumbLX) / 32768.f, static_cast<float>(xinput_state.Gamepad.sThumbLY - input_state.Gamepad.sThumbLY) / 32768.f } );
+		gamepadQuery.OnSticksMove(Side::LEFT, { static_cast<float>(xinput_state.Gamepad.sThumbLX) / 32768.f, static_cast<float>(xinput_state.Gamepad.sThumbLY) / 32768.f });
 	}
 
-	if (xinput_state.Gamepad.sThumbRX != input_state.Gamepad.sThumbRX || xinput_state.Gamepad.sThumbRY != input_state.Gamepad.sThumbRY)
+	if (xinput_state.Gamepad.sThumbRX != gamepadQuery.input_state.Gamepad.sThumbRX || xinput_state.Gamepad.sThumbRY != gamepadQuery.input_state.Gamepad.sThumbRY)
 	{
-		OnSticksMove(Side::RIGHT, { static_cast<float>(xinput_state.Gamepad.sThumbRX) / 32768.f, static_cast<float>(xinput_state.Gamepad.sThumbRY) / 32768.f }, { static_cast<float>(xinput_state.Gamepad.sThumbRX - input_state.Gamepad.sThumbRX) / 32768.f, static_cast<float>(xinput_state.Gamepad.sThumbRY - input_state.Gamepad.sThumbRY) / 32768.f } );
+		gamepadQuery.OnSticksMove(Side::RIGHT, { static_cast<float>(xinput_state.Gamepad.sThumbRX) / 32768.f, static_cast<float>(xinput_state.Gamepad.sThumbRY) / 32768.f });
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP))
 	{
-		OnDPadChange(GamepadButtonPosition::TOP, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP));
+		gamepadQuery.OnDPadChange(GamepadButtonPosition::TOP, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN))
 	{
-		OnDPadChange(GamepadButtonPosition::BOTTOM, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN));
+		gamepadQuery.OnDPadChange(GamepadButtonPosition::BOTTOM, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT))
 	{
-		OnDPadChange(GamepadButtonPosition::LEFT, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT));
+		gamepadQuery.OnDPadChange(GamepadButtonPosition::LEFT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT))
 	{
-		OnDPadChange(GamepadButtonPosition::RIGHT, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT));
+		gamepadQuery.OnDPadChange(GamepadButtonPosition::RIGHT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_START))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_START))
 	{
-		OnMenuButtonsChange(Side::RIGHT, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START));
+		gamepadQuery.OnMenuButtonsChange(Side::RIGHT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK))
 	{
-		OnMenuButtonsChange(Side::LEFT, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK));
+		gamepadQuery.OnMenuButtonsChange(Side::LEFT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB))
 	{
-		OnSticksChange(Side::LEFT, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB));
+		gamepadQuery.OnSticksChange(Side::LEFT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB))
 	{
-		OnSticksChange(Side::RIGHT, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB));
+		gamepadQuery.OnSticksChange(Side::RIGHT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER))
 	{
-		OnHatsChange(Side::LEFT, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER));
+		gamepadQuery.OnHatsChange(Side::LEFT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER))
 	{
-		OnHatsChange(Side::RIGHT, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER));
+		gamepadQuery.OnHatsChange(Side::RIGHT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_A))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_A))
 	{
-		OnRightButtonsChange(GamepadButtonPosition::BOTTOM, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A));
+		gamepadQuery.OnFrontButtonsChange(GamepadButtonPosition::BOTTOM, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_B))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_B))
 	{
-		OnRightButtonsChange(GamepadButtonPosition::RIGHT, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B));
+		gamepadQuery.OnFrontButtonsChange(GamepadButtonPosition::RIGHT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_X))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_X))
 	{
-		OnRightButtonsChange(GamepadButtonPosition::LEFT, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X));
+		gamepadQuery.OnFrontButtonsChange(GamepadButtonPosition::LEFT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X);
 	}
 
-	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y) != (input_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y))
+	if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y) != (gamepadQuery.input_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y))
 	{
-		OnRightButtonsChange(GamepadButtonPosition::TOP, intToGamepadButtonState(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y));
+		gamepadQuery.OnFrontButtonsChange(GamepadButtonPosition::TOP, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y);
 	}
 
-	input_state = xinput_state;
+	gamepadQuery.input_state = xinput_state;
 }
 
 void GamepadQuery::SetVibration(const GamepadVibration& gamepadVibration) const noexcept

@@ -27,39 +27,39 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	}
 	case WM_LBUTTONDOWN:
 	{
-		window->onMouseButtonClick(MouseButton::LEFT_BUTTON, ButtonState::PRESSED);  return 0;
+		window->onMouseButtonClick(MouseButton::LEFT_BUTTON, true);  return 0;
 	}
 	case WM_LBUTTONUP:
 	{
-		window->onMouseButtonClick(MouseButton::LEFT_BUTTON, ButtonState::RELEASED); return 0;
+		window->onMouseButtonClick(MouseButton::LEFT_BUTTON, false); return 0;
 	}
 	case WM_RBUTTONDOWN:
 	{
-		window->onMouseButtonClick(MouseButton::RIGHT_BUTTON, ButtonState::PRESSED);  return 0;
+		window->onMouseButtonClick(MouseButton::RIGHT_BUTTON, true);  return 0;
 	}
 	case WM_RBUTTONUP:
 	{
-		window->onMouseButtonClick(MouseButton::RIGHT_BUTTON, ButtonState::RELEASED); return 0;
+		window->onMouseButtonClick(MouseButton::RIGHT_BUTTON, false); return 0;
 	}
 	case WM_MBUTTONDOWN:
 	{
-		window->onMouseButtonClick(MouseButton::MIDDLE_BUTTON, ButtonState::PRESSED);  return 0;
+		window->onMouseButtonClick(MouseButton::MIDDLE_BUTTON, true);  return 0;
 	}
 	case WM_MBUTTONUP:
 	{
-		window->onMouseButtonClick(MouseButton::MIDDLE_BUTTON, ButtonState::RELEASED); return 0;
+		window->onMouseButtonClick(MouseButton::MIDDLE_BUTTON, false); return 0;
 	}
 	case WM_KEYDOWN:
 	{
 		KeyboardKeys keyboard_keys;
 		Win32_translateKeys(wParam, lParam, keyboard_keys);
-		window->onKeyEvent(keyboard_keys, ButtonState::PRESSED, !((lParam >> 30) & 1));  return 0;
+		window->onKeyEvent(keyboard_keys, true, !((lParam >> 30) & 1));  return 0;
 	}
 	case WM_KEYUP:
 	{
 		KeyboardKeys keyboard_keys;
 		Win32_translateKeys(wParam, lParam, keyboard_keys);
-		window->onKeyEvent(keyboard_keys, ButtonState::RELEASED, true); return 0;
+		window->onKeyEvent(keyboard_keys, false, true); return 0;
 	}
 	case WM_CHAR:
 	{

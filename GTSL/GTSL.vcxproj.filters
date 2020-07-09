@@ -219,9 +219,6 @@
     <ClInclude Include="GTSL\Buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\Input.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Time.h">
       <Filter>Header Files</Filter>
     </ClInclude>

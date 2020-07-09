@@ -3,7 +3,6 @@
 #include "Extent.h"
 
 #include "Delegate.hpp"
-#include "Input.h"
 #include "String.hpp"
 #include "Math/Vector2.h"
 
@@ -91,13 +90,13 @@ namespace GTSL
 		
 		Delegate<void()> onCloseDelegate;
 		Delegate<void(const Extent2D&)> onResizeDelegate;
-		Delegate<void(MouseButton, ButtonState)> onMouseButtonClick;
+		Delegate<void(MouseButton, bool)> onMouseButtonClick;
 		/**
 		 * \brief Delegate called when mouse moves, the first two floats are the X;Y in the -1 <-> 1 range, and the other two floats are delta position in the same range in respect to the last update to the screen.
 		 */
 		Delegate<void(Vector2)> onMouseMove;
 		Delegate<void(float)> onMouseWheelMove;
-		Delegate<void(KeyboardKeys, ButtonState, bool)> onKeyEvent;
+		Delegate<void(KeyboardKeys, bool, bool)> onKeyEvent;
 		Delegate<void(uint32)> onCharEvent;
 		Delegate<void(uint16, uint16)> onWindowMove;
 	public:
