@@ -32,3 +32,10 @@ void GTSL::Thread::Detach() noexcept { handle = nullptr; }
 GTSL::uint32 GTSL::Thread::GetId() const noexcept {	return GetThreadId(handle); }
 
 bool GTSL::Thread::CanBeJoined() const noexcept { return !handle; }
+
+GTSL::uint8 GTSL::Thread::ThreadCount()
+{
+	SYSTEM_INFO system_info;
+	GetSystemInfo(&system_info);
+	return static_cast<uint8>(system_info.dwNumberOfProcessors);
+}

@@ -35,6 +35,8 @@ namespace GTSL
 
 		[[nodiscard]] bool CanBeJoined() const noexcept;
 
+		static uint8 ThreadCount();
+
 		template <typename FT, typename... ARGS, uint64 ... IS>
 		static void Call(const Delegate<FT>& delegate, Tuple<ARGS...>& tup, Indices<IS...>)
 		{
