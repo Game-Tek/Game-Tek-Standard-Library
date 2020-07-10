@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "Assert.h"
 
 namespace GTSL
 {
@@ -48,6 +49,34 @@ namespace GTSL
 	template<typename T>
 	struct Allocation
 	{
+		Allocation() = default;
+		
+		Allocation(const Allocation& other) : Size(other.Size), Alignment(other.Alignment), Data(other.Data)
+		{
+		}
+
+		Allocation(Allocation&& other) noexcept : Size(other.Size), Alignment(other.Alignment), Data(other.Data)
+		{
+			other.Data = nullptr;
+		}
+#if (!_DEBUG)
+		~Allocation() = default;
+#else
+		~Allocation() { GTSL_ASSERT(!this->Data, "Data was not freed!"); }
+#endif
+
+		Allocation& operator=(const Allocation& other)
+		{
+			Size = other.Size; Alignment = other.Alignment; Data = other.Data; return *this;
+		}
+
+		Allocation& operator=(Allocation&& other) noexcept
+		{
+			Size = other.Size; Alignment = other.Alignment; Data = other.Data;
+			other.Data = nullptr;
+			return *this;
+		}
+				
 		uint32 Size{ 0 };
 		uint32 Alignment{ 0 };
 		T* Data{ nullptr };
@@ -63,6 +92,14 @@ namespace GTSL
 			allocatorReference.Allocate(sizeof(TT), alignof(TT), reinterpret_cast<void**>(&ret.Data));
 			::new(ret.Data) TT(MakeForwardReference<ARGS>(args)...); return ret;
 		}
+
+		template<typename TT, typename... ARGS>
+		static void Create(const AllocatorReference& allocatorReference, Allocation& allocation, ARGS&&... args)
+		{
+			allocation.Size = sizeof(TT); allocation.Alignment = alignof(TT);
+			allocatorReference.Allocate(sizeof(TT), alignof(TT), reinterpret_cast<void**>(&allocation.Data));
+			::new(allocation.Data) TT(MakeForwardReference<ARGS>(args)...);
+		}
 	};
 
 	template<typename T, typename ...ARGS>
@@ -75,10 +112,13 @@ namespace GTSL
 	}
 	
 	template<typename T>
-	void Delete(const Allocation<T>& allocation, const AllocatorReference& allocatorReference)
+	void Delete(Allocation<T>& allocation, const AllocatorReference& allocatorReference)
 	{
 		allocation->~T();
 		allocatorReference.Deallocate(allocation.Size, allocation.Alignment, static_cast<void*>(allocation.Data));
+#if (_DEBUG)
+		allocation.Data = nullptr;
+#endif
 	}
 
 	template<typename T>
