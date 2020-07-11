@@ -26,7 +26,9 @@
     <ClInclude Include="GTSL\Core.h" />
     <ClInclude Include="GTSL\DataSizes.h" />
     <ClInclude Include="GTSL\DLL.h" />
+    <ClInclude Include="GTSL\DynamicType.h" />
     <ClInclude Include="GTSL\File.h" />
+    <ClInclude Include="GTSL\Filesystem.h" />
     <ClInclude Include="GTSL\FixedVector.hpp" />
     <ClInclude Include="GTSL\Delegate.hpp" />
     <ClInclude Include="GTSL\Extent.h" />
@@ -97,6 +99,7 @@
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Bitscan.cpp" />
     <ClCompile Include="src\File.cpp" />
+    <ClCompile Include="src\Filesystem.cpp" />
     <ClCompile Include="src\Math\AxisAngle.cpp" />
     <ClCompile Include="src\Math\GTM.cpp" />
     <ClCompile Include="src\Math\Matrix4.cpp" />

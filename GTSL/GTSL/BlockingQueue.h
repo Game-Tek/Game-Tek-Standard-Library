@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Core.h"
-#include "Semaphore.h"
 #include "ConditionVariable.h"
 #include "Mutex.h"
 #include <queue>

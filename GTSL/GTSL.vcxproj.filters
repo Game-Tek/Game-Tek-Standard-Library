@@ -252,6 +252,12 @@
     <ClInclude Include="GTSL\DataSizes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GTSL\DynamicType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\Filesystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\System.cpp">
@@ -315,6 +321,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\StringCommon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Filesystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

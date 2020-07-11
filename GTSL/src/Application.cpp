@@ -64,9 +64,9 @@ void Application::GetNativeHandles(void* nativeHandles)
 
 uint8 Application::ThreadCount() noexcept {	SYSTEM_INFO system_info; GetSystemInfo(&system_info); return static_cast<uint8>(system_info.dwNumberOfProcessors); }
 
-StaticString<Application::MaxPathLength> Application::GetPathToExecutable() const
+StaticString<Application::MAX_PATH_LENGTH> Application::GetPathToExecutable() const
 {
-	StaticString<Application::MaxPathLength> ret;
+	StaticString<Application::MAX_PATH_LENGTH> ret;
 	ret.Resize(GetModuleFileNameA(static_cast<HMODULE>(handle), ret.begin(), ret.GetCapacity()) + 1);
 	//GTSL_ASSERT(GetModuleFileNameA(NULL, a, 512), "Failed to get Win32 module file name!")
 	ret.ReplaceAll('\\', '/');

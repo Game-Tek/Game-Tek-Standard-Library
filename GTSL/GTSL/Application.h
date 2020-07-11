@@ -10,7 +10,7 @@ namespace GTSL
 	class Application
 	{
 	public:
-		static constexpr uint16 MaxPathLength{ 260 };
+		static constexpr uint16 MAX_PATH_LENGTH{ 260 };
 		
 	private:
 		void* handle{ nullptr };
@@ -42,6 +42,6 @@ namespace GTSL
 
 		static uint8 ThreadCount() noexcept;
 		
-		[[nodiscard]] StaticString<MaxPathLength> GetPathToExecutable() const;
+		[[nodiscard]] StaticString<MAX_PATH_LENGTH> GetPathToExecutable() const;
 	};
 }
