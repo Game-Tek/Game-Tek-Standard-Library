@@ -36,6 +36,7 @@ namespace GTSL
 		
 		if(fileQuery.StartQuery(query_result))
 		{
+			function(query_result);
 			while(fileQuery.NextQuery(query_result)) { function(query_result); }
 		}
 
