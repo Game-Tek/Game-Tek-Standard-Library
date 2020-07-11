@@ -12,6 +12,9 @@ namespace GTSL
 	public:
 		constexpr StaticString() noexcept = default;
 
+		template<uint32 NN>
+		constexpr StaticString(const StaticString<NN>& other) noexcept : array(other.array) {}
+		
 		constexpr StaticString(const char* string) : array(Ranger<const UTF8>(StringLength(string), string)) { this->array.PopBack(); }
 
 		constexpr StaticString(const Ranger<UTF8>& ranger) : array(ranger) {}
@@ -134,6 +137,6 @@ namespace GTSL
 
 	private:
 		Array<UTF8, N> array;
-
+		friend class StaticString;
 	};
 }
