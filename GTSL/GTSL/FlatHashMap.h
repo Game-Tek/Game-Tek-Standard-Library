@@ -133,6 +133,16 @@ namespace GTSL
 			return ::new(getValuesBucket(bucket, max_bucket_length) + place_index) T(MakeForwardReference<ARGS>(args)...);
 		}
 
+		bool Find(const key_type key) { return findKeyInBucket(modulo(key, this->capacity), key, getMaxBucketLength()); }
+		
+		bool Find(const key_type key, T* obj)
+		{
+			const auto max_bucket_length = getMaxBucketLength(); const auto bucket = modulo(key, this->capacity);
+			key_type* ret = findKeyInBucket(bucket, key, max_bucket_length);
+			obj = getValuesBucketPointer(bucket, max_bucket_length) + (ret - (getKeysBucketPointer(bucket, max_bucket_length) + 1));
+			return ret;
+		}
+		
 		T& At(const key_type key)
 		{
 			const auto max_bucket_length = getMaxBucketLength();
@@ -255,7 +265,7 @@ namespace GTSL
 
 		[[nodiscard]] key_type* getKeysBucketPointer(const uint32 index, const uint32 maxBucketLength) const { return reinterpret_cast<key_type*>(this->data) + index * maxBucketLength; }
 
-		T* getValuesBucketPointer(const uint32 index, const uint32 maxBucketLength) const { return reinterpret_cast<T*>(this->data + getKeysAllocationSize(this->capacity, maxBucketLength)) + index * maxBucketLength; }
+		T* getValuesBucketPointer(const uint32 bucket, const uint32 maxBucketLength) const { return reinterpret_cast<T*>(this->data + getKeysAllocationSize(this->capacity, maxBucketLength)) + bucket * maxBucketLength; }
 
 		[[nodiscard]] uint32 getMaxBucketLength() const { return this->capacity * this->loadFactor; }
 		
