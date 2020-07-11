@@ -46,8 +46,10 @@ namespace GTSL
 
 		friend void Insert(uint32 n, Buffer& buffer, const AllocatorReference& allocatorReference);
 		friend void Insert(uint64 n, Buffer& buffer, const AllocatorReference& allocatorReference);
+		friend void Insert(float32 n, Buffer& buffer, const AllocatorReference& allocatorReference);
 		friend void Extract(uint32& n, Buffer& buffer, const AllocatorReference& allocatorReference);
 		friend void Extract(uint64& n, Buffer& buffer, const AllocatorReference& allocatorReference);
+		friend void Extract(float32& n, Buffer& buffer, const AllocatorReference& allocatorReference);
 	};
 
 	inline void Extract(uint32& n, Buffer& buffer, const AllocatorReference& allocatorReference)
@@ -61,7 +63,13 @@ namespace GTSL
 		GTSL_ASSERT(buffer.length != 0, "Buffer is already empty!");
 		n = *reinterpret_cast<uint64*>(buffer.data + buffer.length); buffer.length -= sizeof(uint64);
 	}
-	
+
+	inline void Extract(float32& n, Buffer& buffer, const AllocatorReference& allocatorReference)
+	{
+		GTSL_ASSERT(buffer.length != 0, "Buffer is already empty!");
+		n = *reinterpret_cast<float32*>(buffer.data + buffer.length); buffer.length -= sizeof(float32);
+	}
+
 	inline void Insert(const uint32 n, Buffer& buffer, const AllocatorReference& allocatorReference)
 	{
 		GTSL_ASSERT(buffer.length + sizeof(uint32) <= buffer.capacity, "Buffer has no more space!");
@@ -72,5 +80,11 @@ namespace GTSL
 	{
 		GTSL_ASSERT(buffer.length + sizeof(uint64) <= buffer.capacity, "Buffer has no more space!");
 		buffer.length += sizeof(uint64); *reinterpret_cast<uint64*>(buffer.data + buffer.length) = n;
+	}
+
+	inline void Insert(const float32 n, Buffer& buffer, const AllocatorReference& allocatorReference)
+	{
+		GTSL_ASSERT(buffer.length + sizeof(float32) <= buffer.capacity, "Buffer has no more space!");
+		buffer.length += sizeof(float32); *reinterpret_cast<float32*>(buffer.data + buffer.length) = n;
 	}
 }
