@@ -13,7 +13,6 @@ namespace GAL
 		struct CreateInfo final : RenderInfo
 		{
 			GTSL::uint32 Size{ 0 };
-			GTSL::uint32 Alignment{ 8 };
 			GTSL::uint32 BufferType{ 0 };
 		};
 		
