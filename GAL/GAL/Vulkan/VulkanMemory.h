@@ -13,7 +13,7 @@ namespace GAL
 		~VulkanDeviceMemory() = default;
 		VulkanDeviceMemory(const CreateInfo& createInfo);
 
-		void Destroy(class RenderDevice* renderDevice);
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
 		[[nodiscard]] VkDeviceMemory GetVkDeviceMemory() const { return deviceMemory; }
 

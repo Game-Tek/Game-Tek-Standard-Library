@@ -20,11 +20,10 @@ GAL::VulkanFramebuffer::VulkanFramebuffer(const CreateInfo& createInfo)
 	vk_framebuffer_create_info.renderPass = static_cast<VulkanRenderPass*>(createInfo.RenderPass)->GetVkRenderPass();
 	vk_framebuffer_create_info.pAttachments = vk_image_views.begin();
 
-	VK_CHECK(vkCreateFramebuffer(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_framebuffer_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &framebuffer));
+	VK_CHECK(vkCreateFramebuffer(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_framebuffer_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &framebuffer));
 }
 
-void GAL::VulkanFramebuffer::Destroy(GAL::RenderDevice* renderDevice) const
+void GAL::VulkanFramebuffer::Destroy(const VulkanRenderDevice* renderDevice) const
 {
-	const auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
-	vkDestroyFramebuffer(vk_render_device->GetVkDevice(), framebuffer, vk_render_device->GetVkAllocationCallbacks());
+	vkDestroyFramebuffer(renderDevice->GetVkDevice(), framebuffer, renderDevice->GetVkAllocationCallbacks());
 }

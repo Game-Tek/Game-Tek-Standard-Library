@@ -18,7 +18,7 @@ namespace GAL
 		VulkanShader() = default;
 		explicit VulkanShader(const CreateInfo& createInfo);
 
-		void Destroy(RenderDevice* renderDevice);
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
 		static bool CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result, GTSL::String& compilationResult, const GTSL::AllocatorReference& allocatorReference);
 

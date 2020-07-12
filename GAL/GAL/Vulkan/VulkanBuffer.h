@@ -12,7 +12,7 @@ namespace GAL
 		VulkanBuffer() = default;
 		VulkanBuffer(const CreateInfo& createInfo);
 
-		void Destroy(RenderDevice* renderDevice);
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
 		struct BindMemoryInfo : RenderInfo
 		{

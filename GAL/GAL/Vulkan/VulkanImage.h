@@ -12,7 +12,7 @@ namespace GAL
 		VulkanImage() = default;
 		explicit VulkanImage(const CreateInfo& createInfo);
 
-		void Destroy(class RenderDevice* renderDevice);
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 
 		struct BindMemoryInfo : RenderInfo
 		{
@@ -35,7 +35,7 @@ namespace GAL
 		VulkanImageView() = default;
 		explicit VulkanImageView(const CreateInfo& createInfo);
 
-		void Destroy(RenderDevice* renderDevice);
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
 		[[nodiscard]] VkImageView GetVkImageView() const { return imageView; }
 		
@@ -50,7 +50,7 @@ namespace GAL
 	public:
 		explicit VulkanSampler(const CreateInfo& createInfo);
 		
-		void Destroy(class RenderDevice* renderDevice);
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 
 		[[nodiscard]] VkSampler GetVkSampler() const { return sampler; }
 	private:

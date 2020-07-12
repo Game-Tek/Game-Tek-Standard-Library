@@ -14,6 +14,8 @@
 
 #include <GTSL/Extent.h>
 
+#define MAKE_VK_HANDLE(object) typedef struct object##_T* object;
+
 namespace GAL
 {
 	inline VkAttachmentLoadOp RenderTargetLoadOperationsToVkAttachmentLoadOp(const RenderTargetLoadOperations renderTargetLoadOperations)

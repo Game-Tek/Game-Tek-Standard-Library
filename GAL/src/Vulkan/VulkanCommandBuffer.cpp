@@ -165,8 +165,8 @@ GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)
 	
 	VkCommandPoolCreateInfo vk_command_pool_create_info{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 	vk_command_pool_create_info.queueFamilyIndex = static_cast<const VulkanQueue*>(createInfo.Queue)->GetFamilyIndex();
-	vkCreateCommandPool(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_command_pool_create_info,
-		static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &commandPool);
+	vkCreateCommandPool(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_command_pool_create_info,
+		static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &commandPool);
 
 	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info;
 	vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -177,7 +177,7 @@ GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)
 	
 	GTSL::Array<VkCommandBuffer, 16> vk_command_buffers(vulkan_command_buffers.ElementCount());
 
-	vkAllocateCommandBuffers(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_command_buffer_allocate_info, vk_command_buffers.begin());
+	vkAllocateCommandBuffers(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_command_buffer_allocate_info, vk_command_buffers.begin());
 	
 	for(GTSL::uint32 i = 0; i < vulkan_command_buffers.ElementCount(); ++i)
 	{
@@ -187,17 +187,17 @@ GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)
 
 void GAL::VulkanCommandPool::ResetPool(RenderDevice* renderDevice) const
 {
-	vkResetCommandPool(static_cast<VulkanRenderDevice*>(renderDevice)->GetVkDevice(), commandPool, VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
+	vkResetCommandPool(static_cast<const VulkanRenderDevice*>(renderDevice)->GetVkDevice(), commandPool, VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
 }
 
 void GAL::VulkanCommandPool::FreeCommandBuffers(const struct FreeCommandBuffers& freeCommandBuffers) const
 {
 	const auto vulkan_command_buffers = GTSL::Ranger<VulkanCommandBuffer>(freeCommandBuffers.CommandBuffers);
-	vkFreeCommandBuffers(static_cast<VulkanRenderDevice*>(freeCommandBuffers.RenderDevice)->GetVkDevice(), commandPool, vulkan_command_buffers.ElementCount(),
+	vkFreeCommandBuffers(static_cast<const VulkanRenderDevice*>(freeCommandBuffers.RenderDevice)->GetVkDevice(), commandPool, vulkan_command_buffers.ElementCount(),
 		reinterpret_cast<const VkCommandBuffer*>(vulkan_command_buffers.begin()));
 }
 
-void GAL::VulkanCommandPool::Destroy(RenderDevice* renderDevice)
+void GAL::VulkanCommandPool::Destroy(const VulkanRenderDevice* renderDevice)
 {
-	vkDestroyCommandPool(static_cast<VulkanRenderDevice*>(renderDevice)->GetVkDevice(), commandPool, static_cast<VulkanRenderDevice*>(renderDevice)->GetVkAllocationCallbacks());
+	vkDestroyCommandPool(renderDevice->GetVkDevice(), commandPool, renderDevice->GetVkAllocationCallbacks());
 }

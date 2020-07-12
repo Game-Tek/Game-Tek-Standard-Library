@@ -18,9 +18,6 @@
     <ClInclude Include="GAL\Vulkan\Vulkan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GAL\Vulkan\VulkanBase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GAL\Vulkan\VulkanBindings.h">
       <Filter>Header Files</Filter>
     </ClInclude>

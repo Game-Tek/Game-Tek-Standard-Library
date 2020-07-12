@@ -14,10 +14,10 @@
 #include "GTSL/Console.h"
 #include "GTSL/StaticString.hpp"
 
-void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(Buffer* buffer, BufferMemoryRequirements& bufferMemoryRequirements) const
+void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(const VulkanBuffer* buffer, BufferMemoryRequirements& bufferMemoryRequirements) const
 {
 	VkMemoryRequirements vk_memory_requirements;
-	vkGetBufferMemoryRequirements(device, static_cast<VulkanBuffer*>(buffer)->GetVkBuffer(), &vk_memory_requirements);
+	vkGetBufferMemoryRequirements(device, static_cast<const VulkanBuffer*>(buffer)->GetVkBuffer(), &vk_memory_requirements);
 	bufferMemoryRequirements.Alignment = vk_memory_requirements.alignment;
 	bufferMemoryRequirements.MemoryTypes = vk_memory_requirements.memoryTypeBits;
 	bufferMemoryRequirements.Size = vk_memory_requirements.size;

@@ -64,7 +64,7 @@ namespace GAL
 		};
 		void FreeCommandBuffers(const FreeCommandBuffers& freeCommandBuffers) const;
 		
-		void Destroy(RenderDevice* renderDevice);
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 
 		[[nodiscard]] VkCommandPool GetVkCommandPool() const { return commandPool; }
 		

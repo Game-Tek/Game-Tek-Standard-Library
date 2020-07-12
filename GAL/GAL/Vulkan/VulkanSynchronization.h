@@ -12,7 +12,7 @@ namespace GAL
 		VulkanFence() = default;
 		VulkanFence(const CreateInfo& createInfo);
 
-		void Destroy(RenderDevice* renderDevice);
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 		[[nodiscard]] VkFence GetVkFence() const { return fence; }
 
 		struct WaitForFencesInfo final : RenderInfo
@@ -38,7 +38,7 @@ namespace GAL
 		VulkanSemaphore() = default;
 		VulkanSemaphore(const CreateInfo& createInfo);
 
-		void Destroy(RenderDevice* renderDevice);
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 		[[nodiscard]] VkSemaphore GetVkSemaphore() const { return semaphore; }
 	private:
 		VkSemaphore semaphore{ nullptr };

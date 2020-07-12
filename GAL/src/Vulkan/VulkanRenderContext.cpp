@@ -33,14 +33,13 @@ GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo)
 	vk_swapchain_create_info_khr.clipped = VK_TRUE;
 	vk_swapchain_create_info_khr.oldSwapchain = nullptr;
 
-	VK_CHECK(vkCreateSwapchainKHR(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_swapchain_create_info_khr,
-		static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), reinterpret_cast<VkSwapchainKHR*>(&swapchain)));
+	VK_CHECK(vkCreateSwapchainKHR(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_swapchain_create_info_khr,
+		static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), reinterpret_cast<VkSwapchainKHR*>(&swapchain)));
 }
 
-void GAL::VulkanRenderContext::Destroy(RenderDevice* renderDevice)
+void GAL::VulkanRenderContext::Destroy(const VulkanRenderDevice* renderDevice)
 {
-	const auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
-	vkDestroySwapchainKHR(vk_render_device->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain), vk_render_device->GetVkAllocationCallbacks());
+	vkDestroySwapchainKHR(renderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), renderDevice->GetVkAllocationCallbacks());
 }
 
 void GAL::VulkanRenderContext::Recreate(const RecreateInfo& resizeInfo)
@@ -63,15 +62,15 @@ void GAL::VulkanRenderContext::Recreate(const RecreateInfo& resizeInfo)
 	vk_swapchain_create_info_khr.clipped = VK_TRUE;
 	vk_swapchain_create_info_khr.oldSwapchain = reinterpret_cast<VkSwapchainKHR>(swapchain);
 
-	vkCreateSwapchainKHR(static_cast<VulkanRenderDevice*>(resizeInfo.RenderDevice)->GetVkDevice(), &vk_swapchain_create_info_khr,
-		static_cast<VulkanRenderDevice*>(resizeInfo.RenderDevice)->GetVkAllocationCallbacks(), reinterpret_cast<VkSwapchainKHR*>(&swapchain));
+	vkCreateSwapchainKHR(static_cast<const VulkanRenderDevice*>(resizeInfo.RenderDevice)->GetVkDevice(), &vk_swapchain_create_info_khr,
+		static_cast<const VulkanRenderDevice*>(resizeInfo.RenderDevice)->GetVkAllocationCallbacks(), reinterpret_cast<VkSwapchainKHR*>(&swapchain));
 }
 
 GTSL::uint8 GAL::VulkanRenderContext::AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo)
 {
 	GTSL::uint32 image_index = 0;
 
-	auto result = vkAcquireNextImageKHR(static_cast<VulkanRenderDevice*>(acquireNextImageInfo.RenderDevice)->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain),
+	auto result = vkAcquireNextImageKHR(static_cast<const VulkanRenderDevice*>(acquireNextImageInfo.RenderDevice)->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain),
 		~0ULL, static_cast<VulkanSemaphore*>(acquireNextImageInfo.Semaphore)->GetVkSemaphore(),
 	    acquireNextImageInfo.Fence ? static_cast<VulkanFence*>(acquireNextImageInfo.Fence)->GetVkFence() : nullptr, &image_index);
 
@@ -108,11 +107,11 @@ GTSL::Array<GAL::VulkanImageView, 5> GAL::VulkanRenderContext::GetImages(const G
 	GTSL::Array<VulkanImageView, 5> vulkan_images;
 	
 	GTSL::uint32 swapchain_image_count = 0;
-	vkGetSwapchainImagesKHR(static_cast<VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain), &swapchain_image_count, nullptr);
+	vkGetSwapchainImagesKHR(static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain), &swapchain_image_count, nullptr);
 	vulkan_images.Resize(swapchain_image_count);
 
 	GTSL::Array<VkImage, 5> vk_images(swapchain_image_count);
-	VK_CHECK(vkGetSwapchainImagesKHR(static_cast<VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain),
+	VK_CHECK(vkGetSwapchainImagesKHR(static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain),
 		&swapchain_image_count, vk_images.begin()));
 
 	for(auto& e : vulkan_images)
@@ -131,7 +130,7 @@ GTSL::Array<GAL::VulkanImageView, 5> GAL::VulkanRenderContext::GetImages(const G
 		vk_image_view_create_info.subresourceRange.layerCount = 1;
 		vk_image_view_create_info.subresourceRange.levelCount = 1;
 		
-		VK_CHECK(vkCreateImageView(static_cast<VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), &vk_image_view_create_info, static_cast<VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkAllocationCallbacks(), &e.imageView));
+		VK_CHECK(vkCreateImageView(static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), &vk_image_view_create_info, static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkAllocationCallbacks(), &e.imageView));
 	}
 	
 	return vulkan_images;

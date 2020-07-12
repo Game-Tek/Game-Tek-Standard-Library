@@ -10,7 +10,7 @@ namespace GAL
 	
 	struct RenderInfo
 	{
-		RenderDevice* RenderDevice = nullptr;
+		const RenderDevice* RenderDevice = nullptr;
 	};
 
 	enum class PipelineStage : GTSL::uint32

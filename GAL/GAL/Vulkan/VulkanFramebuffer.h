@@ -13,7 +13,7 @@ namespace GAL
 		explicit VulkanFramebuffer(const CreateInfo& createInfo);
 		~VulkanFramebuffer() = default;
 
-		void Destroy(RenderDevice* renderDevice) const;
+		void Destroy(const class VulkanRenderDevice* renderDevice) const;
 
 		[[nodiscard]] VkFramebuffer GetVkFramebuffer() const { return framebuffer; }
 

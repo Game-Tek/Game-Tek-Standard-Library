@@ -40,7 +40,7 @@ namespace GAL
 		VulkanRenderContext(const CreateInfo& createInfo);
 		~VulkanRenderContext() = default;
 
-		void Destroy(class RenderDevice* renderDevice);
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
 		void Recreate(const RecreateInfo& resizeInfo);
 		/**

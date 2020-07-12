@@ -10,6 +10,8 @@
 
 #include "GTSL/StaticString.hpp"
 
+#undef ERROR
+
 namespace GAL
 {
 	enum class RenderAPI : GTSL::uint8

@@ -11,7 +11,7 @@ namespace GAL
 	public:
 		VulkanBindingsPool(const CreateInfo& createInfo);
 
-		void Destroy(class RenderDevice* renderDevice);
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 
 		void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo);
 

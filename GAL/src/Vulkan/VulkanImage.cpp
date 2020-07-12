@@ -20,18 +20,17 @@ GAL::VulkanImage::VulkanImage(const CreateInfo& createInfo)
 	vk_image_create_info.usage = createInfo.ImageUses;
 	vk_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 	vk_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	VK_CHECK(vkCreateImage(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_image_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &image));
+	VK_CHECK(vkCreateImage(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_image_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &image));
 }
 
-void GAL::VulkanImage::Destroy(GAL::RenderDevice* renderDevice)
+void GAL::VulkanImage::Destroy(const VulkanRenderDevice* renderDevice)
 {
-	auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
-	vkDestroyImage(vk_render_device->GetVkDevice(), image, vk_render_device->GetVkAllocationCallbacks());
+	vkDestroyImage(renderDevice->GetVkDevice(), image, renderDevice->GetVkAllocationCallbacks());
 }
 
 void GAL::VulkanImage::BindToMemory(const BindMemoryInfo& bindMemoryInfo) const
 {
-	vkBindImageMemory(static_cast<VulkanRenderDevice*>(bindMemoryInfo.RenderDevice)->GetVkDevice(), image,
+	vkBindImageMemory(static_cast<const VulkanRenderDevice*>(bindMemoryInfo.RenderDevice)->GetVkDevice(), image,
 	static_cast<VkDeviceMemory>(static_cast<VulkanDeviceMemory*>(bindMemoryInfo.Memory)->GetVkDeviceMemory()), bindMemoryInfo.Offset);
 }
 
@@ -50,13 +49,12 @@ GAL::VulkanImageView::VulkanImageView(const CreateInfo& createInfo)
 	vk_image_view_create_info.subresourceRange.levelCount = createInfo.MipLevels;
 	vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
 	vk_image_view_create_info.subresourceRange.layerCount = 1;
-	VK_CHECK(vkCreateImageView(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_image_view_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &imageView));
+	VK_CHECK(vkCreateImageView(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_image_view_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &imageView));
 }
 
-void GAL::VulkanImageView::Destroy(RenderDevice* renderDevice)
+void GAL::VulkanImageView::Destroy(const VulkanRenderDevice* renderDevice)
 {
-	auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
-	vkDestroyImageView(vk_render_device->GetVkDevice(), imageView, vk_render_device->GetVkAllocationCallbacks());
+	vkDestroyImageView(renderDevice->GetVkDevice(), imageView, renderDevice->GetVkAllocationCallbacks());
 }
 
 GAL::VulkanSampler::VulkanSampler(const CreateInfo& createInfo)
@@ -80,11 +78,10 @@ GAL::VulkanSampler::VulkanSampler(const CreateInfo& createInfo)
 	vk_sampler_create_info.minLod = 0.0f;
 	vk_sampler_create_info.maxLod = 0.0f;
 
-	VK_CHECK(vkCreateSampler(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_sampler_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &sampler));
+	VK_CHECK(vkCreateSampler(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_sampler_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &sampler));
 }
 
-void GAL::VulkanSampler::Destroy(RenderDevice* renderDevice)
+void GAL::VulkanSampler::Destroy(const VulkanRenderDevice* renderDevice)
 {
-	auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
-	vkDestroySampler(vk_render_device->GetVkDevice(), sampler, vk_render_device->GetVkAllocationCallbacks());
+	vkDestroySampler(renderDevice->GetVkDevice(), sampler, renderDevice->GetVkAllocationCallbacks());
 }

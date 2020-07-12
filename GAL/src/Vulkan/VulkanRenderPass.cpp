@@ -155,11 +155,10 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 	vk_renderpass_create_info.dependencyCount = array_length;
 	vk_renderpass_create_info.pDependencies = vk_subpass_dependencies.begin();
 
-	vkCreateRenderPass(static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_renderpass_create_info, static_cast<VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &renderPass);
+	vkCreateRenderPass(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_renderpass_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &renderPass);
 }
 
-void GAL::VulkanRenderPass::Destroy(GAL::RenderDevice* renderDevice)
+void GAL::VulkanRenderPass::Destroy(const VulkanRenderDevice* renderDevice)
 {
-	auto vk_render_device = static_cast<VulkanRenderDevice*>(renderDevice);
-	vkDestroyRenderPass(vk_render_device->GetVkDevice(), renderPass, vk_render_device->GetVkAllocationCallbacks());
+	vkDestroyRenderPass(renderDevice->GetVkDevice(), renderPass, renderDevice->GetVkAllocationCallbacks());
 }

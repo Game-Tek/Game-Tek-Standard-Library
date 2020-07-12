@@ -25,7 +25,6 @@
     <ClInclude Include="GAL\Image.h" />
     <ClInclude Include="GAL\Vulkan\Vulkan.h" />
     <ClInclude Include="GAL\Vulkan\VulkanMemory.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanBase.h" />
     <ClInclude Include="GAL\Vulkan\VulkanBindings.h" />
     <ClInclude Include="GAL\Vulkan\VulkanBuffer.h" />
     <ClInclude Include="GAL\Vulkan\VulkanCommandBuffer.h" />
