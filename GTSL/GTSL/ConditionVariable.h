@@ -1,31 +1,34 @@
 #pragma once
 
-#include <synchapi.h>
+#if(_WIN64)
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif
 
 namespace GTSL
 {
+	template<class T>
+	class Lock;
+	
 	class ConditionVariable
 	{
 	public:
-		ConditionVariable()
-		{
-			InitializeConditionVariable(&conditionVariable);
-		}
+		ConditionVariable() noexcept { InitializeConditionVariable(&conditionVariable); }
 
 		~ConditionVariable() = default;
 
 		void Wait(const class Mutex& mutex)
 		{
-			SleepConditionVariableCS(&conditionVariable, (PCRITICAL_SECTION)&mutex, 0xFFFFFFFF);
+			SleepConditionVariableCS(&conditionVariable, PCRITICAL_SECTION(&mutex), 0xFFFFFFFF);
 		}
 		
-		void Wait(const class ReadWriteMutex& mutex, bool isInReadMode)
+		void Wait(const class ReadWriteMutex& mutex, const bool isInReadMode)
 		{
-			SleepConditionVariableSRW(&conditionVariable, (PSRWLOCK)&mutex, 0xFFFFFFFF, isInReadMode);
+			SleepConditionVariableSRW(&conditionVariable, PSRWLOCK(&mutex), 0xFFFFFFFF, isInReadMode);
 		}
 
 		template<typename L>
-		void Wait(const class Lock<Mutex>& lock, L predicate)
+		void Wait(const Lock<Mutex>& lock, L&& predicate)
 		{
 			while (!predicate()) { Wait(lock); }
 		}
