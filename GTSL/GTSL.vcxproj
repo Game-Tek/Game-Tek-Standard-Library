@@ -48,6 +48,7 @@
     <ClInclude Include="GTSL\Math\Vector2.h" />
     <ClInclude Include="GTSL\Math\Vector3.h" />
     <ClInclude Include="GTSL\Math\Vector4.h" />
+    <ClInclude Include="GTSL\RatioUnit.hpp" />
     <ClInclude Include="GTSL\SIMD\SIMD128.hpp" />
     <ClInclude Include="GTSL\SIMD\SIMD.hpp" />
     <ClInclude Include="GTSL\Stack.hpp" />
