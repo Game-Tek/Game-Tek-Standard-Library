@@ -33,6 +33,10 @@ namespace GTSL
 		{
 			allocatorReference.Deallocate(capacity, alignment, data); capacity = 0; data = nullptr;
 		}
+
+		void WriteBytes(const uint32 size, byte* from) { length += size; MemCopy(size, from, data + length); }
+
+		void ReadBytes(const uint32 size, byte* to) { length -= size; MemCopy(size, data + length, to); }
 		
 		[[nodiscard]] uint32 GetCapacity() const { return capacity; }
 		[[nodiscard]] uint32 GetLength() const { return length; }
