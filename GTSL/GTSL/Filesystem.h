@@ -20,13 +20,13 @@ namespace GTSL
 			
 		};
 		
-		bool StartQuery(QueryResult& query) const;
+		bool StartQuery(QueryResult& query);
 		bool NextQuery(QueryResult& query) const;
 		void EndQuery() const;
 		
 	private:
 		StaticString<Application::MAX_PATH_LENGTH> query;
-		handle_type* handle = nullptr;
+		handle_type handle = nullptr;
 	};
 	
 	template<typename FT>

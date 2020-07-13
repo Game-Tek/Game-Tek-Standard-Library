@@ -159,6 +159,12 @@ namespace GTSL
 			return ret;
 		}
 
+		void Remove(const uint32 from, const uint32 to) noexcept
+		{
+			copy(this->length - (to - from), this->data + to, this->data + from);
+			this->length -= to - from;
+		}
+
 		template<typename... ARGS>
 		constexpr uint32 EmplaceBack(ARGS&&... args)
 		{

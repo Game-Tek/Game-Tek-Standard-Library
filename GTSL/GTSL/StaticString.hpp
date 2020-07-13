@@ -36,6 +36,7 @@ namespace GTSL
 		operator GTSL::Ranger<const UTF8>() const { return array; }
 
 		void Drop(const uint32 from) { this->array.Resize(from); }
+		void KeepFrom(const uint32 from) { this->array.Remove(0, from); }
 
 		void ReplaceAll(UTF8 a, const UTF8 with)
 		{
@@ -44,7 +45,7 @@ namespace GTSL
 
 		[[nodiscard]] uint32 npos() const { return this->array.GetLength() + 1; }
 
-		uint32 FindLast(UTF8 c)
+		unsigned	 FindLast(UTF8 c) const
 		{
 			uint32 i{ this->GetLength() };
 			for (auto begin = this->array.end(); begin != this->array.begin(); --begin) { if (*begin == c) { return i; } --i; }
