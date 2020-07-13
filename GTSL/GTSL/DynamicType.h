@@ -9,10 +9,11 @@ namespace GTSL
 	class CheckedPointer
 	{
 	public:
+		CheckedPointer() = default;
 		CheckedPointer(void* data, const char* typeName) : pointer(data), name(typeName)
 		{
 		}
-
+		
 		operator void* () const { return pointer; }
 
 		template<typename T>
@@ -22,10 +23,12 @@ namespace GTSL
 		Id64 name;
 	};
 
-#define DYNAMIC_TYPE(type, data) CheckedPointer(data, #type)
+#define SAFE_POINTER GTSL::CheckedPointer
+#define DYNAMIC_TYPE(type, data) GTSL::CheckedPointer{ data, #type }
 #define DYNAMIC_CAST(type, dynamicType) dynamicType.GetAs(#type)
 #else
-#define DYNAMIC_TYPE(type, data) void*
+#define SAFE_POINTER void*
+#define DYNAMIC_TYPE(type, data) data
 #define DYNAMIC_CAST(type, dynamicType) static_cast<type>(dynamicType>
 #endif
 }
