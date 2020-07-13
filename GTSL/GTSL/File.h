@@ -19,8 +19,8 @@ namespace GTSL
 		void OpenFile(const Ranger<const UTF8>& path, OpenFileMode openFileMode);
 		void CloseFile();
 
-		void WriteToFile(Ranger<const byte>& buffer);
-		void ReadFromFile(Ranger<byte>& buffer);
+		uint32 WriteToFile(const Ranger<const byte>& buffer);
+		uint32 ReadFromFile(const Ranger<byte>& buffer);
 		
 		enum class MoveFrom : uint8
 		{

@@ -33,20 +33,20 @@ void File::CloseFile()
 #endif
 }
 
-void File::WriteToFile(Ranger<const byte>& buffer)
+uint32 File::WriteToFile(const Ranger<const byte>& buffer)
 {
 	DWORD bytes{ 0 };
 	WriteFile(static_cast<HANDLE>(fileHandle), buffer.begin(), buffer.Bytes(), &bytes, nullptr);
 	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
-	buffer = Ranger<const byte>(bytes, buffer.begin());
+	return bytes;
 }
 
-void File::ReadFromFile(Ranger<byte>& buffer)
+uint32 File::ReadFromFile(const Ranger<byte>& buffer)
 {
 	DWORD bytes{ 0 };
 	ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin(), buffer.Bytes(), &bytes, nullptr);
 	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
-	buffer = Ranger<byte>(bytes, buffer.begin());
+	return bytes;
 }
 
 void File::SetPointer(const uint64 byte, uint64& newFilePointer, MoveFrom from)

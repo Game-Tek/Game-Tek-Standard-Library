@@ -1,18 +1,33 @@
 #pragma once
 
-#include "Stream.h"
 #include "Buffer.h"
 #include "FlatHashMap.h"
+#include "Array.hpp"
 
 namespace GTSL
 {
+	template<typename T, uint32 N>
+	void Insert(const Array<T, N>& array, Buffer& buffer, const AllocatorReference& allocatorReference)
+	{
+		Insert(array.GetLength(), buffer, allocatorReference);
+		for (const auto& e : array) { Insert(e, buffer, allocatorReference); }
+	}
+
+	template<typename T, uint32 N>
+	void Extract(Array<T, N>& array, Buffer& buffer, const AllocatorReference& containerAllocator)
+	{
+		uint32 length{ 0 };
+		Extract(length, buffer, containerAllocator); array.Resize(length, containerAllocator);
+		for (auto& e : array) { Extract(e, buffer, containerAllocator); }
+	}
+
 	template<typename T>
 	void Insert(const Vector<T>& vector, Buffer& buffer, const AllocatorReference& allocatorReference)
 	{
 		Insert(vector.GetLength(), buffer, allocatorReference);
-		for (auto& e : vector) { Insert(e, buffer, allocatorReference); }
+		for (const auto& e : vector) { Insert(e, buffer, allocatorReference); }
 	}
-
+	
 	template<typename T>
 	void Extract(Vector<T>& vector, Buffer& buffer, const AllocatorReference& containerAllocator)
 	{
