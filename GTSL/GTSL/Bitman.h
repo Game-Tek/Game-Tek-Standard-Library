@@ -3,13 +3,13 @@
 
 namespace GTSL
 {
-	void BitScanForward(uint32 number, uint8& bit);
-	void BitScanForward(uint64 number, uint8& bit);
-	void BitScanForward(uint32 number, uint8& bit, bool& anySetBit);
-	void BitScanForward(uint64 number, uint8& bit, bool& anySetBit);
-	void BitCount(uint16 number, uint8& count);
-	void BitCount(uint32 number, uint8& count);
-	void BitCount(uint64 number, uint8& count);
+	void FindFirstSetBit(uint32 number, uint8& bit);
+	void FindFirstSetBit(uint64 number, uint8& bit);
+	void FindFirstSetBit(uint32 number, uint8& bit, bool& anySetBit);
+	void FindFirstSetBit(uint64 number, uint8& bit, bool& anySetBit);
+	void NumberOfSetBits(uint16 number, uint8& count);
+	void NumberOfSetBits(uint32 number, uint8& count);
+	void NumberOfSetBits(uint64 number, uint8& count);
 
 	inline void SetBit(const uint8 bitN, uint64& n) { n |= 1ULL << bitN; }
 	inline void ClearBit(const uint8 bitN, uint64& n) { n &= ~(1ULL << bitN); }
