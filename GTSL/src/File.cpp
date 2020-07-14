@@ -2,7 +2,6 @@
 
 #include <Windows.h>
 
-
 #include "GTSL/Buffer.h"
 #include "GTSL/StaticString.hpp"
 
@@ -13,16 +12,25 @@ File::~File()
 	GTSL_ASSERT(fileHandle == nullptr, "File was not closed!")
 }
 
-void File::OpenFile(const Ranger<const UTF8>& path, OpenFileMode openFileMode)
-{	
-	uint64 open_mode{ 0 };
+void File::OpenFile(const Ranger<const UTF8>& path, const uint8 accessMode, const OpenMode openMode)
+{
+	uint64 access_mode{ 0 };
 
-	if (static_cast<uint8>(openFileMode) & static_cast<uint8>(OpenFileMode::READ)) { open_mode |= GENERIC_READ; }
-	if (static_cast<uint8>(openFileMode) & static_cast<uint8>(OpenFileMode::WRITE)) { open_mode |= GENERIC_WRITE; }
+	if (static_cast<uint8>(accessMode) & static_cast<uint8>(AccessMode::READ)) { access_mode |= GENERIC_READ; }
+	if (static_cast<uint8>(accessMode) & static_cast<uint8>(AccessMode::WRITE)) { access_mode |= GENERIC_WRITE; }
+
+	DWORD open_mode{ 0 };
+
+	switch (openMode)
+	{
+		case OpenMode::LEAVE_CONTENTS: open_mode = OPEN_ALWAYS; break;
+		case OpenMode::CLEAR: open_mode = CREATE_ALWAYS; break;
+	default: ;
+	}
 
 	StaticString<MAX_PATH> win32_path(path);
 	win32_path += '\0';
-	fileHandle = CreateFileA(win32_path.begin(), open_mode, 0, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	fileHandle = CreateFileA(win32_path.begin(), access_mode, 0, nullptr, open_mode, FILE_ATTRIBUTE_NORMAL, nullptr);
 	auto w = GetLastError();
 	GTSL_ASSERT(w == ERROR_SUCCESS || w == ERROR_ALREADY_EXISTS, "Win32 Error!");
 }
@@ -71,11 +79,10 @@ uint32 File::ReadFile(Buffer& buffer)
 	return bytes;
 }
 
-void File::SetPointer(const uint64 byte, uint64& newFilePointer, MoveFrom from)
+void File::SetPointer(const int64 byte, MoveFrom from) const
 {
-	LARGE_INTEGER bytes{ byte }; LARGE_INTEGER bytes_moved{ 0 };
-	SetFilePointerEx(static_cast<HANDLE>(fileHandle), bytes, &bytes_moved, static_cast<uint8>(from));
-	newFilePointer = bytes_moved.QuadPart;
+	LARGE_INTEGER bytes{ byte };
+	SetFilePointerEx(static_cast<HANDLE>(fileHandle), bytes, nullptr, static_cast<uint8>(from));
 }
 
 uint64 File::GetFileSize() const

@@ -14,11 +14,10 @@ namespace GTSL
 		File() = default;
 		~File();
 
-		enum class OpenFileMode : uint8
-		{
-			READ = 1, WRITE = 2
-		};
-		void OpenFile(const Ranger<const UTF8>& path, OpenFileMode openFileMode);
+		enum class AccessMode : uint8 { READ = 1, WRITE = 2 };
+
+		enum class OpenMode : uint8 { LEAVE_CONTENTS, CLEAR };
+		void OpenFile(const Ranger<const UTF8>& path, uint8 accessMode, OpenMode openMode);
 		void CloseFile();
 
 		uint32 WriteToFile(const Ranger<const byte>& buffer);
@@ -30,7 +29,7 @@ namespace GTSL
 		{
 			BEGIN, CURRENT, END
 		};
-		void SetPointer(uint64 byte, uint64& newFilePointer, MoveFrom from);
+		void SetPointer(int64 byte, MoveFrom from) const;
 
 		[[nodiscard]] uint64 GetFileSize() const;
 		
