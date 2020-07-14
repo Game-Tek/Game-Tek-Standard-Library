@@ -2,6 +2,8 @@
 
 #include <Windows.h>
 
+
+#include "GTSL/Buffer.h"
 #include "GTSL/StaticString.hpp"
 
 using namespace GTSL;
@@ -21,7 +23,8 @@ void File::OpenFile(const Ranger<const UTF8>& path, OpenFileMode openFileMode)
 	StaticString<MAX_PATH> win32_path(path);
 	win32_path += '\0';
 	fileHandle = CreateFileA(win32_path.begin(), open_mode, 0, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
+	auto w = GetLastError();
+	GTSL_ASSERT(w == ERROR_SUCCESS || w == ERROR_ALREADY_EXISTS, "Win32 Error!");
 }
 
 void File::CloseFile()
@@ -41,11 +44,30 @@ uint32 File::WriteToFile(const Ranger<const byte>& buffer)
 	return bytes;
 }
 
+uint32 File::WriteToFile(Buffer& buffer)
+{
+	DWORD bytes{ 0 };
+	WriteFile(static_cast<HANDLE>(fileHandle), buffer.GetData(), buffer.GetLength(), &bytes, nullptr);
+	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
+	buffer.Resize(buffer.GetLength() - bytes);
+	return bytes;
+}
+
 uint32 File::ReadFromFile(const Ranger<byte>& buffer)
 {
 	DWORD bytes{ 0 };
-	ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin(), buffer.Bytes(), &bytes, nullptr);
+	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin(), buffer.Bytes(), &bytes, nullptr);
 	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
+	return bytes;
+}
+
+uint32 File::ReadFile(Buffer& buffer)
+{
+	DWORD bytes{ 0 };
+	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.GetData(), GetFileSize(), &bytes, nullptr);
+	auto w = GetLastError();
+	GTSL_ASSERT(w && bytes != 0, "Win32 Error!");
+	buffer.Resize(bytes);
 	return bytes;
 }
 

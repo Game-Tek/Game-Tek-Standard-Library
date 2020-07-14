@@ -6,6 +6,8 @@
 
 namespace GTSL
 {
+	class Buffer;
+
 	class File
 	{		
 	public:
@@ -21,6 +23,8 @@ namespace GTSL
 
 		uint32 WriteToFile(const Ranger<const byte>& buffer);
 		uint32 ReadFromFile(const Ranger<byte>& buffer);
+		uint32 WriteToFile(Buffer& buffer);
+		uint32 ReadFile(Buffer& buffer);
 		
 		enum class MoveFrom : uint8
 		{

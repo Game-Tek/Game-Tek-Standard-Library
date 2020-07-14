@@ -3,6 +3,7 @@
 #include "Core.h"
 
 #include "Allocator.h"
+#include "Memory.h"
 
 #if (_DEBUG)
 #include "Assert.h"

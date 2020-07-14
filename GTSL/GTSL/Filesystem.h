@@ -30,7 +30,7 @@ namespace GTSL
 	};
 	
 	template<typename FT>
-	void ForEach(const FileQuery& fileQuery, FT&& function)
+	void ForEach(FileQuery& fileQuery, FT&& function)
 	{
 		FileQuery::QueryResult query_result;
 		
