@@ -10,6 +10,12 @@
 
 namespace GTSL
 {
+	template <class _Integral, class _Ty>
+	[[nodiscard]] volatile _Integral* AtomicAddressAs(_Ty& _Source) noexcept {
+		// gets a pointer to the argument as an integral type (to pass to intrinsics)
+		return &reinterpret_cast<volatile _Integral&>(_Source);
+	}
+	
 	template<typename T>
 	class Atomic;
 
@@ -21,8 +27,10 @@ namespace GTSL
 		
 		explicit Atomic(const type value) : value(value) {}
 
-		type operator++() { return static_cast<type>(_InterlockedIncrement(reinterpret_cast<long*>(&value))); }
-		type operator--() { return static_cast<type>(_InterlockedDecrement(reinterpret_cast<long*>(&value))); }
+		type operator++() { return static_cast<type>(_InterlockedIncrement(AtomicAddressAs<long>(value))); }
+		type operator--() { return static_cast<type>(_InterlockedDecrement(AtomicAddressAs<long>(value))); }
+		type operator++(int32) { const auto ret = value; static_cast<type>(_InterlockedIncrement(AtomicAddressAs<long>(value))); return ret; }
+		type operator--(int32) { const auto ret = value; static_cast<type>(_InterlockedDecrement(AtomicAddressAs<long>(value))); return ret; }
 
 		operator type() const
 		{
@@ -30,7 +38,7 @@ namespace GTSL
 			return value;
 		}
 	private:
-		type value{ 0 };
+		alignas(type) type value{ 0 };
 	};
 
 	template<>
@@ -41,8 +49,8 @@ namespace GTSL
 		
 		explicit Atomic(const type value) : value(value) {}
 
-		type operator++() { return static_cast<type>(_InterlockedIncrement64(reinterpret_cast<int64*>(&value))); }
-		type operator--() { return static_cast<type>(_InterlockedDecrement64(reinterpret_cast<int64*>(&value))); }
+		type operator++() { return static_cast<type>(_InterlockedIncrement64(AtomicAddressAs<int64>(value))); }
+		type operator--() { return static_cast<type>(_InterlockedDecrement64(AtomicAddressAs<int64>(value))); }
 		
 		operator type() const
 		{
