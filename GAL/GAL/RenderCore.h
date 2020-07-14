@@ -176,12 +176,6 @@ namespace GAL
 
 		MAT3,
 		MAT4,
-
-		TEXTURE_1D,
-		TEXTURE_2D,
-		TEXTURE_3D,
-
-		TEXTURE_2D_CUBE,
 	};
 
 	// PIPELINE
