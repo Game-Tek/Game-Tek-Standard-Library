@@ -263,7 +263,7 @@ namespace GTSL
 			}
 		}
 
-		[[nodiscard]] key_type* getKeysBucketPointer(const uint32 index, const uint32 maxBucketLength) const { return reinterpret_cast<key_type*>(this->data) + index * maxBucketLength; }
+		[[nodiscard]] key_type* getKeysBucketPointer(const uint32 index, const uint32 maxBucketLength) const { return reinterpret_cast<key_type*>(this->data) + index * (maxBucketLength + 1); }
 
 		T* getValuesBucketPointer(const uint32 bucket, const uint32 maxBucketLength) const { return reinterpret_cast<T*>(this->data + getKeysAllocationSize(this->capacity, maxBucketLength)) + bucket * maxBucketLength; }
 
@@ -272,8 +272,10 @@ namespace GTSL
 		template<typename TT, typename L>
 		friend void ForEach(FlatHashMap<TT>& collection, L&& lambda);
 
-		friend void Insert(const FlatHashMap&, class Buffer& buffer, const AllocatorReference&);
-		friend void Extract(FlatHashMap&, class Buffer& buffer, const AllocatorReference&);
+		template<typename TT = T>
+		friend void Insert(const FlatHashMap<TT>&, class Buffer& buffer, const AllocatorReference&);
+		template<typename TT = T>
+		friend void Extract(FlatHashMap<TT>&, class Buffer& buffer, const AllocatorReference&);
 	};
 
 	template<typename T, typename L>
