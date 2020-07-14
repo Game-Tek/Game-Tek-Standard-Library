@@ -35,9 +35,17 @@ namespace GTSL
 			allocatorReference.Deallocate(capacity, alignment, data); capacity = 0; data = nullptr;
 		}
 
-		void WriteBytes(const uint32 size, byte* from) { length += size; MemCopy(size, from, data + length); }
+		void WriteBytes(const uint32 size, byte* from) 
+		{
+			MemCopy(size, from, data + length);
+			length += size;
+		}
 
-		void ReadBytes(const uint32 size, byte* to) { length -= size; MemCopy(size, data + length, to); }
+		void ReadBytes(const uint32 size, byte* to)
+		{
+			MemCopy(size, data + (capacity - length), to);
+			length -= size;
+		}
 		
 		[[nodiscard]] uint32 GetCapacity() const { return capacity; }
 		[[nodiscard]] uint32 GetLength() const { return length; }
@@ -88,24 +96,24 @@ namespace GTSL
 	inline void Insert(const bool n, Buffer& buffer, const AllocatorReference& allocatorReference)
 	{
 		GTSL_ASSERT(buffer.length + sizeof(bool) <= buffer.capacity, "Buffer has no more space!");
-		buffer.length += sizeof(bool); *reinterpret_cast<bool*>(buffer.data + buffer.length) = n;
+		*reinterpret_cast<bool*>(buffer.data + buffer.length) = n; buffer.length += sizeof(bool);
 	}
 
 	inline void Insert(const uint32 n, Buffer& buffer, const AllocatorReference& allocatorReference)
 	{
 		GTSL_ASSERT(buffer.length + sizeof(uint32) <= buffer.capacity, "Buffer has no more space!");
-		buffer.length += sizeof(uint32); *reinterpret_cast<uint32*>(buffer.data + buffer.length) = n;
+		*reinterpret_cast<uint32*>(buffer.data + buffer.length) = n; buffer.length += sizeof(uint32);
 	}
 
 	inline void Insert(const uint64 n, Buffer& buffer, const AllocatorReference& allocatorReference)
 	{
 		GTSL_ASSERT(buffer.length + sizeof(uint64) <= buffer.capacity, "Buffer has no more space!");
-		buffer.length += sizeof(uint64); *reinterpret_cast<uint64*>(buffer.data + buffer.length) = n;
+		*reinterpret_cast<uint64*>(buffer.data + buffer.length) = n; buffer.length += sizeof(uint64);
 	}
 
 	inline void Insert(const float32 n, Buffer& buffer, const AllocatorReference& allocatorReference)
 	{
 		GTSL_ASSERT(buffer.length + sizeof(float32) <= buffer.capacity, "Buffer has no more space!");
-		buffer.length += sizeof(float32); *reinterpret_cast<float32*>(buffer.data + buffer.length) = n;
+		*reinterpret_cast<float32*>(buffer.data + buffer.length) = n; buffer.length += sizeof(float32);
 	}
 }
