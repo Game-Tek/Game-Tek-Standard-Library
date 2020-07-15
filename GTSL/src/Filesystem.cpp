@@ -9,7 +9,7 @@ bool GTSL::FileQuery::StartQuery(QueryResult& queryResult)
 
 	if(reinterpret_cast<LONG>(handle_res) != ERROR_FILE_NOT_FOUND && handle_res != INVALID_HANDLE_VALUE)
 	{
-		queryResult.FilePath = find_data.cFileName; handle = handle_res;
+		queryResult.FileNameWithExtension = find_data.cFileName; handle = handle_res;
 		return true;
 	}
 
@@ -23,7 +23,7 @@ bool GTSL::FileQuery::NextQuery(QueryResult& queryResult) const
 
 	if (handle_res)
 	{
-		queryResult.FilePath = find_data.cFileName;
+		queryResult.FileNameWithExtension = find_data.cFileName;
 		return true;
 	}
 

@@ -36,6 +36,11 @@ namespace GTSL
 			this->data = allocate(size, allocatorReference, getMaxBucketLength()); build(0, getMaxBucketLength());
 		}
 
+		FlatHashMap(FlatHashMap&& other) noexcept : data(other.data), capacity(other.capacity), loadFactor(other.loadFactor)
+		{
+			other.data = nullptr; other.capacity = 0; other.loadFactor = 0.0f;
+		}
+		
 		void Free(const AllocatorReference& allocatorReference) { deallocate(allocatorReference, getMaxBucketLength()); this->data = nullptr; }
 
 		~FlatHashMap() { GTSL_ASSERT(!this->data, "Data was not freed!") }

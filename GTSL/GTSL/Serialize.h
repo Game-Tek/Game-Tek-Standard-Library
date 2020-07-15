@@ -43,15 +43,13 @@ namespace GTSL
 		Insert(map.capacity, buffer, allocatorReference);
 		Insert(map.loadFactor, buffer, allocatorReference);
 
-		for(uint32 i = 0; i < map.capacity; ++i)
+		for(uint32 bucket = 0; bucket < map.capacity; ++bucket)
 		{
 			auto max_bucket_length = map.getMaxBucketLength();
-			
-			auto keys_bucket = map.getKeysBucket(i, max_bucket_length);
-			Insert(keys_bucket.ElementCount(), buffer, allocatorReference);
-			
+			Insert(map.getBucketLength(bucket, max_bucket_length), buffer, allocatorReference);
+			auto keys_bucket = map.getKeysBucket(bucket, max_bucket_length);
 			for(auto e : keys_bucket) { Insert(e, buffer, allocatorReference); }
-			auto values_bucket = map.getValuesBucket(i, max_bucket_length);
+			auto values_bucket = map.getValuesBucket(bucket, max_bucket_length);
 			for(auto& e : values_bucket) { Insert(e, buffer, allocatorReference); }
 		}
 	}
@@ -63,16 +61,14 @@ namespace GTSL
 		Extract(capacity, buffer, containerAllocator);
 		Extract(load_factor, buffer, containerAllocator);
 		
-		map = FlatHashMap<T>(capacity, load_factor, containerAllocator);
+		::new(&map) FlatHashMap<T>(capacity, load_factor, containerAllocator);
 		
 		for (uint32 bucket = 0; bucket < capacity; ++bucket)
 		{
 			auto max_bucket_length = map.getMaxBucketLength();
-			Extract(*map.getKeysBucketPointer(bucket, max_bucket_length), buffer, containerAllocator);
-
+			Extract(map.getBucketLength(bucket, max_bucket_length), buffer, containerAllocator);
 			auto keys_bucket = map.getKeysBucket(bucket, max_bucket_length);
 			for (auto& e : keys_bucket) { Extract(e, buffer, containerAllocator); }
-			
 			auto values_bucket = map.getValuesBucket(bucket, max_bucket_length);
 			for (auto& e : values_bucket) { Extract(e, buffer, containerAllocator); }
 		}

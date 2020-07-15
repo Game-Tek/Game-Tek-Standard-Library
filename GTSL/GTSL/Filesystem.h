@@ -16,8 +16,7 @@ namespace GTSL
 
 		struct QueryResult
 		{
-			StaticString<Application::MAX_PATH_LENGTH> FilePath;
-			
+			StaticString<Application::MAX_PATH_LENGTH> FileNameWithExtension;
 		};
 		
 		bool StartQuery(QueryResult& query);

@@ -74,7 +74,7 @@ uint32 File::ReadFile(Buffer& buffer)
 	DWORD bytes{ 0 };
 	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.GetData(), GetFileSize(), &bytes, nullptr);
 	auto w = GetLastError();
-	GTSL_ASSERT(w && bytes != 0, "Win32 Error!");
+	//GTSL_ASSERT(w , "Win32 Error!");
 	buffer.Resize(bytes);
 	return bytes;
 }
