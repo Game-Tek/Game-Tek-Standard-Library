@@ -28,7 +28,7 @@ namespace GTSL
 			capacity = allocated_size;
 		}
 
-		void Resize(const uint32 size) { length = size; pos = size; }
+		void Resize(const uint32 size) { length = size; }
 		
 		void Free(const uint32 alignment, const AllocatorReference& allocatorReference)
 		{
@@ -37,23 +37,21 @@ namespace GTSL
 
 		void WriteBytes(const uint32 size, const byte* from) 
 		{
-			GTSL_ASSERT(pos + size <= capacity, "Can't fit more!");
-			MemCopy(size, from, data + pos);
-			pos += size;
+			GTSL_ASSERT(length + size <= capacity, "Can't fit more!");
+			MemCopy(size, from, data + length);
+			length += size;
 		}
 
 		void ReadBytes(const uint32 size, byte* to)
 		{
-			GTSL_ASSERT(pos != 0, "Buffer is already empty!");
-			MemCopy(size, data + (length - pos), to);
-			pos -= size;
+			GTSL_ASSERT(length - size >= 0, "Buffer is already empty!");
+			MemCopy(size, data + readPos, to);
+			readPos += size;
 		}
-
-		[[nodiscard]] uint32 GetRemainingSize() const { return length - pos; }
 		
 		[[nodiscard]] uint32 GetCapacity() const { return capacity; }
 		[[nodiscard]] uint32 GetLength() const { return length; }
-		[[nodiscard]] uint32 GetPosition() const { return pos; }
+		[[nodiscard]] uint32 GetReadPosition() const { return readPos; }
 		[[nodiscard]] byte* GetData() const { return data; }
 
 		operator Ranger<byte>() const { return Ranger<byte>(length, data); }
@@ -63,7 +61,7 @@ namespace GTSL
 		byte* data{ nullptr };
 		uint32 capacity{ 0 };
 		uint32 length{ 0 };
-		uint32 pos = 0;
+		uint32 readPos = 0;
 
 		friend void Insert(bool n, Buffer& buffer, const AllocatorReference& allocatorReference);
 		friend void Insert(uint32 n, Buffer& buffer, const AllocatorReference& allocatorReference);
