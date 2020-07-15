@@ -291,9 +291,9 @@ namespace GAL
 	
 	enum class VulkanMemoryType : GTSL::uint32
 	{
-		GPU = 1,
-		SHARED = 2,
-		COHERENT = 4,
-		CACHED = 8,
+		GPU = 0x00000001,
+		SHARED = 0x00000002,
+		COHERENT = 0x00000004,
+		CACHED = 0x00000008,
 	};
 }

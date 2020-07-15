@@ -52,7 +52,7 @@ namespace GAL
 
 		void GetBufferMemoryRequirements(const class VulkanBuffer* buffer, BufferMemoryRequirements& bufferMemoryRequirements) const;
 		
-		[[nodiscard]] GTSL::uint32 FindMemoryType(GTSL::uint32 memoryType, GTSL::uint32 memoryFlags) const;
+		[[nodiscard]] GTSL::uint32 FindMemoryType(GTSL::uint32 typeFilter, GTSL::uint32 memoryType) const;
 
 		[[nodiscard]] const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const { return deviceProperties; }
 

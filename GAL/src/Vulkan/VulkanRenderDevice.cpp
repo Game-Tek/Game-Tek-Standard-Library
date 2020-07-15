@@ -23,11 +23,11 @@ void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(const VulkanBuffer* bu
 	bufferMemoryRequirements.Size = vk_memory_requirements.size;
 }
 
-GTSL::uint32 GAL::VulkanRenderDevice::FindMemoryType(const GTSL::uint32 memoryType, const GTSL::uint32 memoryFlags) const
+GTSL::uint32 GAL::VulkanRenderDevice::FindMemoryType(const GTSL::uint32 typeFilter, const GTSL::uint32 memoryType) const
 {
 	for (GTSL::uint32 i = 0; i < memoryProperties.memoryTypeCount; ++i)
 	{
-		if (memoryType & (1 << i) && (memoryProperties.memoryTypes[i].propertyFlags & memoryFlags) == memoryFlags) { return i; }
+		if (typeFilter & (1 << i) && (memoryProperties.memoryTypes[i].propertyFlags & memoryType) == memoryType) { return i; }
 	}
 
 	return 0xffffffff;
