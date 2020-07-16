@@ -69,12 +69,12 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	{
 		RECT rect;
 		GetWindowRect(win_handle, &rect);
-		window->windowSize.Width = rect.right - rect.left;
-		window->windowSize.Height = rect.bottom - rect.top;
+		window->windowSize.Width = static_cast<uint16>(rect.right - rect.left);
+		window->windowSize.Height = static_cast<uint16>(rect.bottom - rect.top);
 
 		GetClientRect(win_handle, &rect);
-		window->clientSize.Width = rect.right;
-		window->clientSize.Height = rect.bottom;
+		window->clientSize.Width = static_cast<uint16>(rect.right);
+		window->clientSize.Height = static_cast<uint16>(rect.bottom);
 
 		window->onResizeDelegate(window->clientSize); return 0;
 	}
@@ -82,12 +82,12 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	{
 		RECT rect;
 		GetWindowRect(win_handle, &rect);
-		window->windowSize.Width = rect.right - rect.left;
-		window->windowSize.Height = rect.bottom - rect.top;
+		window->windowSize.Width = static_cast<uint16>(rect.right - rect.left);
+		window->windowSize.Height = static_cast<uint16>(rect.bottom - rect.top);
 
 		GetClientRect(win_handle, &rect);
-		window->clientSize.Width = rect.right;
-		window->clientSize.Height = rect.bottom;
+		window->clientSize.Width = static_cast<uint16>(rect.right);
+		window->clientSize.Height = static_cast<uint16>(rect.bottom);
 
 		window->onResizeDelegate(window->clientSize); return 0;
 	}

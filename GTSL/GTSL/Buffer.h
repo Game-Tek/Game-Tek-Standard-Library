@@ -21,37 +21,37 @@ namespace GTSL
 		~Buffer() { GTSL_ASSERT(!data, "Allocation was not freed!"); }
 #endif
 		
-		void Allocate(const uint32 bytes, const uint32 alignment, const AllocatorReference& allocatorReference)
+		void Allocate(const uint64 bytes, const uint32 alignment, const AllocatorReference& allocatorReference)
 		{
 			uint64 allocated_size{ 0 };
 			allocatorReference.Allocate(bytes, alignment, reinterpret_cast<void**>(&data), &allocated_size);
 			capacity = allocated_size;
 		}
 
-		void Resize(const uint32 size) { length = size; }
+		void Resize(const uint64 size) { length = size; }
 		
 		void Free(const uint32 alignment, const AllocatorReference& allocatorReference)
 		{
 			allocatorReference.Deallocate(capacity, alignment, data); capacity = 0; data = nullptr;
 		}
 
-		void WriteBytes(const uint32 size, const byte* from) 
+		void WriteBytes(const uint64 size, const byte* from) 
 		{
 			GTSL_ASSERT(length + size <= capacity, "Can't fit more!");
 			MemCopy(size, from, data + length);
 			length += size;
 		}
 
-		void ReadBytes(const uint32 size, byte* to)
+		void ReadBytes(const uint64 size, byte* to)
 		{
 			GTSL_ASSERT(length - size >= 0, "Buffer is already empty!");
 			MemCopy(size, data + readPos, to);
 			readPos += size;
 		}
 		
-		[[nodiscard]] uint32 GetCapacity() const { return capacity; }
-		[[nodiscard]] uint32 GetLength() const { return length; }
-		[[nodiscard]] uint32 GetReadPosition() const { return readPos; }
+		[[nodiscard]] uint64 GetCapacity() const { return capacity; }
+		[[nodiscard]] uint64 GetLength() const { return length; }
+		[[nodiscard]] uint64 GetReadPosition() const { return readPos; }
 		[[nodiscard]] byte* GetData() const { return data; }
 
 		operator Ranger<byte>() const { return Ranger<byte>(length, data); }
@@ -59,9 +59,9 @@ namespace GTSL
 		
 	private:
 		byte* data{ nullptr };
-		uint32 capacity{ 0 };
-		uint32 length{ 0 };
-		uint32 readPos = 0;
+		uint64 capacity{ 0 };
+		uint64 length{ 0 };
+		uint64 readPos = 0;
 
 		friend void Insert(bool n, Buffer& buffer, const AllocatorReference& allocatorReference);
 		friend void Insert(uint8 n, Buffer& buffer, const AllocatorReference& allocatorReference);

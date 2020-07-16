@@ -193,7 +193,7 @@ namespace GTSL
 
 		[[nodiscard]] uint32 getIndexForKeyInBucket(const uint32 bucket, const key_type key, const uint32 maxBucketLength) const
 		{
-			for (auto& e : getKeysBucket(bucket, maxBucketLength)) { if (e == key) { return &e - getKeysBucket(bucket, maxBucketLength).begin(); } } return 0xFFFFFFFF;
+			for (auto& e : getKeysBucket(bucket, maxBucketLength)) { if (e == key) { return static_cast<uint32>(&e - getKeysBucket(bucket, maxBucketLength).begin()); } } return 0xFFFFFFFF;
 		}
 
 		[[nodiscard]] Ranger<key_type> getKeysBucket(const uint32 bucket, const uint32 maxBucketLength) const { return Ranger<key_type>(getBucketLength(bucket, maxBucketLength), getKeysBucketPointer(bucket, maxBucketLength) + 1); }
@@ -248,7 +248,7 @@ namespace GTSL
 
 		[[nodiscard]] uint64& getBucketLength(const uint32 index, const uint32 maxBucketLength) const { return *getKeysBucketPointer(index, maxBucketLength); }
 		
-		byte* allocate(const uint64 newCapacity, const AllocatorReference& allocatorReference, const uint32 maxBucketLength)
+		byte* allocate(const uint32 newCapacity, const AllocatorReference& allocatorReference, const uint32 maxBucketLength)
 		{
 			uint64 allocated_size{ 0 };	void* memory{ nullptr };
 			allocatorReference.Allocate(getTotalAllocationSize(newCapacity, maxBucketLength), alignof(T), &memory, &allocated_size);
@@ -259,7 +259,7 @@ namespace GTSL
 
 		void build(const uint32 oldCapacity, const uint32 maxBucketLength) { for (uint32 i = oldCapacity; i < this->capacity; ++i) { getBucketLength(i, maxBucketLength) = 0; } }
 
-		void copy(const uint64 newCapacity, byte* to, const uint32 maxBucketLength)
+		void copy(const uint32 newCapacity, byte* to, const uint32 maxBucketLength)
 		{
 			for (uint32 i = 0; i < this->capacity; ++i)
 			{
@@ -272,15 +272,15 @@ namespace GTSL
 
 		T* getValuesBucketPointer(const uint32 bucket, const uint32 maxBucketLength) const { return reinterpret_cast<T*>(this->data + getKeysAllocationSize(this->capacity, maxBucketLength)) + bucket * maxBucketLength; }
 
-		[[nodiscard]] uint32 getMaxBucketLength() const { return this->capacity * this->loadFactor; }
+		[[nodiscard]] uint32 getMaxBucketLength() const { return static_cast<uint32>(this->capacity * this->loadFactor); }
 		
 		template<typename TT, typename L>
 		friend void ForEach(FlatHashMap<TT>& collection, L&& lambda);
 
-		template<typename TT = T>
-		friend void Insert(const FlatHashMap<TT>&, class Buffer& buffer, const AllocatorReference&);
-		template<typename TT = T>
-		friend void Extract(FlatHashMap<TT>&, class Buffer& buffer, const AllocatorReference&);
+		template<typename T>
+		friend void Insert(const FlatHashMap<T>&, class Buffer& buffer, const AllocatorReference&);
+		template<typename T>
+		friend void Extract(FlatHashMap<T>&, class Buffer& buffer, const AllocatorReference&);
 	};
 
 	template<typename T, typename L>

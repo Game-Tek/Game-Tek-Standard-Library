@@ -38,7 +38,7 @@ namespace GTSL
 
 		constexpr Array() noexcept = default;
 
-		constexpr Array(std::initializer_list<T> list) noexcept : length(list.size())
+		constexpr Array(std::initializer_list<T> list) noexcept : length(static_cast<uint32>(list.size()))
 		{
 			GTSL_ASSERT(list.size() <= CAPACITY, "Initializer list is bigger than array capacity!")
 			copyToData(list.begin(), this->length);
@@ -49,7 +49,7 @@ namespace GTSL
 			GTSL_ASSERT(length <= CAPACITY, "Array is not big enough to insert the elements requested!")
 		}
 
-		constexpr Array(const Ranger<T>& ranger) noexcept : length(ranger.ElementCount())
+		constexpr Array(const Ranger<T>& ranger) noexcept : length(static_cast<uint32>(ranger.ElementCount()))
 		{
 			GTSL_ASSERT(ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
 			copyToData(ranger.begin(), ranger.ElementCount());
@@ -138,7 +138,7 @@ namespace GTSL
 			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
 			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
 			auto ret = this->length;
-			this->length += ranger.ElementCount();
+			this->length += static_cast<uint32>(ranger.ElementCount());
 			return ret;
 		}
 
@@ -147,7 +147,7 @@ namespace GTSL
 			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
 			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
 			auto ret = this->length;
-			this->length += ranger.ElementCount();
+			this->length += static_cast<uint32>(ranger.ElementCount());
 			return ret;
 		}
 
@@ -155,7 +155,7 @@ namespace GTSL
 		{
 			copy(ranger.ElementCount(), ranger.begin(), this->data + index);
 			auto ret = this->length;
-			this->length += ranger.ElementCount();
+			this->length += static_cast<uint32>(ranger.ElementCount());
 			return ret;
 		}
 

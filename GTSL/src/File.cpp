@@ -14,7 +14,7 @@ File::~File()
 
 void File::OpenFile(const Ranger<const UTF8>& path, const uint8 accessMode, const OpenMode openMode)
 {
-	uint64 access_mode{ 0 };
+	DWORD access_mode{ 0 };
 
 	if (static_cast<uint8>(accessMode) & static_cast<uint8>(AccessMode::READ)) { access_mode |= GENERIC_READ; }
 	if (static_cast<uint8>(accessMode) & static_cast<uint8>(AccessMode::WRITE)) { access_mode |= GENERIC_WRITE; }

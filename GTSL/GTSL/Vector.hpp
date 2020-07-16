@@ -27,7 +27,8 @@ namespace GTSL
 		 * \brief Constructs a Vector with enough space to accomodate capacity T elements.
 		 * \param capacity Number of T objects to allocate space for.
 		 */
-		explicit Vector(const length_type capacity, const AllocatorReference& allocatorReference) : capacity(capacity), length(0),  data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
+		explicit Vector(const length_type capacity, const AllocatorReference& allocatorReference) : capacity(capacity), length(0),
+		data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
 		{
 		}
 
@@ -36,14 +37,16 @@ namespace GTSL
 		 * \param capacity Number of T objects to allocate space for.
 		 * \param length Number of elements to consider being already placed in vector.
 		 */
-		explicit Vector(const length_type capacity, const length_type length, const AllocatorReference& allocatorReference) : capacity(capacity), length(length), data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
+		explicit Vector(const length_type capacity, const length_type length, const AllocatorReference& allocatorReference) : capacity(capacity), length(length),
+		data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
 		{
 		}
 
 		/**
 		 * \brief Constructs a Vector with enough space to accomodate capacity T elements, and considers length elements already occupied.
 		 */
-		explicit Vector(const GTSL::Ranger<const T>& ranger, const AllocatorReference& allocatorReference) : capacity(ranger.ElementCount()), length(ranger.ElementCount()), data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
+		explicit Vector(const GTSL::Ranger<const T>& ranger, const AllocatorReference& allocatorReference) : capacity(static_cast<uint32>(ranger.ElementCount())),
+		length(static_cast<uint32>(ranger.ElementCount())), data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
 		{
 		}
 
@@ -51,7 +54,8 @@ namespace GTSL
 		 * \brief Constructs a Vector and copies it's elements from initializerList.
 		 * \param initializerList Initializer list to take elements from.
 		 */
-		constexpr Vector(const std::initializer_list<T>& initializerList) : capacity(initializerList.end() - initializerList.begin()), length(this->capacity), data(this->allocate(this->capacity))
+		constexpr Vector(const std::initializer_list<T>& initializerList) : capacity(static_cast<uint32>(initializerList.end() - initializerList.begin())),
+		length(this->capacity), data(this->allocateAndSetCapacity(this->capacity))
 		{
 			copyArray(initializerList.begin(), this->data, this->length);
 		}
@@ -60,7 +64,8 @@ namespace GTSL
 		 * \brief Constructs a Vector from a reference to another Vector.
 		 * \param other Reference to another Vector.
 		 */
-		Vector(const Vector& other, const AllocatorReference& allocatorReference) : capacity(other.capacity), length(other.length), data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
+		Vector(const Vector& other, const AllocatorReference& allocatorReference) : capacity(other.capacity), length(other.length),
+		data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
 		{
 			copyArray(other.data, this->data, this->length);
 		}
@@ -240,15 +245,15 @@ namespace GTSL
 		length_type PushBack(const Ranger<T>& ranger, const AllocatorReference& allocatorReference)
 		{
 			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(allocatorReference); }
-			copyArray(ranger.begin(), getIterator(this->length), ranger.ElementCount());
-			return static_cast<uint32>((this->length += ranger.ElementCount()) - ranger.ElementCount());
+			copyArray(ranger.begin(), getIterator(this->length), static_cast<uint32>(ranger.ElementCount()));
+			return static_cast<uint32>((this->length += static_cast<uint32>(ranger.ElementCount())) - ranger.ElementCount());
 		}
 
 		length_type PushBack(const Ranger<const T>& ranger, const AllocatorReference& allocatorReference)
 		{
 			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(allocatorReference); }
-			copyArray(ranger.begin(), getIterator(this->length), ranger.ElementCount());
-			return static_cast<uint32>((this->length += ranger.ElementCount()) - ranger.ElementCount());
+			copyArray(ranger.begin(), getIterator(this->length), static_cast<uint32>(ranger.ElementCount()));
+			return static_cast<uint32>((this->length += static_cast<uint32>(ranger.ElementCount())) - ranger.ElementCount());
 		}
 		
 		/**
@@ -321,8 +326,8 @@ namespace GTSL
 		void Insert(const length_type index, const GTSL::Ranger<const T> ranger, const AllocatorReference& allocatorReference)
 		{
 			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(allocatorReference); }
-			MemCopy(sizeof(T) * ranger.ElementCount(), getIterator(index), getIterator(index + ranger.ElementCount()));
-			this->length += ranger.ElementCount();
+			MemCopy(sizeof(T) * ranger.ElementCount(), getIterator(index), getIterator(static_cast<uint32>(index + ranger.ElementCount())));
+			this->length += static_cast<uint32>(ranger.ElementCount());
 			MemCopy(sizeof(T) * ranger.ElementCount(), ranger, getIterator(index));
 		}
 
