@@ -29,6 +29,7 @@ namespace GTSL
 		}
 
 		void Resize(const uint64 size) { length = size; }
+		void SetReadPosition(const uint64 pos) { readPos = pos; }
 		
 		void Free(const uint32 alignment, const AllocatorReference& allocatorReference)
 		{
@@ -37,16 +38,14 @@ namespace GTSL
 
 		void WriteBytes(const uint64 size, const byte* from) 
 		{
-			GTSL_ASSERT(length + size <= capacity, "Can't fit more!");
-			MemCopy(size, from, data + length);
-			length += size;
+			GTSL_ASSERT(length + size <= capacity, "Buffer can't fit more!");
+			MemCopy(size, from, data + length); length += size;
 		}
 
 		void ReadBytes(const uint64 size, byte* to)
 		{
-			GTSL_ASSERT(length - size >= 0, "Buffer is already empty!");
-			MemCopy(size, data + readPos, to);
-			readPos += size;
+			GTSL_ASSERT(readPos <= length, "Buffer doesn't contain any more bytes!");
+			MemCopy(size, data + readPos, to); readPos += size;
 		}
 		
 		[[nodiscard]] uint64 GetCapacity() const { return capacity; }

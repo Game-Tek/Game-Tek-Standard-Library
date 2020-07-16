@@ -15,7 +15,5 @@ namespace GAL
 			GTSL::uint32 Size{ 0 };
 			GTSL::uint32 BufferType{ 0 };
 		};
-		
-	private:
 	};
 }

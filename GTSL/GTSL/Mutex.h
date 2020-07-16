@@ -2,37 +2,11 @@
 
 #if(_WIN64)
 #define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
 #undef WIN32_LEAN_AND_MEAN
 #endif
 
 namespace GTSL
 {
-
-    //class FastMutex
-    //{
-    //    //https://vorbrodt.blog/2019/02/12/fast-mutex/
-    //public:
-    //    FastMutex() : state(0) {}
-    //
-    //    void Lock()
-    //    {
-    //        if (state.exchange(1, std::memory_order_acquire))
-    //            while (state.exchange(2, std::memory_order_acquire))
-    //                waitset.Wait();
-    //    }
-    //
-    //    void Unlock()
-    //    {
-    //        if (state.exchange(0, std::memory_order_release) == 2)
-    //            waitset.Flag();
-    //    }
-    //
-    //private:
-    //    std::atomic<uint32> state;
-    //    Signal waitset;
-    //};
-
     class Mutex
     {
     public:
@@ -52,17 +26,6 @@ namespace GTSL
 
     template<class T>
     class Lock;
-
-    //template<>
-    //class Lock<FastMutex>
-    //{
-    //public:
-    //    explicit Lock(FastMutex& mutex) noexcept : object(&mutex) { mutex.Lock(); }
-    //    ~Lock() noexcept { object->Unlock(); }
-    //
-    //private:
-    //    FastMutex* object = nullptr;
-    //};
 
     template<>
     class Lock<Mutex>
@@ -125,4 +88,10 @@ namespace GTSL
     private:
         ReadWriteMutex* readWriteMutex{ nullptr };
     };
+
+    template <class T>
+    WriteLock(T) -> WriteLock<T>;
+
+	template <class T>
+    ReadLock(T) -> ReadLock<T>;
 }

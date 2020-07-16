@@ -1,9 +1,9 @@
-#include "GTSL/GamepadQuery.h"
-
-#if (_WIN32)
+#if (_WIN64)
 #define WIN32_LEAN_AND_MEAN
-
+#include <Windows.h>
 #endif
+
+#include "GTSL/GamepadQuery.h"
 
 using namespace GTSL;
 

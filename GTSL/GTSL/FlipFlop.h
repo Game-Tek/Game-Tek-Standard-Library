@@ -1,6 +1,5 @@
 #pragma once
 
-
 namespace GTSL
 {
 	/**
@@ -8,8 +7,6 @@ namespace GTSL
 	 */
 	class FlipFlop
 	{
-		bool state = true;
-
 	public:
 		FlipFlop() = default;
 
@@ -26,5 +23,8 @@ namespace GTSL
 		[[nodiscard]] bool GetState() const { return state; }
 		void SetState(const bool newState) { state = newState; }
 		void FlipState() { state = !state; }
+
+	private:
+		bool state = true;
 	};
 }

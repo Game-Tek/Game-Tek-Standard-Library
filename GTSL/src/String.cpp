@@ -149,8 +149,8 @@ void String::ReplaceAll(const char* a, const char* with, const AllocatorReferenc
 {
 	Array<uint32, 24> ocurrences; //cache ocurrences so as to not perform an array Resize every time we Find a match
 
-	auto a_length = StringLength(a) - 1;
-	auto with_length = StringLength(with) - 1;
+	const auto a_length = StringLength(a) - 1;
+	const auto with_length = StringLength(with) - 1;
 
 	uint32 i = 0;
 	

@@ -37,7 +37,6 @@
     <ClInclude Include="GAL\Vulkan\VulkanImage.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\RenderDevice.cpp" />
     <ClCompile Include="src\Vulkan\VulkanBindings.cpp" />
     <ClCompile Include="src\Vulkan\VulkanBuffer.cpp" />
     <ClCompile Include="src\Vulkan\VulkanMemory.cpp" />

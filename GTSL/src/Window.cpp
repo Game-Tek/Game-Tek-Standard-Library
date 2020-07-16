@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include "GTSL/Application.h"
+#include "GTSL/StaticString.hpp"
 
 #if (_WIN32)
 GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam)
@@ -211,7 +212,7 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 	wndclass.hInstance = static_cast<HINSTANCE>(win32_native_handles.HINSTANCE);
 	RegisterClassA(&wndclass);
 	
-	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, name.begin(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, reinterpret_cast<HINSTANCE>(win32_native_handles.HINSTANCE), nullptr);
+	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, name.begin(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32_native_handles.HINSTANCE), nullptr);
 
 	GTSL_ASSERT(windowHandle, "Window failed to create!")
 	

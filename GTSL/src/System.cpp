@@ -47,10 +47,10 @@ void System::GetVectorInfo(VectorInfo& vectorInfo)
 
 	int info[4];
 	__cpuidex(info, 0, 0);
-	int nIds = info[0];
+	const int nIds = info[0];
 
 	__cpuidex(info, 0x8000000, 0);
-	uint32 nExIds = info[0];
+	const uint32 nExIds = info[0];
 
 	//  Detect Features
 	if (nIds >= 0x00000001)

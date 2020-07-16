@@ -1,10 +1,12 @@
 #pragma once
 
-#include "Ranger.h"
-#include "StaticString.hpp"
+#include "Core.h"
 
 namespace GTSL
 {
+	template<uint32 N>
+	class StaticString;
+	
 	class Window;
 
 	class Application

@@ -95,6 +95,7 @@ GTSL::uint32 GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const Find
 		{
 		case VK_IMAGE_TILING_LINEAR: if (format_properties.linearTilingFeatures & features) return e;
 		case VK_IMAGE_TILING_OPTIMAL: if (format_properties.optimalTilingFeatures & features) return e;
+		default: __debugbreak();
 		}
 	}
 

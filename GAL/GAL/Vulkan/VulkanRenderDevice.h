@@ -10,7 +10,6 @@ namespace GAL
 	{
 	public:
 		VulkanQueue() = default;
-		VulkanQueue(const CreateInfo& createInfo);
 		~VulkanQueue() = default;
 
 		void Wait() const;
@@ -74,6 +73,6 @@ namespace GAL
 		VkPhysicalDeviceProperties deviceProperties;
 		VkPhysicalDeviceMemoryProperties memoryProperties;
 
-		friend VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
+		friend VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 	};
 }

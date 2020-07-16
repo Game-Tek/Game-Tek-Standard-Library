@@ -326,7 +326,9 @@ namespace GAL
 		{
 		case ImageFormat::RGBA_I8: return 1;
 		case ImageFormat::RGB_I8: return 1;
+		default: __debugbreak();
 		}
+		return 0;
 	}
 
 	inline GTSL::uint8 ImageFormatChannelCount(const ImageFormat imageFormat)
@@ -335,9 +337,11 @@ namespace GAL
 		{
 		case ImageFormat::RGBA_I8: return 4;
 		case ImageFormat::RGB_I8: return 3;
+		default: __debugbreak();
 		}
+		return 0;
 	}
-	
+
 	inline GTSL::uint8 ImageFormatSize(const  ImageFormat imageFormat)
 	{
 		switch (imageFormat)
@@ -365,10 +369,11 @@ namespace GAL
 		case ImageFormat::DEPTH16_STENCIL8: break;
 		case ImageFormat::DEPTH24_STENCIL8: break;
 		case ImageFormat::DEPTH32_STENCIL8: break;
-		default: ;
+		default: __debugbreak();
 		}
+		return 0;
 	}
-	
+
 #if (_WIN32)
 #define GAL_DEBUG_BREAK __debugbreak();
 #endif

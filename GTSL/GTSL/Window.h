@@ -3,7 +3,7 @@
 #include "Extent.h"
 
 #include "Delegate.hpp"
-#include "String.hpp"
+#include "Ranger.h"
 #include "Math/Vector2.h"
 
 namespace GTSL
@@ -29,7 +29,7 @@ namespace GTSL
 
 			Tab,
 			CapsLock,
-			
+
 			Esc,
 
 			RShift,
@@ -74,6 +74,50 @@ namespace GTSL
 			MINIMIZED, MAXIMIZED, FULLSCREEN
 		};
 		
+		Window() = default;
+		struct WindowCreateInfo
+		{
+			Ranger<const UTF8> Name;
+			Extent2D Extent;
+			Window* ParentWindow = nullptr;
+			class Application* Application = nullptr;
+		};
+		explicit Window(const WindowCreateInfo & windowCreateInfo);
+		~Window();
+
+		void SetTitle(const char* title);
+		void Notify();
+
+		struct WindowIconInfo
+		{
+			byte* Data = nullptr;
+			Extent2D Extent;
+		};
+		void SetIcon(const WindowIconInfo & windowIconInfo);
+
+		void GetFramebufferExtent(Extent2D & extent) const;
+		void GetWindowExtent(Extent2D & windowExtent) const { windowExtent = windowSize; }
+
+		static void GetAspectRatio(const Extent2D & extent, float& aspectRatio) { aspectRatio = static_cast<float>(extent.Width) / static_cast<float>(extent.Height); }
+
+		struct WindowState
+		{
+			WindowSizeState NewWindowSizeState;
+			uint32 RefreshRate{ 0 };
+			Extent2D NewResolution;
+			uint8 NewBitsPerPixel = 8;
+		};
+		void SetState(const WindowState & windowState);
+
+		struct Win32NativeHandles
+		{
+			void* HWND{ nullptr };
+		};
+		void GetNativeHandles(void* nativeHandlesStruct) const;
+
+		void ShowWindow();
+		void HideWindow();
+		
 	protected:
 		Extent2D windowSize;
 		Extent2D clientSize;
@@ -99,33 +143,8 @@ namespace GTSL
 		Delegate<void(KeyboardKeys, bool, bool)> onKeyEvent;
 		Delegate<void(uint32)> onCharEvent;
 		Delegate<void(uint16, uint16)> onWindowMove;
+
 	public:
-		Window() = default;
-		struct WindowCreateInfo
-		{
-			Ranger<const UTF8> Name;
-			Extent2D Extent;
-			Window* ParentWindow = nullptr;
-			class Application* Application = nullptr;
-		};
-		explicit Window(const WindowCreateInfo& windowCreateInfo);
-		~Window();
-		
-		void SetTitle(const char* title);
-		void Notify();
-
-		struct WindowIconInfo
-		{
-			byte* Data = nullptr;
-			Extent2D Extent;
-		};
-		void SetIcon(const WindowIconInfo& windowIconInfo);
-
-		void GetFramebufferExtent(Extent2D& extent) const;
-		void GetWindowExtent(Extent2D& windowExtent) const { windowExtent = windowSize; }
-
-		static void GetAspectRatio(const Extent2D& extent, float& aspectRatio) { aspectRatio = static_cast<float>(extent.Width) / static_cast<float>(extent.Height); }
-
 		void SetOnCloseDelegate(const decltype(onCloseDelegate)& delegate) { onCloseDelegate = delegate; }
 		/**
 		 * \brief Sets the delegate to call when the mouse on this window is moved.
@@ -140,23 +159,5 @@ namespace GTSL
 		void SetOnCharEventDelegate(const decltype(onCharEvent)& delegate) { onCharEvent = delegate; }
 		void SetOnKeyEventDelegate(const decltype(onKeyEvent)& delegate) { onKeyEvent = delegate; }
 		void SetOnWindowMoveDelegate(const decltype(onWindowMove)& delegate) { onWindowMove = delegate; }
-
-		struct WindowState
-		{
-			WindowSizeState NewWindowSizeState;
-			uint32 RefreshRate{ 0 };
-			Extent2D NewResolution;
-			uint8 NewBitsPerPixel = 8;
-		};
-		void SetState(const WindowState& windowState);
-
-		struct Win32NativeHandles
-		{
-			void* HWND{ nullptr };
-		};
-		void GetNativeHandles(void* nativeHandlesStruct) const;
-
-		void ShowWindow();
-		void HideWindow();
 	};
 }

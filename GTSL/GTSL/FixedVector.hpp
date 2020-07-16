@@ -104,7 +104,7 @@ namespace GTSL
 		 * \brief Constructs a FixedVector with enough space to accomodate capacity T elements.
 		 * \param capacity Number of T objects to allocate space for.
 		 */
-		explicit FixedVector(const length_type capacity, AllocatorReference* allocatorReference) : capacity(capacity), length(0), allocatorReference(allocatorReference), data(this->allocate(capacity))
+		explicit FixedVector(const length_type capacity, AllocatorReference* allocatorReference) : capacity(capacity), allocatorReference(allocatorReference), data(this->allocate(capacity))
 		{
 		}
 

@@ -1,24 +1,24 @@
 #pragma once
 
-#include "Core.h"
-
 #include "Vector3.h"
 #include "Math.hpp"
 
 namespace GTSL
 {
+	using float32 = float;
+	
 	class Line3
 	{
 	public:
 		Vector3 Start;
 		Vector3 End;
 
-		[[nodiscard]] float Length() const
+		[[nodiscard]] float32 Length() const
 		{
 			return GTSL::Math::Length(Segment());
 		}
 
-		[[nodiscard]] float LengthSquared() const
+		[[nodiscard]] float32 LengthSquared() const
 		{
 			return Math::LengthSquared(Segment());
 		}

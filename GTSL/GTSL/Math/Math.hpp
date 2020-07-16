@@ -97,7 +97,7 @@ namespace GTSL
 #if (!_WIN64)
 		static void RoundDown(const uint64 x, const uint64 multiple, uint64& quotient, uint64& remainder) { const uint64 rem = x % multiple; remainder = rem; quotient = x - rem; }
 #endif
-		static void RoundDown(const uint64 x, const uint32 multiple, uint32& quotient, uint32& remainder);
+		static void RoundDown(uint64 x, uint32 multiple, uint32& quotient, uint32& remainder);
 
 		/**
 		 * \brief Returns x to the y.
@@ -491,7 +491,7 @@ namespace GTSL
 				tangent0 = Cross(normal, Vector3(0, 1, 0));
 			Normalize(tangent0);
 			// Find another vector in the plane
-			Vector3 tangent1 = Normalized(Cross(normal, tangent0));
+			const Vector3 tangent1 = Normalized(Cross(normal, tangent0));
 			return Matrix4(tangent0.X, tangent0.Y, tangent0.Z, 0.0f, tangent1.X, tangent1.Y, tangent1.Z, 0.0f, normal.X, normal.Y, normal.Z, 0.0f, 0, 0, 0, 0);
 		}
 
@@ -504,16 +504,16 @@ namespace GTSL
 
 		static Vector3 SphericalCoordinatesToCartesianCoordinates(const Vector2& sphericalCoordinates)
 		{
-			auto cy = Cosine(sphericalCoordinates.Y);
+			const auto cy = Cosine(sphericalCoordinates.Y);
 
 			return Vector3(cy * Sine(sphericalCoordinates.X), Sine(sphericalCoordinates.Y),	cy * Cosine(sphericalCoordinates.X));
 		}
 
 		static Vector3 RotatorToNormalVector(const Rotator& rotator)
 		{
-			auto x = Cosine(rotator.Y) * Cosine(rotator.X);
-			auto y = Sine(rotator.Y) * Cosine(rotator.X);
-			auto z = Sine(rotator.X);
+			const auto x = Cosine(rotator.Y) * Cosine(rotator.X);
+			const auto y = Sine(rotator.Y) * Cosine(rotator.X);
+			const auto z = Sine(rotator.X);
 
 			return Vector3(x, y, z);
 		}
@@ -541,15 +541,15 @@ namespace GTSL
 		{
 			Matrix4 result(1);
 
-			auto xx = A.X * A.X;
-			auto xy = A.X * A.Y;
-			auto xz = A.X * A.Z;
-			auto xw = A.X * A.Q;
-			auto yy = A.Y * A.Y;
-			auto yz = A.Y * A.Z;
-			auto yw = A.Y * A.Q;
-			auto zz = A.Z * A.Z;
-			auto zw = A.Z * A.Q;
+			const auto xx = A.X * A.X;
+			const auto xy = A.X * A.Y;
+			const auto xz = A.X * A.Z;
+			const auto xw = A.X * A.Q;
+			const auto yy = A.Y * A.Y;
+			const auto yz = A.Y * A.Z;
+			const auto yw = A.Y * A.Q;
+			const auto zz = A.Z * A.Z;
+			const auto zw = A.Z * A.Q;
 
 			result(0, 0) = 1 - 2 * (yy + zz);
 			result(0, 1) = 2 * (xy - zw);
@@ -570,14 +570,14 @@ namespace GTSL
 		{
 			Matrix4 result(1);
 
-			float32 c = Cosine(angle); // cosine
-			float32 s = Sine(angle); // sine
-			float32 xx = A.X * A.X;
-			float32 xy = A.X * A.Y;
-			float32 xz = A.X * A.Z;
-			float32 yy = A.Y * A.Y;
-			float32 yz = A.Y * A.Z;
-			float32 zz = A.Z * A.Z;
+			const float32 c = Cosine(angle); // cosine
+			const float32 s = Sine(angle); // sine
+			const float32 xx = A.X * A.X;
+			const float32 xy = A.X * A.Y;
+			const float32 xz = A.X * A.Z;
+			const float32 yy = A.Y * A.Y;
+			const float32 yz = A.Y * A.Z;
+			const float32 zz = A.Z * A.Z;
 
 			// build rotation matrix
 			Matrix4 m;
@@ -702,10 +702,10 @@ namespace GTSL
 			const Vector3 AB = _B - _A;
 			const Vector3 AC = _C - _A;
 			const Vector3 BC = _C - _B;
-			float32 E = DotProduct(AC, AB);
+			const float32 E = DotProduct(AC, AB);
 			// Handle cases where c projects outside ab
 			if (E <= 0.0f) return DotProduct(AC, AC);
-			float32 f = DotProduct(AB, AB);
+			const float32 f = DotProduct(AB, AB);
 			if (E >= f) return DotProduct(BC, BC);
 			// Handle cases where c projects onto ab
 			return DotProduct(AC, AC) - E * E / f;
@@ -751,7 +751,7 @@ namespace GTSL
 			}
 
 			// Check if P in edge region of BC, if so return projection of P onto BC
-			float32 VA = D3 * D6 - D5 * D4;
+			const float32 VA = D3 * D6 - D5 * D4;
 			if (VA <= 0.0f && (D4 - D3) >= 0.0f && (D5 - D6) >= 0.0f)
 			{
 				const float32 W = (D4 - D3) / ((D4 - D3) + (D5 - D6));

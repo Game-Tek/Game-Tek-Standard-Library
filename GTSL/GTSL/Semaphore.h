@@ -28,7 +28,7 @@ namespace GTSL
 
         void Wait() noexcept
         {
-            Lock lock(mutex);
+	        const Lock lock(mutex);
             cv.Wait(lock, [&]() { return count != 0; });
             --count;
         }

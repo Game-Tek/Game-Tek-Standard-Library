@@ -70,7 +70,7 @@ GTSL::uint8 GAL::VulkanRenderContext::AcquireNextImage(const AcquireNextImageInf
 {
 	GTSL::uint32 image_index = 0;
 
-	auto result = vkAcquireNextImageKHR(static_cast<const VulkanRenderDevice*>(acquireNextImageInfo.RenderDevice)->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain),
+	vkAcquireNextImageKHR(static_cast<const VulkanRenderDevice*>(acquireNextImageInfo.RenderDevice)->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain),
 		~0ULL, static_cast<VulkanSemaphore*>(acquireNextImageInfo.Semaphore)->GetVkSemaphore(),
 	    acquireNextImageInfo.Fence ? static_cast<VulkanFence*>(acquireNextImageInfo.Fence)->GetVkFence() : nullptr, &image_index);
 
@@ -147,16 +147,16 @@ GAL::VulkanSurface::VulkanSurface(const CreateInfo& createInfo)
 
 void GAL::VulkanSurface::Destroy(VulkanRenderDevice* renderDevice)
 {
-	vkDestroySurfaceKHR(renderDevice->GetVkInstance(), (VkSurfaceKHR)surface, renderDevice->GetVkAllocationCallbacks());
+	vkDestroySurfaceKHR(renderDevice->GetVkInstance(), static_cast<VkSurfaceKHR>(surface), renderDevice->GetVkAllocationCallbacks());
 }
 
 GTSL::uint32 GAL::VulkanSurface::GetSupportedRenderContextFormat(VulkanRenderDevice* renderDevice, GTSL::Ranger<GTSL::Pair<GTSL::uint32, GTSL::uint32>> formats)
 {
 	GTSL::uint32 surface_formats_count = 0;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice->GetVkPhysicalDevice(), (VkSurfaceKHR)surface, &surface_formats_count, nullptr);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &surface_formats_count, nullptr);
 
 	GTSL::Array<VkSurfaceFormatKHR, 32> surface_formats(surface_formats_count);
-	vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice->GetVkPhysicalDevice(), (VkSurfaceKHR)surface, &surface_formats_count, surface_formats.begin());
+	vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &surface_formats_count, surface_formats.begin());
 
 	for (auto& e : surface_formats)
 	{
@@ -170,9 +170,9 @@ GTSL::uint32 GAL::VulkanSurface::GetSupportedRenderContextFormat(VulkanRenderDev
 GTSL::uint32 GAL::VulkanSurface::GetSupportedPresentMode(VulkanRenderDevice* renderDevice, GTSL::Ranger<GTSL::uint32> presentModes)
 {
 	GTSL::uint32 present_modes_count = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice->GetVkPhysicalDevice(), (VkSurfaceKHR)surface, &present_modes_count, nullptr);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &present_modes_count, nullptr);
 	GTSL::Array<VkPresentModeKHR, 8> present_modes(present_modes_count);
-	vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice->GetVkPhysicalDevice(), (VkSurfaceKHR)surface, &present_modes_count, present_modes.begin());
+	vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &present_modes_count, present_modes.begin());
 
 	for (auto& present_mode : present_modes) { for (auto p_m : presentModes) { if (present_mode == p_m) { return &present_mode - present_modes.begin(); } } }
 
@@ -182,10 +182,10 @@ GTSL::uint32 GAL::VulkanSurface::GetSupportedPresentMode(VulkanRenderDevice* ren
 bool GAL::VulkanSurface::IsSupported(VulkanRenderDevice* renderDevice)
 {
 	VkBool32 supported = 0;
-	vkGetPhysicalDeviceSurfaceSupportKHR(renderDevice->GetVkPhysicalDevice(), 0, reinterpret_cast<VkSurfaceKHR>(surface), &supported);
+	vkGetPhysicalDeviceSurfaceSupportKHR(renderDevice->GetVkPhysicalDevice(), 0, static_cast<VkSurfaceKHR>(surface), &supported);
 
 	VkSurfaceCapabilitiesKHR surface_capabilities;
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(renderDevice->GetVkPhysicalDevice(), (VkSurfaceKHR)surface, &surface_capabilities);
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &surface_capabilities);
 
 	return supported;
 }

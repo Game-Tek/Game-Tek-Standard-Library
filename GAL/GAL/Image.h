@@ -72,6 +72,7 @@ namespace GAL
 			switch (ImageFormatChannelCount(sourceImageFormat))
 			{
 			case 3: byte3_channel_swap(); break;
+			default: __debugbreak();
 			}
 		}
 	};
@@ -101,6 +102,5 @@ namespace GAL
 		{
 			GTSL::uint8 Anisotropy{ 0 };
 		};
-	protected:
 	};
 }

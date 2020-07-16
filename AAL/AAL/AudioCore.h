@@ -94,6 +94,6 @@ namespace AAL
 		EXCLUSIVE
 	};
 
-	inline float dBToVolume(float db);
-	inline float VolumeTodB(float volume);
+	float dBToVolume(float db);
+	float VolumeTodB(float volume);
 }

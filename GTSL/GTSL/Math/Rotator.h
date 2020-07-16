@@ -1,7 +1,5 @@
 #pragma once
 
-#include "GTSL/Core.h"
-
 namespace GTSL
 {
 	//Used to specify a rotation with floating point precision.

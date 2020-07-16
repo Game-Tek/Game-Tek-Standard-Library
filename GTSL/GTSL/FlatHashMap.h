@@ -21,7 +21,7 @@ namespace GTSL
 
 		FlatHashMap() = default;
 
-		FlatHashMap(const uint32 size, const AllocatorReference& allocatorReference) : capacity(size), loadFactor(0.5f)
+		FlatHashMap(const uint32 size, const AllocatorReference& allocatorReference) : capacity(size)
 		{
 			GTSL_ASSERT(size != 0 && (size & (size - 1)) == 0, "Size is not a power of two!");
 			GTSL_ASSERT(static_cast<uint32>(size * this->loadFactor) != 0, "Size and load factor combination leads to empty buckets!")
@@ -140,11 +140,11 @@ namespace GTSL
 
 		bool Find(const key_type key) { return findKeyInBucket(modulo(key, this->capacity), key, getMaxBucketLength()); }
 		
-		bool Find(const key_type key, T* obj)
+		bool Find(const key_type key, T*& obj)
 		{
 			const auto max_bucket_length = getMaxBucketLength(); const auto bucket = modulo(key, this->capacity);
 			key_type* ret = findKeyInBucket(bucket, key, max_bucket_length);
-			obj = getValuesBucketPointer(bucket, max_bucket_length) + (ret - (getKeysBucketPointer(bucket, max_bucket_length) + 1));
+			obj = (getValuesBucketPointer(bucket, max_bucket_length) + (ret - (getKeysBucketPointer(bucket, max_bucket_length) + 1)));
 			return ret;
 		}
 		

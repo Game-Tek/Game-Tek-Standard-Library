@@ -34,7 +34,7 @@ namespace GAL
 		VulkanGraphicsPipeline(const CreateInfo& createInfo);
 		~VulkanGraphicsPipeline() = default;
 
-		void Destroy(RenderDevice* renderDevice);
+		void Destroy(const VulkanRenderDevice* renderDevice);
 
 		[[nodiscard]] VkPipeline GetVkGraphicsPipeline() const { return pipeline; }
 		[[nodiscard]] VkPipelineLayout GetVkPipelineLayout() const { return pipelineLayout; }
@@ -50,7 +50,7 @@ namespace GAL
 		VulkanComputePipeline(const CreateInfo& createInfo);
 		~VulkanComputePipeline() = default;
 
-		void Destroy(RenderDevice* renderDevice);
+		void Destroy(const VulkanRenderDevice* renderDevice);
 
 		[[nodiscard]] VkPipeline GetVkPipeline() const { return pipeline; }
 

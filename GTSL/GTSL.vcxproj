@@ -43,7 +43,6 @@
     <ClInclude Include="GTSL\Math\Plane.h" />
     <ClInclude Include="GTSL\Math\Quaternion.h" />
     <ClInclude Include="GTSL\Math\Rotator.h" />
-    <ClInclude Include="GTSL\Math\Transform2.h" />
     <ClInclude Include="GTSL\Math\Transform3.h" />
     <ClInclude Include="GTSL\Math\Vector2.h" />
     <ClInclude Include="GTSL\Math\Vector3.h" />
@@ -65,7 +64,6 @@
     <ClInclude Include="GTSL\Network\NetConnection.h" />
     <ClInclude Include="GTSL\Network\Sockets.h" />
     <ClInclude Include="GTSL\Network\IPEndpoints.h" />
-    <ClInclude Include="GTSL\Octree.h" />
     <ClInclude Include="GTSL\Pair.h" />
     <ClInclude Include="GTSL\Ranger.h" />
     <ClInclude Include="GTSL\RGB.h" />
@@ -76,7 +74,6 @@
     <ClInclude Include="GTSL\System.h" />
     <ClInclude Include="GTSL\TextureCoordinates.h" />
     <ClInclude Include="GTSL\Thread.h" />
-    <ClInclude Include="GTSL\ThreadPool.h" />
     <ClInclude Include="GTSL\Time.h" />
     <ClInclude Include="GTSL\Window.h" />
     <ClInclude Include="Math\AxisAngle.h" />
@@ -130,14 +127,14 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

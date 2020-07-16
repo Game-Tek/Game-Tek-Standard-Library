@@ -13,8 +13,6 @@ namespace GAL
 		{
 			bool IsSignaled{ true };
 		};
-		
-	protected:
 	};
 
 	/**
@@ -27,6 +25,5 @@ namespace GAL
 		{
 			GTSL::uint64 InitialValue{ 0 };
 		};
-	protected:
 	};
 }

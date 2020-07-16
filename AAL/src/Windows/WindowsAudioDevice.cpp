@@ -19,7 +19,7 @@ WindowsAudioDevice::WindowsAudioDevice(const AudioDeviceCreateInfo& audioDeviceC
 	const auto IID_IAudioClient = __uuidof(IAudioClient);
 	const auto IID_IAudioRenderClient = __uuidof(IAudioRenderClient);
 
-	HRESULT hr = CoCreateInstance(CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL, IID_IMMDeviceEnumerator, reinterpret_cast<void**>(&enumerator));
+	CoCreateInstance(CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL, IID_IMMDeviceEnumerator, reinterpret_cast<void**>(&enumerator));
 
 	//IMMDeviceCollection* audio_endpoints = nullptr;
 	//enumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &audio_endpoints);
@@ -34,7 +34,7 @@ WindowsAudioDevice::WindowsAudioDevice(const AudioDeviceCreateInfo& audioDeviceC
 	case StreamShareMode::EXCLUSIVE: win_share_mode = AUDCLNT_SHAREMODE_EXCLUSIVE; break;
 	case StreamShareMode::SHARED: win_share_mode = AUDCLNT_SHAREMODE_SHARED; break;
 	}
-	audioClient->Initialize(win_share_mode, 0, 0, 0, (PWAVEFORMATEX)&pwfx, nullptr);
+	audioClient->Initialize(win_share_mode, 0, 0, 0, reinterpret_cast<PWAVEFORMATEX>(&pwfx), nullptr);
 
 	audioClient->GetService(IID_IAudioRenderClient, reinterpret_cast<void**>(&renderClient));
 

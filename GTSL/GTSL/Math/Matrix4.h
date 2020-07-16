@@ -259,7 +259,7 @@ namespace GTSL
 		//	return Result;
 		//}
 
-		Matrix4& operator*=(const float other);
+		Matrix4& operator*=(float other);
 		//{
 		//	for (uint8 i = 0; i < MATRIX_SIZE; i++)
 		//	{

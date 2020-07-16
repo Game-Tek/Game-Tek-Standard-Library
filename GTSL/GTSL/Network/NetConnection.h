@@ -1,8 +1,5 @@
 #pragma once
 
-#include "IpEndpoint"
-#include "Application/Clock.h"
-
 class NetConnection
 {
 	Packet::SequenceType sequence = 0;

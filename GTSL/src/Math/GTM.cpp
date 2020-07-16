@@ -160,7 +160,7 @@ float32 Math::DotProduct(const Quaternion& a, const Quaternion& b)
 
 float32 Math::LengthSquared(const Quaternion& a)
 {
-	SIMD128<float32> vec(AlignedPointer<const float32, 16>(&a.X));
+	const SIMD128<float32> vec(AlignedPointer<const float32, 16>(&a.X));
 	return SIMD128<float32>::DotProduct(vec, vec).GetElement<0>();
 }
 

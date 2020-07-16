@@ -31,7 +31,7 @@ void File::OpenFile(const Ranger<const UTF8>& path, const uint8 accessMode, cons
 	StaticString<MAX_PATH> win32_path(path);
 	win32_path += '\0';
 	fileHandle = CreateFileA(win32_path.begin(), access_mode, 0, nullptr, open_mode, FILE_ATTRIBUTE_NORMAL, nullptr);
-	auto w = GetLastError();
+	const auto w = GetLastError();
 	GTSL_ASSERT(w == ERROR_SUCCESS || w == ERROR_ALREADY_EXISTS, "Win32 Error!");
 }
 
@@ -81,7 +81,7 @@ uint32 File::ReadFile(Buffer& buffer)
 
 void File::SetPointer(const int64 byte, MoveFrom from) const
 {
-	LARGE_INTEGER bytes{ byte };
+	const LARGE_INTEGER bytes{ byte };
 	SetFilePointerEx(static_cast<HANDLE>(fileHandle), bytes, nullptr, static_cast<uint8>(from));
 }
 

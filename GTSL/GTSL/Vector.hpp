@@ -27,7 +27,7 @@ namespace GTSL
 		 * \brief Constructs a Vector with enough space to accomodate capacity T elements.
 		 * \param capacity Number of T objects to allocate space for.
 		 */
-		explicit Vector(const length_type capacity, const AllocatorReference& allocatorReference) : capacity(capacity), length(0),
+		explicit Vector(const length_type capacity, const AllocatorReference& allocatorReference) : capacity(capacity),
 		data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
 		{
 		}
@@ -295,7 +295,6 @@ namespace GTSL
 		/**
 		 * \brief Copies the passed in element At index and shifts the rest of the vector forward to fit it in.
 		 * \param index Index At which to Place the object.
-		 * \param obj Object to copy.
 		 * \return Returns the length of the vector after inserting.
 		 */
 		template<typename... ARGS>
@@ -321,7 +320,6 @@ namespace GTSL
 		/**
 		 * \brief Copies obj to index.
 		 * \param index Index At which to Place the object.
-		 * \param obj Object to copy.
 		 */
 		void Insert(const length_type index, const GTSL::Ranger<const T> ranger, const AllocatorReference& allocatorReference)
 		{

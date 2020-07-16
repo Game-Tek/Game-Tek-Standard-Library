@@ -61,7 +61,7 @@ namespace GTSL
 			return *this;
 		}
 
-		Quaternion operator-(void) const
+		Quaternion operator-() const
 		{
 			return Quaternion(-X, -Y, -Z, -Q);
 		}
