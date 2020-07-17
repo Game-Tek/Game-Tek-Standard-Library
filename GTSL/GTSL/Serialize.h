@@ -3,6 +3,7 @@
 #include "Buffer.h"
 #include "FlatHashMap.h"
 #include "Array.hpp"
+#include "Vector.hpp"
 
 namespace GTSL
 {

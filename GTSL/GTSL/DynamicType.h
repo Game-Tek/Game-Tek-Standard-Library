@@ -10,6 +10,7 @@ namespace GTSL
 	{
 	public:
 		CheckedPointer() = default;
+		
 		CheckedPointer(void* data, const char* typeName) : pointer(data), name(typeName)
 		{
 		}
