@@ -51,11 +51,8 @@ namespace GTSL
 		{
 			other.data = nullptr;
 		}
-#if (!_DEBUG)
-		~Allocation() = default;
-#else
+
 		~SmartPointer() { if (this->data) { this->allocator.Deallocate(this->size, this->alignment, this->data); } }
-#endif
 
 		SmartPointer& operator=(const SmartPointer& other)
 		{
@@ -73,10 +70,13 @@ namespace GTSL
 		T* operator->() const { return data; }
 		T& operator*() const { return *data; }
 
+		T* GetData() const { return data; }
+		
 		template<typename TT, typename... ARGS>
 		static SmartPointer<T, ALLOCATOR> Create(const ALLOCATOR& allocatorReference, ARGS&&... args)
 		{
-			T* data = nullptr; allocatorReference.Allocate(sizeof(TT), alignof(TT), reinterpret_cast<void**>(&data));
+			T* data = nullptr; uint64 a_s; allocatorReference.Allocate(sizeof(TT), alignof(TT), reinterpret_cast<void**>(&data), &a_s);
+			::new(data) TT(GTSL::MakeForwardReference<ARGS>(args)...);
 			return SmartPointer<T, ALLOCATOR>(sizeof(TT), alignof(TT), data, allocatorReference);
 		}
 

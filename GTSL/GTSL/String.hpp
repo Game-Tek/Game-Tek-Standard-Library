@@ -4,7 +4,6 @@
 #include "Core.h"
 
 #include "Vector.hpp"
-#include "Stream.h"
 #include "StringCommon.h"
 
 namespace GTSL
@@ -18,13 +17,13 @@ namespace GTSL
 		
 		String() = default;
 
-		String(const char* cstring, const AllocatorReference& allocatorReference) : data(GTSL::Ranger<const UTF8>(StringLength(cstring) + 1, cstring), allocatorReference) {}
+		String(const char* cstring, const ALLOCATOR& allocatorReference) : data(GTSL::Ranger<const UTF8>(StringLength(cstring) + 1, cstring), allocatorReference) {}
 
 		/**
 		 * \brief Creates an String with enough space allocated for length elements.
 		 * \param length Amount of elements to allocate.
 		 */
-		explicit String(const length_type length, const AllocatorReference& allocatorReference) : data(length, allocatorReference) {}
+		explicit String(const length_type length, const ALLOCATOR& allocatorReference) : data(length, allocatorReference) {}
 
 		String(const String& other) = default;
 		String(String&& other) noexcept = default;

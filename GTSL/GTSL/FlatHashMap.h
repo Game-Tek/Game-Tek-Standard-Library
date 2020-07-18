@@ -21,14 +21,14 @@ namespace GTSL
 
 		FlatHashMap() = default;
 
-		FlatHashMap(const uint32 size, const AllocatorReference& allocatorReference) : capacity(size), allocator(allocatorReference)
+		FlatHashMap(const uint32 size, const ALLOCATOR& allocatorReference) : capacity(size), allocator(allocatorReference)
 		{
 			GTSL_ASSERT(size != 0 && (size & (size - 1)) == 0, "Size is not a power of two!");
 			GTSL_ASSERT(static_cast<uint32>(size * this->loadFactor) != 0, "Size and load factor combination leads to empty buckets!")
 			this->data = allocate(size, getMaxBucketLength()); build(0, getMaxBucketLength());
 		}
 
-		FlatHashMap(const uint32 size, const float32 loadFactor, const AllocatorReference& allocatorReference) : capacity(size), loadFactor(loadFactor), allocator(allocatorReference)
+		FlatHashMap(const uint32 size, const float32 loadFactor, const ALLOCATOR& allocatorReference) : capacity(size), loadFactor(loadFactor), allocator(allocatorReference)
 		{
 			GTSL_ASSERT(size != 0 && (size & (size - 1)) == 0, "Size is not a power of two!");
 			GTSL_ASSERT(this->loadFactor < 1.0f && this->loadFactor > 0.0f, "Invalid load factor!");
