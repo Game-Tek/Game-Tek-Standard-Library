@@ -6,6 +6,7 @@
 
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanRenderPass.h"
+#include "GTSL/Buffer.h"
 #include "GTSL/String.hpp"
 
 GAL::VulkanShader::VulkanShader(const CreateInfo& createInfo)
@@ -22,9 +23,7 @@ void GAL::VulkanShader::Destroy(const VulkanRenderDevice* renderDevice)
 	vkDestroyShaderModule(renderDevice->GetVkDevice(), shaderModule, renderDevice->GetVkAllocationCallbacks());
 }
 
-bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName,
-                                      const ShaderType shaderType, const ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result,
-                                      GTSL::String& compilationResult, const GTSL::AllocatorReference& allocatorReference)
+bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result)
 {
 	shaderc_shader_kind shaderc_stage;
 
@@ -54,15 +53,14 @@ bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL:
 	shaderc_compile_options.SetSourceLanguage(shaderc_source_language);
 	shaderc_compile_options.SetOptimizationLevel(shaderc_optimization_level_performance);
 	const auto shaderc_module = shaderc_compiler.CompileGlslToSpv(static_cast<const char*>(code.begin()), shaderc_stage, shaderName.begin(), shaderc_compile_options);
-	
+
 	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
 		auto res = shaderc_module.GetErrorMessage();
-		compilationResult = GTSL::String(GTSL::Ranger<const GTSL::UTF8>(shaderc_module.GetErrorMessage().length(), shaderc_module.GetErrorMessage().c_str()), allocatorReference);
 		return false;
 	}
-	
-	result.Initialize(GTSL::Ranger<const GTSL::byte>(reinterpret_cast<const GTSL::byte*>(shaderc_module.begin()), reinterpret_cast<const GTSL::byte*>(shaderc_module.end())), allocatorReference);
+
+	result.WriteBytes((shaderc_module.end() - shaderc_module.begin()) * sizeof(GTSL::uint32), reinterpret_cast<const GTSL::byte*>(shaderc_module.begin()));
 	return true;
 }
 

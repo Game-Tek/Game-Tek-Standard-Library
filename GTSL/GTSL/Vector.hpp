@@ -11,7 +11,7 @@
 
 namespace GTSL
 {
-	template <typename T>
+	template <typename T, class ALLOCATOR>
 	class Vector
 	{
 	public:
@@ -28,7 +28,7 @@ namespace GTSL
 		 * \param capacity Number of T objects to allocate space for.
 		 */
 		explicit Vector(const length_type capacity, const AllocatorReference& allocatorReference) : capacity(capacity),
-		data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
+		data(this->allocate(this->capacity, this->capacity)), allocator(allocatorReference)
 		{
 		}
 
@@ -38,7 +38,7 @@ namespace GTSL
 		 * \param length Number of elements to consider being already placed in vector.
 		 */
 		explicit Vector(const length_type capacity, const length_type length, const AllocatorReference& allocatorReference) : capacity(capacity), length(length),
-		data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
+		data(this->allocate(this->capacity, this->capacity)), allocator(allocatorReference)
 		{
 		}
 
@@ -46,7 +46,7 @@ namespace GTSL
 		 * \brief Constructs a Vector with enough space to accomodate capacity T elements, and considers length elements already occupied.
 		 */
 		explicit Vector(const GTSL::Ranger<const T>& ranger, const AllocatorReference& allocatorReference) : capacity(static_cast<uint32>(ranger.ElementCount())),
-		length(static_cast<uint32>(ranger.ElementCount())), data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
+		length(static_cast<uint32>(ranger.ElementCount())), data(this->allocate(this->capacity, this->capacity)), allocator(allocatorReference)
 		{
 		}
 
@@ -55,7 +55,7 @@ namespace GTSL
 		 * \param initializerList Initializer list to take elements from.
 		 */
 		constexpr Vector(const std::initializer_list<T>& initializerList) : capacity(static_cast<uint32>(initializerList.end() - initializerList.begin())),
-		length(this->capacity), data(this->allocateAndSetCapacity(this->capacity))
+		length(this->capacity), data(this->allocate(this->capacity, this->capacity))
 		{
 			copyArray(initializerList.begin(), this->data, this->length);
 		}
@@ -65,7 +65,7 @@ namespace GTSL
 		 * \param other Reference to another Vector.
 		 */
 		Vector(const Vector& other, const AllocatorReference& allocatorReference) : capacity(other.capacity), length(other.length),
-		data(this->allocateAndSetCapacity(this->capacity, allocatorReference))
+		data(this->allocate(this->capacity, this->capacity)), allocator(allocatorReference)
 		{
 			copyArray(other.data, this->data, this->length);
 		}
@@ -107,12 +107,14 @@ namespace GTSL
 			other.data = nullptr;
 			return *this;
 		}
-
-		void Free(const AllocatorReference& allocatorReference) { for (auto& e : *this) { e.~T(); } freeData(allocatorReference); }
 		
 		~Vector()
 		{
-			GTSL_ASSERT(!this->data, "Data was not freed!")
+			if(this->data) [[likely]]
+			{
+				for (auto& e : *this) { e.~T(); }
+				deallocate();
+			}
 		}
 		
 		/**
@@ -167,9 +169,9 @@ namespace GTSL
 		 * \brief Resizes the array(if necessary, does not reallocate for downsize) to accomodate count T elements.
 		 * \param count Number of new T elements to accomodate.
 		 */
-		void Resize(const length_type count, const AllocatorReference& allocatorReference)
+		void Resize(const length_type count)
 		{
-			if (this->length + count > this->capacity) { reallocate(allocatorReference); }
+			if (this->length + count > this->capacity) { reallocate(); }
 			this->length = count;
 		}
 
@@ -183,10 +185,10 @@ namespace GTSL
 		 * \brief Initializes the Vector with space for count elements. Useful for when Vector was initialized with no allocation. Calling this function when the array is not Empty will lead to a memory leak.
 		 * \param count Number of T elements to allocate space for.
 		 */
-		void Initialize(const length_type count, const AllocatorReference& allocatorReference)
+		void Initialize(const length_type count)
 		{
 			GTSL_ASSERT(!this->data, "Array pointer is not null!")
-			this->data = allocateAndSetCapacity(count, allocatorReference);
+			this->data = allocate(count, this->capacity);
 			this->length = 0;
 		}
 		
@@ -195,27 +197,24 @@ namespace GTSL
 		*/
 		void Initialize(const GTSL::Ranger<const T>& ranger, const AllocatorReference& allocatorReference)
 		{
-			this->data = allocateAndSetCapacity(ranger.ElementCount(), allocatorReference);
+			this->data = allocate(ranger.ElementCount(), this->capacity);
 			copyArray(ranger.begin(), this->data, ranger.ElementCount());
 			this->length = ranger.ElementCount();
+			this->allocator = allocatorReference;
 		}
 
 		/**
 		 * \brief Downsizes the array to fit count elements.
 		 * \param count Number of T type to leave space for.
 		 */
-		void Shrink(const length_type count, const AllocatorReference& allocatorReference)
+		void Shrink(const length_type count)
 		{
 			for (auto begin = this->begin() + count; begin != this->end(); ++begin) { begin->~T(); }
-			auto old_capacity = this->capacity;
-			T* buffer = allocateAndSetCapacity(count, allocatorReference);
-			auto new_capacity = this->capacity;
+			length_type new_capacity;
+			T* buffer = allocate(count, new_capacity);
 			copyArray(this->data, buffer, this->length);
-			this->capacity = old_capacity;
-			freeData(allocatorReference);
-			this->data = buffer;
-			this->capacity = new_capacity;
-			this->length = count;
+			deallocate();
+			this->capacity = new_capacity; this->data = buffer; this->length = count;
 		}
 
 		/**
@@ -223,9 +222,9 @@ namespace GTSL
 		 * \param obj Object to Insert back.
 		 * \return Length of vector after inserting, also index At which obj was inserted.
 		 */
-		length_type PushBack(const T& obj, const AllocatorReference& allocatorReference)
+		length_type PushBack(const T& obj)
 		{
-			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(allocatorReference); }
+			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
 			::new(static_cast<void*>(this->data + this->length)) T(obj);
 			return this->length++;
 		}
@@ -235,23 +234,23 @@ namespace GTSL
 		 * \param obj Object to Insert back.
 		 * \return Index At which obj was inserted.
 		 */
-		length_type PushBack(T&& obj, const AllocatorReference& allocatorReference)
+		length_type PushBack(T&& obj)
 		{
-			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(allocatorReference); }
+			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
 			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeTransferReference(obj));
 			return this->length++;
 		}
 
-		length_type PushBack(const Ranger<T>& ranger, const AllocatorReference& allocatorReference)
+		length_type PushBack(const Ranger<T>& ranger)
 		{
-			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(allocatorReference); }
+			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(); }
 			copyArray(ranger.begin(), getIterator(this->length), static_cast<uint32>(ranger.ElementCount()));
 			return static_cast<uint32>((this->length += static_cast<uint32>(ranger.ElementCount())) - ranger.ElementCount());
 		}
 
-		length_type PushBack(const Ranger<const T>& ranger, const AllocatorReference& allocatorReference)
+		length_type PushBack(const Ranger<const T>& ranger)
 		{
-			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(allocatorReference); }
+			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(); }
 			copyArray(ranger.begin(), getIterator(this->length), static_cast<uint32>(ranger.ElementCount()));
 			return static_cast<uint32>((this->length += static_cast<uint32>(ranger.ElementCount())) - ranger.ElementCount());
 		}
@@ -261,9 +260,9 @@ namespace GTSL
 		 * \param other Vector to copy elements from.
 		 * \return Length of vector after inserting other's elements.
 		 */
-		length_type PushBack(const Vector& other, const AllocatorReference& allocatorReference)
+		length_type PushBack(const Vector& other)
 		{
-			if (this->length + (this->length - other.length) > this->capacity) { reallocate(allocatorReference); }
+			if (this->length + (this->length - other.length) > this->capacity) { reallocate(); }
 			copyArray(other.data, getIterator(this->length), other.length);
 			return (this->length += other.length) - other.length;
 		}
@@ -275,9 +274,9 @@ namespace GTSL
 		 * \return Length of vector after inserting, also index At which the object was inserted.
 		 */
 		template <typename... ARGS>
-		length_type EmplaceBack(const AllocatorReference& allocatorReference, ARGS&&... args)
+		length_type EmplaceBack(ARGS&&... args)
 		{
-			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(allocatorReference); }
+			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
 			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeForwardReference<ARGS>(args)...);
 			return this->length++;
 		}
@@ -298,9 +297,9 @@ namespace GTSL
 		 * \return Returns the length of the vector after inserting.
 		 */
 		template<typename... ARGS>
-		length_type Insert(const AllocatorReference& allocatorReference, const length_type index, ARGS&&... args)
+		length_type Insert(const length_type index, ARGS&&... args)
 		{
-			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(allocatorReference); }
+			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
 			copyArray(getIterator(index), getIterator(index + 1), this->length - index);
 			::new(static_cast<void*>(this->data + this->length)) T(MakeForwardReference<ARGS>(args)...);
 			return this->length += 1;
@@ -321,9 +320,9 @@ namespace GTSL
 		 * \brief Copies obj to index.
 		 * \param index Index At which to Place the object.
 		 */
-		void Insert(const length_type index, const GTSL::Ranger<const T> ranger, const AllocatorReference& allocatorReference)
+		void Insert(const length_type index, const GTSL::Ranger<const T> ranger)
 		{
-			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(allocatorReference); }
+			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(); }
 			MemCopy(sizeof(T) * ranger.ElementCount(), getIterator(index), getIterator(static_cast<uint32>(index + ranger.ElementCount())));
 			this->length += static_cast<uint32>(ranger.ElementCount());
 			MemCopy(sizeof(T) * ranger.ElementCount(), ranger, getIterator(index));
@@ -341,12 +340,6 @@ namespace GTSL
 			this->data[index].~T();
 			::new(static_cast<void*>(this->data + index)) T(GTSL::MakeForwardReference<ARGS>(args) ...);
 		}
-
-		/**
-		 * \brief Destroys the element a index.
-		 * \param index Index of the element to Destroy.
-		 */
-		void Destroy(const length_type index) { this->data[index].~T(); }
 
 		/**
 		 * \brief Removes the elements At index and moves the rest of the vector to fill the space.
@@ -470,6 +463,7 @@ namespace GTSL
 		length_type capacity{ 0 };
 		length_type length{ 0 };
 		T* data{ nullptr };
+		[[no_unique_address]] ALLOCATOR allocator;
 
 		/**
 		 * \brief Copies data from from to to.
@@ -487,26 +481,18 @@ namespace GTSL
 		 * \param elementCount How many elements of this vector's T to allocate space for.
 		 * \return T pointer to the newly allocated memory.
 		 */
-		T* allocateAndSetCapacity(const length_type elementCount, const AllocatorReference& allocatorReference)
+		T* allocate(const length_type elementCount, length_type& newCapacity)
 		{
-			T* data{ nullptr };
-			uint64 allocated_size{ 0 };
-			allocatorReference.Allocate(elementCount * sizeof(T), alignof(T), reinterpret_cast<void**>(&data), &allocated_size);
-			this->capacity = static_cast<length_type>(allocated_size / sizeof(T));
+			T* data{ nullptr }; uint64 allocated_size{ 0 };
+			this->allocator.Allocate(elementCount * sizeof(T), alignof(T), reinterpret_cast<void**>(&data), &allocated_size);
+			newCapacity = static_cast<length_type>(allocated_size / sizeof(T));
 			return data;
 		}
 
 		/**
 		 * \brief Deletes the data found At this vector's data and sets data as nullptr.
 		 */
-		void freeData(const AllocatorReference& allocatorReference)
-		{
-			if (this->data)
-			{
-				allocatorReference.Deallocate(this->capacity * sizeof(T), alignof(T), this->data);
-				this->data = nullptr;
-			}
-		}
+		void deallocate() { this->allocator.Deallocate(this->capacity * sizeof(T), alignof(T), this->data); }
 
 		/**
 		 * \brief Reallocates this->data to a new array if (this->length + additionalElements) exceeds the allocated space.\n
@@ -514,14 +500,13 @@ namespace GTSL
 		 * Growth of the array is geometric.
 		 * Number can be negative.
 		 */
-		void reallocate(const AllocatorReference& allocatorReference)
+		void reallocate()
 		{
-			const uint32 old_capacity = this->capacity;
 			const length_type new_capacity = this->length * 2;
-			T* new_data = this->allocateAndSetCapacity(new_capacity, allocatorReference);
+			T* new_data = this->allocate(new_capacity, new_capacity);
 			copyArray(this->data, new_data, this->length);
-			allocatorReference.Deallocate(old_capacity * sizeof(T), alignof(T), this->data);
-			this->data = new_data;
+			deallocate();
+			this->data = new_data; this->capacity = new_capacity;
 		}
 
 		/**

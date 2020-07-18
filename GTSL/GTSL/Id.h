@@ -7,8 +7,6 @@
 
 namespace GTSL
 {
-	class String;
-
 	class Id64
 	{
 	public:

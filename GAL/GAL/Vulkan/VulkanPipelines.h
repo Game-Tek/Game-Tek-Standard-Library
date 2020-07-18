@@ -4,10 +4,8 @@
 
 #include "Vulkan.h"
 
-#include <GTSL/Vector.hpp>
-
 namespace GTSL {
-	class String;
+	class Buffer;
 }
 
 namespace GAL
@@ -20,7 +18,7 @@ namespace GAL
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
-		static bool CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Vector<GTSL::byte>& result, GTSL::String& compilationResult, const GTSL::AllocatorReference& allocatorReference);
+		static bool CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result);
 
 		[[nodiscard]] VkShaderModule GetVkShaderModule() const { return shaderModule; }
 	protected:

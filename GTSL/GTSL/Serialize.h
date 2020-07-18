@@ -22,15 +22,15 @@ namespace GTSL
 		for (auto& e : array) { Extract(e, buffer); }
 	}
 
-	template<typename T>
-	void Insert(const Vector<T>& vector, Buffer& buffer)
+	template<typename T, class ALLOCATOR>
+	void Insert(const Vector<T, ALLOCATOR>& vector, Buffer& buffer)
 	{
 		Insert(vector.GetLength(), buffer);
 		for (const auto& e : vector) { Insert(e, buffer); }
 	}
 	
-	template<typename T>
-	void Extract(Vector<T>& vector, Buffer& buffer)
+	template<typename T, class ALLOCATOR>
+	void Extract(Vector<T, ALLOCATOR>& vector, Buffer& buffer)
 	{
 		uint32 length{ 0 };
 		Extract(length, buffer); vector.Initialize(length);

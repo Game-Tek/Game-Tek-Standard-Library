@@ -1,8 +1,6 @@
 #pragma once
 
 #include "Core.h"
-
-#include "Allocator.h"
 #include "Memory.h"
 
 #if (_DEBUG)
@@ -20,8 +18,9 @@ namespace GTSL
 #else
 		~Buffer() { GTSL_ASSERT(!data, "Allocation was not freed!"); }
 #endif
-		
-		void Allocate(const uint64 bytes, const uint32 alignment, const AllocatorReference& allocatorReference)
+
+		template<class ALLOCATOR>
+		void Allocate(const uint64 bytes, const uint32 alignment, const ALLOCATOR& allocatorReference)
 		{
 			uint64 allocated_size{ 0 };
 			allocatorReference.Allocate(bytes, alignment, reinterpret_cast<void**>(&data), &allocated_size);
@@ -30,8 +29,9 @@ namespace GTSL
 
 		void Resize(const uint64 size) { length = size; }
 		void SetReadPosition(const uint64 pos) { readPos = pos; }
-		
-		void Free(const uint32 alignment, const AllocatorReference& allocatorReference)
+
+		template<class ALLOCATOR>
+		void Free(const uint32 alignment, const ALLOCATOR& allocatorReference)
 		{
 			allocatorReference.Deallocate(capacity, alignment, data); capacity = 0; data = nullptr;
 		}

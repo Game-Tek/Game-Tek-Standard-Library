@@ -59,7 +59,6 @@ namespace GTSL
 		{
 			VectorInfo VectorInfo;
 			uint8 CoreCount = 0;
-			String CpuBrand;
 		} CPU;
 
 		RamInfo RAM;
@@ -68,10 +67,8 @@ namespace GTSL
 	class System
 	{
 	public:
-		static void GetRunningPath(String& path);
 		static void GetRAMInfo(RamInfo& ramInfo);
 		static void GetVectorInfo(VectorInfo& vectorInfo);
-		static void GetCPUName(String& name);
 		static void GetSystemInfo(SystemInfo& systemInfo);
 	};
 }

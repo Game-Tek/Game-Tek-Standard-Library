@@ -54,9 +54,6 @@
     <ClInclude Include="GTSL\Semaphore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\Signal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\System.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -195,9 +192,6 @@
     <ClInclude Include="GTSL\Delegate.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\Stack.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\DLL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -261,9 +255,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\GamepadQuery.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\String.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Memory.cpp">

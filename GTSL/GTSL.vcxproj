@@ -50,7 +50,6 @@
     <ClInclude Include="GTSL\RatioUnit.hpp" />
     <ClInclude Include="GTSL\SIMD\SIMD128.hpp" />
     <ClInclude Include="GTSL\SIMD\SIMD.hpp" />
-    <ClInclude Include="GTSL\Stack.hpp" />
     <ClInclude Include="GTSL\StaticString.hpp" />
     <ClInclude Include="GTSL\String.hpp" />
     <ClInclude Include="GTSL\GamepadQuery.h" />
@@ -69,7 +68,6 @@
     <ClInclude Include="GTSL\RGB.h" />
     <ClInclude Include="GTSL\Semaphore.h" />
     <ClInclude Include="GTSL\Serialize.h" />
-    <ClInclude Include="GTSL\Signal.h" />
     <ClInclude Include="GTSL\Stream.h" />
     <ClInclude Include="GTSL\System.h" />
     <ClInclude Include="GTSL\TextureCoordinates.h" />
@@ -106,7 +104,6 @@
     <ClCompile Include="src\Math\Rotator.cpp" />
     <ClCompile Include="src\Math\Vector3.cpp" />
     <ClCompile Include="src\Memory.cpp" />
-    <ClCompile Include="src\String.cpp" />
     <ClCompile Include="src\GamepadQuery.cpp" />
     <ClCompile Include="src\Sockets.cpp" />
     <ClCompile Include="src\Stream.cpp" />

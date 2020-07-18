@@ -90,20 +90,4 @@ namespace GTSL
 
 		[[no_unique_address]] ALLOCATOR allocator;
 	};
-
-	template<typename T, typename ...ARGS>
-	T* New(const AllocatorReference& allocatorReference, ARGS&&... args)
-	{
-		void* data{ nullptr }; uint64 size{ 0 };
-		allocatorReference.Allocate(sizeof(T), alignof(T), &data, &size);
-		::new(data) T(MakeForwardReference<ARGS>(args)...);
-		return static_cast<T*>(data);
-	}
-
-	template<typename T>
-	void Delete(T* ptr, const AllocatorReference& allocatorReference)
-	{
-		ptr->~T();
-		allocatorReference.Deallocate(sizeof(T), alignof(T), ptr);
-	}
 }

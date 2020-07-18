@@ -10,18 +10,6 @@
 
 using namespace GTSL;
 
-void System::GetRunningPath(String& path)
-{
-#if (_WIN32)
-	char a[512];
-	GetModuleFileNameA(NULL, a, 512);
-	//GTSL_ASSERT(GetModuleFileNameA(NULL, a, 512), "Failed to get Win32 module file name!")
-	path += a;
-	path.Drop(path.FindLast('\\') + 1);
-	path.ReplaceAll('\\', '/');
-#endif
-}
-
 void System::GetRAMInfo(RamInfo& ramInfo)
 {
 #if (_WIN32)
@@ -106,30 +94,30 @@ void System::GetVectorInfo(VectorInfo& vectorInfo)
 }
 
 
-void System::GetCPUName(String& name)
-{
-#if (_WIN32)
-	int CPUInfo[4] = { -1 };
-	unsigned i = 0;
-	const unsigned nExIds = CPUInfo[0];
-	char CPUBrandString[0x40];
-	// Get the information associated with each extended ID.
-	__cpuid(CPUInfo, 0x80000000);
-	for (i = 0x80000000; i <= nExIds; ++i)
-	{
-		__cpuid(CPUInfo, i);
-		// Interpret CPU brand string
-		if (i == 0x80000002)
-		memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
-		else if (i == 0x80000003)
-		memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
-		else if (i == 0x80000004)
-		memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
-	}
-
-	name += CPUBrandString;
-#endif
-}
+//void System::GetCPUName(String& name)
+//{
+//#if (_WIN32)
+//	int CPUInfo[4] = { -1 };
+//	unsigned i = 0;
+//	const unsigned nExIds = CPUInfo[0];
+//	char CPUBrandString[0x40];
+//	// Get the information associated with each extended ID.
+//	__cpuid(CPUInfo, 0x80000000);
+//	for (i = 0x80000000; i <= nExIds; ++i)
+//	{
+//		__cpuid(CPUInfo, i);
+//		// Interpret CPU brand string
+//		if (i == 0x80000002)
+//		memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
+//		else if (i == 0x80000003)
+//		memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
+//		else if (i == 0x80000004)
+//		memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+//	}
+//
+//	name += CPUBrandString;
+//#endif
+//}
 
 void System::GetSystemInfo(SystemInfo& systemInfo)
 {
@@ -142,5 +130,5 @@ void System::GetSystemInfo(SystemInfo& systemInfo)
 	
 	GetVectorInfo(systemInfo.CPU.VectorInfo);
 	GetRAMInfo(systemInfo.RAM);
-	GetCPUName(systemInfo.CPU.CpuBrand);
+	//GetCPUName(systemInfo.CPU.CpuBrand);
 }
