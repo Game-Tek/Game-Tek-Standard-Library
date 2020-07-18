@@ -13,7 +13,7 @@
 
 namespace GTSL
 {
-	template<typename T>
+	template<typename T, class ALLOCATOR>
 	class FlatHashMap
 	{
 	public:
@@ -21,29 +21,27 @@ namespace GTSL
 
 		FlatHashMap() = default;
 
-		FlatHashMap(const uint32 size, const AllocatorReference& allocatorReference) : capacity(size)
+		FlatHashMap(const uint32 size, const AllocatorReference& allocatorReference) : capacity(size), allocator(allocatorReference)
 		{
 			GTSL_ASSERT(size != 0 && (size & (size - 1)) == 0, "Size is not a power of two!");
 			GTSL_ASSERT(static_cast<uint32>(size * this->loadFactor) != 0, "Size and load factor combination leads to empty buckets!")
-			this->data = allocate(size, allocatorReference, getMaxBucketLength()); build(0, getMaxBucketLength());
+			this->data = allocate(size, getMaxBucketLength()); build(0, getMaxBucketLength());
 		}
 
-		FlatHashMap(const uint32 size, const float32 loadFactor, const AllocatorReference& allocatorReference) : capacity(size), loadFactor(loadFactor)
+		FlatHashMap(const uint32 size, const float32 loadFactor, const AllocatorReference& allocatorReference) : capacity(size), loadFactor(loadFactor), allocator(allocatorReference)
 		{
 			GTSL_ASSERT(size != 0 && (size & (size - 1)) == 0, "Size is not a power of two!");
 			GTSL_ASSERT(this->loadFactor < 1.0f && this->loadFactor > 0.0f, "Invalid load factor!");
 			GTSL_ASSERT(static_cast<uint32>(size * this->loadFactor) != 0, "Size and load factor combination leads to empty buckets!")
-			this->data = allocate(size, allocatorReference, getMaxBucketLength()); build(0, getMaxBucketLength());
+			this->data = allocate(size, getMaxBucketLength()); build(0, getMaxBucketLength());
 		}
 
-		FlatHashMap(FlatHashMap&& other) noexcept : data(other.data), capacity(other.capacity), loadFactor(other.loadFactor)
+		FlatHashMap(FlatHashMap&& other) noexcept : data(other.data), capacity(other.capacity), loadFactor(other.loadFactor), allocator(GTSL::MakeTransferReference(other.allocator))
 		{
 			other.data = nullptr; other.capacity = 0; other.loadFactor = 0.0f;
 		}
-		
-		void Free(const AllocatorReference& allocatorReference) { deallocate(allocatorReference, getMaxBucketLength()); this->data = nullptr; }
 
-		~FlatHashMap() { GTSL_ASSERT(!this->data, "Data was not freed!") }
+		~FlatHashMap() { if (this->data) { deallocate(getMaxBucketLength()); } }
 
 		template<typename TT>
 		class Iterator
@@ -127,15 +125,15 @@ namespace GTSL
 		}
 
 		template<typename... ARGS>
-		T* Emplace(const AllocatorReference& allocatorReference, const key_type key, ARGS&&... args)
+		T& Emplace(const key_type key, ARGS&&... args)
 		{
 			const auto max_bucket_length = getMaxBucketLength();
 			const auto bucket = modulo(key, this->capacity);
 			GTSL_ASSERT(findKeyInBucket(bucket, key, max_bucket_length) == nullptr, "Key already exists!")
 			uint64 place_index = getBucketLength(bucket, max_bucket_length)++;
-			if (place_index + 1 > max_bucket_length) { resize(allocatorReference, max_bucket_length); }
+			if (place_index + 1 > max_bucket_length) { resize(max_bucket_length); }
 			getKeysBucket(bucket, max_bucket_length)[place_index] = key;
-			return ::new(getValuesBucket(bucket, max_bucket_length) + place_index) T(MakeForwardReference<ARGS>(args)...);
+			return *(new(getValuesBucket(bucket, max_bucket_length) + place_index) T(MakeForwardReference<ARGS>(args)...));
 		}
 
 		bool Find(const key_type key) { return findKeyInBucket(modulo(key, this->capacity), key, getMaxBucketLength()); }
@@ -173,6 +171,7 @@ namespace GTSL
 		byte* data = nullptr;
 		uint32 capacity = 0;
 		float32 loadFactor = 0.5f;
+		[[no_unique_address]] ALLOCATOR allocator;
 
 		[[nodiscard]] key_type* findKeyInBucket(const uint32 bucket, const key_type key, const uint32 maxBucketLength) const
 		{
@@ -202,12 +201,12 @@ namespace GTSL
 
 		static constexpr uint32 modulo(const key_type key, const uint32 size) { return key & (size - 1); }
 
-		void resize(const AllocatorReference& allocatorReference, const uint32 maxBucketLength)
+		void resize(const uint32 maxBucketLength)
 		{
 			auto new_capacity = this->capacity * 2;
-			auto new_alloc = allocate(new_capacity, allocatorReference, maxBucketLength);
+			auto new_alloc = allocate(new_capacity, maxBucketLength);
 			copy(new_capacity, new_alloc, maxBucketLength);
-			deallocate(allocatorReference, maxBucketLength);
+			deallocate(maxBucketLength);
 			this->data = new_alloc; this->capacity = new_capacity;
 			build(this->capacity / 2, maxBucketLength);
 
@@ -248,14 +247,14 @@ namespace GTSL
 
 		[[nodiscard]] uint64& getBucketLength(const uint32 index, const uint32 maxBucketLength) const { return *getKeysBucketPointer(index, maxBucketLength); }
 		
-		byte* allocate(const uint32 newCapacity, const AllocatorReference& allocatorReference, const uint32 maxBucketLength)
+		byte* allocate(const uint32 newCapacity, const uint32 maxBucketLength)
 		{
 			uint64 allocated_size{ 0 };	void* memory{ nullptr };
-			allocatorReference.Allocate(getTotalAllocationSize(newCapacity, maxBucketLength), alignof(T), &memory, &allocated_size);
+			allocator.Allocate(getTotalAllocationSize(newCapacity, maxBucketLength), alignof(T), &memory, &allocated_size);
 			return static_cast<byte*>(memory);
 		}
 
-		void deallocate(const AllocatorReference& allocatorReference, const uint32 maxBucketLength) const { allocatorReference.Deallocate(getTotalAllocationSize(this->capacity, maxBucketLength), alignof(T), this->data); }
+		void deallocate(const uint32 maxBucketLength) const { allocator.Deallocate(getTotalAllocationSize(this->capacity, maxBucketLength), alignof(T), this->data); }
 
 		void build(const uint32 oldCapacity, const uint32 maxBucketLength) { for (uint32 i = oldCapacity; i < this->capacity; ++i) { getBucketLength(i, maxBucketLength) = 0; } }
 
@@ -274,17 +273,17 @@ namespace GTSL
 
 		[[nodiscard]] uint32 getMaxBucketLength() const { return static_cast<uint32>(this->capacity * this->loadFactor); }
 		
-		template<typename TT, typename L>
-		friend void ForEach(FlatHashMap<TT>& collection, L&& lambda);
+		template<typename TT, class ALLOCATOR, typename L >
+		friend void ForEach(FlatHashMap<TT, ALLOCATOR>& collection, L&& lambda);
 
-		template<typename T>
-		friend void Insert(const FlatHashMap<T>&, class Buffer& buffer, const AllocatorReference&);
-		template<typename T>
-		friend void Extract(FlatHashMap<T>&, class Buffer& buffer, const AllocatorReference&);
+		template<typename T, class ALLOCATOR>
+		friend void Insert(const FlatHashMap<T, ALLOCATOR>&, class Buffer& buffer);
+		template<typename T, class ALLOCATOR>
+		friend void Extract(FlatHashMap<T, ALLOCATOR>&, class Buffer& buffer);
 	};
 
-	template<typename T, typename L>
-	void ForEach(FlatHashMap<T>& collection, L&& lambda)
+	template<typename T, class ALLOCATOR, typename L>
+	void ForEach(FlatHashMap<T, ALLOCATOR>& collection, L&& lambda)
 	{
 		for (uint32 bucket = 0; bucket < collection.capacity; ++bucket) { for (auto& e : collection.getValuesBucket(bucket, collection.getMaxBucketLength())) { lambda(e); } }
 	}

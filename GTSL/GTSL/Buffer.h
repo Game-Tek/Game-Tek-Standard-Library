@@ -62,32 +62,32 @@ namespace GTSL
 		uint64 length{ 0 };
 		uint64 readPos = 0;
 
-		friend void Insert(bool n, Buffer& buffer, const AllocatorReference& allocatorReference);
-		friend void Insert(uint8 n, Buffer& buffer, const AllocatorReference& allocatorReference);
-		friend void Insert(uint16 n, Buffer& buffer, const AllocatorReference& allocatorReference);
-		friend void Insert(uint32 n, Buffer& buffer, const AllocatorReference& allocatorReference);
-		friend void Insert(uint64 n, Buffer& buffer, const AllocatorReference& allocatorReference);
-		friend void Insert(float32 n, Buffer& buffer, const AllocatorReference& allocatorReference);
+		friend void Insert(bool n, Buffer& buffer);
+		friend void Insert(uint8 n, Buffer& buffer);
+		friend void Insert(uint16 n, Buffer& buffer);
+		friend void Insert(uint32 n, Buffer& buffer);
+		friend void Insert(uint64 n, Buffer& buffer);
+		friend void Insert(float32 n, Buffer& buffer);
 		
-		friend void Extract(bool& n, Buffer& buffer, const AllocatorReference& allocatorReference);
-		friend void Extract(uint8& n, Buffer& buffer, const AllocatorReference& allocatorReference);
-		friend void Extract(uint16& n, Buffer& buffer, const AllocatorReference& allocatorReference);
-		friend void Extract(uint32& n, Buffer& buffer, const AllocatorReference& allocatorReference);
-		friend void Extract(uint64& n, Buffer& buffer, const AllocatorReference& allocatorReference);
-		friend void Extract(float32& n, Buffer& buffer, const AllocatorReference& allocatorReference);
+		friend void Extract(bool& n, Buffer& buffer);
+		friend void Extract(uint8& n, Buffer& buffer);
+		friend void Extract(uint16& n, Buffer& buffer);
+		friend void Extract(uint32& n, Buffer& buffer);
+		friend void Extract(uint64& n, Buffer& buffer);
+		friend void Extract(float32& n, Buffer& buffer);
 	};
 
-	inline void Insert(bool n, Buffer& buffer, const AllocatorReference& allocatorReference) { buffer.WriteBytes(sizeof(bool), reinterpret_cast<const byte*>(&n)); }
-	inline void Insert(uint8 n, Buffer& buffer, const AllocatorReference& allocatorReference) { buffer.WriteBytes(sizeof(uint8), reinterpret_cast<byte*>(&n)); }
-	inline void Insert(uint16 n, Buffer& buffer, const AllocatorReference& allocatorReference) { buffer.WriteBytes(sizeof(uint16), reinterpret_cast<byte*>(&n)); }
-	inline void Insert(uint32 n, Buffer& buffer, const AllocatorReference& allocatorReference) { buffer.WriteBytes(sizeof(uint32), reinterpret_cast<const byte*>(&n)); }
-	inline void Insert(uint64 n, Buffer& buffer, const AllocatorReference& allocatorReference) { buffer.WriteBytes(sizeof(uint64), reinterpret_cast<const byte*>(&n)); }
-	inline void Insert(float32 n, Buffer& buffer, const AllocatorReference& allocatorReference) { buffer.WriteBytes(sizeof(float32), reinterpret_cast<const byte*>(&n)); }
+	inline void Insert(bool n, Buffer& buffer) { buffer.WriteBytes(sizeof(bool), reinterpret_cast<const byte*>(&n)); }
+	inline void Insert(uint8 n, Buffer& buffer) { buffer.WriteBytes(sizeof(uint8), reinterpret_cast<byte*>(&n)); }
+	inline void Insert(uint16 n, Buffer& buffer) { buffer.WriteBytes(sizeof(uint16), reinterpret_cast<byte*>(&n)); }
+	inline void Insert(uint32 n, Buffer& buffer) { buffer.WriteBytes(sizeof(uint32), reinterpret_cast<const byte*>(&n)); }
+	inline void Insert(uint64 n, Buffer& buffer) { buffer.WriteBytes(sizeof(uint64), reinterpret_cast<const byte*>(&n)); }
+	inline void Insert(float32 n, Buffer& buffer) { buffer.WriteBytes(sizeof(float32), reinterpret_cast<const byte*>(&n)); }
 
-	inline void Extract(bool& n, Buffer& buffer, const AllocatorReference& allocatorReference) { buffer.ReadBytes(sizeof(bool), reinterpret_cast<byte*>(&n)); }
-	inline void Extract(uint8& n, Buffer& buffer, const AllocatorReference& allocatorReference) { buffer.ReadBytes(sizeof(uint8), reinterpret_cast<byte*>(&n)); }
-	inline void Extract(uint16& n, Buffer& buffer, const AllocatorReference& allocatorReference) { buffer.ReadBytes(sizeof(uint16), reinterpret_cast<byte*>(&n)); }
-	inline void Extract(uint32& n, Buffer& buffer, const AllocatorReference& allocatorReference) { buffer.ReadBytes(sizeof(uint32), reinterpret_cast<byte*>(&n)); }
-	inline void Extract(uint64& n, Buffer& buffer, const AllocatorReference& allocatorReference) { buffer.ReadBytes(sizeof(uint64), reinterpret_cast<byte*>(&n)); }
-	inline void Extract(float32& n, Buffer& buffer, const AllocatorReference& allocatorReference) { buffer.ReadBytes(sizeof(float32), reinterpret_cast<byte*>(&n)); }
+	inline void Extract(bool& n, Buffer& buffer) { buffer.ReadBytes(sizeof(bool), reinterpret_cast<byte*>(&n)); }
+	inline void Extract(uint8& n, Buffer& buffer) { buffer.ReadBytes(sizeof(uint8), reinterpret_cast<byte*>(&n)); }
+	inline void Extract(uint16& n, Buffer& buffer) { buffer.ReadBytes(sizeof(uint16), reinterpret_cast<byte*>(&n)); }
+	inline void Extract(uint32& n, Buffer& buffer) { buffer.ReadBytes(sizeof(uint32), reinterpret_cast<byte*>(&n)); }
+	inline void Extract(uint64& n, Buffer& buffer) { buffer.ReadBytes(sizeof(uint64), reinterpret_cast<byte*>(&n)); }
+	inline void Extract(float32& n, Buffer& buffer) { buffer.ReadBytes(sizeof(float32), reinterpret_cast<byte*>(&n)); }
 }

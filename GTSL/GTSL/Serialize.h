@@ -8,70 +8,68 @@
 namespace GTSL
 {
 	template<typename T, uint32 N>
-	void Insert(const Array<T, N>& array, Buffer& buffer, const AllocatorReference& allocatorReference)
+	void Insert(const Array<T, N>& array, Buffer& buffer)
 	{
-		Insert(array.GetLength(), buffer, allocatorReference);
-		for (const auto& e : array) { Insert(e, buffer, allocatorReference); }
+		Insert(array.GetLength(), buffer);
+		for (const auto& e : array) { Insert(e, buffer); }
 	}
 
 	template<typename T, uint32 N>
-	void Extract(Array<T, N>& array, Buffer& buffer, const AllocatorReference& containerAllocator)
+	void Extract(Array<T, N>& array, Buffer& buffer)
 	{
 		uint32 length{ 0 };
-		Extract(length, buffer, containerAllocator); array.Resize(length, containerAllocator);
-		for (auto& e : array) { Extract(e, buffer, containerAllocator); }
+		Extract(length, buffer); array.Resize(length);
+		for (auto& e : array) { Extract(e, buffer); }
 	}
 
 	template<typename T>
-	void Insert(const Vector<T>& vector, Buffer& buffer, const AllocatorReference& allocatorReference)
+	void Insert(const Vector<T>& vector, Buffer& buffer)
 	{
-		Insert(vector.GetLength(), buffer, allocatorReference);
-		for (const auto& e : vector) { Insert(e, buffer, allocatorReference); }
+		Insert(vector.GetLength(), buffer);
+		for (const auto& e : vector) { Insert(e, buffer); }
 	}
 	
 	template<typename T>
-	void Extract(Vector<T>& vector, Buffer& buffer, const AllocatorReference& containerAllocator)
+	void Extract(Vector<T>& vector, Buffer& buffer)
 	{
 		uint32 length{ 0 };
-		Extract(length, buffer, containerAllocator); vector.Initialize(length, containerAllocator);
-		vector.Resize(length, containerAllocator);
-		for (auto& e : vector) { Extract(e, buffer, containerAllocator); }
+		Extract(length, buffer); vector.Initialize(length);
+		vector.Resize(length);
+		for (auto& e : vector) { Extract(e, buffer); }
 	}
 	
-	template<typename T>
-	void Insert(const FlatHashMap<T>& map, Buffer& buffer, const AllocatorReference& allocatorReference)
+	template<typename T, class ALLOCATOR>
+	void Insert(const FlatHashMap<T, ALLOCATOR>& map, Buffer& buffer)
 	{
-		Insert(map.capacity, buffer, allocatorReference);
-		Insert(map.loadFactor, buffer, allocatorReference);
+		Insert(map.capacity, buffer);
+		Insert(map.loadFactor, buffer);
 
 		for(uint32 bucket = 0; bucket < map.capacity; ++bucket)
 		{
 			auto max_bucket_length = map.getMaxBucketLength();
-			Insert(map.getBucketLength(bucket, max_bucket_length), buffer, allocatorReference);
+			Insert(map.getBucketLength(bucket, max_bucket_length), buffer);
 			auto keys_bucket = map.getKeysBucket(bucket, max_bucket_length);
-			for(auto e : keys_bucket) { Insert(e, buffer, allocatorReference); }
+			for(auto e : keys_bucket) { Insert(e, buffer); }
 			auto values_bucket = map.getValuesBucket(bucket, max_bucket_length);
-			for(auto& e : values_bucket) { Insert(e, buffer, allocatorReference); }
+			for(auto& e : values_bucket) { Insert(e, buffer); }
 		}
 	}
 
-	template<typename T>
-	void Extract(FlatHashMap<T>& map, Buffer& buffer, const AllocatorReference& containerAllocator)
+	template<typename T, class ALLOCATOR>
+	void Extract(FlatHashMap<T, ALLOCATOR>& map, Buffer& buffer)
 	{
 		uint32 capacity{ 0 }; float32 load_factor = 0;
-		Extract(capacity, buffer, containerAllocator);
-		Extract(load_factor, buffer, containerAllocator);
-		
-		::new(&map) FlatHashMap<T>(capacity, load_factor, containerAllocator);
+		Extract(capacity, buffer);
+		Extract(load_factor, buffer);
 		
 		for (uint32 bucket = 0; bucket < capacity; ++bucket)
 		{
 			auto max_bucket_length = map.getMaxBucketLength();
-			Extract(map.getBucketLength(bucket, max_bucket_length), buffer, containerAllocator);
+			Extract(map.getBucketLength(bucket, max_bucket_length), buffer);
 			auto keys_bucket = map.getKeysBucket(bucket, max_bucket_length);
-			for (auto& e : keys_bucket) { Extract(e, buffer, containerAllocator); }
+			for (auto& e : keys_bucket) { Extract(e, buffer); }
 			auto values_bucket = map.getValuesBucket(bucket, max_bucket_length);
-			for (auto& e : values_bucket) { Extract(e, buffer, containerAllocator); }
+			for (auto& e : values_bucket) { Extract(e, buffer); }
 		}
 	}
 }
