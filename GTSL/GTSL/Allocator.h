@@ -15,6 +15,9 @@ namespace GTSL
 		AllocatorReference(const AllocatorReference& allocatorReference) = default;
 		AllocatorReference(AllocatorReference&& allocatorReference) = default;
 
+		AllocatorReference& operator=(const AllocatorReference&) = default;
+		AllocatorReference& operator=(AllocatorReference&&) = default;
+
 		/**
 		 * \brief Allocates memory.
 		 * \param size Number of bytes to allocate.

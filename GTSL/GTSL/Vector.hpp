@@ -194,6 +194,14 @@ namespace GTSL
 			this->data = allocate(count, this->capacity);
 			this->length = 0;
 		}
+
+		void Initialize(const length_type count, const ALLOCATOR& allocator)
+		{
+			GTSL_ASSERT(!this->data, "Array pointer is not null!")
+			this->allocator = allocator;
+			this->data = allocate(count, this->capacity);
+			this->length = 0;
+		}
 		
 		/**
 		* \brief Initializes the Vector with space for count elements and copies data to it's array. Useful for when Vector was initialized with no allocation. Calling this function when the array is not Empty will lead to a memory leak.
