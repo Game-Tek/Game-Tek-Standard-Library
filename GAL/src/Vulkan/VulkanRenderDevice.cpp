@@ -9,6 +9,7 @@
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanBuffer.h"
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
+#include "GAL/Vulkan/VulkanImage.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
 #include "GAL/Vulkan/VulkanSynchronization.h"
 #include "GTSL/Console.h"
@@ -21,6 +22,15 @@ void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(const VulkanBuffer* bu
 	bufferMemoryRequirements.Alignment = vk_memory_requirements.alignment;
 	bufferMemoryRequirements.MemoryTypes = vk_memory_requirements.memoryTypeBits;
 	bufferMemoryRequirements.Size = vk_memory_requirements.size;
+}
+
+void GAL::VulkanRenderDevice::GetImageMemoryRequirements(const VulkanImage* image,	ImageMemoryRequirements& imageMemoryRequirements) const
+{
+	VkMemoryRequirements vk_memory_requirements;
+	vkGetImageMemoryRequirements(device, image->GetVkImage(), &vk_memory_requirements);
+	imageMemoryRequirements.Alignment = vk_memory_requirements.alignment;
+	imageMemoryRequirements.MemoryTypes = vk_memory_requirements.memoryTypeBits;
+	imageMemoryRequirements.Size = vk_memory_requirements.size;
 }
 
 GTSL::uint32 GAL::VulkanRenderDevice::FindMemoryType(const GTSL::uint32 typeFilter, const GTSL::uint32 memoryType) const

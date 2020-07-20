@@ -50,6 +50,7 @@ namespace GAL
 		[[nodiscard]] VkDevice GetVkDevice() const { return device; }
 
 		void GetBufferMemoryRequirements(const class VulkanBuffer* buffer, BufferMemoryRequirements& bufferMemoryRequirements) const;
+		void GetImageMemoryRequirements(const class VulkanImage* image, ImageMemoryRequirements& imageMemoryRequirements) const;
 		
 		[[nodiscard]] GTSL::uint32 FindMemoryType(GTSL::uint32 typeFilter, GTSL::uint32 memoryType) const;
 
