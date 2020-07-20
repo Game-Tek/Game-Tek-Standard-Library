@@ -31,4 +31,7 @@ namespace GTSL
 
 	template <typename T>
 	[[nodiscard]] constexpr typename RemoveReference<T>::type&& MakeTransferReference(T&& arg) noexcept { return static_cast<typename RemoveReference<T>::type&&>(arg); }
+
+	template<typename T, typename R>
+	uint32 RangeForIndex(const T& e, const R& range) { return &e - range.begin(); }
 }

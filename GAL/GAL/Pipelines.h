@@ -25,7 +25,7 @@ namespace GAL
 	public:
 		struct CreateInfo : RenderInfo
 		{
-			GTSL::Ranger<GTSL::byte> ShaderData;
+			GTSL::Ranger<const GTSL::byte> ShaderData;
 		};
 	};
 	
@@ -46,13 +46,23 @@ namespace GAL
 			Shader* Shader = nullptr;
 		};
 	};
+
+	class PipelineCache
+	{
+	public:
+		struct CreateInfo : RenderInfo
+		{
+			GTSL::Ranger<const GTSL::byte> Data;
+		};
+	private:
+	};
 	
 	class GraphicsPipeline : public Pipeline
 	{
 	public:
 		struct PipelineDescriptor
 		{
-			GTSL::Ranger<ShaderInfo> Stages;
+			GTSL::Ranger<const ShaderInfo> Stages;
 			CullMode CullMode = CullMode::CULL_NONE;
 			bool DepthClampEnable = false;
 			bool BlendEnable = false;
@@ -66,21 +76,34 @@ namespace GAL
 		{
 			RenderPass* RenderPass = nullptr;
 			GTSL::Extent2D SurfaceExtent;
-			GTSL::Ranger<ShaderDataTypes> VertexDescriptor;
+			GTSL::Ranger<const ShaderDataTypes> VertexDescriptor;
 			PipelineDescriptor PipelineDescriptor;
 			bool IsInheritable = false;
 			GraphicsPipeline* ParentPipeline = nullptr;
 
 			PushConstant* PushConstant = nullptr;
 			GTSL::Ranger<class BindingsPool> BindingsPools;
-			GTSL::Ranger<GTSL::byte> PipelineCache;
+			const PipelineCache* PipelineCache = nullptr;
 		};
 
-		GraphicsPipeline() = default;
+		static constexpr GTSL::uint8 MAX_VERTEX_ELEMENTS = 21;
 		
-		static GTSL::uint32 GetVertexSize(GTSL::Ranger<ShaderDataTypes> vertex)
+		GraphicsPipeline() = default;
+
+		static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Ranger<const ShaderDataTypes> vertex, GTSL::Ranger<GTSL::uint8> offsets)
 		{
-			GTSL::uint32 size{ 0 };	for (auto& e : vertex) { size += ShaderDataTypesSize(e); } return size;
+			GTSL::uint32 size = 0;
+			for (const auto& e : vertex)
+			{
+				offsets[RangeForIndex(e, vertex)] = size;
+				size += ShaderDataTypesSize(e);
+			}
+			return size;
+		}
+		
+		static GTSL::uint32 GetVertexSize(GTSL::Ranger<const ShaderDataTypes> vertex)
+		{
+			GTSL::uint32 size{ 0 };	for (const auto& e : vertex) { size += ShaderDataTypesSize(e); } return size;
 		}
 
 		static GTSL::uint32 GetByteOffsetToMember(const GTSL::uint8 member, GTSL::Ranger<ShaderDataTypes> vertex)

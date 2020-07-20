@@ -13,7 +13,7 @@ GAL::VulkanShader::VulkanShader(const CreateInfo& createInfo)
 {
 	VkShaderModuleCreateInfo vk_shader_module_create_info{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
 	vk_shader_module_create_info.codeSize = createInfo.ShaderData.Bytes();
-	vk_shader_module_create_info.pCode = reinterpret_cast<uint32_t*>(createInfo.ShaderData.begin());
+	vk_shader_module_create_info.pCode = reinterpret_cast<const uint32_t*>(createInfo.ShaderData.begin());
 
 	VK_CHECK(vkCreateShaderModule(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_shader_module_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &shaderModule));
 }
@@ -52,7 +52,7 @@ bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL:
 
 	shaderc_compile_options.SetSourceLanguage(shaderc_source_language);
 	shaderc_compile_options.SetOptimizationLevel(shaderc_optimization_level_performance);
-	const auto shaderc_module = shaderc_compiler.CompileGlslToSpv(static_cast<const char*>(code.begin()), shaderc_stage, shaderName.begin(), shaderc_compile_options);
+	const auto shaderc_module = shaderc_compiler.CompileGlslToSpv(static_cast<const char*>(code.begin()), code.Bytes(), shaderc_stage, shaderName.begin(), shaderc_compile_options);
 
 	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
@@ -64,22 +64,54 @@ bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL:
 	return true;
 }
 
+GAL::VulkanPipelineCache::VulkanPipelineCache(const CreateInfo& createInfo)
+{
+	VkPipelineCacheCreateInfo vk_pipeline_cache_create_info{ VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO };
+	vk_pipeline_cache_create_info.initialDataSize = createInfo.Data.Bytes();
+	vk_pipeline_cache_create_info.pInitialData = createInfo.Data.begin();
+
+	vkCreatePipelineCache(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_pipeline_cache_create_info,
+		static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipelineCache);
+}
+
+void GAL::VulkanPipelineCache::Destroy(const VulkanRenderDevice* renderDevice)
+{
+	vkDestroyPipelineCache(renderDevice->GetVkDevice(), pipelineCache, renderDevice->GetVkAllocationCallbacks());
+	pipelineCache = nullptr;
+}
+
+void GAL::VulkanPipelineCache::GetCacheSize(const VulkanRenderDevice* renderDevice, GTSL::uint32& size) const
+{
+	size_t data_size = 0;
+	vkGetPipelineCacheData(renderDevice->GetVkDevice(), pipelineCache, &data_size, nullptr);
+	size = static_cast<GTSL::uint32>(data_size);
+}
+
+void GAL::VulkanPipelineCache::GetCache(const VulkanRenderDevice* renderDevice, const GTSL::uint32 size, GTSL::Buffer& buffer) const
+{
+	GTSL::uint64 data_size = size;
+	vkGetPipelineCacheData(renderDevice->GetVkDevice(), pipelineCache, &data_size, buffer.GetData());
+	buffer.Resize(data_size);
+}
+
 GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo)
 {
 	//  VERTEX INPUT STATE
 
+	GTSL::Array<GTSL::uint8, MAX_VERTEX_ELEMENTS> offsets;
+	
 	GTSL::Array<VkVertexInputBindingDescription, 4> vk_vertex_input_binding_descriptions(1);
 	vk_vertex_input_binding_descriptions[0].binding = 0;
-	vk_vertex_input_binding_descriptions[0].stride = GetVertexSize(createInfo.VertexDescriptor);
+	vk_vertex_input_binding_descriptions[0].stride = GetVertexSizeAndOffsetsToMembers(createInfo.VertexDescriptor, offsets);
 	vk_vertex_input_binding_descriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	GTSL::Array<VkVertexInputAttributeDescription, 8> vk_vertex_input_attribute_descriptions(createInfo.VertexDescriptor.ElementCount());
+	GTSL::Array<VkVertexInputAttributeDescription, MAX_VERTEX_ELEMENTS> vk_vertex_input_attribute_descriptions(createInfo.VertexDescriptor.ElementCount());
 	for (GTSL::uint8 i = 0; i < vk_vertex_input_attribute_descriptions.GetLength(); ++i)
 	{
 		vk_vertex_input_attribute_descriptions[i].binding = 0;
 		vk_vertex_input_attribute_descriptions[i].location = i;
 		vk_vertex_input_attribute_descriptions[i].format = ShaderDataTypesToVkFormat(createInfo.VertexDescriptor[i]);
-		vk_vertex_input_attribute_descriptions[i].offset = GetByteOffsetToMember(i, createInfo.VertexDescriptor);
+		vk_vertex_input_attribute_descriptions[i].offset = offsets[i];
 	}
 
 	VkPipelineVertexInputStateCreateInfo vk_pipeline_vertex_input_state_create_info{ VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
@@ -211,13 +243,9 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	}
 
 	GTSL::Array<VkDescriptorSetLayout, 16> vk_descriptor_set_layouts(createInfo.BindingsPools.ElementCount());
+	for (auto& e : vk_descriptor_set_layouts)
 	{
-		GTSL::uint8 i = 0;
-		for (auto& e : vk_descriptor_set_layouts)
-		{
-			e = static_cast<VulkanBindingsPool&>(createInfo.BindingsPools[i]).GetVkDescriptorSetLayout();
-			++i;
-		}
+		e = static_cast<VulkanBindingsPool&>(createInfo.BindingsPools[RangeForIndex(e, vk_descriptor_set_layouts)]).GetVkDescriptorSetLayout();
 	}
 
 	vk_pipeline_layout_create_info.setLayoutCount = vk_descriptor_set_layouts.GetLength();
@@ -246,17 +274,11 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	vk_graphics_pipeline_create_info.basePipelineHandle = createInfo.ParentPipeline ? static_cast<VulkanGraphicsPipeline*>(createInfo.ParentPipeline)->pipeline : nullptr; // Optional
 	vk_graphics_pipeline_create_info.basePipelineIndex = createInfo.ParentPipeline ? 0 : -1;
 
-
 	if(createInfo.PipelineCache)
 	{
-		VkPipelineCache vk_pipeline_cache;
-		VkPipelineCacheCreateInfo vk_pipeline_cache_create_info{ VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO };
-		vk_pipeline_cache_create_info.initialDataSize = createInfo.PipelineCache.Bytes();
-		vk_pipeline_cache_create_info.pInitialData = createInfo.PipelineCache.begin();
-
-		vkCreatePipelineCache(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_pipeline_cache_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &vk_pipeline_cache);
-		vkCreateGraphicsPipelines(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), vk_pipeline_cache, 1, &vk_graphics_pipeline_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipeline);
-		vkDestroyPipelineCache(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), vk_pipeline_cache, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks());
+		vkCreateGraphicsPipelines(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), 
+			static_cast<const VulkanPipelineCache*>(createInfo.PipelineCache)->GetVkPipelineCache(), 1, &vk_graphics_pipeline_create_info,
+			static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipeline);
 		return;
 	}
 	
