@@ -44,44 +44,49 @@ void File::CloseFile()
 #endif
 }
 
-uint32 File::WriteToFile(const Ranger<const byte>& buffer)
+uint32 File::WriteToFile(const Ranger<const byte>& buffer) const
 {
 	DWORD bytes{ 0 };
-	WriteFile(static_cast<HANDLE>(fileHandle), buffer.begin(), buffer.Bytes(), &bytes, nullptr);
+	WriteFile(static_cast<HANDLE>(fileHandle), buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
 	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
 	return bytes;
 }
 
-uint32 File::WriteToFile(Buffer& buffer)
+uint32 File::WriteToFile(Buffer& buffer) const
 {
 	DWORD bytes{ 0 };
-	WriteFile(static_cast<HANDLE>(fileHandle), buffer.GetData(), buffer.GetLength(), &bytes, nullptr);
+	WriteFile(static_cast<HANDLE>(fileHandle), buffer.GetData(), static_cast<uint32>(buffer.GetLength()), &bytes, nullptr);
 	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
 	buffer.Resize(buffer.GetLength() - bytes);
 	return bytes;
 }
 
-uint32 File::ReadFromFile(const Ranger<byte>& buffer)
+uint32 File::ReadFromFile(const Ranger<byte>& buffer) const
 {
 	DWORD bytes{ 0 };
-	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin(), buffer.Bytes(), &bytes, nullptr);
+	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
 	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
 	return bytes;
 }
 
-uint32 File::ReadFile(Buffer& buffer)
+uint32 File::ReadFile(Buffer& buffer) const
 {
 	DWORD bytes{ 0 };
-	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.GetData(), GetFileSize(), &bytes, nullptr);
+	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.GetData(), static_cast<uint32>(GetFileSize()), &bytes, nullptr);
 	auto w = GetLastError();
 	//GTSL_ASSERT(w , "Win32 Error!");
 	buffer.Resize(bytes);
 	return bytes;
 }
 
-void File::SetPointer(const int64 byte, MoveFrom from) const
+void File::SetEndOfFile()
 {
-	const LARGE_INTEGER bytes{ byte };
+	::SetEndOfFile(fileHandle);
+}
+
+void File::SetPointer(const int64 byte, MoveFrom from)
+{
+	const LARGE_INTEGER bytes{ .QuadPart = byte };
 	SetFilePointerEx(static_cast<HANDLE>(fileHandle), bytes, nullptr, static_cast<uint8>(from));
 }
 

@@ -20,16 +20,18 @@ namespace GTSL
 		void OpenFile(const Ranger<const UTF8>& path, uint8 accessMode, OpenMode openMode);
 		void CloseFile();
 
-		uint32 WriteToFile(const Ranger<const byte>& buffer);
-		uint32 ReadFromFile(const Ranger<byte>& buffer);
-		uint32 WriteToFile(Buffer& buffer);
-		uint32 ReadFile(Buffer& buffer);
+		uint32 WriteToFile(const Ranger<const byte>& buffer) const;
+		uint32 ReadFromFile(const Ranger<byte>& buffer) const;
+		uint32 WriteToFile(Buffer& buffer) const;
+		uint32 ReadFile(Buffer& buffer) const;
+
+		void SetEndOfFile();
 		
 		enum class MoveFrom : uint8
 		{
 			BEGIN, CURRENT, END
 		};
-		void SetPointer(int64 byte, MoveFrom from) const;
+		void SetPointer(int64 byte, MoveFrom from);
 
 		[[nodiscard]] uint64 GetFileSize() const;
 		
