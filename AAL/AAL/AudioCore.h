@@ -17,17 +17,17 @@ namespace AAL
 		/**
 		 * \brief Audio is stereo, has two channels. Typical for speakers or headphones.
 		 */
-		 CHANNELS_STEREO = 2,
+		CHANNELS_STEREO = 2,
 
-		 /**
-		  * \brief Audio is in 5.1, has five channels and one sub-woofer channel. Typical for home cinema setups.
-		  */
-		  CHANNELS_5_1 = 5,
+		/**
+		 * \brief Audio is in 5.1, has five channels and one sub-woofer channel. Typical for home cinema setups.
+		 */
+		CHANNELS_5_1 = 5,
 
-		  /**
-		   * \brief Audio is in 7.1, has seven channels and one sub-woofer channel. Typical for home cinema setups.
-		   */
-		   CHANNELS_7_1 = 7
+		/**
+		 * \brief Audio is in 7.1, has seven channels and one sub-woofer channel. Typical for home cinema setups.
+		 */
+		CHANNELS_7_1 = 7
 	};
 
 	/**
@@ -43,12 +43,12 @@ namespace AAL
 		/**
 		 * \brief Audio bit depth is 16 bit.
 		 */
-		 BIT_DEPTH_16 = 16,
+		BIT_DEPTH_16 = 16,
 
-		 /**
-		  * \brief Audio bit depth is 24 bit.
-		  */
-		  BIT_DEPTH_24 = 24
+		/**
+		 * \brief Audio bit depth is 24 bit.
+		 */
+		BIT_DEPTH_24 = 24
 	};
 
 	/**
@@ -64,12 +64,12 @@ namespace AAL
 		/**
 		* \brief Audio sample rate is 48.000 Hz.
 		 */
-		 KHZ_48 = 48,
+		KHZ_48 = 48,
 
-		 /**
-		 * \brief Audio sample rate is 96.000 Hz.
-		 */
-		 KHZ_96 = 96
+		/**
+		* \brief Audio sample rate is 96.000 Hz.
+		*/
+		KHZ_96 = 96
 	};
 
 	/**
@@ -85,7 +85,7 @@ namespace AAL
 		/**
 		 * \brief Audio output device are headphones.
 		 */
-		 HEADPHONES
+		HEADPHONES
 	};
 
 	enum class StreamShareMode : GTSL::uint8

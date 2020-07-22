@@ -11,38 +11,41 @@ namespace AAL
 	{
 	public:
 		WindowsAudioDevice() = default;
-		WindowsAudioDevice(const AudioDeviceCreateInfo& audioDeviceCreateInfo);
-		~WindowsAudioDevice();
+		WindowsAudioDevice(const CreateInfo& audioDeviceCreateInfo);
+		~WindowsAudioDevice() = default;
 
+		void Initialize(const CreateInfo& audioDeviceCreateInfo);
+		void Destroy();
+		
 		/**
 		* \brief Initializes the audio device to start receiving audio. Must be called before any other function.
 		*/
-		void Start();
+		void Start() const;
 		
 		/**
 		* \brief Sets the passed variable as the available size in the allocated buffer.
 		* Should be called to query the available size before filling the audio buffer size it may have some space still occupied since the audio driver may not have consumed it.
 		* \param availableBufferSize Pointer to a variable to set as the available buffer size.
 		*/
-		void GetAvailableBufferSize(GTSL::uint64* availableBufferSize);
+		void GetAvailableBufferSize(GTSL::uint64& availableBufferSize) const;
 
 		/**
 		* \brief Sets the passed variable as the size of the allocated buffer.
 		* \param totalBufferSize Pointer to to variable for storing the size of the allocated buffer.
 		*/
-		void GetBufferSize(GTSL::uint32* totalBufferSize);
+		void GetBufferSize(GTSL::uint32& totalBufferSize) const;
 		
 		/**
 		* \brief Pushes the audio data found in the passed in buffer for the amount of specified samples to the audio buffer, making such data available for the next request from the driver to retrieve audio data.
 		* \param data Pointer to the buffer containing the audio data to be used for filling the audio buffer.
 		* \param pushedSamples Number of audio samples to copy from the passed pointer to the audio buffer.
 		*/
-		void PushAudioData(void* data, GTSL::uint64 pushedSamples);
+		void PushAudioData(void* data, GTSL::uint32 pushedSamples) const;
 		
 		/**
 		 * \brief Shutdowns and destroys the audio device resources. Must be called before destroying the audio device, no other functions shall be called after this.
 		*/
-		void Stop();
+		void Stop() const;
 
 	private:
 		/**
@@ -72,6 +75,5 @@ namespace AAL
 		WAVEFORMATEXTENSIBLE pwfx;
 
 		GTSL::uint32 bufferFrameCount = 0;
-		void* data = nullptr;
 	};
 }

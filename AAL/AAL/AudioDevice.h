@@ -13,11 +13,16 @@ namespace AAL
 		AudioDevice() = default;
 		~AudioDevice() = default;
 
-		struct AudioDeviceCreateInfo
+		struct CreateInfo
 		{
 			StreamShareMode ShareMode;
 		};
 
+		AudioBitDepth GetBitDepth() const { return bitDepth; }
+		AudioSampleRate GetSampleRate() const { return sampleRate; }
+		AudioChannelCount GetChannelCount() const { return channelCount; }
+		AudioOutputDeviceType GetOutputDeviceType() const { return outputDevice; }
+		
 	protected:
 		AudioBitDepth bitDepth;
 		AudioSampleRate sampleRate;
