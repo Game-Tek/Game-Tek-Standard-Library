@@ -55,7 +55,7 @@ namespace GTSL
 			other.data = nullptr;
 		}
 
-		~SmartPointer() { if (this->data) { this->allocator.Deallocate(this->size, this->alignment, this->data); } }
+		~SmartPointer() { if (this->data) { this->data->~T(); this->allocator.Deallocate(this->size, this->alignment, this->data); } }
 
 		SmartPointer& operator=(const SmartPointer& other)
 		{
