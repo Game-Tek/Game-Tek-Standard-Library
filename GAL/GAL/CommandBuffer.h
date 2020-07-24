@@ -37,7 +37,7 @@ namespace GAL
 			/**
 			 * \brief Pointer to primary/parent command buffer, can be null if this command buffer is primary/has no children.
 			 */
-			CommandBuffer* PrimaryCommandBuffer{ nullptr };
+			const CommandBuffer* PrimaryCommandBuffer{ nullptr };
 		};
 		//Starts recording of commands.
 
@@ -53,10 +53,6 @@ namespace GAL
 		//    BIND BUFFER COMMANDS
 
 		//Adds a BindMesh command to the command queue.
-		struct BindMeshInfo : RenderInfo
-		{
-			RenderMesh* Mesh = nullptr;
-		};
 
 		struct BindIndexBufferInfo final : RenderInfo
 		{
@@ -76,15 +72,15 @@ namespace GAL
 
 		struct BindBindingsSetInfo : RenderInfo
 		{
-			GTSL::Ranger<BindingsSet> BindingsSets;
-			GTSL::Ranger<GTSL::uint32> Offsets;
-			Pipeline* Pipeline = nullptr;
+			GTSL::Ranger<const BindingsSet> BindingsSets;
+			GTSL::Ranger<const GTSL::uint32> Offsets;
+			const Pipeline* Pipeline = nullptr;
 			GTSL::uint8 BindingsSetIndex = 0;
 		};
 
 		struct UpdatePushConstantsInfo : RenderInfo
 		{
-			GraphicsPipeline* Pipeline = nullptr;
+			const GraphicsPipeline* Pipeline = nullptr;
 			size_t Offset = 0;
 			size_t Size = 0;
 			GTSL::byte* Data = nullptr;
@@ -92,14 +88,14 @@ namespace GAL
 
 		struct BindGraphicsPipelineInfo : RenderInfo
 		{
-			GraphicsPipeline* GraphicsPipeline = nullptr;
+			const GraphicsPipeline* GraphicsPipeline = nullptr;
 			GTSL::Extent2D RenderExtent;
 		};
 		//Adds a BindGraphicsPipeline command to the command queue.
 
 		struct BindComputePipelineInfo : RenderInfo
 		{
-			ComputePipeline* Pipeline = nullptr;
+			const ComputePipeline* Pipeline = nullptr;
 		};
 		//Adds a BindComputePipeline to the command queue.
 
@@ -125,10 +121,10 @@ namespace GAL
 
 		struct BeginRenderPassInfo : RenderInfo
 		{
-			RenderPass* RenderPass = nullptr;
-			Framebuffer* Framebuffer = nullptr;
+			const RenderPass* RenderPass = nullptr;
+			const Framebuffer* Framebuffer = nullptr;
 			GTSL::Extent2D RenderArea;
-			GTSL::Ranger<GTSL::RGBA> ClearValues;
+			GTSL::Ranger<const GTSL::RGBA> ClearValues;
 		};
 		//Adds a BeginRenderPass command to the command queue.
 
@@ -147,10 +143,10 @@ namespace GAL
 
 		struct CopyBufferToImageInfo : RenderInfo
 		{
-			class Buffer* SourceBuffer{ nullptr };
+			const class Buffer* SourceBuffer{ nullptr };
 			ImageFormat SourceImageFormat;
 			ImageLayout ImageLayout;
-			class Image* DestinationImage{ nullptr };
+			const class Image* DestinationImage{ nullptr };
 
 			GTSL::Extent3D Extent;
 			GTSL::Extent3D Offset;
@@ -166,9 +162,9 @@ namespace GAL
 
 		struct CopyBuffersInfo : RenderInfo
 		{
-			class Buffer* Source{ nullptr };
+			const class Buffer* Source{ nullptr };
 			GTSL::uint32 SourceOffset{ 0 };
-			class Buffer* Destination{ nullptr };
+			const class Buffer* Destination{ nullptr };
 			GTSL::uint32 DestinationOffset{ 0 };
 
 			GTSL::uint32 Size{ 0 };

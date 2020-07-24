@@ -41,14 +41,14 @@ namespace GAL
 		{
 			GTSL::Ranger<const class CommandBuffer> CommandBuffers;
 			GTSL::Ranger<const class Semaphore> SignalSemaphores;
-			GTSL::Ranger<GTSL::uint64> SignalValues;
+			GTSL::Ranger<const GTSL::uint64> SignalValues;
 			GTSL::Ranger<const class Semaphore> WaitSemaphores;
-			GTSL::Ranger<GTSL::uint64> WaitValues;
+			GTSL::Ranger<const GTSL::uint64> WaitValues;
 			/**
 			 * \brief Pipeline stages at which each corresponding semaphore wait will occur.
 			 */
-			GTSL::Ranger<GTSL::uint32> WaitPipelineStages;
-			class Fence* Fence{ nullptr };
+			GTSL::Ranger<const GTSL::uint32> WaitPipelineStages;
+			const class Fence* Fence{ nullptr };
 		};
 		void Submit(const SubmitInfo& dispatchInfo);
 
@@ -65,7 +65,7 @@ namespace GAL
 		{
 			GTSL::Ranger<const GTSL::UTF8> ApplicationName;
 			GTSL::uint16 ApplicationVersion[3];
-			GTSL::Ranger<Queue::CreateInfo> QueueCreateInfos;
+			GTSL::Ranger<const Queue::CreateInfo> QueueCreateInfos;
 			GTSL::Ranger<Queue> Queues;
 			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
 		};

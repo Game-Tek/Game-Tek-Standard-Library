@@ -218,7 +218,7 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 		vk_pipeline_shader_stage_create_infos[i].flags = 0;
 		vk_pipeline_shader_stage_create_infos[i].stage = ShaderTypeToVkShaderStageFlagBits(createInfo.PipelineDescriptor.Stages[i].Type);
 		vk_pipeline_shader_stage_create_infos[i].pName = "main";
-		vk_pipeline_shader_stage_create_infos[i].module = static_cast<VulkanShader*>(createInfo.PipelineDescriptor.Stages[i].Shader)->GetVkShaderModule();
+		vk_pipeline_shader_stage_create_infos[i].module = static_cast<const VulkanShader*>(createInfo.PipelineDescriptor.Stages[i].Shader)->GetVkShaderModule();
 		vk_pipeline_shader_stage_create_infos[i].pSpecializationInfo = nullptr;
 	}
 
@@ -245,7 +245,7 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	GTSL::Array<VkDescriptorSetLayout, 16> vk_descriptor_set_layouts(createInfo.BindingsPools.ElementCount());
 	for (auto& e : vk_descriptor_set_layouts)
 	{
-		e = static_cast<VulkanBindingsPool&>(createInfo.BindingsPools[RangeForIndex(e, vk_descriptor_set_layouts)]).GetVkDescriptorSetLayout();
+		e = static_cast<const VulkanBindingsPool&>(createInfo.BindingsPools[RangeForIndex(e, vk_descriptor_set_layouts)]).GetVkDescriptorSetLayout();
 	}
 
 	vk_pipeline_layout_create_info.setLayoutCount = vk_descriptor_set_layouts.GetLength();
@@ -269,9 +269,9 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	vk_graphics_pipeline_create_info.pColorBlendState = &vk_pipeline_colorblend_state_create_info;
 	vk_graphics_pipeline_create_info.pDynamicState = &vk_pipeline_dynamic_state_create_info;
 	vk_graphics_pipeline_create_info.layout = pipelineLayout;
-	vk_graphics_pipeline_create_info.renderPass = static_cast<VulkanRenderPass*>(createInfo.RenderPass)->GetVkRenderPass();
+	vk_graphics_pipeline_create_info.renderPass = static_cast<const VulkanRenderPass*>(createInfo.RenderPass)->GetVkRenderPass();
 	vk_graphics_pipeline_create_info.subpass = 0;
-	vk_graphics_pipeline_create_info.basePipelineHandle = createInfo.ParentPipeline ? static_cast<VulkanGraphicsPipeline*>(createInfo.ParentPipeline)->pipeline : nullptr; // Optional
+	vk_graphics_pipeline_create_info.basePipelineHandle = createInfo.ParentPipeline ? static_cast<const VulkanGraphicsPipeline*>(createInfo.ParentPipeline)->pipeline : nullptr; // Optional
 	vk_graphics_pipeline_create_info.basePipelineIndex = createInfo.ParentPipeline ? 0 : -1;
 
 	if(createInfo.PipelineCache)

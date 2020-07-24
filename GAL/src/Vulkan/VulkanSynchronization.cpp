@@ -16,6 +16,11 @@ void GAL::VulkanFence::Destroy(const VulkanRenderDevice* renderDevice)
 	vkDestroyFence(renderDevice->GetVkDevice(), fence, renderDevice->GetVkAllocationCallbacks());
 }
 
+bool GAL::VulkanFence::GetStatus(const VulkanRenderDevice* renderDevice) const
+{
+	return vkGetFenceStatus(renderDevice->GetVkDevice(), fence) == VK_SUCCESS;
+}
+
 void GAL::VulkanFence::WaitForFences(const WaitForFencesInfo& waitForFencesInfo)
 {
 	auto vulkan_fences = GTSL::Ranger<const VulkanFence>(waitForFencesInfo.Fences);

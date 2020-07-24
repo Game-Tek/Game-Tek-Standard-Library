@@ -16,7 +16,7 @@
 GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo)
 {
 	VkSwapchainCreateInfoKHR vk_swapchain_create_info_khr{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-	vk_swapchain_create_info_khr.surface = reinterpret_cast<VkSurfaceKHR>(static_cast<VulkanSurface*>(createInfo.Surface)->GetVkSurface());
+	vk_swapchain_create_info_khr.surface = static_cast<VkSurfaceKHR>(static_cast<const VulkanSurface*>(createInfo.Surface)->GetVkSurface());
 	vk_swapchain_create_info_khr.minImageCount = createInfo.DesiredFramesInFlight;
 	vk_swapchain_create_info_khr.imageFormat = static_cast<VkFormat>(createInfo.Format);
 	vk_swapchain_create_info_khr.imageColorSpace = static_cast<VkColorSpaceKHR>(createInfo.ColorSpace);
@@ -45,7 +45,7 @@ void GAL::VulkanRenderContext::Destroy(const VulkanRenderDevice* renderDevice)
 void GAL::VulkanRenderContext::Recreate(const RecreateInfo& resizeInfo)
 {
 	VkSwapchainCreateInfoKHR vk_swapchain_create_info_khr{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-	vk_swapchain_create_info_khr.surface = reinterpret_cast<VkSurfaceKHR>(static_cast<VulkanSurface*>(resizeInfo.Surface)->GetVkSurface());
+	vk_swapchain_create_info_khr.surface = static_cast<VkSurfaceKHR>(static_cast<const VulkanSurface*>(resizeInfo.Surface)->GetVkSurface());
 	vk_swapchain_create_info_khr.minImageCount = resizeInfo.DesiredFramesInFlight;
 	vk_swapchain_create_info_khr.imageFormat = static_cast<VkFormat>(resizeInfo.Format);
 	vk_swapchain_create_info_khr.imageColorSpace = static_cast<VkColorSpaceKHR>(resizeInfo.ColorSpace);
@@ -60,7 +60,7 @@ void GAL::VulkanRenderContext::Recreate(const RecreateInfo& resizeInfo)
 	vk_swapchain_create_info_khr.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 	vk_swapchain_create_info_khr.presentMode = static_cast<VkPresentModeKHR>(resizeInfo.PresentMode);
 	vk_swapchain_create_info_khr.clipped = VK_TRUE;
-	vk_swapchain_create_info_khr.oldSwapchain = reinterpret_cast<VkSwapchainKHR>(swapchain);
+	vk_swapchain_create_info_khr.oldSwapchain = static_cast<VkSwapchainKHR>(swapchain);
 
 	vkCreateSwapchainKHR(static_cast<const VulkanRenderDevice*>(resizeInfo.RenderDevice)->GetVkDevice(), &vk_swapchain_create_info_khr,
 		static_cast<const VulkanRenderDevice*>(resizeInfo.RenderDevice)->GetVkAllocationCallbacks(), reinterpret_cast<VkSwapchainKHR*>(&swapchain));
@@ -71,8 +71,8 @@ GTSL::uint8 GAL::VulkanRenderContext::AcquireNextImage(const AcquireNextImageInf
 	GTSL::uint32 image_index = 0;
 
 	vkAcquireNextImageKHR(static_cast<const VulkanRenderDevice*>(acquireNextImageInfo.RenderDevice)->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain),
-		~0ULL, static_cast<VulkanSemaphore*>(acquireNextImageInfo.Semaphore)->GetVkSemaphore(),
-	    acquireNextImageInfo.Fence ? static_cast<VulkanFence*>(acquireNextImageInfo.Fence)->GetVkFence() : nullptr, &image_index);
+		~0ULL, static_cast<const VulkanSemaphore*>(acquireNextImageInfo.Semaphore)->GetVkSemaphore(),
+	    acquireNextImageInfo.Fence ? static_cast<const VulkanFence*>(acquireNextImageInfo.Fence)->GetVkFence() : nullptr, &image_index);
 
 	return static_cast<GTSL::uint8>(image_index);
 }
@@ -86,7 +86,7 @@ void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)
 	GTSL::Array<VkSemaphore, 16> vk_wait_semaphores(vulkan_semaphores.ElementCount());
 	for (const auto& e : vulkan_semaphores)
 	{
-		vk_wait_semaphores[static_cast<GTSL::uint32>(&e - vulkan_semaphores.begin())] = e.GetVkSemaphore();
+		vk_wait_semaphores[static_cast<GTSL::uint32>(RangeForIndex(e, vulkan_semaphores))] = e.GetVkSemaphore();
 	}
 	
 	VkPresentInfoKHR present_info{ VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
@@ -99,7 +99,7 @@ void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)
 		present_info.pResults = nullptr;
 	}
 
-	vkQueuePresentKHR(static_cast<VulkanQueue*>(presentInfo.Queue)->GetVkQueue(), &present_info);
+	vkQueuePresentKHR(static_cast<const VulkanQueue*>(presentInfo.Queue)->GetVkQueue(), &present_info);
 }
 
 GTSL::Array<GAL::VulkanImageView, 5> GAL::VulkanRenderContext::GetImages(const GetImagesInfo& getImagesInfo)
@@ -107,11 +107,11 @@ GTSL::Array<GAL::VulkanImageView, 5> GAL::VulkanRenderContext::GetImages(const G
 	GTSL::Array<VulkanImageView, 5> vulkan_images;
 	
 	GTSL::uint32 swapchain_image_count = 0;
-	vkGetSwapchainImagesKHR(static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain), &swapchain_image_count, nullptr);
+	vkGetSwapchainImagesKHR(static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), &swapchain_image_count, nullptr);
 	vulkan_images.Resize(swapchain_image_count);
 
 	GTSL::Array<VkImage, 5> vk_images(swapchain_image_count);
-	VK_CHECK(vkGetSwapchainImagesKHR(static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), reinterpret_cast<VkSwapchainKHR>(swapchain),
+	VK_CHECK(vkGetSwapchainImagesKHR(static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain),
 		&swapchain_image_count, vk_images.begin()));
 
 	for(auto& e : vulkan_images)

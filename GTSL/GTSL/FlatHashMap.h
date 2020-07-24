@@ -41,7 +41,30 @@ namespace GTSL
 			other.data = nullptr; other.capacity = 0; other.loadFactor = 0.0f;
 		}
 
-		~FlatHashMap() { if (this->data) { deallocate(getMaxBucketLength()); } }
+		void Initialize(const uint32 size, const ALLOCATOR& allocatorReference)
+		{
+			GTSL_ASSERT(size != 0 && (size & (size - 1)) == 0, "Size is not a power of two!");
+			GTSL_ASSERT(static_cast<uint32>(size * this->loadFactor) != 0, "Size and load factor combination leads to empty buckets!")
+			this->capacity = size;
+			this->allocator = allocatorReference;
+			this->data = allocate(size, getMaxBucketLength()); build(0, getMaxBucketLength());
+		}
+		
+		~FlatHashMap()
+		{
+			if (this->data)
+			{
+				auto max_bucket_length = getMaxBucketLength();
+				
+				for(uint32 i = 0; i < this->capacity; ++i)
+				{
+					for(auto& e : this->getValuesBucket(i, max_bucket_length)) { e.~T(); }
+				}
+				
+				deallocate(getMaxBucketLength());
+				this->data = nullptr;
+			}
+		}
 
 		template<typename TT>
 		class Iterator

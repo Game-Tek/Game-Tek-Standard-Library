@@ -36,14 +36,14 @@ namespace GAL
 	public:
 		struct PushConstant
 		{
-			size_t Size = 0;
+			GTSL::uint32 Size = 0;
 			ShaderType Stage = ShaderType::ALL_STAGES;
 		};
 
 		struct ShaderInfo
 		{
 			ShaderType Type = ShaderType::VERTEX_SHADER;
-			Shader* Shader = nullptr;
+			const Shader* Shader = nullptr;
 		};
 	};
 
@@ -74,15 +74,15 @@ namespace GAL
 		
 		struct CreateInfo : RenderInfo
 		{
-			RenderPass* RenderPass = nullptr;
+			const RenderPass* RenderPass = nullptr;
 			GTSL::Extent2D SurfaceExtent;
 			GTSL::Ranger<const ShaderDataTypes> VertexDescriptor;
 			PipelineDescriptor PipelineDescriptor;
 			bool IsInheritable = false;
-			GraphicsPipeline* ParentPipeline = nullptr;
+			const GraphicsPipeline* ParentPipeline = nullptr;
 
-			PushConstant* PushConstant = nullptr;
-			GTSL::Ranger<class BindingsPool> BindingsPools;
+			const PushConstant* PushConstant = nullptr;
+			GTSL::Ranger<const class BindingsPool> BindingsPools;
 			const PipelineCache* PipelineCache = nullptr;
 		};
 
@@ -95,7 +95,7 @@ namespace GAL
 			GTSL::uint32 size = 0;
 			for (const auto& e : vertex)
 			{
-				offsets[RangeForIndex(e, vertex)] = size;
+				*(offsets + RangeForIndex(e, vertex)) = size;
 				size += ShaderDataTypesSize(e);
 			}
 			return size;
@@ -106,7 +106,7 @@ namespace GAL
 			GTSL::uint32 size{ 0 };	for (const auto& e : vertex) { size += ShaderDataTypesSize(e); } return size;
 		}
 
-		static GTSL::uint32 GetByteOffsetToMember(const GTSL::uint8 member, GTSL::Ranger<ShaderDataTypes> vertex)
+		static GTSL::uint32 GetByteOffsetToMember(const GTSL::uint8 member, GTSL::Ranger<const ShaderDataTypes> vertex)
 		{
 			GTSL::uint32 offset{ 0 };
 			for(auto* begin = vertex.begin(); begin != vertex.begin() + member; ++begin) { offset += ShaderDataTypesSize(*begin); }

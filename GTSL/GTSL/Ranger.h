@@ -33,7 +33,7 @@ namespace GTSL
 
 		[[nodiscard]] uint64 ElementCount() const { return to - from; }
 
-		T* operator+(const uint64 i) const { return this->from + i; }
+		//T* operator+(const uint64 i) const { return this->from + i; }
 		T* operator*(const uint64 i) const { return this->from * i; }
 		T* operator/(const uint64 i) const { return this->from / i; }
 

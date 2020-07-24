@@ -28,18 +28,18 @@ void GAL::VulkanCommandBuffer::EndRecording(const EndRecordingInfo& endRecording
 void GAL::VulkanCommandBuffer::BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo)
 {
 	VkRenderPassBeginInfo vk_render_pass_begin_info{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-	vk_render_pass_begin_info.renderPass = static_cast<VulkanRenderPass*>(beginRenderPassInfo.RenderPass)->GetVkRenderPass();
+	vk_render_pass_begin_info.renderPass = static_cast<const VulkanRenderPass*>(beginRenderPassInfo.RenderPass)->GetVkRenderPass();
 	
 	GTSL::Array<VkClearValue, 32> vk_clear_clear_values(beginRenderPassInfo.ClearValues.ElementCount());
 	
 	for(const auto& e : beginRenderPassInfo.ClearValues)
 	{
-		vk_clear_clear_values[&e - beginRenderPassInfo.ClearValues.begin()] = VkClearValue{ e.R(), e.G(), e.B(), e.A() };
+		vk_clear_clear_values.EmplaceBack(VkClearValue{ e.R(), e.G(), e.B(), e.A() });
 	}
 	
 	vk_render_pass_begin_info.pClearValues = vk_clear_clear_values.begin();
 	vk_render_pass_begin_info.clearValueCount = vk_clear_clear_values.GetLength();
-	vk_render_pass_begin_info.framebuffer = static_cast<VulkanFramebuffer*>(beginRenderPassInfo.Framebuffer)->GetVkFramebuffer();
+	vk_render_pass_begin_info.framebuffer = static_cast<const VulkanFramebuffer*>(beginRenderPassInfo.Framebuffer)->GetVkFramebuffer();
 	vk_render_pass_begin_info.renderArea.extent = Extent2DToVkExtent2D(beginRenderPassInfo.RenderArea);
 	vk_render_pass_begin_info.renderArea.offset = { 0, 0 };
 
@@ -67,12 +67,12 @@ void GAL::VulkanCommandBuffer::BindGraphicsPipeline(const BindGraphicsPipelineIn
 	viewport.height = bindGraphicsPipelineInfo.RenderExtent.Height;
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, static_cast<VulkanGraphicsPipeline*>(bindGraphicsPipelineInfo.GraphicsPipeline)->GetVkGraphicsPipeline());
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, static_cast<const VulkanGraphicsPipeline*>(bindGraphicsPipelineInfo.GraphicsPipeline)->GetVkGraphicsPipeline());
 }
 
 void GAL::VulkanCommandBuffer::BindComputePipeline(const BindComputePipelineInfo& bindComputePipelineInfo)
 {
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, static_cast<VulkanComputePipeline*>(bindComputePipelineInfo.Pipeline)->GetVkPipeline());
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, static_cast<const VulkanComputePipeline*>(bindComputePipelineInfo.Pipeline)->GetVkPipeline());
 }
 
 void GAL::VulkanCommandBuffer::BindIndexBuffer(const BindIndexBufferInfo& buffer)
@@ -89,7 +89,7 @@ void GAL::VulkanCommandBuffer::BindVertexBuffer(const BindVertexBufferInfo& buff
 
 void GAL::VulkanCommandBuffer::UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo)
 {
-	vkCmdPushConstants(commandBuffer, static_cast<VulkanGraphicsPipeline*>(updatePushConstantsInfo.Pipeline)->GetVkPipelineLayout(), VK_SHADER_STAGE_ALL_GRAPHICS, updatePushConstantsInfo.Offset, updatePushConstantsInfo.Size, updatePushConstantsInfo.Data);
+	vkCmdPushConstants(commandBuffer, static_cast<const VulkanGraphicsPipeline*>(updatePushConstantsInfo.Pipeline)->GetVkPipelineLayout(), VK_SHADER_STAGE_ALL_GRAPHICS, updatePushConstantsInfo.Offset, updatePushConstantsInfo.Size, updatePushConstantsInfo.Data);
 }
 
 void GAL::VulkanCommandBuffer::DrawIndexed(const DrawIndexedInfo& drawIndexedInfo)
@@ -104,8 +104,8 @@ void GAL::VulkanCommandBuffer::Dispatch(const DispatchInfo& dispatchInfo)
 
 void GAL::VulkanCommandBuffer::BindBindingsSet(const BindBindingsSetInfo& bindBindingsSetInfo)
 {
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,	static_cast<VulkanGraphicsPipeline*>(bindBindingsSetInfo.Pipeline)->GetVkPipelineLayout(), 0,
-	bindBindingsSetInfo.BindingsSets.ElementCount(), reinterpret_cast<VkDescriptorSet*>(bindBindingsSetInfo.BindingsSets.begin()), 0, 0);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,	static_cast<const VulkanGraphicsPipeline*>(bindBindingsSetInfo.Pipeline)->GetVkPipelineLayout(), 0,
+	bindBindingsSetInfo.BindingsSets.ElementCount(), reinterpret_cast<const VkDescriptorSet*>(bindBindingsSetInfo.BindingsSets.begin()), 0, 0);
 }
 
 void GAL::VulkanCommandBuffer::CopyImage(const CopyImageInfo& copyImageInfo)
@@ -126,7 +126,7 @@ void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& co
 	region.imageOffset = { 0, 0, 0 };
 	//region.imageOffset = Extent3DToVkExtent3D(copyImageToBufferInfo.Offset);
 	region.imageExtent = Extent3DToVkExtent3D(copyBufferToImageInfo.Extent);
-	vkCmdCopyBufferToImage(commandBuffer, static_cast<VulkanBuffer*>(copyBufferToImageInfo.SourceBuffer)->GetVkBuffer(), static_cast<VulkanImage*>(copyBufferToImageInfo.DestinationImage)->GetVkImage(), ImageLayoutToVkImageLayout(copyBufferToImageInfo.ImageLayout), 1, &region);
+	vkCmdCopyBufferToImage(commandBuffer, static_cast<const VulkanBuffer*>(copyBufferToImageInfo.SourceBuffer)->GetVkBuffer(), static_cast<const VulkanImage*>(copyBufferToImageInfo.DestinationImage)->GetVkImage(), ImageLayoutToVkImageLayout(copyBufferToImageInfo.ImageLayout), 1, &region);
 }
 
 void GAL::VulkanCommandBuffer::TransitionImage(const TransitionImageInfo& transitionImageInfo)
@@ -155,7 +155,7 @@ void GAL::VulkanCommandBuffer::CopyBuffers(const CopyBuffersInfo& copyBuffersInf
 	vk_buffer_copy.size = copyBuffersInfo.Size;
 	vk_buffer_copy.srcOffset = copyBuffersInfo.SourceOffset;
 	vk_buffer_copy.dstOffset = copyBuffersInfo.DestinationOffset;
-	vkCmdCopyBuffer(commandBuffer, static_cast<VulkanBuffer*>(copyBuffersInfo.Source)->GetVkBuffer(), static_cast<VulkanBuffer*>(copyBuffersInfo.Destination)->GetVkBuffer(),
+	vkCmdCopyBuffer(commandBuffer, static_cast<const VulkanBuffer*>(copyBuffersInfo.Source)->GetVkBuffer(), static_cast<const VulkanBuffer*>(copyBuffersInfo.Destination)->GetVkBuffer(),
 		1, &vk_buffer_copy);
 }
 

@@ -15,6 +15,8 @@ namespace GAL
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		[[nodiscard]] VkFence GetVkFence() const { return fence; }
 
+		[[nodiscard]] bool GetStatus(const VulkanRenderDevice* renderDevice) const;
+		
 		struct WaitForFencesInfo final : RenderInfo
 		{
 			GTSL::Ranger<const Fence> Fences;

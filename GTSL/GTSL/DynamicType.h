@@ -26,7 +26,7 @@ namespace GTSL
 
 #define SAFE_POINTER GTSL::CheckedPointer
 #define DYNAMIC_TYPE(type, data) GTSL::CheckedPointer{ data, #type }
-#define DYNAMIC_CAST(type, dynamicType) dynamicType.GetAs(#type)
+#define DYNAMIC_CAST(type, dynamicType) dynamicType.GetAs<type>(#type)
 #else
 #define SAFE_POINTER void*
 #define DYNAMIC_TYPE(type, data) data

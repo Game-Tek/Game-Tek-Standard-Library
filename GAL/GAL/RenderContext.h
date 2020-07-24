@@ -5,6 +5,8 @@
 #include <GTSL/Extent.h>
 #include <GTSL/Ranger.h>
 
+#include "Vulkan/VulkanSynchronization.h"
+
 namespace GAL
 {
 	class Window;
@@ -39,7 +41,7 @@ namespace GAL
 			GTSL::uint32 Format{ 0 };
 			GTSL::uint32 ColorSpace{ 0 };
 			GTSL::uint32 ImageUses{ 0 };
-			Surface* Surface{ nullptr };
+			const Surface* Surface{ nullptr };
 		};
 		//explicit RenderContext(const CreateInfo& createInfo);
 		
@@ -53,20 +55,20 @@ namespace GAL
 			GTSL::uint32 Format{ 0 };
 			GTSL::uint32 ColorSpace{ 0 };
 			GTSL::uint32 ImageUses{ 0 };
-			Surface* Surface{ nullptr };
+			const Surface* Surface{ nullptr };
 		};
 		void Recreate(const RecreateInfo& resizeInfo);
 
 		struct AcquireNextImageInfo : RenderInfo
 		{
-			class Semaphore* Semaphore{ nullptr };
-			class Fence* Fence{ nullptr };
+			VulkanSemaphore* Semaphore{nullptr};
+			const class Fence* Fence{ nullptr };
 		};
 		void AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
 
 		struct PresentInfo : RenderInfo
 		{
-			Queue* Queue = nullptr;
+			const Queue* Queue = nullptr;
 			GTSL::Ranger<const class Semaphore> WaitSemaphores;
 			GTSL::uint8 ImageIndex{ 0 };
 		};

@@ -121,7 +121,7 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 	GTSL::Array<VkCommandBuffer, 16> vk_command_buffers(static_cast<GTSL::uint32>(vulkan_command_buffers.ElementCount()));
 	for(const auto& e : vulkan_command_buffers)
 	{
-		vk_command_buffers[&e - vulkan_command_buffers.begin()] = e.GetVkCommandBuffer();
+		vk_command_buffers[RangeForIndex(e, vulkan_command_buffers)] = e.GetVkCommandBuffer();
 	}
 	
 	GTSL::Ranger<const VulkanSemaphore> vulkan_signal_semaphores(submitInfo.SignalSemaphores);
@@ -141,7 +141,10 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 
 	GTSL::Array<GTSL::uint32, 16> vk_pipeline_stages(submitInfo.WaitPipelineStages.ElementCount());
 	{
-		for(auto& e : submitInfo.WaitPipelineStages) { vk_pipeline_stages[&e - submitInfo.WaitPipelineStages.begin()] = PipelineStageToVkPipelineStageFlags(e); }
+		for(const auto& e : submitInfo.WaitPipelineStages)
+		{
+			vk_pipeline_stages[RangeForIndex(e, submitInfo.WaitPipelineStages)] = PipelineStageToVkPipelineStageFlags(e);
+		}
 	}
 	vk_submit_info.pWaitDstStageMask = vk_pipeline_stages.begin();
 	
@@ -151,7 +154,7 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 	vk_submit_info.waitSemaphoreCount = vulkan_wait_semaphores.ElementCount();
 	vk_submit_info.pWaitSemaphores = reinterpret_cast<const VkSemaphore*>(vulkan_wait_semaphores.begin());
 	
-	VK_CHECK(vkQueueSubmit(queue, 1, &vk_submit_info, submitInfo.Fence ? static_cast<VulkanFence*>(submitInfo.Fence)->GetVkFence() : nullptr));
+	VK_CHECK(vkQueueSubmit(queue, 1, &vk_submit_info, submitInfo.Fence ? static_cast<const VulkanFence*>(submitInfo.Fence)->GetVkFence() : nullptr));
 }
 
 GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : RenderDevice(createInfo)
