@@ -44,13 +44,13 @@ namespace GTSL
 	struct TupleAccessor
 	{
 		template <class... TYPES>
-		static inline typename TupleElement<N, Tuple<TYPES...> >::type& Get(Tuple<TYPES...>& t)
+		static typename TupleElement<N, Tuple<TYPES...> >::type& Get(Tuple<TYPES...>& t)
 		{
 			return TupleAccessor<N - 1>::Get(t.rest);
 		}
 
 		template <class... TYPES>
-		static inline const typename TupleElement<N, Tuple<TYPES...> >::type& Get(const Tuple<TYPES...>& t)
+		static const typename TupleElement<N, Tuple<TYPES...> >::type& Get(const Tuple<TYPES...>& t)
 		{
 			return TupleAccessor<N - 1>::Get(t.rest);
 		}
@@ -60,22 +60,23 @@ namespace GTSL
 	struct TupleAccessor<0>
 	{
 		template <class... Ts>
-		static inline typename TupleElement<0, Tuple<Ts...> >::type& Get(Tuple<Ts...>& t)
+		static typename TupleElement<0, Tuple<Ts...> >::type& Get(Tuple<Ts...>& t)
 		{
 			return t.element;
 		}
 
 		template <class... Ts>
-		static inline const typename TupleElement<0, Tuple<Ts...> >::type& Get(const Tuple<Ts...>& t)
+		static const typename TupleElement<0, Tuple<Ts...> >::type& Get(const Tuple<Ts...>& t)
 		{
 			return t.element;
 		}
 	};
 
 	template<uint64 N, typename... ARGS>
-	auto& Get(Tuple<ARGS...>& tuple)
-	{
-	}
+	auto& Get(Tuple<ARGS...>& tuple) { return TupleAccessor<N>::Get(tuple); }
+
+	template<uint64 N, typename... ARGS>
+	const auto& Get(const Tuple<ARGS...>& tuple) { return TupleAccessor<N>::Get(tuple); }
 	
 	template <class... ARGS>
 	Tuple(ARGS...)->Tuple<ARGS...>;
