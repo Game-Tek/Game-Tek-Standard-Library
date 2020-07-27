@@ -68,7 +68,6 @@
     <ClInclude Include="GTSL\RGB.h" />
     <ClInclude Include="GTSL\Semaphore.h" />
     <ClInclude Include="GTSL\Serialize.h" />
-    <ClInclude Include="GTSL\Stream.h" />
     <ClInclude Include="GTSL\System.h" />
     <ClInclude Include="GTSL\TextureCoordinates.h" />
     <ClInclude Include="GTSL\Thread.h" />
@@ -107,7 +106,6 @@
     <ClCompile Include="src\Memory.cpp" />
     <ClCompile Include="src\GamepadQuery.cpp" />
     <ClCompile Include="src\Sockets.cpp" />
-    <ClCompile Include="src\Stream.cpp" />
     <ClCompile Include="src\StringCommon.cpp" />
     <ClCompile Include="src\System.cpp" />
     <ClCompile Include="src\Thread.cpp" />
