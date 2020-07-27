@@ -41,6 +41,40 @@ namespace GTSL
 		 */
 	};
 
+	struct DefaultAllocatorReference
+	{
+		DefaultAllocatorReference() = default;
+
+		DefaultAllocatorReference(const DefaultAllocatorReference& allocatorReference) = default;
+		DefaultAllocatorReference(DefaultAllocatorReference&& allocatorReference) = default;
+
+		DefaultAllocatorReference& operator=(const DefaultAllocatorReference&) = default;
+		DefaultAllocatorReference& operator=(DefaultAllocatorReference&&) = default;
+
+		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size);
+		void Deallocate(uint64 size, uint64 alignment, void* data);
+	};
+	
+	struct Allocation
+	{
+		void* Data = nullptr;
+	};
+
+	template<typename T, class ALLOCATOR, typename... ARGS>
+	void New(Allocation& allocation, const ALLOCATOR& allocator, ARGS&&... args)
+	{
+		uint64 allocated_size; allocator.Allocate(sizeof(T), alignof(T), &allocation.Data, &allocated_size);
+		::new(allocation.Data) T(GTSL::MakeForwardReference<ARGS>(args)...);
+	}
+
+	template<typename T, class ALLOCATOR>
+	void Delete(Allocation& allocation, const ALLOCATOR& allocator)
+	{
+		allocator.Free(sizeof(T), alignof(T), allocation.Data);
+		static_cast<T*>(allocation.Data)->~T();
+		allocation.Data = nullptr;
+	}
+	
 	template<typename T, class ALLOCATOR>
 	struct SmartPointer
 	{

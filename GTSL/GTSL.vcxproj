@@ -90,6 +90,7 @@
     <ClInclude Include="Math\Vector4.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Allocator.cpp" />
     <ClCompile Include="src\Console.cpp" />
     <ClCompile Include="src\DLL.cpp" />
     <ClCompile Include="src\Application.cpp" />
