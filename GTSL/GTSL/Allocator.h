@@ -61,18 +61,18 @@ namespace GTSL
 	};
 
 	template<typename T, class ALLOCATOR, typename... ARGS>
-	void New(Allocation& allocation, const ALLOCATOR& allocator, ARGS&&... args)
+	void New(void** data, const ALLOCATOR& allocator, ARGS&&... args)
 	{
-		uint64 allocated_size; allocator.Allocate(sizeof(T), alignof(T), &allocation.Data, &allocated_size);
-		::new(allocation.Data) T(GTSL::MakeForwardReference<ARGS>(args)...);
+		uint64 allocated_size; allocator.Allocate(sizeof(T), alignof(T), data, &allocated_size);
+		::new(data) T(GTSL::MakeForwardReference<ARGS>(args)...);
 	}
 
 	template<typename T, class ALLOCATOR>
-	void Delete(Allocation& allocation, const ALLOCATOR& allocator)
+	void Delete(void** data, const ALLOCATOR& allocator)
 	{
-		allocator.Free(sizeof(T), alignof(T), allocation.Data);
-		static_cast<T*>(allocation.Data)->~T();
-		allocation.Data = nullptr;
+		allocator.Deallocate(sizeof(T), alignof(T), *data);
+		static_cast<T*>(*data)->~T();
+		*data = nullptr;
 	}
 	
 	template<typename T, class ALLOCATOR>
