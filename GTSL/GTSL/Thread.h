@@ -28,7 +28,7 @@ namespace GTSL
 		};
 		void SetPriority(Priority threadPriority) const noexcept;
 
-		void Join() const noexcept;
+		void Join() noexcept;
 		void Detach() noexcept;
 
 		[[nodiscard]] uint32 GetId() const noexcept;

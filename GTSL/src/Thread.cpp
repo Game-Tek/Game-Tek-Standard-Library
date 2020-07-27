@@ -25,7 +25,7 @@ void GTSL::Thread::SetPriority(const Priority threadPriority) const noexcept
 	SetThreadPriority(handle, priority);
 }
 
-void GTSL::Thread::Join() const noexcept { WaitForSingleObject(handle, INFINITE); }
+void GTSL::Thread::Join() noexcept { WaitForSingleObject(handle, INFINITE); handle = nullptr; }
 
 void GTSL::Thread::Detach() noexcept { handle = nullptr; }
 

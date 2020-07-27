@@ -11,10 +11,10 @@ namespace GTSL
 		return delegate(TupleAccessor<IS>::Get(tup)...);
 	}
 
-	template <typename RET, typename... ARGS>
-	static auto Call(const Delegate<RET(ARGS...)>& delegate, Tuple<ARGS...>& tup) -> RET
+	template <typename RET, typename... FARGS, typename... TARGS>
+	static auto Call(const Delegate<RET(FARGS...)>& delegate, Tuple<TARGS...>& tup) -> RET
 	{
-		return Call<RET>(delegate, tup, BuildIndices<sizeof...(ARGS)>{});
+		return Call<RET>(delegate, tup, BuildIndices<sizeof...(TARGS)>{});
 	}
 
 	template<typename T>
