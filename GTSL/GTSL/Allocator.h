@@ -64,7 +64,7 @@ namespace GTSL
 	void New(void** data, const ALLOCATOR& allocator, ARGS&&... args)
 	{
 		uint64 allocated_size; allocator.Allocate(sizeof(T), alignof(T), data, &allocated_size);
-		::new(data) T(GTSL::MakeForwardReference<ARGS>(args)...);
+		::new(*data) T(GTSL::MakeForwardReference<ARGS>(args)...);
 	}
 
 	template<typename T, class ALLOCATOR>

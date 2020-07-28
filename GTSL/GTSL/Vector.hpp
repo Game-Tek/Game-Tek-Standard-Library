@@ -70,7 +70,7 @@ namespace GTSL
 		Vector(const Vector<T, ALLOCATOR2>& other, const ALLOCATOR& allocatorReference) : allocator(allocatorReference), capacity(other.capacity),
 		length(other.length), data(this->allocate(this->capacity, this->capacity))
 		{
-			copyArray(other.data, this->data, this->length);
+			for (auto& e : other) { ::new(this->data + GTSL::RangeForIndex(e, other)) T(e); }
 		}
 
 		/**
@@ -87,11 +87,12 @@ namespace GTSL
 		 * \param other Reference to other Vector.
 		 * \return Reference to self.
 		 */
-		Vector& operator=(const Vector& other)
+		template<class OTHER_ALLOCATOR>
+		Vector& operator=(const Vector<T, OTHER_ALLOCATOR>& other)
 		{
 			GTSL_ASSERT(this != &other, "Assigning to self is not allowed!");
-			reallocateIfExceeds(other.length - this->length);
-			copyArray(other.data, this->data, other.length);
+			if (other.length > this->length) { reallocate(); };
+			for (auto& e : other) { this->data[GTSL::RangeForIndex(e, other)] = e; }
 			this->length = other.length;
 			return *this;
 		}
