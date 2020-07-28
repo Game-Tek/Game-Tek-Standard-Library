@@ -256,14 +256,14 @@ namespace GTSL
 		length_type PushBack(const Ranger<T>& ranger)
 		{
 			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(); }
-			copyArray(ranger.begin(), getIterator(this->length), static_cast<uint32>(ranger.ElementCount()));
+			for (auto& e : ranger) { this->data[GTSL::RangeForIndex(e, ranger)] = e; }
 			return static_cast<uint32>((this->length += static_cast<uint32>(ranger.ElementCount())) - ranger.ElementCount());
 		}
 
 		length_type PushBack(const Ranger<const T>& ranger)
 		{
 			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(); }
-			copyArray(ranger.begin(), getIterator(this->length), static_cast<uint32>(ranger.ElementCount()));
+			for (auto& e : ranger) { this->data[GTSL::RangeForIndex(e, ranger)] = e; }
 			return static_cast<uint32>((this->length += static_cast<uint32>(ranger.ElementCount())) - ranger.ElementCount());
 		}
 		
