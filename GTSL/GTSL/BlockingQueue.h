@@ -56,28 +56,21 @@ namespace GTSL
 
 		bool Pop(T& item)
 		{
-			mutex.Lock();
+			Lock lock(mutex);
+			
 			while (queue.empty() && !done) { ready.Wait(mutex); }
-			if (queue.empty()) { mutex.Unlock(); return false; }
+			if (queue.empty()) { return false; }
 			item = queue.front();
 			queue.pop();
-			mutex.Unlock();
+			
 			return true;
 		}
 
 		bool TryPop(T& item)
 		{
-			if (!mutex.TryLock())
-			{
-				if (queue.empty()) { return false; }
-
-				item = queue.front();
-				queue.pop();
-				return true;
-			}
-
+			if (!mutex.TryLock()) { return false; }
 			if (queue.empty()) { mutex.Unlock(); return false; }
-
+			
 			item = queue.front();
 			queue.pop();
 
