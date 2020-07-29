@@ -27,6 +27,7 @@
     <ClInclude Include="GTSL\DataSizes.h" />
     <ClInclude Include="GTSL\DLL.h" />
     <ClInclude Include="GTSL\DynamicType.h" />
+    <ClInclude Include="GTSL\EasyEnum.h" />
     <ClInclude Include="GTSL\File.h" />
     <ClInclude Include="GTSL\Filesystem.h" />
     <ClInclude Include="GTSL\FixedVector.hpp" />
@@ -48,6 +49,7 @@
     <ClInclude Include="GTSL\Math\Vector3.h" />
     <ClInclude Include="GTSL\Math\Vector4.h" />
     <ClInclude Include="GTSL\RatioUnit.hpp" />
+    <ClInclude Include="GTSL\Result.h" />
     <ClInclude Include="GTSL\SIMD\SIMD128.hpp" />
     <ClInclude Include="GTSL\SIMD\SIMD.hpp" />
     <ClInclude Include="GTSL\StaticString.hpp" />
