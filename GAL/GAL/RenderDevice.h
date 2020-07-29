@@ -66,7 +66,7 @@ namespace GAL
 			GTSL::Ranger<const GTSL::UTF8> ApplicationName;
 			GTSL::uint16 ApplicationVersion[3];
 			GTSL::Ranger<const Queue::CreateInfo> QueueCreateInfos;
-			GTSL::Ranger<Queue> Queues;
+			GTSL::Ranger<Queue*> Queues;
 			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
 		};
 		RenderDevice(const CreateInfo& createInfo) : debugPrintFunction(createInfo.DebugPrintFunction)

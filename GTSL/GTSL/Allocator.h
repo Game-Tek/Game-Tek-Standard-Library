@@ -68,11 +68,10 @@ namespace GTSL
 	}
 
 	template<typename T, class ALLOCATOR>
-	void Delete(void** data, const ALLOCATOR& allocator)
+	void Delete(void* data, const ALLOCATOR& allocator)
 	{
-		allocator.Deallocate(sizeof(T), alignof(T), *data);
-		static_cast<T*>(*data)->~T();
-		*data = nullptr;
+		allocator.Deallocate(sizeof(T), alignof(T), data);
+		static_cast<T*>(data)->~T();
 	}
 	
 	template<typename T, class ALLOCATOR>

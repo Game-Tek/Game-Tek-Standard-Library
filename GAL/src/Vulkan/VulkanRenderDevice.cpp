@@ -296,9 +296,9 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	{
 		for (GTSL::uint8 j = 0; j < vk_device_queue_create_infos[i].queueCount; ++j)
 		{
-			static_cast<VulkanQueue&>(createInfo.Queues[i]).familyIndex = vk_device_queue_create_infos[i].queueFamilyIndex;
-			static_cast<VulkanQueue&>(createInfo.Queues[i]).queueIndex = j;
-			vkGetDeviceQueue(device, vk_device_queue_create_infos[i].queueFamilyIndex, j, &static_cast<VulkanQueue&>(createInfo.Queues[i]).queue);
+			static_cast<VulkanQueue*>(createInfo.Queues[i])->familyIndex = vk_device_queue_create_infos[i].queueFamilyIndex;
+			static_cast<VulkanQueue*>(createInfo.Queues[i])->queueIndex = j;
+			vkGetDeviceQueue(device, vk_device_queue_create_infos[i].queueFamilyIndex, j, &static_cast<VulkanQueue*>(createInfo.Queues[i])->queue);
 		}
 	}
 
