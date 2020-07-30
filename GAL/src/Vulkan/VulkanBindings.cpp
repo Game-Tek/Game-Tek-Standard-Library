@@ -9,7 +9,7 @@ GAL::VulkanBindingsPool::VulkanBindingsPool(const CreateInfo& createInfo)
 	GTSL::Array<VkDescriptorPoolSize, MAX_BINDINGS_PER_SET> descriptor_pool_sizes(createInfo.BindingsDescriptors.ElementCount());
 	for (auto& descriptor_pool_size : descriptor_pool_sizes)
 	{
-		descriptor_pool_size.type = UniformTypeToVkDescriptorType(createInfo.BindingsDescriptors[&descriptor_pool_size - descriptor_pool_sizes.begin()].BindingType);
+		descriptor_pool_size.type = static_cast<VkDescriptorType>(createInfo.BindingsDescriptors[&descriptor_pool_size - descriptor_pool_sizes.begin()].BindingType);
 		//Max number of descriptors of VkDescriptorPoolSize::type we can allocate.
 		descriptor_pool_size.descriptorCount = createInfo.BindingsDescriptors[&descriptor_pool_size - descriptor_pool_sizes.begin()].MaxNumberOfBindingsAllocatable;
 	}
@@ -32,8 +32,8 @@ GAL::VulkanBindingsPool::VulkanBindingsPool(const CreateInfo& createInfo)
 		{
 			binding.binding = i;
 			binding.descriptorCount = createInfo.BindingsDescriptors[i].MaxNumberOfBindingsAllocatable;
-			binding.descriptorType = UniformTypeToVkDescriptorType(createInfo.BindingsDescriptors[i].BindingType);
-			binding.stageFlags = ShaderTypeToVkShaderStageFlagBits(createInfo.BindingsDescriptors[i].ShaderStage);
+			binding.descriptorType = static_cast<VkDescriptorType>(createInfo.BindingsDescriptors[i].BindingType);
+			binding.stageFlags = createInfo.BindingsDescriptors[i].ShaderStage;
 			binding.pImmutableSamplers = nullptr;
 			++i;
 		}
@@ -84,9 +84,9 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 		{
 			vk_descriptor_image_infos[image_set].EmplaceBack();
 			
-			vk_descriptor_image_infos[image_set][i].imageView = static_cast<const VulkanImageView&>(e.ImageViews[i]).GetVkImageView();
+			vk_descriptor_image_infos[image_set][i].imageView = e.ImageViews[i].GetVkImageView();
 			vk_descriptor_image_infos[image_set][i].imageLayout = ImageLayoutToVkImageLayout(e.Layouts[i]);
-			vk_descriptor_image_infos[image_set][i].sampler = static_cast<const VulkanSampler&>(e.Samplers[i]).GetVkSampler();
+			vk_descriptor_image_infos[image_set][i].sampler = e.Samplers[i].GetVkSampler();
 		}
 		
 		write_descriptors[write_descriptor_index].pNext = nullptr;
@@ -94,7 +94,7 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 		write_descriptors[write_descriptor_index].dstBinding = write_descriptor_index;
 		write_descriptors[write_descriptor_index].dstArrayElement = 0;
 		write_descriptors[write_descriptor_index].descriptorCount = e.ImageViews.ElementCount();
-		write_descriptors[write_descriptor_index].descriptorType = UniformTypeToVkDescriptorType(e.BindingType);
+		write_descriptors[write_descriptor_index].descriptorType = static_cast<VkDescriptorType>(e.BindingType);
 		write_descriptors[write_descriptor_index].pImageInfo = vk_descriptor_image_infos[image_set].begin();
 		write_descriptors[write_descriptor_index].pBufferInfo = nullptr;
 		write_descriptors[write_descriptor_index].pTexelBufferView = nullptr;
@@ -110,7 +110,7 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 		{
 			vk_descriptor_buffer_infos[buffer_set].EmplaceBack();
 			
-			vk_descriptor_buffer_infos[buffer_set][i].buffer = static_cast<const VulkanBuffer&>(e.Buffers[i]).GetVkBuffer();
+			vk_descriptor_buffer_infos[buffer_set][i].buffer = e.Buffers[i].GetVkBuffer();
 			vk_descriptor_buffer_infos[buffer_set][i].range = e.Sizes[i];
 			vk_descriptor_buffer_infos[buffer_set][i].offset = e.Offsets[i];
 		}
@@ -120,7 +120,7 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 		write_descriptors[write_descriptor_index].dstBinding = write_descriptor_index;
 		write_descriptors[write_descriptor_index].dstArrayElement = 0;
 		write_descriptors[write_descriptor_index].descriptorCount = e.Buffers.ElementCount();
-		write_descriptors[write_descriptor_index].descriptorType = UniformTypeToVkDescriptorType(e.BindingType);
+		write_descriptors[write_descriptor_index].descriptorType = static_cast<VkDescriptorType>(e.BindingType);
 		write_descriptors[write_descriptor_index].pImageInfo = nullptr;
 		write_descriptors[write_descriptor_index].pBufferInfo = vk_descriptor_buffer_infos[buffer_set].begin();
 		write_descriptors[write_descriptor_index].pTexelBufferView = nullptr;

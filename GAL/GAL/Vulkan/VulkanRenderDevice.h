@@ -32,7 +32,17 @@ namespace GAL
 	{
 	public:
 		VulkanRenderDevice() = default;
+
+		struct CreateInfo
+		{
+			GTSL::Ranger<const GTSL::UTF8> ApplicationName;
+			GTSL::uint16 ApplicationVersion[3];
+			GTSL::Ranger<const Queue::CreateInfo> QueueCreateInfos;
+			GTSL::Ranger<VulkanQueue> Queues;
+			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
+		};
 		explicit VulkanRenderDevice(const CreateInfo& createInfo);
+		
 		~VulkanRenderDevice();
 
 		GPUInfo GetGPUInfo();

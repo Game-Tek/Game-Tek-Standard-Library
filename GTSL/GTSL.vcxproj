@@ -27,7 +27,7 @@
     <ClInclude Include="GTSL\DataSizes.h" />
     <ClInclude Include="GTSL\DLL.h" />
     <ClInclude Include="GTSL\DynamicType.h" />
-    <ClInclude Include="GTSL\EasyEnum.h" />
+    <ClInclude Include="GTSL\Flags.h" />
     <ClInclude Include="GTSL\File.h" />
     <ClInclude Include="GTSL\Filesystem.h" />
     <ClInclude Include="GTSL\FixedVector.hpp" />

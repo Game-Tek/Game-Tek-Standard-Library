@@ -14,6 +14,8 @@
 
 #include <GTSL/Extent.h>
 
+#include "GTSL/Flags.h"
+
 #define MAKE_VK_HANDLE(object) typedef struct object##_T* (object);
 
 namespace GAL
@@ -71,7 +73,6 @@ namespace GAL
 	{
 		switch (shaderType)
 		{
-		case ShaderType::ALL_STAGES: return VK_SHADER_STAGE_ALL_GRAPHICS;
 		case ShaderType::VERTEX_SHADER: return VK_SHADER_STAGE_VERTEX_BIT;
 		case ShaderType::TESSELLATION_CONTROL_SHADER: return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 		case ShaderType::TESSELLATION_EVALUATION_SHADER: return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
@@ -195,16 +196,63 @@ namespace GAL
 		LINEAR = 1,
 	};
 	
-	enum class VulkanImageUse : GTSL::uint32
+	struct VulkanImageUse : GTSL::Flags<GTSL::uint32>
 	{
-		TRANSFER_SOURCE = 1,
-		TRANSFER_DESTINATION = 2,
-		SAMPLE = 4,
-		STORAGE = 8,
-		COLOR_ATTACHMENT = 16,
-		DEPTH_STENCIL_ATTACHMENT = 32,
-		TRANSIENT_ATTACHMENT = 64,
-		INPUT_ATTACHMENT = 128
+		static constexpr value_type TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, SAMPLE = 4, STORAGE = 8, COLOR_ATTACHMENT = 16, DEPTH_STENCIL_ATTACHMENT = 32, TRANSIENT_ATTACHMENT = 64, INPUT_ATTACHMENT = 128;
+	};
+
+	enum class VulkanBindingType : GTSL::uint32
+	{
+		FLOAT,
+		FLOAT2,
+		FLOAT3,
+		FLOAT4,
+
+		INT,
+		INT2,
+		INT3,
+		INT4,
+
+		BOOL,
+
+		MAT3,
+		MAT4,
+
+		TEXTURE_1D,
+		TEXTURE_2D,
+		TEXTURE_3D,
+
+		TEXTURE_2D_CUBE,
+
+		SAMPLER,
+		COMBINED_IMAGE_SAMPLER,
+		SAMPLED_IMAGE,
+		STORAGE_IMAGE,
+		UNIFORM_TEXEL_BUFFER,
+		STORAGE_TEXEL_BUFFER,
+		UNIFORM_BUFFER,
+		STORAGE_BUFFER,
+		UNIFORM_BUFFER_DYNAMIC,
+		STORAGE_BUFFER_DYNAMIC,
+		INPUT_ATTACHMENT
+	};
+	
+	enum class VulkanShaderType : GTSL::uint32
+	{
+		VERTEX_SHADER,
+		TESSELLATION_CONTROL_SHADER,
+		TESSELLATION_EVALUATION_SHADER,
+		GEOMETRY_SHADER,
+		FRAGMENT_SHADER,
+
+		COMPUTE_SHADER
+	};
+
+	struct VulkanShaderStage : GTSL::Flags<GTSL::uint32>
+	{
+		static constexpr value_type VERTEX_SHADER = 1, TESSELLATION_CONTROL_SHADER = 2;
+		static constexpr value_type TESSELLATION_EVALUATION_SHADER = 4, GEOMETRY_SHADER = 8, FRAGMENT_SHADER = 16, COMPUTE_SHADER = 32, ALL = 0x7FFFFFFF;
+		static constexpr value_type RAYGEN = 0x00000100, ANY_HIT = 0x00000200, CLOSEST_HIT = 0x00000400, MISS = 0x00000800, INTERSECTION = 0x00001000, CALLABLE = 0x00002000;
 	};
 	
 	enum class VulkanColorSpace : GTSL::uint32
@@ -272,28 +320,19 @@ namespace GAL
 		*/
 		FIFO = 2,
 	};
-	
-	enum class VulkanBufferType : GTSL::uint32
+
+	struct VulkanBufferType : GTSL::Flags<GTSL::uint32>
 	{
-		TRANSFER_SOURCE = 1,
-		TRANSFER_DESTINATION = 2,
-		UNIFORM = 16,
-		INDEX = 64,
-		VERTEX = 128,
+		static constexpr value_type	TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, UNIFORM = 16, INDEX = 64, VERTEX = 128;
 	};
 	
-	enum class VulkanQueueCapabilities : GTSL::uint32
+	struct VulkanQueueCapabilities : GTSL::Flags<GTSL::uint32>
 	{
-		GRAPHICS = 1,
-		COMPUTE = 2,
-		TRANSFER = 4
+		static constexpr value_type GRAPHICS = 1, COMPUTE = 2, TRANSFER = 4;
 	};
 	
-	enum class VulkanMemoryType : GTSL::uint32
+	struct VulkanMemoryType : GTSL::Flags<GTSL::uint32>
 	{
-		GPU = 0x00000001,
-		SHARED = 0x00000002,
-		COHERENT = 0x00000004,
-		CACHED = 0x00000008,
+		static constexpr value_type GPU = 1, SHARED = 2, COHERENT = 4, CACHED = 8;
 	};
 }

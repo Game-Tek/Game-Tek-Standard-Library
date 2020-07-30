@@ -84,7 +84,7 @@ GTSL::uint32 GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const Find
 
 	VkFormatFeatureFlags features;
 	
-	switch (static_cast<VulkanImageUse>(findSupportedImageFormat.ImageUse))
+	switch (findSupportedImageFormat.ImageUse)
 	{
 	case VulkanImageUse::TRANSFER_SOURCE: features = VK_FORMAT_FEATURE_TRANSFER_SRC_BIT; break;
 	case VulkanImageUse::TRANSFER_DESTINATION: features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT; break;
@@ -157,7 +157,7 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 	VK_CHECK(vkQueueSubmit(queue, 1, &vk_submit_info, submitInfo.Fence ? static_cast<const VulkanFence*>(submitInfo.Fence)->GetVkFence() : nullptr));
 }
 
-GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : RenderDevice(createInfo)
+GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : RenderDevice(createInfo.DebugPrintFunction)
 {
 	VkApplicationInfo vk_application_info{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
 	vk_application_info.pNext = nullptr;
@@ -296,9 +296,9 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	{
 		for (GTSL::uint8 j = 0; j < vk_device_queue_create_infos[i].queueCount; ++j)
 		{
-			static_cast<VulkanQueue*>(createInfo.Queues[i])->familyIndex = vk_device_queue_create_infos[i].queueFamilyIndex;
-			static_cast<VulkanQueue*>(createInfo.Queues[i])->queueIndex = j;
-			vkGetDeviceQueue(device, vk_device_queue_create_infos[i].queueFamilyIndex, j, &static_cast<VulkanQueue*>(createInfo.Queues[i])->queue);
+			createInfo.Queues[i].familyIndex = vk_device_queue_create_infos[i].queueFamilyIndex;
+			createInfo.Queues[i].queueIndex = j;
+			vkGetDeviceQueue(device, vk_device_queue_create_infos[i].queueFamilyIndex, j, &createInfo.Queues[i].queue);
 		}
 	}
 

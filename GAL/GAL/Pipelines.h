@@ -37,7 +37,7 @@ namespace GAL
 		struct PushConstant
 		{
 			GTSL::uint32 Size = 0;
-			ShaderType Stage = ShaderType::ALL_STAGES;
+			ShaderType Stage = ShaderType::VERTEX_SHADER;
 		};
 
 		struct ShaderInfo
@@ -86,7 +86,7 @@ namespace GAL
 			const PipelineCache* PipelineCache = nullptr;
 		};
 
-		static constexpr GTSL::uint8 MAX_VERTEX_ELEMENTS = 21;
+		static constexpr GTSL::uint8 MAX_VERTEX_ELEMENTS = 20;
 		
 		GraphicsPipeline() = default;
 

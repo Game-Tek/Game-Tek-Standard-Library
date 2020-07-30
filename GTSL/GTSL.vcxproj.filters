@@ -243,10 +243,10 @@
     <ClInclude Include="GTSL\RatioUnit.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\EasyEnum.h">
+    <ClInclude Include="GTSL\Result.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\Result.h">
+    <ClInclude Include="GTSL\Flags.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
