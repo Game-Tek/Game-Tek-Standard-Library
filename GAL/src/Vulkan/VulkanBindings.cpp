@@ -6,12 +6,12 @@
 
 GAL::VulkanBindingsPool::VulkanBindingsPool(const CreateInfo& createInfo)
 {
-	GTSL::Array<VkDescriptorPoolSize, MAX_BINDINGS_PER_SET> descriptor_pool_sizes(createInfo.BindingsDescriptors.ElementCount());
+	GTSL::Array<VkDescriptorPoolSize, MAX_BINDINGS_PER_SET> descriptor_pool_sizes(createInfo.DescriptorPoolSizes.ElementCount());
 	for (auto& descriptor_pool_size : descriptor_pool_sizes)
 	{
-		descriptor_pool_size.type = static_cast<VkDescriptorType>(createInfo.BindingsDescriptors[&descriptor_pool_size - descriptor_pool_sizes.begin()].BindingType);
+		descriptor_pool_size.type = static_cast<VkDescriptorType>(createInfo.DescriptorPoolSizes[&descriptor_pool_size - descriptor_pool_sizes.begin()].BindingType);
 		//Max number of descriptors of VkDescriptorPoolSize::type we can allocate.
-		descriptor_pool_size.descriptorCount = createInfo.BindingsDescriptors[&descriptor_pool_size - descriptor_pool_sizes.begin()].MaxNumberOfBindingsAllocatable;
+		descriptor_pool_size.descriptorCount = createInfo.DescriptorPoolSizes[&descriptor_pool_size - descriptor_pool_sizes.begin()].Count;
 	}
 
 	VkDescriptorPoolCreateInfo vk_descriptor_pool_create_info{ VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
@@ -19,12 +19,31 @@ GAL::VulkanBindingsPool::VulkanBindingsPool(const CreateInfo& createInfo)
 	vk_descriptor_pool_create_info.maxSets = createInfo.BindingsSets.ElementCount();
 	vk_descriptor_pool_create_info.poolSizeCount = descriptor_pool_sizes.GetLength();
 	vk_descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.begin();
-
 	vkCreateDescriptorPool(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_descriptor_pool_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &descriptorPool);
 
+	VkDescriptorSetAllocateInfo vk_descriptor_set_allocate_info{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
+	vk_descriptor_set_allocate_info.descriptorPool = descriptorPool;
+	vk_descriptor_set_allocate_info.descriptorSetCount = createInfo.BindingsSets.ElementCount();
+	vkAllocateDescriptorSets(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_descriptor_set_allocate_info, reinterpret_cast<VkDescriptorSet*>(createInfo.BindingsSets.begin()));
+}
+
+void GAL::VulkanBindingsPool::Destroy(const VulkanRenderDevice* renderDevice)
+{
+	const auto vk_render_device = static_cast<const VulkanRenderDevice*>(renderDevice);
+	vkDestroyDescriptorPool(vk_render_device->GetVkDevice(), descriptorPool, vk_render_device->GetVkAllocationCallbacks());
+}
+
+void GAL::VulkanBindingsPool::FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo)
+{
+	vkFreeDescriptorSets(static_cast<const VulkanRenderDevice*>(freeBindingsSetInfo.RenderDevice)->GetVkDevice(), descriptorPool,
+	static_cast<GTSL::uint32>(freeBindingsSetInfo.BindingsSet.ElementCount()), reinterpret_cast<VkDescriptorSet*>(freeBindingsSetInfo.BindingsSet.begin()));
+}
+
+GAL::VulkanBindingsSetLayout::VulkanBindingsSetLayout(const CreateInfo& createInfo)
+{
 	VkDescriptorSetLayoutCreateInfo vk_descriptor_set_layout_create_info{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
 
-	GTSL::Array<VkDescriptorSetLayoutBinding, MAX_BINDINGS_PER_SET> descriptor_set_layout_bindings(createInfo.BindingsSets.ElementCount());
+	GTSL::Array<VkDescriptorSetLayoutBinding, MAX_BINDINGS_PER_SET> descriptor_set_layout_bindings(createInfo.BindingsDescriptors.ElementCount());
 	{
 		GTSL::uint8 i = 0;
 
@@ -42,25 +61,12 @@ GAL::VulkanBindingsPool::VulkanBindingsPool(const CreateInfo& createInfo)
 	vk_descriptor_set_layout_create_info.bindingCount = descriptor_set_layout_bindings.GetLength();
 	vk_descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.begin();
 
-	vkCreateDescriptorSetLayout(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_descriptor_set_layout_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &descriptorSetLayout);
-
-	VkDescriptorSetAllocateInfo vk_descriptor_set_allocate_info{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-	vk_descriptor_set_allocate_info.descriptorPool = descriptorPool;
-	vk_descriptor_set_allocate_info.descriptorSetCount = createInfo.BindingsSets.ElementCount();
-	vkAllocateDescriptorSets(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_descriptor_set_allocate_info, reinterpret_cast<VkDescriptorSet*>(createInfo.BindingsSets.begin()));
+	vkCreateDescriptorSetLayout(createInfo.RenderDevice->GetVkDevice(), &vk_descriptor_set_layout_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &descriptorSetLayout);
 }
 
-void GAL::VulkanBindingsPool::Destroy(const VulkanRenderDevice* renderDevice)
+void GAL::VulkanBindingsSetLayout::Destroy(const VulkanRenderDevice* renderDevice)
 {
-	const auto vk_render_device = static_cast<const VulkanRenderDevice*>(renderDevice);
-	vkDestroyDescriptorSetLayout(vk_render_device->GetVkDevice(), descriptorSetLayout, vk_render_device->GetVkAllocationCallbacks());
-	vkDestroyDescriptorPool(vk_render_device->GetVkDevice(), descriptorPool, vk_render_device->GetVkAllocationCallbacks());
-}
-
-void GAL::VulkanBindingsPool::FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo)
-{
-	vkFreeDescriptorSets(static_cast<const VulkanRenderDevice*>(freeBindingsSetInfo.RenderDevice)->GetVkDevice(), descriptorPool,
-	static_cast<GTSL::uint32>(freeBindingsSetInfo.BindingsSet.ElementCount()), reinterpret_cast<VkDescriptorSet*>(freeBindingsSetInfo.BindingsSet.begin()));
+	vkDestroyDescriptorSetLayout(renderDevice->GetVkDevice(), descriptorSetLayout, renderDevice->GetVkAllocationCallbacks());
 }
 
 void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateInfo)

@@ -20,6 +20,11 @@
 
 namespace GAL
 {
+	struct VulkanRenderInfo
+	{
+		const class VulkanRenderDevice* RenderDevice = nullptr;
+	};
+	
 	inline VkAttachmentLoadOp RenderTargetLoadOperationsToVkAttachmentLoadOp(const RenderTargetLoadOperations renderTargetLoadOperations)
 	{
 		switch (renderTargetLoadOperations)
@@ -239,19 +244,19 @@ namespace GAL
 	
 	enum class VulkanShaderType : GTSL::uint32
 	{
-		VERTEX_SHADER,
-		TESSELLATION_CONTROL_SHADER,
-		TESSELLATION_EVALUATION_SHADER,
-		GEOMETRY_SHADER,
-		FRAGMENT_SHADER,
+		VERTEX,
+		TESSELLATION_CONTROL,
+		TESSELLATION_EVALUATION,
+		GEOMETRY,
+		FRAGMENT,
 
-		COMPUTE_SHADER
+		COMPUTE
 	};
 
 	struct VulkanShaderStage : GTSL::Flags<GTSL::uint32>
 	{
-		static constexpr value_type VERTEX_SHADER = 1, TESSELLATION_CONTROL_SHADER = 2;
-		static constexpr value_type TESSELLATION_EVALUATION_SHADER = 4, GEOMETRY_SHADER = 8, FRAGMENT_SHADER = 16, COMPUTE_SHADER = 32, ALL = 0x7FFFFFFF;
+		static constexpr value_type VERTEX = 1, TESSELLATION_CONTROL = 2;
+		static constexpr value_type TESSELLATION_EVALUATION = 4, GEOMETRY = 8, FRAGMENT = 16, COMPUTE = 32, ALL = 0x7FFFFFFF;
 		static constexpr value_type RAYGEN = 0x00000100, ANY_HIT = 0x00000200, CLOSEST_HIT = 0x00000400, MISS = 0x00000800, INTERSECTION = 0x00001000, CALLABLE = 0x00002000;
 	};
 	

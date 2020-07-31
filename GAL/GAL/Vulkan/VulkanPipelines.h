@@ -2,6 +2,7 @@
 
 #include "GAL/Pipelines.h"
 
+#define VK_ENABLE_BETA_EXTENSIONS
 #include "Vulkan.h"
 
 namespace GTSL {
@@ -41,11 +42,48 @@ namespace GAL
 	private:
 		VkPipelineCache pipelineCache = nullptr;
 	};
+
+	struct VulkanPipelineDescriptor
+	{
+		CullMode CullMode = CullMode::CULL_NONE;
+		bool DepthClampEnable = false;
+		bool BlendEnable = false;
+		BlendOperation ColorBlendOperation = BlendOperation::ADD;
+		SampleCount RasterizationSamples = SampleCount::SAMPLE_COUNT_1;
+		CompareOperation DepthCompareOperation = CompareOperation::NEVER;
+		StencilOperations StencilOperations;
+	};
+
+	class VulkanPipeline
+	{
+	public:
+		struct ShaderInfo
+		{
+			VulkanShaderType Type = VulkanShaderType::VERTEX;
+			const VulkanShader* Shader = nullptr;
+		};
+	};
 	
 	class VulkanGraphicsPipeline final : public GraphicsPipeline
 	{
 	public:
 		VulkanGraphicsPipeline() = default;
+		
+		struct CreateInfo : VulkanRenderInfo
+		{
+			const class VulkanRenderPass* RenderPass = nullptr;
+			GTSL::Extent2D SurfaceExtent;
+			GTSL::Ranger<const ShaderDataTypes> VertexDescriptor;
+			VulkanPipelineDescriptor PipelineDescriptor;
+			GTSL::Ranger<const VulkanPipeline::ShaderInfo> Stages;
+			bool IsInheritable = false;
+			const VulkanGraphicsPipeline* ParentPipeline = nullptr;
+
+			const PushConstant* PushConstant = nullptr;
+			GTSL::Ranger<const class VulkanBindingsSetLayout> BindingsSetLayouts;
+			const VulkanPipelineCache* PipelineCache = nullptr;
+		};
+		
 		VulkanGraphicsPipeline(const CreateInfo& createInfo);
 		~VulkanGraphicsPipeline() = default;
 
@@ -71,5 +109,27 @@ namespace GAL
 
 	private:
 		VkPipeline pipeline = nullptr;
+	};
+
+	class VulkanRaytracingPipeline final
+	{
+	public:
+		struct CreateInfo : VulkanRenderInfo
+		{
+			bool IsInheritable = false;
+			const VulkanRaytracingPipeline* ParentPipeline = nullptr;
+			
+			GTSL::uint32 MaxRecursionDepth = 0;
+			VulkanPipelineDescriptor PipelineDescriptor;
+			GTSL::Ranger<const VulkanPipeline::ShaderInfo> Stages;
+			GTSL::Ranger<const VulkanBindingsSetLayout> BindingsSetLayouts;
+		};
+
+		VkPipeline GetVkPipeline() const { return pipeline; }
+		VulkanRaytracingPipeline(const CreateInfo& createInfo);
+		
+	private:
+		VkPipeline pipeline;
+		VkPipelineLayout pipelineLayout;
 	};
 }

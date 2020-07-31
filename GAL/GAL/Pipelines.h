@@ -40,11 +40,11 @@ namespace GAL
 			ShaderType Stage = ShaderType::VERTEX_SHADER;
 		};
 
-		struct ShaderInfo
-		{
-			ShaderType Type = ShaderType::VERTEX_SHADER;
-			const Shader* Shader = nullptr;
-		};
+		//struct ShaderInfo
+		//{
+		//	ShaderType Type = ShaderType::VERTEX_SHADER;
+		//	const Shader* Shader = nullptr;
+		//};
 	};
 
 	class PipelineCache
@@ -56,35 +56,35 @@ namespace GAL
 		};
 	private:
 	};
+
+	//struct PipelineDescriptor
+	//{
+	//	GTSL::Ranger<const Pipeline::ShaderInfo> Stages;
+	//	CullMode CullMode = CullMode::CULL_NONE;
+	//	bool DepthClampEnable = false;
+	//	bool BlendEnable = false;
+	//	BlendOperation ColorBlendOperation = BlendOperation::ADD;
+	//	SampleCount RasterizationSamples = SampleCount::SAMPLE_COUNT_1;
+	//	CompareOperation DepthCompareOperation = CompareOperation::NEVER;
+	//	StencilOperations StencilOperations;
+	//};
 	
 	class GraphicsPipeline : public Pipeline
 	{
-	public:
-		struct PipelineDescriptor
-		{
-			GTSL::Ranger<const ShaderInfo> Stages;
-			CullMode CullMode = CullMode::CULL_NONE;
-			bool DepthClampEnable = false;
-			bool BlendEnable = false;
-			BlendOperation ColorBlendOperation = BlendOperation::ADD;
-			SampleCount RasterizationSamples = SampleCount::SAMPLE_COUNT_1;
-			CompareOperation DepthCompareOperation = CompareOperation::NEVER;
-			StencilOperations StencilOperations;
-		};
-		
-		struct CreateInfo : RenderInfo
-		{
-			const RenderPass* RenderPass = nullptr;
-			GTSL::Extent2D SurfaceExtent;
-			GTSL::Ranger<const ShaderDataTypes> VertexDescriptor;
-			PipelineDescriptor PipelineDescriptor;
-			bool IsInheritable = false;
-			const GraphicsPipeline* ParentPipeline = nullptr;
-
-			const PushConstant* PushConstant = nullptr;
-			GTSL::Ranger<const class BindingsPool> BindingsPools;
-			const PipelineCache* PipelineCache = nullptr;
-		};
+	public:		
+		//struct CreateInfo : RenderInfo
+		//{
+		//	const RenderPass* RenderPass = nullptr;
+		//	GTSL::Extent2D SurfaceExtent;
+		//	GTSL::Ranger<const ShaderDataTypes> VertexDescriptor;
+		//	PipelineDescriptor PipelineDescriptor;
+		//	bool IsInheritable = false;
+		//	const GraphicsPipeline* ParentPipeline = nullptr;
+		//
+		//	const PushConstant* PushConstant = nullptr;
+		//	GTSL::Ranger<const class BindingsPool> BindingsPools;
+		//	const PipelineCache* PipelineCache = nullptr;
+		//};
 
 		static constexpr GTSL::uint8 MAX_VERTEX_ELEMENTS = 20;
 		
