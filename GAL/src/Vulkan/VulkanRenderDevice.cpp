@@ -10,7 +10,6 @@
 #include "GAL/Vulkan/VulkanBuffer.h"
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
 #include "GAL/Vulkan/VulkanImage.h"
-#include "GAL/Vulkan/VulkanPipelines.h"
 #include "GAL/Vulkan/VulkanSynchronization.h"
 #include "GTSL/Console.h"
 #include "GTSL/StaticString.hpp"
@@ -238,7 +237,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 	GTSL::Array<const char*, 32> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME };
 
-	GTSL::Array<VkDeviceQueueCreateInfo, 16> vk_device_queue_create_infos(createInfo.QueueCreateInfos.ElementCount());
+	GTSL::Array<VkDeviceQueueCreateInfo, 16> vk_device_queue_create_infos;
 
 	GTSL::uint32 queue_families_count = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, nullptr);
@@ -246,10 +245,9 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	GTSL::Array<VkQueueFamilyProperties, 32> vk_queue_families_properties(queue_families_count);
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, vk_queue_families_properties.begin());
 
-	GTSL::Array<bool, 32> used_families(queue_families_count);
-	for (auto& e : used_families) { e = false; }
+	GTSL::Array<bool, 32> used_families;
 
-	GTSL::Array<VkQueueFlags, 32> vk_queues_flag_bits(queue_families_count);
+	GTSL::Array<VkQueueFlags, 32> vk_queues_flag_bits(createInfo.QueueCreateInfos.ElementCount());
 	{
 		for (auto& e : vk_queues_flag_bits)
 		{
@@ -257,26 +255,29 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		}
 	}
 
-	for (GTSL::uint8 QUEUE = 0; QUEUE < vk_device_queue_create_infos.GetLength(); ++QUEUE)
+	for (GTSL::uint8 QUEUE = 0; QUEUE < createInfo.QueueCreateInfos.ElementCount(); ++QUEUE)
 	{
 		for (GTSL::uint8 FAMILY = 0; FAMILY < queue_families_count; ++FAMILY)
 		{
-			if (vk_queue_families_properties[FAMILY].queueCount > 0 && vk_queue_families_properties[FAMILY].queueFlags & vk_queues_flag_bits[FAMILY]) //if family has vk_queue_flags_bits[FAMILY] create queue from this family
+			if (vk_queue_families_properties[FAMILY].queueCount > 0 && vk_queue_families_properties[FAMILY].queueFlags & vk_queues_flag_bits[QUEUE]) //if family has vk_queue_flags_bits[FAMILY] create queue from this family
 			{
 				if (used_families[FAMILY]) //if a queue is already being used from this family add another
 				{
-					vk_device_queue_create_infos[FAMILY].queueCount++;
+					++vk_device_queue_create_infos[FAMILY].queueCount;
 					vk_device_queue_create_infos[FAMILY].pQueuePriorities = &createInfo.QueueCreateInfos[QUEUE].QueuePriority;
 					break;
 				}
 
+				vk_device_queue_create_infos.EmplaceBack();
+				
 				vk_device_queue_create_infos[FAMILY].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 				vk_device_queue_create_infos[FAMILY].pNext = nullptr;
 				vk_device_queue_create_infos[FAMILY].flags = 0;
 				vk_device_queue_create_infos[FAMILY].queueFamilyIndex = FAMILY;
 				vk_device_queue_create_infos[FAMILY].queueCount = 1;
 				vk_device_queue_create_infos[FAMILY].pQueuePriorities = &createInfo.QueueCreateInfos[QUEUE].QueuePriority;
-				used_families[FAMILY] = true;
+
+				used_families.EmplaceBack(true);
 				break;
 			}
 		}
