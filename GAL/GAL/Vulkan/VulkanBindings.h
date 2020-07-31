@@ -39,7 +39,7 @@ namespace GAL
 		{
 			VulkanBindingType BindingType = VulkanBindingType::UNIFORM_BUFFER;
 			VulkanShaderStage::value_type ShaderStage = VulkanShaderStage::ALL;
-			GTSL::uint8 MaxNumberOfBindingsAllocatable = 0;
+			GTSL::uint8 UniformCount = 0;
 		};
 
 		struct ImageBindingDescriptor : BindingDescriptor

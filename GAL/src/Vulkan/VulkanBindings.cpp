@@ -50,7 +50,7 @@ GAL::VulkanBindingsSetLayout::VulkanBindingsSetLayout(const CreateInfo& createIn
 		for (auto& binding : descriptor_set_layout_bindings)
 		{
 			binding.binding = i;
-			binding.descriptorCount = createInfo.BindingsDescriptors[i].MaxNumberOfBindingsAllocatable;
+			binding.descriptorCount = createInfo.BindingsDescriptors[i].UniformCount;
 			binding.descriptorType = static_cast<VkDescriptorType>(createInfo.BindingsDescriptors[i].BindingType);
 			binding.stageFlags = createInfo.BindingsDescriptors[i].ShaderStage;
 			binding.pImmutableSamplers = nullptr;
