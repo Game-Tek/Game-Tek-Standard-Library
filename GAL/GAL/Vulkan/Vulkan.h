@@ -194,7 +194,7 @@ namespace GAL
 		default: return VK_COMPARE_OP_MAX_ENUM;
 		}
 	}
-
+	
 	enum class VulkanImageTiling : GTSL::uint32
 	{
 		OPTIMAL = 0,
@@ -208,38 +208,18 @@ namespace GAL
 
 	enum class VulkanBindingType : GTSL::uint32
 	{
-		FLOAT,
-		FLOAT2,
-		FLOAT3,
-		FLOAT4,
-
-		INT,
-		INT2,
-		INT3,
-		INT4,
-
-		BOOL,
-
-		MAT3,
-		MAT4,
-
-		TEXTURE_1D,
-		TEXTURE_2D,
-		TEXTURE_3D,
-
-		TEXTURE_2D_CUBE,
-
-		SAMPLER,
-		COMBINED_IMAGE_SAMPLER,
-		SAMPLED_IMAGE,
-		STORAGE_IMAGE,
-		UNIFORM_TEXEL_BUFFER,
-		STORAGE_TEXEL_BUFFER,
-		UNIFORM_BUFFER,
-		STORAGE_BUFFER,
-		UNIFORM_BUFFER_DYNAMIC,
-		STORAGE_BUFFER_DYNAMIC,
-		INPUT_ATTACHMENT
+		SAMPLER = 0,
+		COMBINED_IMAGE_SAMPLER = 1,
+		SAMPLED_IMAGE = 2,
+		STORAGE_IMAGE = 3,
+		UNIFORM_TEXEL_BUFFER = 4,
+		STORAGE_TEXEL_BUFFER = 5,
+		UNIFORM_BUFFER = 6,
+		STORAGE_BUFFER = 7,
+		UNIFORM_BUFFER_DYNAMIC = 8,
+		STORAGE_BUFFER_DYNAMIC = 9,
+		INPUT_ATTACHMENT = 10,
+		ACCELERATION_STRUCTURE  = 1000165000
 	};
 	
 	enum class VulkanShaderType : GTSL::uint32
@@ -340,4 +320,26 @@ namespace GAL
 	{
 		static constexpr value_type GPU = 1, SHARED = 2, COHERENT = 4, CACHED = 8;
 	};
+
+	inline VulkanBindingType BindingTypeToVulkanBindingType(const BindingType binding)
+	{
+		switch (binding)
+		{
+		case BindingType::SAMPLER: return VulkanBindingType::SAMPLER;
+		case BindingType::COMBINED_IMAGE_SAMPLER: return VulkanBindingType::COMBINED_IMAGE_SAMPLER;
+		case BindingType::SAMPLED_IMAGE: return VulkanBindingType::SAMPLED_IMAGE;
+		case BindingType::STORAGE_IMAGE: return VulkanBindingType::STORAGE_IMAGE;
+		case BindingType::UNIFORM_TEXEL_BUFFER: return VulkanBindingType::UNIFORM_TEXEL_BUFFER;
+		case BindingType::STORAGE_TEXEL_BUFFER: return VulkanBindingType::STORAGE_TEXEL_BUFFER;
+		case BindingType::UNIFORM_BUFFER: return VulkanBindingType::UNIFORM_BUFFER;
+		case BindingType::STORAGE_BUFFER: return VulkanBindingType::STORAGE_BUFFER;
+		case BindingType::UNIFORM_BUFFER_DYNAMIC: return VulkanBindingType::UNIFORM_BUFFER_DYNAMIC;
+		case BindingType::STORAGE_BUFFER_DYNAMIC: return VulkanBindingType::STORAGE_BUFFER_DYNAMIC;
+		case BindingType::INPUT_ATTACHMENT: return VulkanBindingType::INPUT_ATTACHMENT;
+		case BindingType::ACCELERATION_STRUCTURE: return VulkanBindingType::ACCELERATION_STRUCTURE;
+		default: GAL_DEBUG_BREAK;
+		}
+
+		return VulkanBindingType::UNIFORM_BUFFER_DYNAMIC;
+	}
 }

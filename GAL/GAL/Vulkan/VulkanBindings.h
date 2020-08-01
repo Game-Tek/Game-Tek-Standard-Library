@@ -19,12 +19,18 @@ namespace GAL
 		struct CreateInfo : RenderInfo
 		{
 			GTSL::Ranger<const DescriptorPoolSize> DescriptorPoolSizes;
-			GTSL::Ranger<class VulkanBindingsSet> BindingsSets;
+			GTSL::uint32 MaxSets = 0;
 		};
 		VulkanBindingsPool(const CreateInfo& createInfo);
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 
+		struct AllocateBindingsSetsInfo : VulkanRenderInfo
+		{
+			GTSL::Ranger<class VulkanBindingsSet> BindingsSets;
+			GTSL::Ranger<const class VulkanBindingsSetLayout> BindingsSetLayouts;
+		};
+		void AllocateBindingsSets(const AllocateBindingsSetsInfo& allocateBindingsSetsInfo);
 		void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo);
 
 		[[nodiscard]] VkDescriptorPool GetVkDescriptorPool() const { return descriptorPool; }
