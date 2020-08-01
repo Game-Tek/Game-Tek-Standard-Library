@@ -19,7 +19,7 @@ namespace GAL
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
-		[[nodiscard]] static bool CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result);
+		[[nodiscard]] static bool CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringError);
 
 		[[nodiscard]] VkShaderModule GetVkShaderModule() const { return shaderModule; }
 	protected:

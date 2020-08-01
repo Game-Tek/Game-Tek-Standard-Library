@@ -9,6 +9,7 @@ namespace GAL
 	class VulkanBindingsPool final : public BindingsPool
 	{
 	public:
+		VulkanBindingsPool() = default;
 		struct DescriptorPoolSize
 		{
 			VulkanBindingType BindingType;

@@ -23,7 +23,7 @@ void GAL::VulkanShader::Destroy(const VulkanRenderDevice* renderDevice)
 	vkDestroyShaderModule(renderDevice->GetVkDevice(), shaderModule, renderDevice->GetVkAllocationCallbacks());
 }
 
-bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result)
+bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringResult)
 {
 	shaderc_shader_kind shaderc_stage;
 
@@ -35,7 +35,7 @@ bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL:
 	case VK_SHADER_STAGE_GEOMETRY_BIT: shaderc_stage = shaderc_geometry_shader;	break;
 	case VK_SHADER_STAGE_FRAGMENT_BIT: shaderc_stage = shaderc_fragment_shader;	break;
 	case VK_SHADER_STAGE_COMPUTE_BIT: shaderc_stage = shaderc_compute_shader; break;
-	default: shaderc_stage = shaderc_spirv_assembly; break;
+	default: GAL_DEBUG_BREAK;
 	}
 
 	const shaderc::Compiler shaderc_compiler;
@@ -48,6 +48,7 @@ bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL:
 	{
 	case ShaderLanguage::GLSL: shaderc_source_language = shaderc_source_language_glsl; break;
 	case ShaderLanguage::HLSL: shaderc_source_language = shaderc_source_language_hlsl; break;
+	default: GAL_DEBUG_BREAK;
 	}
 
 	shaderc_compile_options.SetSourceLanguage(shaderc_source_language);
@@ -56,7 +57,7 @@ bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL:
 
 	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		auto res = shaderc_module.GetErrorMessage();
+		stringResult.WriteBytes(stringResult.GetLength(), reinterpret_cast<const GTSL::byte*>(shaderc_module.GetErrorMessage().c_str()));
 		return false;
 	}
 
