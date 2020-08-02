@@ -73,7 +73,7 @@ namespace GAL
 		{
 			const class VulkanRenderPass* RenderPass = nullptr;
 			GTSL::Extent2D SurfaceExtent;
-			GTSL::Ranger<const ShaderDataTypes> VertexDescriptor;
+			GTSL::Ranger<const VulkanShaderDataType> VertexDescriptor;
 			VulkanPipelineDescriptor PipelineDescriptor;
 			GTSL::Ranger<const VulkanPipeline::ShaderInfo> Stages;
 			bool IsInheritable = false;
@@ -95,6 +95,17 @@ namespace GAL
 	private:
 		VkPipelineLayout pipelineLayout = nullptr;
 		VkPipeline pipeline = nullptr;
+
+		static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Ranger<const VulkanShaderDataType> vertex, GTSL::Ranger<GTSL::uint8> offsets)
+		{
+			GTSL::uint32 size = 0;
+			for (const auto& e : vertex)
+			{
+				*(offsets + RangeForIndex(e, vertex)) = size;
+				size += VulkanShaderDataTypeSize(e);
+			}
+			return size;
+		}
 	};
 
 	class VulkanComputePipeline final : public ComputePipeline

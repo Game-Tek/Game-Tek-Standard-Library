@@ -158,7 +158,7 @@ namespace GAL
 		COMPUTE_SHADER
 	};
 
-	enum class ShaderDataTypes : GTSL::uint8
+	enum class ShaderDataType : GTSL::uint8
 	{
 		FLOAT,
 		FLOAT2,
@@ -279,21 +279,21 @@ namespace GAL
 		DEPTH32_STENCIL8 = 130
 	};
 
-	inline GTSL::uint8 ShaderDataTypesSize(const ShaderDataTypes _SDT)
+	inline GTSL::uint8 ShaderDataTypesSize(const ShaderDataType _SDT)
 	{
 		switch (_SDT)
 		{
-		case ShaderDataTypes::FLOAT: return 4;
-		case ShaderDataTypes::FLOAT2: return 4 * 2;
-		case ShaderDataTypes::FLOAT3: return 4 * 3;
-		case ShaderDataTypes::FLOAT4: return 4 * 4;
-		case ShaderDataTypes::INT: return 4;
-		case ShaderDataTypes::INT2: return 4 * 2;
-		case ShaderDataTypes::INT3: return 4 * 3;
-		case ShaderDataTypes::INT4: return 4 * 4;
-		case ShaderDataTypes::BOOL: return 4;
-		case ShaderDataTypes::MAT3: return 4 * 3 * 3;
-		case ShaderDataTypes::MAT4: return 4 * 4 * 4;
+		case ShaderDataType::FLOAT: return 4;
+		case ShaderDataType::FLOAT2: return 4 * 2;
+		case ShaderDataType::FLOAT3: return 4 * 3;
+		case ShaderDataType::FLOAT4: return 4 * 4;
+		case ShaderDataType::INT: return 4;
+		case ShaderDataType::INT2: return 4 * 2;
+		case ShaderDataType::INT3: return 4 * 3;
+		case ShaderDataType::INT4: return 4 * 4;
+		case ShaderDataType::BOOL: return 4;
+		case ShaderDataType::MAT3: return 4 * 3 * 3;
+		case ShaderDataType::MAT4: return 4 * 4 * 4;
 		default: return 0;
 		}
 	}

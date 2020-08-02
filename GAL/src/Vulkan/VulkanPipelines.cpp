@@ -111,7 +111,7 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	{
 		vk_vertex_input_attribute_descriptions[i].binding = 0;
 		vk_vertex_input_attribute_descriptions[i].location = i;
-		vk_vertex_input_attribute_descriptions[i].format = ShaderDataTypesToVkFormat(createInfo.VertexDescriptor[i]);
+		vk_vertex_input_attribute_descriptions[i].format = VkFormat(createInfo.VertexDescriptor[i]);
 		vk_vertex_input_attribute_descriptions[i].offset = offsets[i];
 	}
 

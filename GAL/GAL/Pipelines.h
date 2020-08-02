@@ -90,23 +90,23 @@ namespace GAL
 		
 		GraphicsPipeline() = default;
 
-		static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Ranger<const ShaderDataTypes> vertex, GTSL::Ranger<GTSL::uint8> offsets)
-		{
-			GTSL::uint32 size = 0;
-			for (const auto& e : vertex)
-			{
-				*(offsets + RangeForIndex(e, vertex)) = size;
-				size += ShaderDataTypesSize(e);
-			}
-			return size;
-		}
+		//static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Ranger<const ShaderDataTypes> vertex, GTSL::Ranger<GTSL::uint8> offsets)
+		//{
+		//	GTSL::uint32 size = 0;
+		//	for (const auto& e : vertex)
+		//	{
+		//		*(offsets + RangeForIndex(e, vertex)) = size;
+		//		size += ShaderDataTypesSize(e);
+		//	}
+		//	return size;
+		//}
 		
-		static GTSL::uint32 GetVertexSize(GTSL::Ranger<const ShaderDataTypes> vertex)
+		static GTSL::uint32 GetVertexSize(GTSL::Ranger<const ShaderDataType> vertex)
 		{
 			GTSL::uint32 size{ 0 };	for (const auto& e : vertex) { size += ShaderDataTypesSize(e); } return size;
 		}
 
-		static GTSL::uint32 GetByteOffsetToMember(const GTSL::uint8 member, GTSL::Ranger<const ShaderDataTypes> vertex)
+		static GTSL::uint32 GetByteOffsetToMember(const GTSL::uint8 member, GTSL::Ranger<const ShaderDataType> vertex)
 		{
 			GTSL::uint32 offset{ 0 };
 			for(auto* begin = vertex.begin(); begin != vertex.begin() + member; ++begin) { offset += ShaderDataTypesSize(*begin); }

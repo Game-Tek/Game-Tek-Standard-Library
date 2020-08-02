@@ -73,7 +73,7 @@ namespace GAL
 	{
 		return static_cast<VkPipelineStageFlags>(accessFlags);
 	}
-
+	
 	inline VkShaderStageFlagBits ShaderTypeToVkShaderStageFlagBits(const ShaderType shaderType)
 	{
 		switch (shaderType)
@@ -132,19 +132,19 @@ namespace GAL
 		}
 	}
 
-	inline VkFormat ShaderDataTypesToVkFormat(const ShaderDataTypes shaderDataTypes)
+	inline VkFormat ShaderDataTypesToVkFormat(const ShaderDataType shaderDataTypes)
 	{
 		switch (shaderDataTypes)
 		{
-		case ShaderDataTypes::FLOAT: return VK_FORMAT_R32_SFLOAT;
-		case ShaderDataTypes::FLOAT2: return VK_FORMAT_R32G32_SFLOAT;
-		case ShaderDataTypes::FLOAT3: return VK_FORMAT_R32G32B32_SFLOAT;
-		case ShaderDataTypes::FLOAT4: return VK_FORMAT_R32G32B32A32_SFLOAT;
-		case ShaderDataTypes::INT: return VK_FORMAT_R32_SINT;
-		case ShaderDataTypes::INT2: return VK_FORMAT_R32G32_SINT;
-		case ShaderDataTypes::INT3: return VK_FORMAT_R32G32B32_SINT;
-		case ShaderDataTypes::INT4: return VK_FORMAT_R32G32B32A32_SINT;
-		case ShaderDataTypes::BOOL: return VK_FORMAT_R32_SINT;
+		case ShaderDataType::FLOAT: return VK_FORMAT_R32_SFLOAT;
+		case ShaderDataType::FLOAT2: return VK_FORMAT_R32G32_SFLOAT;
+		case ShaderDataType::FLOAT3: return VK_FORMAT_R32G32B32_SFLOAT;
+		case ShaderDataType::FLOAT4: return VK_FORMAT_R32G32B32A32_SFLOAT;
+		case ShaderDataType::INT: return VK_FORMAT_R32_SINT;
+		case ShaderDataType::INT2: return VK_FORMAT_R32G32_SINT;
+		case ShaderDataType::INT3: return VK_FORMAT_R32G32B32_SINT;
+		case ShaderDataType::INT4: return VK_FORMAT_R32G32B32A32_SINT;
+		case ShaderDataType::BOOL: return VK_FORMAT_R32_SINT;
 		default: return VK_FORMAT_MAX_ENUM;
 		}
 	}
@@ -230,7 +230,9 @@ namespace GAL
 		GEOMETRY,
 		FRAGMENT,
 
-		COMPUTE
+		COMPUTE,
+
+		RAYGEN, ANY_HIT, CLOSEST_HIT, MISS, INTERSECTION, CALLABLE
 	};
 
 	struct VulkanShaderStage : GTSL::Flags<GTSL::uint32>
@@ -321,6 +323,19 @@ namespace GAL
 		static constexpr value_type GPU = 1, SHARED = 2, COHERENT = 4, CACHED = 8;
 	};
 
+	enum class VulkanShaderDataType
+	{
+		FLOAT = VK_FORMAT_R32_SFLOAT,
+		FLOAT2 = VK_FORMAT_R32G32_SFLOAT,
+		FLOAT3 = VK_FORMAT_R32G32B32_SFLOAT,
+		FLOAT4 = VK_FORMAT_R32G32B32A32_SFLOAT,
+		INT = VK_FORMAT_R32_SINT,
+		INT2 = VK_FORMAT_R32G32_SINT,
+		INT3 = VK_FORMAT_R32G32B32_SINT,
+		INT4 = VK_FORMAT_R32G32B32A32_SINT,
+		BOOL = VK_FORMAT_R32_SINT
+	};
+	
 	inline VulkanBindingType BindingTypeToVulkanBindingType(const BindingType binding)
 	{
 		switch (binding)
@@ -341,5 +356,57 @@ namespace GAL
 		}
 
 		return VulkanBindingType::UNIFORM_BUFFER_DYNAMIC;
+	}
+
+	inline VulkanShaderType ShaderTypeToVulkanShaderType(const ShaderType shader)
+	{
+		switch (shader) {
+		case ShaderType::VERTEX_SHADER: return VulkanShaderType::VERTEX;
+		case ShaderType::TESSELLATION_CONTROL_SHADER: return VulkanShaderType::TESSELLATION_CONTROL;
+		case ShaderType::TESSELLATION_EVALUATION_SHADER: return VulkanShaderType::TESSELLATION_EVALUATION;
+		case ShaderType::GEOMETRY_SHADER: return VulkanShaderType::GEOMETRY;
+		case ShaderType::FRAGMENT_SHADER: return VulkanShaderType::FRAGMENT;
+		case ShaderType::COMPUTE_SHADER: return VulkanShaderType::COMPUTE;
+		default: GAL_DEBUG_BREAK;
+		}
+	}
+
+	inline VulkanShaderDataType ShaderDataTypeToVulkanShaderDataType(const ShaderDataType shaderDataType)
+	{
+		switch (shaderDataType)
+		{
+		case ShaderDataType::FLOAT: return VulkanShaderDataType::FLOAT;
+		case ShaderDataType::FLOAT2: return VulkanShaderDataType::FLOAT2;
+		case ShaderDataType::FLOAT3: return VulkanShaderDataType::FLOAT3;
+		case ShaderDataType::FLOAT4: return VulkanShaderDataType::FLOAT4;
+		case ShaderDataType::INT: return VulkanShaderDataType::INT;
+		case ShaderDataType::INT2: return VulkanShaderDataType::INT2;
+		case ShaderDataType::INT3: return VulkanShaderDataType::INT3;
+		case ShaderDataType::INT4: return VulkanShaderDataType::INT4;
+		case ShaderDataType::BOOL: return VulkanShaderDataType::BOOL;
+		case ShaderDataType::MAT3: break;
+		case ShaderDataType::MAT4: break;
+		default: GAL_DEBUG_BREAK;
+		}
+
+		return VulkanShaderDataType::FLOAT;
+	}
+	
+	inline GTSL::uint8 VulkanShaderDataTypeSize(const VulkanShaderDataType sdt)
+	{
+		switch (sdt)
+		{
+		case VulkanShaderDataType::FLOAT: return 4;
+		case VulkanShaderDataType::FLOAT2: return 4 * 2;
+		case VulkanShaderDataType::FLOAT3: return 4 * 3;
+		case VulkanShaderDataType::FLOAT4: return 4 * 4;
+		case VulkanShaderDataType::INT: return 4;
+		case VulkanShaderDataType::INT2: return 4 * 2;
+		case VulkanShaderDataType::INT3: return 4 * 3;
+		case VulkanShaderDataType::INT4: return 4 * 4;
+		default: GAL_DEBUG_BREAK;
+		}
+
+		return 0;
 	}
 }
