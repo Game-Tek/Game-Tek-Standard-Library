@@ -48,11 +48,10 @@ namespace GAL
 		//	GTSL::Ranger<GTSL::uint32> Sizes;
 		//};
 		
-		struct FreeBindingsSetInfo : RenderInfo
-		{
-			GTSL::Ranger<class BindingsSet> BindingsSet;
-		};
-		void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo);
+		//struct FreeBindingsSetInfo : RenderInfo
+		//{
+		//	GTSL::Ranger<class BindingsSet> BindingsSet;
+		//};
 	};
 
 	class BindingsSet : public GALObject

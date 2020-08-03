@@ -31,6 +31,11 @@ namespace GAL
 			GTSL::Ranger<const class VulkanBindingsSetLayout> BindingsSetLayouts;
 		};
 		void AllocateBindingsSets(const AllocateBindingsSetsInfo& allocateBindingsSetsInfo);
+		
+		struct FreeBindingsSetInfo : VulkanRenderInfo
+		{
+			GTSL::Ranger<class VulkanBindingsSet> BindingsSet;
+		};
 		void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo);
 
 		[[nodiscard]] VkDescriptorPool GetVkDescriptorPool() const { return descriptorPool; }
