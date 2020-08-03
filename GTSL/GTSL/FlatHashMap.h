@@ -36,7 +36,7 @@ namespace GTSL
 			this->data = allocate(size, getMaxBucketLength()); build(0, getMaxBucketLength());
 		}
 
-		FlatHashMap(FlatHashMap&& other) noexcept : data(other.data), capacity(other.capacity), loadFactor(other.loadFactor), allocator(GTSL::MakeTransferReference(other.allocator))
+		FlatHashMap(FlatHashMap&& other) noexcept : data(other.data), capacity(other.capacity), loadFactor(other.loadFactor), allocator(GTSL::MoveRef(other.allocator))
 		{
 			other.data = nullptr; other.capacity = 0; other.loadFactor = 0.0f;
 		}
@@ -156,7 +156,7 @@ namespace GTSL
 			uint64 place_index = getBucketLength(bucket, max_bucket_length)++;
 			if (place_index + 1 > max_bucket_length) { resize(max_bucket_length); }
 			getKeysBucket(bucket, max_bucket_length)[place_index] = key;
-			return *(new(getValuesBucket(bucket, max_bucket_length) + place_index) T(MakeForwardReference<ARGS>(args)...));
+			return *(new(getValuesBucket(bucket, max_bucket_length) + place_index) T(ForwardRef<ARGS>(args)...));
 		}
 
 		bool Find(const key_type key) { return findKeyInBucket(modulo(key, this->capacity), key, getMaxBucketLength()); }

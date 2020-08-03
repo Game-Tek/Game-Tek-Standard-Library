@@ -13,7 +13,7 @@ namespace GTSL
 	{
 	public:
 		Tuple() = default;
-		Tuple(T&& arg) : element(GTSL::MakeForwardReference<T>(arg))
+		Tuple(T&& arg) : element(GTSL::ForwardRef<T>(arg))
 		{}
 		
 		T element;
@@ -24,7 +24,7 @@ namespace GTSL
 	{
 	public:
 		Tuple() = default;
-		Tuple(T&& arg, TYPES&&... types) : element(GTSL::MakeForwardReference<T>(arg)), rest(GTSL::MakeForwardReference<TYPES>(types)...)
+		Tuple(T&& arg, TYPES&&... types) : element(GTSL::ForwardRef<T>(arg)), rest(GTSL::ForwardRef<TYPES>(types)...)
 		{}
 		
 		T element;

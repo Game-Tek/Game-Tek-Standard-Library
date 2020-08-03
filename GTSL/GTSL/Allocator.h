@@ -64,7 +64,7 @@ namespace GTSL
 	void New(void** data, const ALLOCATOR& allocator, ARGS&&... args)
 	{
 		uint64 allocated_size; allocator.Allocate(sizeof(T), alignof(T), data, &allocated_size);
-		::new(*data) T(GTSL::MakeForwardReference<ARGS>(args)...);
+		::new(*data) T(GTSL::ForwardRef<ARGS>(args)...);
 	}
 
 	template<typename T, class ALLOCATOR>
@@ -117,7 +117,7 @@ namespace GTSL
 		static SmartPointer<T, ALLOCATOR> Create(const ALLOCATOR& allocatorReference, ARGS&&... args)
 		{
 			T* data = nullptr; uint64 a_s; allocatorReference.Allocate(sizeof(TT), alignof(TT), reinterpret_cast<void**>(&data), &a_s);
-			::new(data) TT(GTSL::MakeForwardReference<ARGS>(args)...);
+			::new(data) TT(GTSL::ForwardRef<ARGS>(args)...);
 			return SmartPointer<T, ALLOCATOR>(sizeof(TT), alignof(TT), data, allocatorReference);
 		}
 

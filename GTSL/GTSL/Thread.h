@@ -14,7 +14,7 @@ namespace GTSL
 		template<typename T, typename... ARGS>
 		Thread(Delegate<T> delegate, ARGS... args) noexcept
 		{
-			auto data = new FunctionCallData<T, ARGS...>(delegate, GTSL::MakeForwardReference<ARGS>(args)...);
+			auto data = new FunctionCallData<T, ARGS...>(delegate, GTSL::ForwardRef<ARGS>(args)...);
 			
 			auto p = &Thread::launchThread<T, ARGS...>;
 			handle = createThread(p, data);
@@ -53,7 +53,7 @@ namespace GTSL
 		template<typename FT, typename... ARGS>
 		struct FunctionCallData
 		{
-			FunctionCallData(Delegate<FT> delegate, ARGS&&... args) : Delegate(delegate), Parameters(GTSL::MakeForwardReference<ARGS>(args)...)
+			FunctionCallData(Delegate<FT> delegate, ARGS&&... args) : Delegate(delegate), Parameters(GTSL::ForwardRef<ARGS>(args)...)
 			{
 			}
 

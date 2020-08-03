@@ -409,4 +409,26 @@ namespace GAL
 
 		return 0;
 	}
+
+	inline VkShaderStageFlagBits VulkanShaderTypeToVkShaderStageFlagBits(const VulkanShaderType shader)
+	{
+		switch (shader)
+		{
+		case VulkanShaderType::VERTEX: return VK_SHADER_STAGE_VERTEX_BIT;
+		case VulkanShaderType::TESSELLATION_CONTROL: return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+		case VulkanShaderType::TESSELLATION_EVALUATION: return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+		case VulkanShaderType::GEOMETRY: return VK_SHADER_STAGE_GEOMETRY_BIT;
+		case VulkanShaderType::FRAGMENT: return VK_SHADER_STAGE_FRAGMENT_BIT;
+		case VulkanShaderType::COMPUTE: return VK_SHADER_STAGE_COMPUTE_BIT;
+		case VulkanShaderType::RAYGEN: return VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+		case VulkanShaderType::ANY_HIT: return VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+		case VulkanShaderType::CLOSEST_HIT: return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+		case VulkanShaderType::MISS: return VK_SHADER_STAGE_MISS_BIT_KHR;
+		case VulkanShaderType::INTERSECTION: return VK_SHADER_STAGE_INTERSECTION_BIT_KHR;
+		case VulkanShaderType::CALLABLE: return VK_SHADER_STAGE_CALLABLE_BIT_KHR;
+		default: GAL_DEBUG_BREAK;
+		}
+
+		return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
+	}
 }

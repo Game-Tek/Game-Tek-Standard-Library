@@ -248,14 +248,14 @@ namespace GTSL
 		*/
 		length_type PushBack(T&& obj)
 		{
-			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeTransferReference(obj));
+			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MoveRef(obj));
 			return ++this->length;
 		}
 
 		template<typename ...ARGS>
 		length_type EmplaceBack(ARGS&&... args)
 		{
-			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeForwardReference<ARGS>(args)...);
+			::new(static_cast<void*>(this->data + this->length)) T(GTSL::ForwardRef<ARGS>(args)...);
 			return ++this->length;
 		}
 

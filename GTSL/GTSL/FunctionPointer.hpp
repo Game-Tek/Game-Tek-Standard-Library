@@ -13,13 +13,13 @@ namespace GTSL
 		RET(*callerFunction)(void*, ARGS&& ...) { nullptr };
 
 		template <RET(*FUNCTION)(ARGS ...)>
-		static constexpr RET functionCaller(void* callee, ARGS&&... params) { return (FUNCTION)(GTSL::MakeForwardReference<ARGS>(params)...); }
+		static constexpr RET functionCaller(void* callee, ARGS&&... params) { return (FUNCTION)(GTSL::ForwardRef<ARGS>(params)...); }
 
 		template <class T, RET(T::* METHOD)(ARGS ...)>
-		static constexpr RET methodCaller(void* callee, ARGS&&... params) { return (static_cast<T*>(callee)->*METHOD)(GTSL::MakeForwardReference<ARGS>(params)...); }
+		static constexpr RET methodCaller(void* callee, ARGS&&... params) { return (static_cast<T*>(callee)->*METHOD)(GTSL::ForwardRef<ARGS>(params)...); }
 
 		template <class T, RET(T::* CONST_METHOD)(ARGS ...) const>
-		static constexpr RET constMethodCaller(void* callee, ARGS&&... params) { return (static_cast<const T*>(callee)->*CONST_METHOD)(GTSL::MakeForwardReference<ARGS>(params)...); }
+		static constexpr RET constMethodCaller(void* callee, ARGS&&... params) { return (static_cast<const T*>(callee)->*CONST_METHOD)(GTSL::ForwardRef<ARGS>(params)...); }
 	public:
 		constexpr explicit FunctionPointer(decltype(callerFunction) cF) : callerFunction(cF)
 		{
@@ -35,6 +35,6 @@ namespace GTSL
 		static constexpr FunctionPointer Create() { return FunctionPointer(constMethodCaller<T, CONST_METHOD>); }
 
 		template<typename T>
-		constexpr RET operator()(T* callee, ARGS... args) const { return callerFunction(static_cast<void*>(callee), GTSL::MakeForwardReference<ARGS>(args)...); }
+		constexpr RET operator()(T* callee, ARGS... args) const { return callerFunction(static_cast<void*>(callee), GTSL::ForwardRef<ARGS>(args)...); }
 	};
 }

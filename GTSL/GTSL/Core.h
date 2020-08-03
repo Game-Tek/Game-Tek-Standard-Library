@@ -27,10 +27,10 @@ namespace GTSL
 	struct RemoveReference<T&&> { using type = T; using const_type_ref = const T&&; };
 	
 	template<typename T>
-	[[nodiscard]] constexpr T&& MakeForwardReference(typename RemoveReference<T>::type& args) noexcept { return static_cast<T&&>(args); }
+	[[nodiscard]] constexpr T&& ForwardRef(typename RemoveReference<T>::type& args) noexcept { return static_cast<T&&>(args); }
 
 	template <typename T>
-	[[nodiscard]] constexpr typename RemoveReference<T>::type&& MakeTransferReference(T&& arg) noexcept { return static_cast<typename RemoveReference<T>::type&&>(arg); }
+	[[nodiscard]] constexpr typename RemoveReference<T>::type&& MoveRef(T&& arg) noexcept { return static_cast<typename RemoveReference<T>::type&&>(arg); }
 
 	template<typename T, typename R>
 	int64 RangeForIndex(const T& e, const R& range) { return &e - range.begin(); }

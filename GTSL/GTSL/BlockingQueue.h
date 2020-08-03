@@ -24,7 +24,7 @@ namespace GTSL
 		{
 			{
 				Lock lock(mutex);
-				queue.emplace(GTSL::MakeForwardReference<T>(item));
+				queue.emplace(GTSL::ForwardRef<T>(item));
 			}
 			ready.NotifyOne();
 		}
@@ -46,7 +46,7 @@ namespace GTSL
 		{
 			{
 				if (!mutex.TryLock()) { return false; }
-				queue.emplace(GTSL::MakeForwardReference<T>(item));
+				queue.emplace(GTSL::ForwardRef<T>(item));
 				mutex.Unlock();
 			}
 

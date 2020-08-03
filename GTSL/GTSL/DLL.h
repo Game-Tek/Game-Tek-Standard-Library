@@ -25,10 +25,10 @@ namespace GTSL
 			}
 
 			template<typename RET, typename... ARGS>
-			RET operator()(ARGS&&... args) { return reinterpret_cast<RET(*)(ARGS...)>(functionPointer)(GTSL::MakeForwardReference<ARGS>(args)...); }
+			RET operator()(ARGS&&... args) { return reinterpret_cast<RET(*)(ARGS...)>(functionPointer)(GTSL::ForwardRef<ARGS>(args)...); }
 
 			template<typename RET, typename... ARGS>
-			auto Call(ARGS&&... args) -> RET { return reinterpret_cast<RET(*)(ARGS...)>(functionPointer)(GTSL::MakeForwardReference<ARGS>(args)...); }
+			auto Call(ARGS&&... args) -> RET { return reinterpret_cast<RET(*)(ARGS...)>(functionPointer)(GTSL::ForwardRef<ARGS>(args)...); }
 		};
 
 		DLL() = default;

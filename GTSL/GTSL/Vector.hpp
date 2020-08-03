@@ -77,7 +77,7 @@ namespace GTSL
 		 * \brief Constructs a Vector from an r-value reference to another Vector.
 		 * \param other R-Value reference to other Vector to transfer from.
 		 */
-		Vector(Vector&& other) noexcept : allocator(GTSL::MakeTransferReference(other.allocator)), capacity(other.capacity), length(other.length), data(other.data)
+		Vector(Vector&& other) noexcept : allocator(GTSL::MoveRef(other.allocator)), capacity(other.capacity), length(other.length), data(other.data)
 		{
 			other.data = nullptr;
 		}
@@ -249,7 +249,7 @@ namespace GTSL
 		length_type PushBack(T&& obj)
 		{
 			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
-			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeTransferReference(obj));
+			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MoveRef(obj));
 			return this->length++;
 		}
 
@@ -289,7 +289,7 @@ namespace GTSL
 		length_type EmplaceBack(ARGS&&... args)
 		{
 			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
-			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeForwardReference<ARGS>(args)...);
+			::new(static_cast<void*>(this->data + this->length)) T(GTSL::ForwardRef<ARGS>(args)...);
 			return this->length++;
 		}
 
@@ -313,7 +313,7 @@ namespace GTSL
 		{
 			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
 			copyArray(getIterator(index), getIterator(index + 1), this->length - index);
-			::new(static_cast<void*>(this->data + this->length)) T(MakeForwardReference<ARGS>(args)...);
+			::new(static_cast<void*>(this->data + this->length)) T(ForwardRef<ARGS>(args)...);
 			return this->length += 1;
 		}
 
@@ -350,7 +350,7 @@ namespace GTSL
 		void Emplace(const length_type index, ARGS&&... args)
 		{
 			this->data[index].~T();
-			::new(static_cast<void*>(this->data + index)) T(GTSL::MakeForwardReference<ARGS>(args) ...);
+			::new(static_cast<void*>(this->data + index)) T(GTSL::ForwardRef<ARGS>(args) ...);
 		}
 
 		/**

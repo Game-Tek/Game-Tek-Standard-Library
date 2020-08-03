@@ -129,7 +129,7 @@ namespace GTSL
 		constexpr uint32 PushBack(T&& obj) noexcept
 		{
 			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
-			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MakeTransferReference(obj));
+			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MoveRef(obj));
 			return this->length++;
 		}
 
@@ -169,7 +169,7 @@ namespace GTSL
 		constexpr uint32 EmplaceBack(ARGS&&... args)
 		{
 			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
-			::new(this->data + this->length) T(GTSL::MakeForwardReference<ARGS>(args)...);
+			::new(this->data + this->length) T(GTSL::ForwardRef<ARGS>(args)...);
 			return this->length++;
 		}
 

@@ -80,12 +80,12 @@ namespace GTSL
 
 			if (findFreeIndex(index)) //If there is a free index insert there,
 			{
-				objects.Emplace(index, GTSL::MakeForwardReference<ARGS>(args) ...);
+				objects.Emplace(index, GTSL::ForwardRef<ARGS>(args) ...);
 				return index;
 			}
 
 			//if there wasn't a free index Place a the back of the array.
-			return objects.EmplaceBack(GTSL::MakeForwardReference<ARGS>(args) ...);
+			return objects.EmplaceBack(GTSL::ForwardRef<ARGS>(args) ...);
 		}
 
 		/**

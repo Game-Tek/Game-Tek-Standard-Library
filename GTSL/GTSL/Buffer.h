@@ -19,6 +19,11 @@ namespace GTSL
 		~Buffer() { GTSL_ASSERT(!data, "Allocation was not freed!"); }
 #endif
 
+		Buffer(Buffer&& buffer) noexcept : data(buffer.data), capacity(buffer.capacity), length(buffer.length), readPos(buffer.readPos)
+		{
+			buffer.data = nullptr;
+		}
+		
 		template<class ALLOCATOR>
 		void Allocate(const uint64 bytes, const uint32 alignment, const ALLOCATOR& allocatorReference)
 		{

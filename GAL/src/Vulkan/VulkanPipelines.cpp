@@ -62,6 +62,10 @@ bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL:
 	}
 
 	result.WriteBytes((shaderc_module.end() - shaderc_module.begin()) * sizeof(GTSL::uint32), reinterpret_cast<const GTSL::byte*>(shaderc_module.begin()));
+
+	auto test = shaderc_module.end() - shaderc_module.begin();
+	auto test2 = (shaderc_module.end() - shaderc_module.begin()) * sizeof(GTSL::uint32);
+	
 	return true;
 }
 
@@ -217,7 +221,7 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 		vk_pipeline_shader_stage_create_infos[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vk_pipeline_shader_stage_create_infos[i].pNext = nullptr;
 		vk_pipeline_shader_stage_create_infos[i].flags = 0;
-		vk_pipeline_shader_stage_create_infos[i].stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
+		vk_pipeline_shader_stage_create_infos[i].stage = VulkanShaderTypeToVkShaderStageFlagBits(createInfo.Stages[i].Type);
 		vk_pipeline_shader_stage_create_infos[i].pName = "main";
 		vk_pipeline_shader_stage_create_infos[i].module = createInfo.Stages[i].Shader->GetVkShaderModule();
 		vk_pipeline_shader_stage_create_infos[i].pSpecializationInfo = nullptr;

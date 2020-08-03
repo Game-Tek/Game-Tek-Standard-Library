@@ -88,7 +88,7 @@ namespace GTSL
 		template <typename LAMBDA>
 		static Delegate Create(LAMBDA& instance) { return Delegate(static_cast<void*>(&instance), lambdaCaller<LAMBDA>); }
 
-		RET operator()(ARGS... args) const { return (*callerFunction)(callee, GTSL::MakeForwardReference<ARGS>(args)...); }
+		RET operator()(ARGS... args) const { return (*callerFunction)(callee, GTSL::ForwardRef<ARGS>(args)...); }
 
 	private:		
 		RET(*callerFunction)(void*, ARGS&&...) { nullptr };
@@ -99,15 +99,15 @@ namespace GTSL
 		}
 		
 		template <class T, RET(T::* METHOD)(ARGS ...)>
-		static RET methodCaller(void* callee, ARGS&&... params) { return (static_cast<T*>(callee)->*METHOD)(GTSL::MakeForwardReference<ARGS>(params)...); }
+		static RET methodCaller(void* callee, ARGS&&... params) { return (static_cast<T*>(callee)->*METHOD)(GTSL::ForwardRef<ARGS>(params)...); }
 
 		template <class T, RET(T::* CONST_METHOD)(ARGS ...) const>
-		static RET constMethodCaller(void* callee, ARGS&&... params) { return (static_cast<const T*>(callee)->*CONST_METHOD)(GTSL::MakeForwardReference<ARGS>(params)...); }
+		static RET constMethodCaller(void* callee, ARGS&&... params) { return (static_cast<const T*>(callee)->*CONST_METHOD)(GTSL::ForwardRef<ARGS>(params)...); }
 
 		template <RET(*FUNCTION)(ARGS ...)>
-		static RET functionCaller(void* callee, ARGS&&... params) { return (FUNCTION)(GTSL::MakeForwardReference<ARGS>(params)...); }
+		static RET functionCaller(void* callee, ARGS&&... params) { return (FUNCTION)(GTSL::ForwardRef<ARGS>(params)...); }
 
 		template <typename LAMBDA>
-		static RET lambdaCaller(void* callee, ARGS&&... params) { return (static_cast<LAMBDA*>(callee)->operator())(GTSL::MakeForwardReference<ARGS>(params)...); }
+		static RET lambdaCaller(void* callee, ARGS&&... params) { return (static_cast<LAMBDA*>(callee)->operator())(GTSL::ForwardRef<ARGS>(params)...); }
 	};
 }
