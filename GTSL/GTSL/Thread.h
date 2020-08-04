@@ -3,6 +3,7 @@
 #include "Core.h"
 #include "Delegate.hpp"
 #include "Tuple.h"
+#include "Algorithm.h"
 
 namespace GTSL
 {
@@ -36,18 +37,6 @@ namespace GTSL
 		[[nodiscard]] bool CanBeJoined() const noexcept;
 
 		static uint8 ThreadCount();
-
-		template <typename FT, typename... ARGS, uint64 ... IS>
-		static void Call(const Delegate<FT>& delegate, Tuple<ARGS...>& tup, Indices<IS...>)
-		{
-			delegate(TupleAccessor<IS>::Get(tup)...);
-		}
-
-		template <typename FT, typename... ARGS>
-		static void Call(const Delegate<FT>& delegate, Tuple<ARGS...>& tup)
-		{
-			Call(delegate, tup, BuildIndices<sizeof...(ARGS)>{});
-		}
 		
 	private:
 		template<typename FT, typename... ARGS>

@@ -81,11 +81,11 @@ namespace GTSL
 	template <class... ARGS>
 	Tuple(ARGS...)->Tuple<ARGS...>;
 
-	template<uint64 ...>
+	template<uint64...>
 	struct Indices {};
 
 	template<uint64 N, uint64... S>
-	struct BuildIndices : BuildIndices<N - 1, N - 1, S...> { };
+	struct BuildIndices : BuildIndices<N - 1, N - 1, S...> {};
 
 	template<uint64... S>
 	struct BuildIndices<0, S...> : Indices<S...> {};
