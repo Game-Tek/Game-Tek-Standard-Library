@@ -70,22 +70,6 @@ namespace GAL
 
 		//Adds a BindBindingsSet to the command queue.
 
-		struct BindBindingsSetInfo : RenderInfo
-		{
-			GTSL::Ranger<const BindingsSet> BindingsSets;
-			GTSL::Ranger<const GTSL::uint32> Offsets;
-			const Pipeline* Pipeline = nullptr;
-			GTSL::uint8 BindingsSetIndex = 0;
-		};
-
-		struct UpdatePushConstantsInfo : RenderInfo
-		{
-			const GraphicsPipeline* Pipeline = nullptr;
-			size_t Offset = 0;
-			size_t Size = 0;
-			GTSL::byte* Data = nullptr;
-		};
-
 		struct BindGraphicsPipelineInfo : RenderInfo
 		{
 			const GraphicsPipeline* GraphicsPipeline = nullptr;

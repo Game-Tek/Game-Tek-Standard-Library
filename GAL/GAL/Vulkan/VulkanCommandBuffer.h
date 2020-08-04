@@ -6,6 +6,8 @@
 
 namespace GAL
 {
+	class VulkanPipeline;
+	class VulkanBindingsSet;
 	class VulkanRenderDevice;
 
 	class VulkanCommandBuffer final : public CommandBuffer
@@ -22,17 +24,36 @@ namespace GAL
 		void AdvanceSubPass(const AdvanceSubpassInfo& advanceSubpassInfo);
 		void EndRenderPass(const EndRenderPassInfo& endRenderPassInfo);
 
-		void BindGraphicsPipeline(const BindGraphicsPipelineInfo& bindGraphicsPipelineInfo);
-		void BindComputePipeline(const BindComputePipelineInfo& bindComputePipelineInfo);
+		struct BindPipelineInfo : VulkanRenderInfo
+		{
+			const VulkanPipeline* Pipeline = nullptr;
+			VulkanPipelineType PipelineType;
+		};
+		void BindPipeline(const BindPipelineInfo& bindPipelineInfo);
 
 		void BindIndexBuffer(const BindIndexBufferInfo& buffer);
 		void BindVertexBuffer(const BindVertexBufferInfo& buffer);
-		
+
+		struct UpdatePushConstantsInfo : VulkanRenderInfo
+		{
+			const VulkanPipeline* Pipeline = nullptr;
+			size_t Offset = 0;
+			size_t Size = 0;
+			GTSL::byte* Data = nullptr;
+		};
 		void UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo);
 
 		void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo);
 		void Dispatch(const DispatchInfo& dispatchInfo);
 
+		struct BindBindingsSetInfo : VulkanRenderInfo
+		{
+			VulkanPipelineType PipelineType;
+			GTSL::Ranger<const VulkanBindingsSet> BindingsSets;
+			GTSL::Ranger<const GTSL::uint32> Offsets;
+			const VulkanPipeline* Pipeline = nullptr;
+			GTSL::uint8 BindingsSetIndex = 0;
+		};
 		void BindBindingsSet(const BindBindingsSetInfo& bindBindingsSetInfo);
 
 		void CopyImage(const CopyImageInfo& copyImageInfo);

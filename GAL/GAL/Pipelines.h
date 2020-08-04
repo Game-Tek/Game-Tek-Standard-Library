@@ -40,6 +40,8 @@ namespace GAL
 			ShaderType Stage = ShaderType::VERTEX_SHADER;
 		};
 
+		static constexpr GTSL::uint8 MAX_VERTEX_ELEMENTS = 20;
+		
 		//struct ShaderInfo
 		//{
 		//	ShaderType Type = ShaderType::VERTEX_SHADER;
@@ -85,8 +87,6 @@ namespace GAL
 		//	GTSL::Ranger<const class BindingsPool> BindingsPools;
 		//	const PipelineCache* PipelineCache = nullptr;
 		//};
-
-		static constexpr GTSL::uint8 MAX_VERTEX_ELEMENTS = 20;
 		
 		GraphicsPipeline() = default;
 

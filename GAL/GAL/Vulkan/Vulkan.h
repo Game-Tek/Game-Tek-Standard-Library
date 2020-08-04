@@ -323,6 +323,11 @@ namespace GAL
 		static constexpr value_type GPU = 1, SHARED = 2, COHERENT = 4, CACHED = 8;
 	};
 
+	enum class VulkanPipelineType : GTSL::uint32
+	{
+		GRAPHICS = 0, COMPUTE = 1, RAY_TRACING = 1000165000
+	};
+	
 	enum class VulkanShaderDataType
 	{
 		FLOAT = VK_FORMAT_R32_SFLOAT,

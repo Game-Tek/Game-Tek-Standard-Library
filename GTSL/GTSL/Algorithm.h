@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Tuple.h"
-#include "Delegate.hpp"
 
 namespace GTSL
 {
@@ -18,5 +17,11 @@ namespace GTSL
 	bool IsPowerOfTwo(T number) { return (number & (number - 1)) == 0; }
 
 	template<typename E>
+	inline constexpr bool IsEnum = __is_enum(E);
+	
+	template<typename E>
+	concept Enum = IsEnum<E>;
+
+	template<Enum E>
 	using UnderlyingType = __underlying_type(E);
 }

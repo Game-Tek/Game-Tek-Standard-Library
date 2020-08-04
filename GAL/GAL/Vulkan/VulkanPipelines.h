@@ -54,7 +54,7 @@ namespace GAL
 		StencilOperations StencilOperations;
 	};
 
-	class VulkanPipeline
+	class VulkanPipeline : public Pipeline
 	{
 	public:
 		struct ShaderInfo
@@ -62,9 +62,16 @@ namespace GAL
 			VulkanShaderType Type = VulkanShaderType::VERTEX;
 			const VulkanShader* Shader = nullptr;
 		};
+
+
+		[[nodiscard]] VkPipeline GetVkPipeline() const { return pipeline; }
+		[[nodiscard]] VkPipelineLayout GetVkPipelineLayout() const { return pipelineLayout; }
+	protected:
+		VkPipelineLayout pipelineLayout = nullptr;
+		VkPipeline pipeline = nullptr;
 	};
 	
-	class VulkanGraphicsPipeline final : public GraphicsPipeline
+	class VulkanGraphicsPipeline final : public VulkanPipeline
 	{
 	public:
 		VulkanGraphicsPipeline() = default;
@@ -89,13 +96,7 @@ namespace GAL
 
 		void Destroy(const VulkanRenderDevice* renderDevice);
 
-		[[nodiscard]] VkPipeline GetVkGraphicsPipeline() const { return pipeline; }
-		[[nodiscard]] VkPipelineLayout GetVkPipelineLayout() const { return pipelineLayout; }
-
 	private:
-		VkPipelineLayout pipelineLayout = nullptr;
-		VkPipeline pipeline = nullptr;
-
 		static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Ranger<const VulkanShaderDataType> vertex, GTSL::Ranger<GTSL::uint8> offsets)
 		{
 			GTSL::uint32 size = 0;
@@ -108,9 +109,12 @@ namespace GAL
 		}
 	};
 
-	class VulkanComputePipeline final : public ComputePipeline
+	class VulkanComputePipeline final : public VulkanPipeline
 	{
 	public:
+		struct CreateInfo : VulkanRenderInfo
+		{
+		};
 		VulkanComputePipeline(const CreateInfo& createInfo);
 		~VulkanComputePipeline() = default;
 
@@ -122,7 +126,7 @@ namespace GAL
 		VkPipeline pipeline = nullptr;
 	};
 
-	class VulkanRaytracingPipeline final
+	class VulkanRaytracingPipeline final : public VulkanPipeline
 	{
 	public:
 		struct CreateInfo : VulkanRenderInfo
@@ -132,7 +136,7 @@ namespace GAL
 			
 			GTSL::uint32 MaxRecursionDepth = 0;
 			VulkanPipelineDescriptor PipelineDescriptor;
-			GTSL::Ranger<const VulkanPipeline::ShaderInfo> Stages;
+			GTSL::Ranger<const ShaderInfo> Stages;
 			GTSL::Ranger<const VulkanBindingsSetLayout> BindingsSetLayouts;
 		};
 
