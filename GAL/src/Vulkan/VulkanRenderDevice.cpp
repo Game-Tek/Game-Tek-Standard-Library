@@ -1,4 +1,4 @@
-#include "GAL/Vulkan/VulkanRenderDevice.h"
+	#include "GAL/Vulkan/VulkanRenderDevice.h"
 
 #if(_WIN64)
 #define WIN32_LEAN_AND_MEAN
@@ -255,6 +255,9 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		}
 	}
 
+	GTSL::Array<GTSL::Array<GTSL::float32, 64>, 64> families_priorities;
+	GTSL::Array<GTSL::Array<GTSL::uint32, 64>, 64> families_indeces;
+
 	for (GTSL::uint8 QUEUE = 0; QUEUE < createInfo.QueueCreateInfos.ElementCount(); ++QUEUE)
 	{
 		for (GTSL::uint8 FAMILY = 0; FAMILY < queue_families_count; ++FAMILY)
@@ -264,20 +267,26 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 				if (used_families[FAMILY]) //if a queue is already being used from this family add another
 				{
 					++vk_device_queue_create_infos[FAMILY].queueCount;
-					vk_device_queue_create_infos[FAMILY].pQueuePriorities = &createInfo.QueueCreateInfos[QUEUE].QueuePriority;
+					families_priorities[FAMILY].EmplaceBack(createInfo.QueueCreateInfos[QUEUE].QueuePriority);
+					families_indeces[FAMILY].EmplaceBack(QUEUE);
+					vk_device_queue_create_infos[FAMILY].pQueuePriorities = &families_priorities[FAMILY][vk_device_queue_create_infos[FAMILY].queueCount - 1];
 					break;
 				}
 
 				vk_device_queue_create_infos.EmplaceBack();
+				families_priorities.EmplaceBack();
+				families_indeces.EmplaceBack();
+				used_families.EmplaceBack(true);
+				
+				families_priorities[FAMILY].EmplaceBack(createInfo.QueueCreateInfos[QUEUE].QueuePriority);
+				families_indeces[FAMILY].EmplaceBack(QUEUE);
 				
 				vk_device_queue_create_infos[FAMILY].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 				vk_device_queue_create_infos[FAMILY].pNext = nullptr;
 				vk_device_queue_create_infos[FAMILY].flags = 0;
 				vk_device_queue_create_infos[FAMILY].queueFamilyIndex = FAMILY;
 				vk_device_queue_create_infos[FAMILY].queueCount = 1;
-				vk_device_queue_create_infos[FAMILY].pQueuePriorities = &createInfo.QueueCreateInfos[QUEUE].QueuePriority;
-
-				used_families.EmplaceBack(true);
+				vk_device_queue_create_infos[FAMILY].pQueuePriorities = &families_priorities[FAMILY][vk_device_queue_create_infos[FAMILY].queueCount - 1];
 				break;
 			}
 		}
@@ -293,13 +302,13 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 	VK_CHECK(vkCreateDevice(physicalDevice, &vk_device_create_info, GetVkAllocationCallbacks(), &device));
 
-	for (GTSL::uint8 i = 0; i < createInfo.QueueCreateInfos.ElementCount(); ++i)
+	for (GTSL::uint8 FAMILY = 0; FAMILY < families_indeces.GetLength(); ++FAMILY)
 	{
-		for (GTSL::uint8 j = 0; j < vk_device_queue_create_infos[i].queueCount; ++j)
+		for (GTSL::uint8 QUEUE = 0; QUEUE < families_indeces[FAMILY].GetLength(); ++QUEUE)
 		{
-			createInfo.Queues[i].familyIndex = vk_device_queue_create_infos[i].queueFamilyIndex;
-			createInfo.Queues[i].queueIndex = j;
-			vkGetDeviceQueue(device, vk_device_queue_create_infos[i].queueFamilyIndex, j, &createInfo.Queues[i].queue);
+			createInfo.Queues[families_indeces[FAMILY][QUEUE]].familyIndex = FAMILY;
+			createInfo.Queues[families_indeces[FAMILY][QUEUE]].queueIndex = QUEUE;
+			vkGetDeviceQueue(device, FAMILY, QUEUE, &createInfo.Queues[families_indeces[FAMILY][QUEUE]].queue);
 		}
 	}
 
