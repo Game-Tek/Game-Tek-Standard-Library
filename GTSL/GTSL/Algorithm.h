@@ -12,10 +12,10 @@ namespace GTSL
 
 	template <typename LAMBDA, typename... ARGS>
 	static auto Call(LAMBDA&& lambda, Tuple<ARGS...>& tup) { return Call(lambda, tup, BuildIndices<sizeof...(ARGS)>{}); }
-	
+
 	template<typename T>
 	bool IsPowerOfTwo(T number) { return (number & (number - 1)) == 0; }
-
+	
 	template<typename E>
 	inline constexpr bool IsEnum = __is_enum(E);
 	

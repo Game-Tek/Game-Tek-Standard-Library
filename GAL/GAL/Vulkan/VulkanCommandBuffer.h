@@ -52,7 +52,6 @@ namespace GAL
 			GTSL::Ranger<const VulkanBindingsSet> BindingsSets;
 			GTSL::Ranger<const GTSL::uint32> Offsets;
 			const VulkanPipeline* Pipeline = nullptr;
-			GTSL::uint8 BindingsSetIndex = 0;
 		};
 		void BindBindingsSet(const BindBindingsSetInfo& bindBindingsSetInfo);
 

@@ -99,7 +99,14 @@ namespace GTSL
 #endif
 		static void RoundDown(uint64 x, uint32 multiple, uint32& quotient, uint32& remainder);
 
-
+		static bool IsPowerOfTwo(const uint64 n) {return (n & (n - 1)) == 0; }
+		
+		static uint64 RoundUpToPowerOf2Multiple(const uint64 n, const uint64 multiple)
+		{
+			GTSL_ASSERT(IsPowerOfTwo(multiple), "Is not multiple of two!");
+			return n + (multiple - 1) & ~(multiple - 1);
+		}
+		
 		static uint64 RoundUp(const uint64 number, const uint32 multiple)
 		{
 			const uint64 m_m_1 = multiple - 1, sum = number + m_m_1; return sum - sum % multiple;
