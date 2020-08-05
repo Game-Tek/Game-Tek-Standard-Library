@@ -31,6 +31,7 @@
     <ClInclude Include="GAL\Vulkan\VulkanCommandBuffer.h" />
     <ClInclude Include="GAL\Vulkan\VulkanFramebuffer.h" />
     <ClInclude Include="GAL\Vulkan\VulkanPipelines.h" />
+    <ClInclude Include="GAL\Vulkan\VulkanQueryPool.h" />
     <ClInclude Include="GAL\Vulkan\VulkanRenderContext.h" />
     <ClInclude Include="GAL\Vulkan\VulkanRenderDevice.h" />
     <ClInclude Include="GAL\Vulkan\VulkanRenderPass.h" />

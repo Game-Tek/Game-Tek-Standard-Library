@@ -12,6 +12,8 @@ GAL::VulkanTopLevelAccelerationStructure::VulkanTopLevelAccelerationStructure(co
 	acceleration_structure_create_geometry_type.maxPrimitiveCount;
 	acceleration_structure_create_geometry_type.maxVertexCount;
 	acceleration_structure_create_geometry_type.vertexFormat;
+
+	VkGeometryFlagBitsKHR
 	
 	VkAccelerationStructureCreateInfoKHR vk_acceleration_structure_create_info_khr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
 	vk_acceleration_structure_create_info_khr.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;

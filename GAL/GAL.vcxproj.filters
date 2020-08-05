@@ -90,6 +90,9 @@
     <ClInclude Include="GAL\Vulkan\VulkanAccelerationStructures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GAL\Vulkan\VulkanQueryPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Vulkan\VulkanBindings.cpp">

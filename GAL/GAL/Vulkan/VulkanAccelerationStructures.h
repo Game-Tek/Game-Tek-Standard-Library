@@ -10,7 +10,7 @@ namespace GAL
 	public:
 		VkAccelerationStructureKHR GetVkAccelerationStructure() const { return accelerationStructure; }
 
-		struct AccelerationStructureGeometry : VulkanRenderInfo
+		struct AccelerationStructureGeometryType : VulkanRenderInfo
 		{
 			VulkanGeometryType GeometryType;
 			VulkanIndexType IndexType;
@@ -18,6 +18,30 @@ namespace GAL
 			GTSL::uint32 MaxPrimitiveCount = 0;
 			GTSL::uint32 MaxVertexCount = 0;
 			bool AllowTransforms = false;
+		};
+
+		struct AccelerationStructureGeometryTriangleData : VulkanRenderInfo
+		{
+			VulkanShaderDataType VertexType;
+			VulkanIndexType IndexType;
+			GTSL::uint16 VertexStride = 0;
+			VulkanDeviceAddress VertexBufferAddress;
+			VulkanDeviceAddress IndexBufferAddress;
+		};
+
+		struct AccelerationStructureGeometry : VulkanRenderInfo
+		{
+			VulkanGeometryType GeometryType;
+			VulkanGeometryFlags GeometryFlags;
+			AccelerationStructureGeometryTriangleData* GeometryTriangleData;
+		};
+
+		struct AccelerationStructureBuildOffsetInfo : VulkanRenderInfo
+		{
+			GTSL::uint32 FirstVertex;
+			GTSL::uint32 PrimitiveCount;
+			GTSL::uint32 PrimitiveOffset;
+			GTSL::uint32 TransformOffset;
 		};
 		
 	protected:

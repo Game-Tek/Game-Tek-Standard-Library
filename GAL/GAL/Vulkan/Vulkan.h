@@ -20,6 +20,8 @@
 
 namespace GAL
 {
+	using VulkanDeviceAddress = GTSL::uint64;
+	
 	struct VulkanRenderInfo
 	{
 		const class VulkanRenderDevice* RenderDevice = nullptr;
@@ -244,12 +246,32 @@ namespace GAL
 	{
 		TRIANGLES = 0, AABB = 1
 	};
+
+	struct VulkanGeometryFlags : GTSL::Flags<GTSL::uint32>
+	{
+		static constexpr value_type OPAQUE = 1, NO_DUPLICATE_ANY_HIT = 2;
+	};
 	
 	struct VulkanShaderStage : GTSL::Flags<GTSL::uint32>
 	{
 		static constexpr value_type VERTEX = 1, TESSELLATION_CONTROL = 2;
 		static constexpr value_type TESSELLATION_EVALUATION = 4, GEOMETRY = 8, FRAGMENT = 16, COMPUTE = 32, ALL = 0x7FFFFFFF;
 		static constexpr value_type RAYGEN = 0x00000100, ANY_HIT = 0x00000200, CLOSEST_HIT = 0x00000400, MISS = 0x00000800, INTERSECTION = 0x00001000, CALLABLE = 0x00002000;
+	};
+
+	enum class VulkanQueryType
+	{
+		OCCLUSION = 0,
+		PIPELINE_STATISTICS = 1,
+		TIMESTAMP = 2,
+		// Provided by VK_EXT_transform_feedback
+		TRANSFORM_FEEDBACK_STREAM = 1000028004,
+		// Provided by VK_KHR_performance_query
+		PERFORMANCE_QUERY = 1000116000,
+		// Provided by VK_KHR_ray_tracing
+		ACCELERATION_STRUCTURE_COMPACTED_SIZE = 1000165000,
+		// Provided by VK_KHR_ray_tracing
+		ACCELERATION_STRUCTURE_SERIALIZATION_SIZE = 1000150000,
 	};
 	
 	enum class VulkanColorSpace : GTSL::uint32
