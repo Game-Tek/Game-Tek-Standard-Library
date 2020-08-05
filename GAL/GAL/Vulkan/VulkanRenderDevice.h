@@ -35,6 +35,11 @@ namespace GAL
 	public:
 		VulkanRenderDevice() = default;
 
+		enum class Extension
+		{
+			RAY_TRACING
+		};
+		
 		struct CreateInfo
 		{
 			GTSL::Ranger<const GTSL::UTF8> ApplicationName;
@@ -42,6 +47,7 @@ namespace GAL
 			GTSL::Ranger<const Queue::CreateInfo> QueueCreateInfos;
 			GTSL::Ranger<VulkanQueue> Queues;
 			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
+			GTSL::Ranger<const Extension> Extensions;
 		};
 		explicit VulkanRenderDevice(const CreateInfo& createInfo);
 		

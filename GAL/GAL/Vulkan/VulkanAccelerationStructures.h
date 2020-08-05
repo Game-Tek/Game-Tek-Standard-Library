@@ -9,6 +9,16 @@ namespace GAL
 	{
 	public:
 		VkAccelerationStructureKHR GetVkAccelerationStructure() const { return accelerationStructure; }
+
+		struct AccelerationStructureGeometry : VulkanRenderInfo
+		{
+			VulkanGeometryType GeometryType;
+			VulkanIndexType IndexType;
+			VulkanShaderDataType VertexType;
+			GTSL::uint32 MaxPrimitiveCount = 0;
+			GTSL::uint32 MaxVertexCount = 0;
+			bool AllowTransforms = false;
+		};
 		
 	protected:
 		VkAccelerationStructureKHR accelerationStructure;

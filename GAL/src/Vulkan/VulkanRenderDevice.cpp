@@ -222,8 +222,6 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 	physicalDevice = vk_physical_devices[0];
 
-	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-
 	VkPhysicalDeviceFeatures vk_physical_device_features{};
 	vk_physical_device_features.samplerAnisotropy = true;
 	vk_physical_device_features.shaderSampledImageArrayDynamicIndexing = true;
@@ -234,8 +232,6 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 	VkPhysicalDeviceFeatures2 extended_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
 	extended_features.pNext = &timeline_semaphore_features;
-
-	GTSL::Array<const char*, 32> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME };
 
 	GTSL::Array<VkDeviceQueueCreateInfo, 16> vk_device_queue_create_infos;
 
@@ -292,11 +288,72 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		}
 	}
 
+	VkPhysicalDeviceProperties2 properties2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+	VkPhysicalDeviceFeatures2 features2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+
+	void** next_property = &properties2.pNext;
+	void** next_feature = &features2.pNext;
+
+	GTSL::Array<GTSL::byte[1024], 32> properties_structures;
+	GTSL::Array<GTSL::byte[1024], 32> features_structures;
+	GTSL::Array<const char*, 32> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME };
+
+	auto place_properties_structure = [&](const GTSL::uint64 size, void* structure, void** structureNext)
+	{
+		auto& structure_array = properties_structures;
+
+		structure_array.EmplaceBack();
+		GTSL_ASSERT(size <= 1024, "Structure bigger than available space");
+		GTSL::MemCopy(size, structure, structure_array.end() - 1);
+		*next_feature = structure_array.end() - 1;
+		next_feature = reinterpret_cast<void**>(static_cast<VkStructureType*>(structure) + 1);
+	};
+
+	auto place_features_structure = [&](const GTSL::uint64 size, void* structure, void** structureNext)
+	{
+		auto& structure_array = features_structures;
+		
+		structure_array.EmplaceBack();
+		GTSL_ASSERT(size <= 1024, "Structure bigger than available space");
+		GTSL::MemCopy(size, structure, structure_array.end() - 1);
+		*next_feature = structure_array.end() - 1;
+		next_feature = reinterpret_cast<void**>(static_cast<VkStructureType*>(structure) + 1);
+	};
+
+	for (auto e : createInfo.Extensions)
+	{
+		switch (e)
+		{
+		case Extension::RAY_TRACING:
+		{
+			device_extensions.EmplaceBack(VK_KHR_RAY_TRACING_EXTENSION_NAME);
+			device_extensions.EmplaceBack(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME);
+			device_extensions.EmplaceBack(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
+			device_extensions.EmplaceBack(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
+			device_extensions.EmplaceBack(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+
+			VkPhysicalDeviceRayTracingPropertiesKHR ray_tracing_properties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_KHR };
+			VkPhysicalDeviceRayTracingFeaturesKHR ray_tracing_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_FEATURES_KHR };
+
+			place_properties_structure(sizeof(VkPhysicalDeviceRayTracingPropertiesKHR), &ray_tracing_properties, &ray_tracing_properties.pNext);
+			place_features_structure(sizeof(VkPhysicalDeviceRayTracingFeaturesKHR), &ray_tracing_features, &ray_tracing_features.pNext);
+				
+			break;
+		}
+		default:;
+		}
+	}
+
+	vkGetPhysicalDeviceProperties2(physicalDevice, &properties2);
+	vkGetPhysicalDeviceFeatures2(physicalDevice, &features2);
+
+	deviceProperties = properties2.properties;
+
 	VkDeviceCreateInfo vk_device_create_info{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-	vk_device_create_info.pNext = nullptr; //extended features
+	vk_device_create_info.pNext = &extended_features; //extended features
 	vk_device_create_info.queueCreateInfoCount = vk_device_queue_create_infos.GetLength();
 	vk_device_create_info.pQueueCreateInfos = vk_device_queue_create_infos.begin();
-	vk_device_create_info.pEnabledFeatures = &vk_physical_device_features; //because of next
+	vk_device_create_info.pEnabledFeatures = nullptr;
 	vk_device_create_info.enabledExtensionCount = device_extensions.GetLength();
 	vk_device_create_info.ppEnabledExtensionNames = device_extensions.begin();
 

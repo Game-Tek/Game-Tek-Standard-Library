@@ -235,6 +235,16 @@ namespace GAL
 		RAYGEN, ANY_HIT, CLOSEST_HIT, MISS, INTERSECTION, CALLABLE
 	};
 
+	enum class VulkanIndexType
+	{
+		UINT16 = 0, UINT32 = 1
+	};
+
+	enum class VulkanGeometryType
+	{
+		TRIANGLES = 0, AABB = 1
+	};
+	
 	struct VulkanShaderStage : GTSL::Flags<GTSL::uint32>
 	{
 		static constexpr value_type VERTEX = 1, TESSELLATION_CONTROL = 2;
