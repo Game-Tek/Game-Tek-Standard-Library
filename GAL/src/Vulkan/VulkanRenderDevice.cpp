@@ -238,16 +238,8 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 	physicalDevice = vk_physical_devices[0];
 
-	VkPhysicalDeviceFeatures vk_physical_device_features{};
-	vk_physical_device_features.samplerAnisotropy = true;
-	vk_physical_device_features.shaderSampledImageArrayDynamicIndexing = true;
-
 	VkPhysicalDeviceTimelineSemaphoreFeatures timeline_semaphore_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES };
-	timeline_semaphore_features.pNext = &vk_physical_device_features;
 	timeline_semaphore_features.timelineSemaphore = true;
-
-	VkPhysicalDeviceFeatures2 extended_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
-	extended_features.pNext = &timeline_semaphore_features;
 
 	GTSL::Array<VkDeviceQueueCreateInfo, 16> vk_device_queue_create_infos;
 
@@ -307,12 +299,14 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	VkPhysicalDeviceProperties2 properties2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
 	VkPhysicalDeviceFeatures2 features2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
 
+	features2.features.samplerAnisotropy = true;
+
 	void** next_property = &properties2.pNext;
 	void** next_feature = &features2.pNext;
 
 	GTSL::Array<GTSL::byte, 32 * 1024> properties_structures;
 	GTSL::Array<GTSL::byte, 32 * 1024> features_structures;
-	GTSL::Array<const char*, 32> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME };
+	GTSL::Array<const char*, 32> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 	auto place_properties_structure = [&](const GTSL::uint64 size, void* structure, void** structureNext)
 	{
@@ -320,8 +314,8 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 		structure_array.Resize(structure_array.GetLength() + static_cast<GTSL::uint32>(size));
 		GTSL::MemCopy(size, structure, structure_array.end() - size);
-		*next_feature = structure_array.end() - 1;
-		next_feature = reinterpret_cast<void**>(static_cast<VkStructureType*>(structure) + 1);
+		*next_feature = structure_array.end() - size;
+		next_feature = structureNext;
 	};
 
 	auto place_features_structure = [&](const GTSL::uint64 size, void* structure, void** structureNext)
@@ -330,9 +324,12 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		
 		structure_array.Resize(structure_array.GetLength() + static_cast<GTSL::uint32>(size));
 		GTSL::MemCopy(size, structure, structure_array.end() - size);
-		*next_feature = structure_array.end() - 1;
-		next_feature = reinterpret_cast<void**>(static_cast<VkStructureType*>(structure) + 1);
+		*next_feature = structure_array.end() - size;
+		next_feature = structureNext;
 	};
+
+	place_features_structure(sizeof(VkPhysicalDeviceTimelineSemaphoreFeatures), &timeline_semaphore_features, &timeline_semaphore_features.pNext);
+	device_extensions.EmplaceBack(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
 
 	for (auto e : createInfo.Extensions)
 	{
@@ -364,7 +361,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	deviceProperties = properties2.properties;
 
 	VkDeviceCreateInfo vk_device_create_info{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-	vk_device_create_info.pNext = &extended_features; //extended features
+	vk_device_create_info.pNext = &features2; //extended features
 	vk_device_create_info.queueCreateInfoCount = vk_device_queue_create_infos.GetLength();
 	vk_device_create_info.pQueueCreateInfos = vk_device_queue_create_infos.begin();
 	vk_device_create_info.pEnabledFeatures = nullptr;

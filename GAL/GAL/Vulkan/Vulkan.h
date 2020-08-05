@@ -17,6 +17,7 @@
 #include "GTSL/Flags.h"
 
 #define MAKE_VK_HANDLE(object) typedef struct object##_T* (object);
+#undef OPAQUE
 
 namespace GAL
 {

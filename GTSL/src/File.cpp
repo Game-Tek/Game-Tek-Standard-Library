@@ -65,7 +65,8 @@ uint32 File::ReadFromFile(const Ranger<byte>& buffer) const
 {
 	DWORD bytes{ 0 };
 	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
-	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
+	const auto error = GetLastError();
+	GTSL_ASSERT(error == ERROR_SUCCESS, "Win32 Error!");
 	return bytes;
 }
 
