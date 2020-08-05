@@ -6,6 +6,7 @@
 #include <GAL/ext/vulkan/vulkan_win32.h>
 #endif
 
+#include "GAL/Vulkan/VulkanAccelerationStructures.h"
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanBuffer.h"
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
@@ -14,7 +15,7 @@
 #include "GTSL/Console.h"
 #include "GTSL/StaticString.hpp"
 
-void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(const VulkanBuffer* buffer, BufferMemoryRequirements& bufferMemoryRequirements) const
+void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(const VulkanBuffer* buffer, MemoryRequirements& bufferMemoryRequirements) const
 {
 	VkMemoryRequirements vk_memory_requirements;
 	vkGetBufferMemoryRequirements(device, static_cast<const VulkanBuffer*>(buffer)->GetVkBuffer(), &vk_memory_requirements);
@@ -23,13 +24,26 @@ void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(const VulkanBuffer* bu
 	bufferMemoryRequirements.Size = vk_memory_requirements.size;
 }
 
-void GAL::VulkanRenderDevice::GetImageMemoryRequirements(const VulkanImage* image,	ImageMemoryRequirements& imageMemoryRequirements) const
+void GAL::VulkanRenderDevice::GetImageMemoryRequirements(const VulkanImage* image,	MemoryRequirements& imageMemoryRequirements) const
 {
 	VkMemoryRequirements vk_memory_requirements;
 	vkGetImageMemoryRequirements(device, image->GetVkImage(), &vk_memory_requirements);
 	imageMemoryRequirements.Alignment = vk_memory_requirements.alignment;
 	imageMemoryRequirements.MemoryTypes = vk_memory_requirements.memoryTypeBits;
 	imageMemoryRequirements.Size = vk_memory_requirements.size;
+}
+
+void GAL::VulkanRenderDevice::GetAccelerationStructureMemoryRequirements(const GetAccelerationStructureMemoryRequirementsInfo& accelerationStructureMemoryRequirementsInfo) const
+{
+	VkAccelerationStructureMemoryRequirementsInfoKHR acceleration_structure_memory_requirements_info{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_KHR };
+	acceleration_structure_memory_requirements_info.accelerationStructure = accelerationStructureMemoryRequirementsInfo.AccelerationStructure->GetVkAccelerationStructure();
+	acceleration_structure_memory_requirements_info.buildType = static_cast<VkAccelerationStructureBuildTypeKHR>(accelerationStructureMemoryRequirementsInfo.AccelerationStructureBuildType);
+	acceleration_structure_memory_requirements_info.type = static_cast<VkAccelerationStructureMemoryRequirementsTypeKHR>(accelerationStructureMemoryRequirementsInfo.AccelerationStructureMemoryRequirementsType);
+	VkMemoryRequirements2 memory_requirements2;
+	vkGetAccelerationStructureMemoryRequirementsKHR(device, &acceleration_structure_memory_requirements_info, &memory_requirements2);
+	accelerationStructureMemoryRequirementsInfo.MemoryRequirements->Size = memory_requirements2.memoryRequirements.size;
+	accelerationStructureMemoryRequirementsInfo.MemoryRequirements->Alignment = memory_requirements2.memoryRequirements.alignment;
+	accelerationStructureMemoryRequirementsInfo.MemoryRequirements->MemoryTypes = memory_requirements2.memoryRequirements.memoryTypeBits;
 }
 
 GTSL::uint32 GAL::VulkanRenderDevice::FindMemoryType(const GTSL::uint32 typeFilter, const GTSL::uint32 memoryType) const
@@ -155,6 +169,8 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 	
 	VK_CHECK(vkQueueSubmit(queue, 1, &vk_submit_info, submitInfo.Fence ? static_cast<const VulkanFence*>(submitInfo.Fence)->GetVkFence() : nullptr));
 }
+
+#define GET_DEVICE_PROC(device, var) var = reinterpret_cast<PFN_##var>(vkGetDeviceProcAddr(device, #var))
 
 GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : RenderDevice(createInfo.DebugPrintFunction)
 {
@@ -294,17 +310,16 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	void** next_property = &properties2.pNext;
 	void** next_feature = &features2.pNext;
 
-	GTSL::Array<GTSL::byte[1024], 32> properties_structures;
-	GTSL::Array<GTSL::byte[1024], 32> features_structures;
+	GTSL::Array<GTSL::byte, 32 * 1024> properties_structures;
+	GTSL::Array<GTSL::byte, 32 * 1024> features_structures;
 	GTSL::Array<const char*, 32> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME };
 
 	auto place_properties_structure = [&](const GTSL::uint64 size, void* structure, void** structureNext)
 	{
 		auto& structure_array = properties_structures;
 
-		structure_array.EmplaceBack();
-		GTSL_ASSERT(size <= 1024, "Structure bigger than available space");
-		GTSL::MemCopy(size, structure, structure_array.end() - 1);
+		structure_array.Resize(structure_array.GetLength() + static_cast<GTSL::uint32>(size));
+		GTSL::MemCopy(size, structure, structure_array.end() - size);
 		*next_feature = structure_array.end() - 1;
 		next_feature = reinterpret_cast<void**>(static_cast<VkStructureType*>(structure) + 1);
 	};
@@ -313,9 +328,8 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	{
 		auto& structure_array = features_structures;
 		
-		structure_array.EmplaceBack();
-		GTSL_ASSERT(size <= 1024, "Structure bigger than available space");
-		GTSL::MemCopy(size, structure, structure_array.end() - 1);
+		structure_array.Resize(structure_array.GetLength() + static_cast<GTSL::uint32>(size));
+		GTSL::MemCopy(size, structure, structure_array.end() - size);
 		*next_feature = structure_array.end() - 1;
 		next_feature = reinterpret_cast<void**>(static_cast<VkStructureType*>(structure) + 1);
 	};
@@ -337,7 +351,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 			place_properties_structure(sizeof(VkPhysicalDeviceRayTracingPropertiesKHR), &ray_tracing_properties, &ray_tracing_properties.pNext);
 			place_features_structure(sizeof(VkPhysicalDeviceRayTracingFeaturesKHR), &ray_tracing_features, &ray_tracing_features.pNext);
-				
+			
 			break;
 		}
 		default:;
@@ -370,6 +384,37 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	}
 
 	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
+
+	for (auto e : createInfo.Extensions)
+	{
+		switch (e)
+		{
+		case Extension::RAY_TRACING:
+		{		
+			GET_DEVICE_PROC(device, vkCreateAccelerationStructureKHR);
+			GET_DEVICE_PROC(device, vkDestroyAccelerationStructureKHR);
+				
+			GET_DEVICE_PROC(device, vkCreateRayTracingPipelinesKHR);
+			GET_DEVICE_PROC(device, vkBindAccelerationStructureMemoryKHR);
+				
+			GET_DEVICE_PROC(device, vkGetAccelerationStructureMemoryRequirementsKHR);
+			GET_DEVICE_PROC(device, vkGetAccelerationStructureDeviceAddressKHR);
+				
+			GET_DEVICE_PROC(device, vkCreateDeferredOperationKHR);
+			GET_DEVICE_PROC(device, vkDestroyDeferredOperationKHR);
+				
+			GET_DEVICE_PROC(device, vkCmdCopyAccelerationStructureKHR);
+			GET_DEVICE_PROC(device, vkCmdBuildAccelerationStructureKHR);
+			GET_DEVICE_PROC(device, vkCmdWriteAccelerationStructuresPropertiesKHR);
+			GET_DEVICE_PROC(device, vkCmdCopyMemoryToAccelerationStructureKHR);
+			GET_DEVICE_PROC(device, vkCmdCopyAccelerationStructureToMemoryKHR);
+			GET_DEVICE_PROC(device, vkCmdTraceRaysKHR);
+				
+			break;
+		}
+		default:;
+		}
+	}
 }
 
 GAL::VulkanRenderDevice::~VulkanRenderDevice()

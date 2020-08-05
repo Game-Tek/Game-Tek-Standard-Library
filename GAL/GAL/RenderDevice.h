@@ -73,14 +73,7 @@ namespace GAL
 		{
 		}
 
-		struct BufferMemoryRequirements
-		{
-			GTSL::uint32 Size{ 0 };
-			GTSL::uint32 Alignment{ 0 };
-			GTSL::uint32 MemoryTypes{ 0 };
-		};
-
-		struct ImageMemoryRequirements
+		struct MemoryRequirements
 		{
 			GTSL::uint32 Size{ 0 };
 			GTSL::uint32 Alignment{ 0 };

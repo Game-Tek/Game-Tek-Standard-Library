@@ -2,9 +2,8 @@
 
 #include "GAL/RenderDevice.h"
 
-#define VK_ENABLE_BETA_EXTENSIONS
 #include "Vulkan.h"
-#undef VK_ENABLE_BETA_EXTENSIONS
+#include <GAL/ext/vulkan/vulkan_beta.h>
 
 namespace GAL
 {
@@ -67,8 +66,17 @@ namespace GAL
 		[[nodiscard]] VkPhysicalDevice GetVkPhysicalDevice() const { return physicalDevice; }
 		[[nodiscard]] VkDevice GetVkDevice() const { return device; }
 
-		void GetBufferMemoryRequirements(const class VulkanBuffer* buffer, BufferMemoryRequirements& bufferMemoryRequirements) const;
-		void GetImageMemoryRequirements(const class VulkanImage* image, ImageMemoryRequirements& imageMemoryRequirements) const;
+		void GetBufferMemoryRequirements(const class VulkanBuffer* buffer, MemoryRequirements& bufferMemoryRequirements) const;
+		void GetImageMemoryRequirements(const class VulkanImage* image, MemoryRequirements& imageMemoryRequirements) const;
+
+		struct GetAccelerationStructureMemoryRequirementsInfo
+		{
+			VulkanAccelerationStructureBuildType AccelerationStructureBuildType;
+			VulkanAccelerationStructureMemoryRequirementsType AccelerationStructureMemoryRequirementsType;
+			const class VulkanAccelerationStructure* AccelerationStructure;
+			MemoryRequirements* MemoryRequirements;
+		};
+		void GetAccelerationStructureMemoryRequirements(const GetAccelerationStructureMemoryRequirementsInfo& accelerationStructureMemoryRequirementsInfo) const;
 		
 		[[nodiscard]] GTSL::uint32 FindMemoryType(GTSL::uint32 typeFilter, GTSL::uint32 memoryType) const;
 
@@ -76,19 +84,26 @@ namespace GAL
 
 		[[nodiscard]] VkAllocationCallbacks* GetVkAllocationCallbacks() const { return nullptr; }
 
-		PFN_vkCreateAccelerationStructureKHR CreateAccelerationStructure;
-		PFN_vkDestroyAccelerationStructureKHR DestroyAccelerationStructure;
+		PFN_vkCreateAccelerationStructureKHR vkCreateAccelerationStructureKHR;
+		PFN_vkDestroyAccelerationStructureKHR vkDestroyAccelerationStructureKHR;
 
-		PFN_vkCreateRayTracingPipelinesKHR CreateRayTracingPipelines;
-		PFN_vkBindAccelerationStructureMemoryKHR BindAccelerationStructureMemory;
+		PFN_vkBuildAccelerationStructureKHR VkBuildAccelerationStructureKHR;
+		
+		PFN_vkCreateRayTracingPipelinesKHR vkCreateRayTracingPipelinesKHR;
+		PFN_vkBindAccelerationStructureMemoryKHR vkBindAccelerationStructureMemoryKHR;
 
-		PFN_vkCreateDeferredOperationKHR CreateDeferredOperation;
-		PFN_vkDestroyDeferredOperationKHR DestroyDeferredOperation;
+		PFN_vkGetAccelerationStructureMemoryRequirementsKHR vkGetAccelerationStructureMemoryRequirementsKHR;
+		PFN_vkGetAccelerationStructureDeviceAddressKHR vkGetAccelerationStructureDeviceAddressKHR;
+		
+		PFN_vkCreateDeferredOperationKHR vkCreateDeferredOperationKHR;
+		PFN_vkDestroyDeferredOperationKHR vkDestroyDeferredOperationKHR;
 
-		PFN_vkCmdCopyAccelerationStructureKHR CmdCopyAccelerationStructure;
-		PFN_vkCmdBuildAccelerationStructureKHR CmdBuildAccelerationStructure;
-
-		PFN_vkCmdWriteAccelerationStructuresPropertiesKHR CmdWriteAccelerationStructuresProperties;
+		PFN_vkCmdCopyAccelerationStructureKHR vkCmdCopyAccelerationStructureKHR;
+		PFN_vkCmdBuildAccelerationStructureKHR vkCmdBuildAccelerationStructureKHR;
+		PFN_vkCmdCopyAccelerationStructureToMemoryKHR vkCmdCopyAccelerationStructureToMemoryKHR;
+		PFN_vkCmdCopyMemoryToAccelerationStructureKHR vkCmdCopyMemoryToAccelerationStructureKHR;
+		PFN_vkCmdWriteAccelerationStructuresPropertiesKHR vkCmdWriteAccelerationStructuresPropertiesKHR;
+		PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR;
 	private:
 #if (_DEBUG)
 		PFN_vkCreateDebugUtilsMessengerEXT createDebugUtilsFunction = nullptr;

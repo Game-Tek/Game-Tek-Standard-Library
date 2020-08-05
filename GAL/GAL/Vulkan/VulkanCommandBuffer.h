@@ -44,6 +44,13 @@ namespace GAL
 		void UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo);
 
 		void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo);
+
+		struct TraceRaysInfo : VulkanRenderInfo
+		{
+			
+		};
+		void TraceRays(const TraceRaysInfo& traceRaysInfo);
+		
 		void Dispatch(const DispatchInfo& dispatchInfo);
 
 		struct BindBindingsSetInfo : VulkanRenderInfo
@@ -61,6 +68,15 @@ namespace GAL
 
 		void TransitionImage(const TransitionImageInfo& transitionImageInfo);
 
+		struct CopyBuffersInfo : VulkanRenderInfo
+		{
+			const class VulkanBuffer* Source{ nullptr };
+			GTSL::uint32 SourceOffset{ 0 };
+			const class VulkanBuffer* Destination{ nullptr };
+			GTSL::uint32 DestinationOffset{ 0 };
+
+			GTSL::uint32 Size{ 0 };
+		};
 		void CopyBuffers(const CopyBuffersInfo& copyBuffersInfo);
 		
 		[[nodiscard]] VkCommandBuffer GetVkCommandBuffer() const { return commandBuffer; }
@@ -74,13 +90,20 @@ namespace GAL
 	{
 	public:
 		VulkanCommandPool() = default;
+
+		struct CreateInfo final : VulkanRenderInfo
+		{
+			const class VulkanQueue* Queue{ nullptr };
+			bool IsPrimary = true;
+			GTSL::Ranger<VulkanCommandBuffer> CommandBuffers;
+		};
 		VulkanCommandPool(const CreateInfo& createInfo);
 
 		void ResetPool(RenderDevice* renderDevice) const;
 		
-		struct FreeCommandBuffers final : RenderInfo
+		struct FreeCommandBuffers final : VulkanRenderInfo
 		{
-			GTSL::Ranger<CommandBuffer> CommandBuffers;
+			GTSL::Ranger<VulkanCommandBuffer> CommandBuffers;
 		};
 		void FreeCommandBuffers(const FreeCommandBuffers& freeCommandBuffers) const;
 		

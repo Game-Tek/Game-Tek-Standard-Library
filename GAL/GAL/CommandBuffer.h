@@ -143,26 +143,10 @@ namespace GAL
 			GTSL::uint32 SourceStage, DestinationStage;
 			AccessFlags SourceAccessFlags, DestinationAccessFlags;
 		};
-
-		struct CopyBuffersInfo : RenderInfo
-		{
-			const class Buffer* Source{ nullptr };
-			GTSL::uint32 SourceOffset{ 0 };
-			const class Buffer* Destination{ nullptr };
-			GTSL::uint32 DestinationOffset{ 0 };
-
-			GTSL::uint32 Size{ 0 };
-		};
 	};
 
 	class CommandPool : public GALObject
 	{
 	public:
-		struct CreateInfo final : RenderInfo
-		{
-			const Queue* Queue{ nullptr };
-			bool IsPrimary = true;
-			GTSL::Ranger<class CommandBuffer> CommandBuffers;
-		};
 	};
 }

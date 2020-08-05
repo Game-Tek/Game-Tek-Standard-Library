@@ -348,8 +348,6 @@ GAL::VulkanRaytracingPipeline::VulkanRaytracingPipeline(const CreateInfo& create
 		vk_ray_tracing_pipeline_create_info.basePipelineIndex = -1;
 		vk_ray_tracing_pipeline_create_info.basePipelineHandle = nullptr;
 	}
-
-	vkGetDeviceProcAddr(createInfo.RenderDevice->GetVkDevice(), "vkCreateRayTracingPipelinesKHR");
 	
-	createInfo.RenderDevice->CreateRayTracingPipelines(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vk_ray_tracing_pipeline_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
+	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vk_ray_tracing_pipeline_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
 }

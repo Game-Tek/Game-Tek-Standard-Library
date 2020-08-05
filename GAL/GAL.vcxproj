@@ -46,6 +46,7 @@
     <ClCompile Include="src\Vulkan\VulkanCommandBuffer.cpp" />
     <ClCompile Include="src\Vulkan\VulkanFramebuffer.cpp" />
     <ClCompile Include="src\Vulkan\VulkanPipelines.cpp" />
+    <ClCompile Include="src\Vulkan\VulkanQueryPool.cpp" />
     <ClCompile Include="src\Vulkan\VulkanRenderContext.cpp" />
     <ClCompile Include="src\Vulkan\VulkanRenderDevice.cpp" />
     <ClCompile Include="src\Vulkan\VulkanRenderPass.cpp" />

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Vulkan.h"
-#include "VulkanRenderDevice.h"
 
 namespace GAL
 {
@@ -24,15 +23,4 @@ namespace GAL
 	private:
 		VkQueryPool queryPool;
 	};
-
-	inline VulkanQueryPool::VulkanQueryPool(const CreateInfo& createInfo)
-	{
-		VkQueryPoolCreateInfo vk_query_pool_create_info{ VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
-		vkCreateQueryPool(createInfo.RenderDevice->GetVkDevice(), &vk_query_pool_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &queryPool);
-	}
-
-	inline void VulkanQueryPool::Destroy(VulkanRenderDevice* renderDevice)
-	{
-		vkDestroyQueryPool(renderDevice->GetVkDevice(), queryPool, renderDevice->GetVkAllocationCallbacks());
-	}
 }

@@ -273,6 +273,18 @@ namespace GAL
 		// Provided by VK_KHR_ray_tracing
 		ACCELERATION_STRUCTURE_SERIALIZATION_SIZE = 1000150000,
 	};
+
+	enum class VulkanAccelerationStructureBuildType
+	{
+		GPU_LOCAL = 0, HOST = 1, GPU_OR_HOST = 2
+	};
+
+	enum class VulkanAccelerationStructureMemoryRequirementsType
+	{
+		OBJECT = 0,
+		BUILD_SCRATCH = 1,
+		UPDATE_SCRATCH = 2,
+	};
 	
 	enum class VulkanColorSpace : GTSL::uint32
 	{
