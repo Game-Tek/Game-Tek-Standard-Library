@@ -2,7 +2,9 @@
 
 #include "GAL/RenderDevice.h"
 
-#include <GAL/ext/vulkan/vulkan.h>
+#define VK_ENABLE_BETA_EXTENSIONS
+#include "Vulkan.h"
+#undef VK_ENABLE_BETA_EXTENSIONS
 
 namespace GAL
 {
@@ -68,6 +70,19 @@ namespace GAL
 
 		[[nodiscard]] VkAllocationCallbacks* GetVkAllocationCallbacks() const { return nullptr; }
 
+		PFN_vkCreateAccelerationStructureKHR CreateAccelerationStructure;
+		PFN_vkDestroyAccelerationStructureKHR DestroyAccelerationStructure;
+
+		PFN_vkCreateRayTracingPipelinesKHR CreateRayTracingPipelines;
+		PFN_vkBindAccelerationStructureMemoryKHR BindAccelerationStructureMemory;
+
+		PFN_vkCreateDeferredOperationKHR CreateDeferredOperation;
+		PFN_vkDestroyDeferredOperationKHR DestroyDeferredOperation;
+
+		PFN_vkCmdCopyAccelerationStructureKHR CmdCopyAccelerationStructure;
+		PFN_vkCmdBuildAccelerationStructureKHR CmdBuildAccelerationStructure;
+
+		PFN_vkCmdWriteAccelerationStructuresPropertiesKHR CmdWriteAccelerationStructuresProperties;
 	private:
 #if (_DEBUG)
 		PFN_vkCreateDebugUtilsMessengerEXT createDebugUtilsFunction = nullptr;

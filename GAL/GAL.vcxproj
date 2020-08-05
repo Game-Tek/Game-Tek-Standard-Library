@@ -24,6 +24,7 @@
     <ClInclude Include="GAL\Synchronization.h" />
     <ClInclude Include="GAL\Image.h" />
     <ClInclude Include="GAL\Vulkan\Vulkan.h" />
+    <ClInclude Include="GAL\Vulkan\VulkanAccelerationStructures.h" />
     <ClInclude Include="GAL\Vulkan\VulkanMemory.h" />
     <ClInclude Include="GAL\Vulkan\VulkanBindings.h" />
     <ClInclude Include="GAL\Vulkan\VulkanBuffer.h" />
@@ -37,6 +38,7 @@
     <ClInclude Include="GAL\Vulkan\VulkanImage.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Vulkan\VulkanAccelerationStructures.cpp" />
     <ClCompile Include="src\Vulkan\VulkanBindings.cpp" />
     <ClCompile Include="src\Vulkan\VulkanBuffer.cpp" />
     <ClCompile Include="src\Vulkan\VulkanMemory.cpp" />
