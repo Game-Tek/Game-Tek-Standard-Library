@@ -83,7 +83,7 @@ namespace GAL
 
 	private:
 		VkCommandBuffer commandBuffer = nullptr;
-
+		friend class VulkanCommandPool;
 	};
 
 	class VulkanCommandPool final : public CommandPool
@@ -100,12 +100,19 @@ namespace GAL
 		VulkanCommandPool(const CreateInfo& createInfo);
 
 		void ResetPool(RenderDevice* renderDevice) const;
+
+		struct AllocateCommandBuffersInfo final : VulkanRenderInfo
+		{
+			bool IsPrimary = true;
+			GTSL::Ranger<VulkanCommandBuffer> CommandBuffers;
+		};
+		void AllocateCommandBuffer(const AllocateCommandBuffersInfo& allocateCommandBuffersInfo);
 		
-		struct FreeCommandBuffers final : VulkanRenderInfo
+		struct FreeCommandBuffersInfo final : VulkanRenderInfo
 		{
 			GTSL::Ranger<VulkanCommandBuffer> CommandBuffers;
 		};
-		void FreeCommandBuffers(const FreeCommandBuffers& freeCommandBuffers) const;
+		void FreeCommandBuffers(const FreeCommandBuffersInfo& freeCommandBuffers) const;
 		
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 

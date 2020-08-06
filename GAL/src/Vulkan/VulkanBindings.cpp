@@ -34,7 +34,7 @@ void GAL::VulkanBindingsPool::AllocateBindingsSets(const AllocateBindingsSetsInf
 	vk_descriptor_set_allocate_info.descriptorPool = descriptorPool;
 	vk_descriptor_set_allocate_info.descriptorSetCount = allocateBindingsSetsInfo.BindingsSets.ElementCount();
 	vk_descriptor_set_allocate_info.pSetLayouts = reinterpret_cast<const VkDescriptorSetLayout*>(allocateBindingsSetsInfo.BindingsSetLayouts.begin());
-	vkAllocateDescriptorSets(allocateBindingsSetsInfo.RenderDevice->GetVkDevice(), &vk_descriptor_set_allocate_info, reinterpret_cast<VkDescriptorSet*>(allocateBindingsSetsInfo.BindingsSets.begin()));
+	VK_CHECK(vkAllocateDescriptorSets(allocateBindingsSetsInfo.RenderDevice->GetVkDevice(), &vk_descriptor_set_allocate_info, reinterpret_cast<VkDescriptorSet*>(allocateBindingsSetsInfo.BindingsSets.begin())));
 }
 
 void GAL::VulkanBindingsPool::FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo)
@@ -98,7 +98,8 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 			vk_descriptor_image_infos[image_set][i].imageLayout = ImageLayoutToVkImageLayout(e.Layouts[i]);
 			vk_descriptor_image_infos[image_set][i].sampler = e.Samplers[i].GetVkSampler();
 		}
-		
+
+		write_descriptors[write_descriptor_index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		write_descriptors[write_descriptor_index].pNext = nullptr;
 		write_descriptors[write_descriptor_index].dstSet = descriptorSet;
 		write_descriptors[write_descriptor_index].dstBinding = write_descriptor_index;
@@ -124,7 +125,8 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 			vk_descriptor_buffer_infos[buffer_set][i].range = e.Sizes[i];
 			vk_descriptor_buffer_infos[buffer_set][i].offset = e.Offsets[i];
 		}
-		
+
+		write_descriptors[write_descriptor_index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		write_descriptors[write_descriptor_index].pNext = nullptr;
 		write_descriptors[write_descriptor_index].dstSet = descriptorSet;
 		write_descriptors[write_descriptor_index].dstBinding = write_descriptor_index;
@@ -136,5 +138,5 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 		write_descriptors[write_descriptor_index].pTexelBufferView = nullptr;
 	}
 
-	vkUpdateDescriptorSets(static_cast<const VulkanRenderDevice*>(bindingsUpdateInfo.RenderDevice)->GetVkDevice(), write_descriptors.GetCapacity(), write_descriptors.begin(), 0, nullptr);
+	vkUpdateDescriptorSets(static_cast<const VulkanRenderDevice*>(bindingsUpdateInfo.RenderDevice)->GetVkDevice(), write_descriptors.GetLength(), write_descriptors.begin(), 0, nullptr);
 }

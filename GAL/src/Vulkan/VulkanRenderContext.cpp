@@ -71,7 +71,7 @@ GTSL::uint8 GAL::VulkanRenderContext::AcquireNextImage(const AcquireNextImageInf
 	GTSL::uint32 image_index = 0;
 
 	vkAcquireNextImageKHR(static_cast<const VulkanRenderDevice*>(acquireNextImageInfo.RenderDevice)->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain),
-		~0ULL, static_cast<const VulkanSemaphore*>(acquireNextImageInfo.Semaphore)->GetVkSemaphore(),
+		~0ULL, static_cast<const VulkanSemaphore*>(acquireNextImageInfo.SignalSemaphore)->GetVkSemaphore(),
 	    acquireNextImageInfo.Fence ? static_cast<const VulkanFence*>(acquireNextImageInfo.Fence)->GetVkFence() : nullptr, &image_index);
 
 	return static_cast<GTSL::uint8>(image_index);

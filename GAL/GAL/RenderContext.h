@@ -61,7 +61,7 @@ namespace GAL
 
 		struct AcquireNextImageInfo : RenderInfo
 		{
-			VulkanSemaphore* Semaphore{nullptr};
+			VulkanSemaphore* SignalSemaphore{nullptr};
 			const class Fence* Fence{ nullptr };
 		};
 		void AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);

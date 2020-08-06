@@ -80,6 +80,8 @@ namespace GAL
 		
 		[[nodiscard]] GTSL::uint32 FindMemoryType(GTSL::uint32 typeFilter, GTSL::uint32 memoryType) const;
 
+		[[nodiscard]] GTSL::uint32 GetMinUniformBufferOffset() const { return deviceProperties.limits.minUniformBufferOffsetAlignment; }
+		
 		[[nodiscard]] const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const { return deviceProperties; }
 
 		[[nodiscard]] VkAllocationCallbacks* GetVkAllocationCallbacks() const { return nullptr; }

@@ -172,15 +172,34 @@ GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)
 	vk_command_buffer_allocate_info.level = createInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 	vk_command_buffer_allocate_info.commandBufferCount = createInfo.CommandBuffers.ElementCount();
 
-	vkAllocateCommandBuffers(createInfo.RenderDevice->GetVkDevice(), &vk_command_buffer_allocate_info, reinterpret_cast<VkCommandBuffer*>(createInfo.CommandBuffers.begin()));
+	GTSL::Array<VkCommandBuffer, 16> command_buffers(createInfo.CommandBuffers.ElementCount());
+	
+	vkAllocateCommandBuffers(createInfo.RenderDevice->GetVkDevice(), &vk_command_buffer_allocate_info, command_buffers.begin());
+
+	for(GTSL::uint32 i = 0; i < createInfo.CommandBuffers.ElementCount(); ++i)
+	{
+		createInfo.CommandBuffers[i].commandBuffer = command_buffers[i];
+	}
 }
 
 void GAL::VulkanCommandPool::ResetPool(RenderDevice* renderDevice) const
 {
-	vkResetCommandPool(static_cast<const VulkanRenderDevice*>(renderDevice)->GetVkDevice(), commandPool, VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
+	vkResetCommandPool(static_cast<const VulkanRenderDevice*>(renderDevice)->GetVkDevice(), commandPool, 0);
 }
 
-void GAL::VulkanCommandPool::FreeCommandBuffers(const struct FreeCommandBuffers& freeCommandBuffers) const
+void GAL::VulkanCommandPool::AllocateCommandBuffer(const AllocateCommandBuffersInfo& allocateCommandBuffersInfo)
+{
+	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info;
+	vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	vk_command_buffer_allocate_info.pNext = nullptr;
+	vk_command_buffer_allocate_info.commandPool = commandPool;
+	vk_command_buffer_allocate_info.level = allocateCommandBuffersInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+	vk_command_buffer_allocate_info.commandBufferCount = allocateCommandBuffersInfo.CommandBuffers.ElementCount();
+	
+	vkAllocateCommandBuffers(allocateCommandBuffersInfo.RenderDevice->GetVkDevice(), &vk_command_buffer_allocate_info, reinterpret_cast<VkCommandBuffer*>(allocateCommandBuffersInfo.CommandBuffers.begin()));
+}
+
+void GAL::VulkanCommandPool::FreeCommandBuffers(const struct FreeCommandBuffersInfo& freeCommandBuffers) const
 {
 	vkFreeCommandBuffers(freeCommandBuffers.RenderDevice->GetVkDevice(), commandPool, freeCommandBuffers.CommandBuffers.ElementCount(),	reinterpret_cast<const VkCommandBuffer*>(freeCommandBuffers.CommandBuffers.begin()));
 }
