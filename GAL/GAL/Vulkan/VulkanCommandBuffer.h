@@ -31,6 +31,12 @@ namespace GAL
 		};
 		void BindPipeline(const BindPipelineInfo& bindPipelineInfo);
 
+		struct BindIndexBufferInfo final : VulkanRenderInfo
+		{
+			const class VulkanBuffer* Buffer{ nullptr };
+			GTSL::uint32 Offset{ 0 };
+			VulkanIndexType IndexType;
+		};
 		void BindIndexBuffer(const BindIndexBufferInfo& buffer);
 		void BindVertexBuffer(const BindVertexBufferInfo& buffer);
 

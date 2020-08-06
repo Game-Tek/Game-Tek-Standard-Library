@@ -12,7 +12,6 @@
 void GAL::VulkanCommandBuffer::BeginRecording(const BeginRecordingInfo& beginRecordingInfo)
 {
 	VkCommandBufferBeginInfo vk_command_buffer_begin_info{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-	vk_command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 	//Hint to primary buffer if this is secondary.
 	//vk_command_buffer_begin_info.pInheritanceInfo = static_cast<VulkanCommandBuffer*>(beginRecordingInfo.PrimaryCommandBuffer)->GetVkCommandBuffer();
 	vk_command_buffer_begin_info.pInheritanceInfo = nullptr;
@@ -72,7 +71,7 @@ void GAL::VulkanCommandBuffer::BindPipeline(const BindPipelineInfo& bindPipeline
 
 void GAL::VulkanCommandBuffer::BindIndexBuffer(const BindIndexBufferInfo& buffer)
 {
-	vkCmdBindIndexBuffer(commandBuffer, static_cast<const VulkanBuffer*>(buffer.Buffer)->GetVkBuffer(), buffer.Offset, VK_INDEX_TYPE_UINT16);
+	vkCmdBindIndexBuffer(commandBuffer, buffer.Buffer->GetVkBuffer(), buffer.Offset, static_cast<VkIndexType>(buffer.IndexType));
 }
 
 void GAL::VulkanCommandBuffer::BindVertexBuffer(const BindVertexBufferInfo& buffer)
@@ -111,6 +110,7 @@ void GAL::VulkanCommandBuffer::BindBindingsSet(const BindBindingsSetInfo& bindBi
 
 void GAL::VulkanCommandBuffer::CopyImage(const CopyImageInfo& copyImageInfo)
 {
+	__debugbreak();
 	//vkCmdCopyImage(commandBuffer, static_cast<VulkanImage*>(copyImageInfo.SourceImage), , , , , );
 }
 
@@ -165,9 +165,7 @@ GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)
 	vk_command_pool_create_info.queueFamilyIndex = createInfo.Queue->GetFamilyIndex();
 	VK_CHECK(vkCreateCommandPool(createInfo.RenderDevice->GetVkDevice(), &vk_command_pool_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &commandPool));
 
-	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info;
-	vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	vk_command_buffer_allocate_info.pNext = nullptr;
+	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{ vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
 	vk_command_buffer_allocate_info.commandPool = commandPool;
 	vk_command_buffer_allocate_info.level = createInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 	vk_command_buffer_allocate_info.commandBufferCount = createInfo.CommandBuffers.ElementCount();
@@ -189,9 +187,7 @@ void GAL::VulkanCommandPool::ResetPool(RenderDevice* renderDevice) const
 
 void GAL::VulkanCommandPool::AllocateCommandBuffer(const AllocateCommandBuffersInfo& allocateCommandBuffersInfo)
 {
-	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info;
-	vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	vk_command_buffer_allocate_info.pNext = nullptr;
+	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
 	vk_command_buffer_allocate_info.commandPool = commandPool;
 	vk_command_buffer_allocate_info.level = allocateCommandBuffersInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 	vk_command_buffer_allocate_info.commandBufferCount = allocateCommandBuffersInfo.CommandBuffers.ElementCount();

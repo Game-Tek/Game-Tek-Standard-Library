@@ -54,12 +54,6 @@ namespace GAL
 
 		//Adds a BindMesh command to the command queue.
 
-		struct BindIndexBufferInfo final : RenderInfo
-		{
-			const class Buffer* Buffer{ nullptr };
-			GTSL::uint32 Offset{ 0 };
-		};
-
 		struct BindVertexBufferInfo final : RenderInfo
 		{
 			const class Buffer* Buffer{ nullptr };
