@@ -41,8 +41,25 @@ namespace GAL
 		~VulkanRenderContext() = default;
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
-		
+
+
+		struct RecreateInfo : VulkanRenderInfo
+		{
+			GTSL::Extent2D SurfaceArea;
+			GTSL::uint8 DesiredFramesInFlight = 0;
+			GTSL::uint32 PresentMode{ 0 };
+			GTSL::uint32 Format{ 0 };
+			GTSL::uint32 ColorSpace{ 0 };
+			GTSL::uint32 ImageUses{ 0 };
+			const VulkanSurface* Surface{ nullptr };
+		};
 		void Recreate(const RecreateInfo& resizeInfo);
+
+		struct AcquireNextImageInfo : VulkanRenderInfo
+		{
+			VulkanSemaphore* SignalSemaphore{ nullptr };
+			const class VulkanFence* Fence{ nullptr };
+		};
 		/**
 		 * \brief  Acquires the next image in the swapchain queue to present to.
 		 * \param acquireNextImageInfo Information to perform image acquisition.

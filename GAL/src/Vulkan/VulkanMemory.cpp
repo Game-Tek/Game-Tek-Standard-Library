@@ -9,7 +9,7 @@ GAL::VulkanDeviceMemory::VulkanDeviceMemory(const CreateInfo& createInfo)
 	vk_memory_allocate_info.allocationSize = createInfo.Size;
 	vk_memory_allocate_info.memoryTypeIndex = createInfo.MemoryType;
 
-	VK_CHECK(vkAllocateMemory(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_memory_allocate_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), reinterpret_cast<::VkDeviceMemory*>(&deviceMemory)));
+	VK_CHECK(vkAllocateMemory(createInfo.RenderDevice->GetVkDevice(), &vk_memory_allocate_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), reinterpret_cast<::VkDeviceMemory*>(&deviceMemory)));
 }
 
 void GAL::VulkanDeviceMemory::Destroy(const VulkanRenderDevice* renderDevice)
@@ -20,7 +20,7 @@ void GAL::VulkanDeviceMemory::Destroy(const VulkanRenderDevice* renderDevice)
 void* GAL::VulkanDeviceMemory::Map(const MapInfo& mapInfo) const
 {
 	void* data{ 0 };
-	vkMapMemory(static_cast<const VulkanRenderDevice*>(mapInfo.RenderDevice)->GetVkDevice(), static_cast<::VkDeviceMemory>(deviceMemory), mapInfo.Offset, mapInfo.Size, 0, &data);
+	VK_CHECK(vkMapMemory(mapInfo.RenderDevice->GetVkDevice(), static_cast<::VkDeviceMemory>(deviceMemory), mapInfo.Offset, mapInfo.Size, 0, &data));
 	return data;
 }
 

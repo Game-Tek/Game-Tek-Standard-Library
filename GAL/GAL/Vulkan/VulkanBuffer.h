@@ -2,7 +2,7 @@
 
 #include "GAL/Buffer.h"
 
-#include <GAL/ext/vulkan/vulkan.h>
+#include "Vulkan.h"
 
 namespace GAL
 {
@@ -10,13 +10,19 @@ namespace GAL
 	{
 	public:
 		VulkanBuffer() = default;
+
+		struct CreateInfo final : VulkanRenderInfo
+		{
+			GTSL::uint32 Size{ 0 };
+			GTSL::uint32 BufferType{ 0 };
+		};
 		VulkanBuffer(const CreateInfo& createInfo);
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
-		struct BindMemoryInfo : RenderInfo
+		struct BindMemoryInfo : VulkanRenderInfo
 		{
-			class DeviceMemory* Memory{ nullptr };
+			class VulkanDeviceMemory* Memory{ nullptr };
 			GTSL::uint32 Offset{ 0 };
 		};
 		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;

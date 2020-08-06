@@ -10,6 +10,11 @@ namespace GAL
 	{
 	public:
 		VulkanFence() = default;
+
+		struct CreateInfo : VulkanRenderInfo
+		{
+			bool IsSignaled{ true };
+		};
 		VulkanFence(const CreateInfo& createInfo);
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
@@ -17,17 +22,17 @@ namespace GAL
 
 		[[nodiscard]] bool GetStatus(const VulkanRenderDevice* renderDevice) const;
 		
-		struct WaitForFencesInfo final : RenderInfo
+		struct WaitForFencesInfo final : VulkanRenderInfo
 		{
-			GTSL::Ranger<const Fence> Fences;
+			GTSL::Ranger<const VulkanFence> Fences;
 			GTSL::uint64 Timeout;
 			bool WaitForAll{ true };
 		};
 		static void WaitForFences(const WaitForFencesInfo& waitForFencesInfo);
 
-		struct ResetFencesInfo final : RenderInfo
+		struct ResetFencesInfo final : VulkanRenderInfo
 		{
-			GTSL::Ranger<const Fence> Fences;
+			GTSL::Ranger<const VulkanFence> Fences;
 		};
 		static void ResetFences(const ResetFencesInfo& resetFencesInfo);
 	private:
@@ -38,6 +43,11 @@ namespace GAL
 	{
 	public:
 		VulkanSemaphore() = default;
+
+		struct CreateInfo : VulkanRenderInfo
+		{
+			GTSL::uint64 InitialValue{ 0 };
+		};
 		VulkanSemaphore(const CreateInfo& createInfo);
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);

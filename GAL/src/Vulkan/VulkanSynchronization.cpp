@@ -7,8 +7,7 @@ GAL::VulkanFence::VulkanFence(const CreateInfo& createInfo)
 	VkFenceCreateInfo vk_fence_create_info{ VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
 	vk_fence_create_info.flags = createInfo.IsSignaled;
 
-	VK_CHECK(vkCreateFence(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_fence_create_info,
-		static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &fence));
+	VK_CHECK(vkCreateFence(createInfo.RenderDevice->GetVkDevice(), &vk_fence_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &fence));
 }
 
 void GAL::VulkanFence::Destroy(const VulkanRenderDevice* renderDevice)
@@ -23,18 +22,12 @@ bool GAL::VulkanFence::GetStatus(const VulkanRenderDevice* renderDevice) const
 
 void GAL::VulkanFence::WaitForFences(const WaitForFencesInfo& waitForFencesInfo)
 {
-	auto vulkan_fences = GTSL::Ranger<const VulkanFence>(waitForFencesInfo.Fences);
-
-	vkWaitForFences(static_cast<const VulkanRenderDevice*>(waitForFencesInfo.RenderDevice)->GetVkDevice(), static_cast<GTSL::uint32>(vulkan_fences.ElementCount()),
-	reinterpret_cast<const VkFence*>(vulkan_fences.begin()), waitForFencesInfo.WaitForAll, waitForFencesInfo.Timeout);
+	VK_CHECK(vkWaitForFences(waitForFencesInfo.RenderDevice->GetVkDevice(), static_cast<GTSL::uint32>(waitForFencesInfo.Fences.ElementCount()), reinterpret_cast<const VkFence*>(waitForFencesInfo.Fences.begin()), waitForFencesInfo.WaitForAll, waitForFencesInfo.Timeout));
 }
 
 void GAL::VulkanFence::ResetFences(const ResetFencesInfo& resetFencesInfo)
 {
-	auto vulkan_fences = GTSL::Ranger<const VulkanFence>(resetFencesInfo.Fences);
-	
-	vkResetFences(static_cast<const VulkanRenderDevice*>(resetFencesInfo.RenderDevice)->GetVkDevice(), vulkan_fences.ElementCount(),
-	reinterpret_cast<const VkFence*>(vulkan_fences.begin()));
+	VK_CHECK(vkResetFences(resetFencesInfo.RenderDevice->GetVkDevice(), resetFencesInfo.Fences.ElementCount(), reinterpret_cast<const VkFence*>(resetFencesInfo.Fences.begin())));
 }
 
 GAL::VulkanSemaphore::VulkanSemaphore(const CreateInfo& createInfo)
@@ -48,8 +41,7 @@ GAL::VulkanSemaphore::VulkanSemaphore(const CreateInfo& createInfo)
 	VkSemaphoreCreateInfo vk_semaphore_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 	//VkSemaphoreTypeCreateInfo vk_semaphore_type_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO };
 
-	VK_CHECK(vkCreateSemaphore(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_semaphore_create_info,
-		static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &semaphore));
+	VK_CHECK(vkCreateSemaphore(createInfo.RenderDevice->GetVkDevice(), &vk_semaphore_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &semaphore));
 }
 
 void GAL::VulkanSemaphore::Destroy(const VulkanRenderDevice* renderDevice)

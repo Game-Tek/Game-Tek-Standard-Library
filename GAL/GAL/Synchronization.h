@@ -9,10 +9,6 @@ namespace GAL
 	class Fence : public GALObject
 	{
 	public:
-		struct CreateInfo : RenderInfo
-		{
-			bool IsSignaled{ true };
-		};
 	};
 
 	/**
@@ -21,9 +17,5 @@ namespace GAL
 	class Semaphore : public GALObject
 	{
 	public:
-		struct CreateInfo : RenderInfo
-		{
-			GTSL::uint64 InitialValue{ 0 };
-		};
 	};
 }

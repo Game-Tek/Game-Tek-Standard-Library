@@ -2,6 +2,8 @@
 
 #include "GAL/Memory.h"
 
+#include "Vulkan.h"
+
 namespace GAL
 {
 	class VulkanDeviceMemory final : public DeviceMemory
@@ -10,14 +12,20 @@ namespace GAL
 		using VkDeviceMemory = void*;
 		
 		VulkanDeviceMemory() = default;
-		~VulkanDeviceMemory() = default;
+
+		struct CreateInfo final : VulkanRenderInfo
+		{
+			GTSL::uint32 Size{ 0 };
+			GTSL::uint32 MemoryType{ 0 };
+		};
 		VulkanDeviceMemory(const CreateInfo& createInfo);
+		~VulkanDeviceMemory() = default;
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
 		[[nodiscard]] VkDeviceMemory GetVkDeviceMemory() const { return deviceMemory; }
 
-		struct MapInfo : RenderInfo
+		struct MapInfo : VulkanRenderInfo
 		{
 			GTSL::uint32 Size{ 0 };
 			GTSL::uint32 Offset{ 0 };

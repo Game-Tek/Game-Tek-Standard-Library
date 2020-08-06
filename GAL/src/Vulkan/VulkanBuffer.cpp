@@ -10,7 +10,7 @@ GAL::VulkanBuffer::VulkanBuffer(const CreateInfo& createInfo)
 	vk_buffer_create_info.size = createInfo.Size;
 	vk_buffer_create_info.usage = createInfo.BufferType;
 
-	VK_CHECK(vkCreateBuffer(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_buffer_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &buffer))
+	VK_CHECK(vkCreateBuffer(createInfo.RenderDevice->GetVkDevice(), &vk_buffer_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &buffer))
 }
 
 void GAL::VulkanBuffer::Destroy(const VulkanRenderDevice* renderDevice)
@@ -20,6 +20,5 @@ void GAL::VulkanBuffer::Destroy(const VulkanRenderDevice* renderDevice)
 
 void GAL::VulkanBuffer::BindToMemory(const BindMemoryInfo& bindMemoryInfo) const
 {
-	vkBindBufferMemory(static_cast<const VulkanRenderDevice*>(bindMemoryInfo.RenderDevice)->GetVkDevice(), buffer,
-	static_cast<VkDeviceMemory>(static_cast<VulkanDeviceMemory*>(bindMemoryInfo.Memory)->GetVkDeviceMemory()), bindMemoryInfo.Offset);
+	VK_CHECK(vkBindBufferMemory(bindMemoryInfo.RenderDevice->GetVkDevice(), buffer, static_cast<VkDeviceMemory>(bindMemoryInfo.Memory->GetVkDeviceMemory()), bindMemoryInfo.Offset));
 }
