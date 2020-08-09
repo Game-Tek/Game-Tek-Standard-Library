@@ -8,6 +8,7 @@ GAL::VulkanFence::VulkanFence(const CreateInfo& createInfo)
 	vk_fence_create_info.flags = createInfo.IsSignaled;
 
 	VK_CHECK(vkCreateFence(createInfo.RenderDevice->GetVkDevice(), &vk_fence_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &fence));
+	SET_NAME(fence, VK_OBJECT_TYPE_FENCE, createInfo);
 }
 
 void GAL::VulkanFence::Destroy(const VulkanRenderDevice* renderDevice)
@@ -42,6 +43,7 @@ GAL::VulkanSemaphore::VulkanSemaphore(const CreateInfo& createInfo)
 	//VkSemaphoreTypeCreateInfo vk_semaphore_type_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO };
 
 	VK_CHECK(vkCreateSemaphore(createInfo.RenderDevice->GetVkDevice(), &vk_semaphore_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &semaphore));
+	SET_NAME(semaphore, VK_OBJECT_TYPE_SEMAPHORE, createInfo);
 }
 
 void GAL::VulkanSemaphore::Destroy(const VulkanRenderDevice* renderDevice)

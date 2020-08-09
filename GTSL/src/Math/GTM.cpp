@@ -41,8 +41,10 @@ float32 Math::LengthSquared(const Vector2& a)
 
 float32 Math::LengthSquared(const Vector3& a)
 {
-	const SIMD128<float32> vec(a.X, a.Y, a.Z, 0.0f);
-	return SIMD128<float32>::DotProduct(vec, vec).GetElement<0>();
+	//const SIMD128<float32> vec(a.X, a.Y, a.Z, 0.0f);
+	//return SIMD128<float32>::DotProduct(vec, vec).GetElement<0>();
+	//
+	return a.X * a.X + a.Y * a.Y + a.Z * a.Z;
 }
 
 float32 Math::LengthSquared(const Vector4& a)

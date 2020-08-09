@@ -11,7 +11,7 @@ namespace GAL
 	public:
 		VulkanFence() = default;
 
-		struct CreateInfo : VulkanRenderInfo
+		struct CreateInfo : VulkanCreateInfo
 		{
 			bool IsSignaled{ true };
 		};
@@ -44,7 +44,7 @@ namespace GAL
 	public:
 		VulkanSemaphore() = default;
 
-		struct CreateInfo : VulkanRenderInfo
+		struct CreateInfo : VulkanCreateInfo
 		{
 			GTSL::uint64 InitialValue{ 0 };
 		};

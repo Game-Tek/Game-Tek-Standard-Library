@@ -10,6 +10,8 @@ GAL::VulkanDeviceMemory::VulkanDeviceMemory(const CreateInfo& createInfo)
 	vk_memory_allocate_info.memoryTypeIndex = createInfo.MemoryType;
 
 	VK_CHECK(vkAllocateMemory(createInfo.RenderDevice->GetVkDevice(), &vk_memory_allocate_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), reinterpret_cast<::VkDeviceMemory*>(&deviceMemory)));
+
+	SET_NAME(deviceMemory, VK_OBJECT_TYPE_DEVICE_MEMORY, createInfo);
 }
 
 void GAL::VulkanDeviceMemory::Destroy(const VulkanRenderDevice* renderDevice)

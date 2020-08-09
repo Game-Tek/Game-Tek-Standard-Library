@@ -25,6 +25,8 @@ namespace GTSL
 	 *
 	 * Most operations are accelerated by SIMD code.
 	 *
+	 * Operation follow ordering convention.	
+	 *
 	 */
 	class alignas(16) Matrix4
 	{
@@ -38,6 +40,8 @@ namespace GTSL
 		{
 		}
 
+		Matrix4(const Rotator& rotator);
+		
 		/**
 		 * \brief Builds an identity matrix with _A being each of the identity elements value.
 		 * Usually one(1) will be used.
@@ -90,7 +94,7 @@ namespace GTSL
 		~Matrix4() = default;
 
 		explicit Matrix4(const class Quaternion& quaternion);
-		explicit Matrix4(const class Rotator& rotator);
+		Matrix4(const class AxisAngle& axisAngle);
 
 		/**
 		 * \brief Sets all of this matrices' components to represent an Identity matrix.\n

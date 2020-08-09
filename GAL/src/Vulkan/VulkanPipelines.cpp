@@ -57,7 +57,7 @@ bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL:
 
 	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		stringResult.WriteBytes(stringResult.GetLength(), reinterpret_cast<const GTSL::byte*>(shaderc_module.GetErrorMessage().c_str()));
+		stringResult.WriteBytes(shaderc_module.GetErrorMessage().size(), reinterpret_cast<const GTSL::byte*>(shaderc_module.GetErrorMessage().c_str()));
 		return false;
 	}
 
@@ -284,10 +284,13 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 		vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), 
 			createInfo.PipelineCache->GetVkPipelineCache(), 1, &vk_graphics_pipeline_create_info,
 			createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
+
+		SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
 		return;
 	}
 	
 	VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vk_graphics_pipeline_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
+	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
 }
 
 void GAL::VulkanGraphicsPipeline::Destroy(const VulkanRenderDevice* renderDevice)
@@ -350,4 +353,5 @@ GAL::VulkanRaytracingPipeline::VulkanRaytracingPipeline(const CreateInfo& create
 	}
 	
 	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vk_ray_tracing_pipeline_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
+	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
 }

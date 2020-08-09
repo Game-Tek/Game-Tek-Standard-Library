@@ -1,5 +1,7 @@
 #include "GTSL/Math/Matrix4.h"
 
+
+#include "GTSL/Math/AxisAngle.h"
 #include "GTSL/Math/Quaternion.h"
 #include "GTSL/Math/Math.hpp"
 #include "GTSL/SIMD/SIMD128.hpp"
@@ -32,21 +34,66 @@ Matrix4::Matrix4(const Quaternion& quaternion)
 	array[15] = 1;
 }
 
+Matrix4::Matrix4(const AxisAngle& axisAngle) : Matrix4(1)
+{
+	const float32 c = Math::Cosine(axisAngle.Angle);
+	const float32 s = Math::Sine(axisAngle.Angle);
+	const float32 t = 1.0f - c;
+	const float32 xx = axisAngle.X * axisAngle.X;
+	const float32 xy = axisAngle.X * axisAngle.Y;
+	const float32 xz = axisAngle.X * axisAngle.Z;
+	const float32 yy = axisAngle.Y * axisAngle.Y;
+	const float32 yz = axisAngle.Y * axisAngle.Z;
+	const float32 zz = axisAngle.Z * axisAngle.Z;
+
+	// build rotation matrix
+	(*this)(0, 0) = c + xx * t;
+	(*this)(1, 1) = c + yy * t;
+	(*this)(2, 2) = c + zz * t;
+
+	auto tmp1 = xy * t;
+	auto tmp2 = axisAngle.Z * s;
+
+	(*this)(1, 0) = tmp1 + tmp2;
+	(*this)(0, 1) = tmp1 - tmp2;
+
+	tmp1 = xz * t;
+	tmp2 = axisAngle.Y * s;
+
+	(*this)(2, 0) = tmp1 - tmp2;
+	(*this)(0, 2) = tmp1 + tmp2;
+
+	tmp1 = yz * t;
+	tmp2 = axisAngle.X * s;
+
+	(*this)(2, 1) = tmp1 + tmp2;
+	(*this)(1, 2) = tmp1 - tmp2;
+}
+
 
 //CODE IS CORRECT
 Matrix4::Matrix4(const Rotator& rotator) : Matrix4(1)
 {
-	float SP, SY, SR;
-	float CP, CY, CR;
+	//Heading = rotation about y axis
+	//Attitude = rotation about z axis
+	//Bank = rotation about x axis
+	
+	float32 ch = Math::Cosine(rotator.Y);
+	float32 sh = Math::Sine(rotator.Y);
+	float32 ca = Math::Cosine(rotator.Z);
+	float32 sa = Math::Sine(rotator.Z);
+	float32 cb = Math::Cosine(rotator.X);
+	float32 sb = Math::Sine(rotator.X);
 
-	Math::SinCos(&SP, &CP, rotator.X);
-	Math::SinCos(&SY, &CY, rotator.Y);
-	Math::SinCos(&SR, &CR, rotator.Z);
-
-	array[0] = CP * CY;						array[1] = CP * SY;					array[2] = SP;			array[3] = 0.f;
-	array[4] = SR * SP * CY - CR * SY;		array[5] = SR * SP * SY + CR * CY;	array[6] = -SR * CP;	array[7] = 0.f;
-	array[8] = -(CR * SP * CY + SR * SY);	array[9] = CY * SR - CR * SP * SY;	array[10] = CR * CP;	array[11] = 0.f;
-	array[12] = 0;							array[13] = 0;						array[14] = 0;			array[15] = 1;
+	(*this)(0, 0) = ch * ca;
+	(*this)(0, 1) = sh * sb - ch * sa * cb;
+	(*this)(0, 2) = ch * sa * sb + sh * cb;
+	(*this)(1, 0) = sa;
+	(*this)(1, 1) = ca * cb;
+	(*this)(1, 2) = -ca * sb;
+	(*this)(2, 0) = -sh * ca;
+	(*this)(2, 1) = sh * sa * cb + ch * sb;
+	(*this)(2, 2) = -sh * sa * sb + ch * cb;
 }
 
 void Matrix4::Transpose()
@@ -70,6 +117,7 @@ Vector4 Matrix4::operator*(const Vector4& other) const
 	return Result;
 }
 
+//WORKS
 Matrix4 Matrix4::operator*(const Matrix4& other) const
 {
 	Matrix4 Result;
@@ -107,6 +155,7 @@ Matrix4& Matrix4::operator*=(const float32 other)
 	return *this;
 }
 
+//WORKS
 Matrix4& Matrix4::operator*=(const Matrix4& other)
 {
 	//https://codereview.stackexchange.com/questions/101144/simd-matrix-multiplication

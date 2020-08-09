@@ -428,6 +428,10 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		default:;
 		}
 	}
+
+#if (_DEBUG)
+	GET_DEVICE_PROC(device, vkSetDebugUtilsObjectNameEXT);
+#endif
 }
 
 GAL::VulkanRenderDevice::~VulkanRenderDevice()

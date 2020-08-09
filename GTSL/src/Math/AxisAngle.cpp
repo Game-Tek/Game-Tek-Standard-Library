@@ -21,3 +21,9 @@ AxisAngle::AxisAngle(const Quaternion& quaternion) : Angle(2.0f * Math::ArcCosin
 	Y = data[1];
 	Z = data[2];
 }
+
+AxisAngle AxisAngle::Normalized(const AxisAngle& axisAngle)
+{
+	const float32 mag = Math::Length(Vector3(axisAngle.X, axisAngle.Y, axisAngle.Z));
+	return { axisAngle.X / mag, axisAngle.Y / mag, axisAngle.Z / mag, axisAngle.Angle };
+}

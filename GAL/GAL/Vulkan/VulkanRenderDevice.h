@@ -106,11 +106,17 @@ namespace GAL
 		PFN_vkCmdCopyMemoryToAccelerationStructureKHR vkCmdCopyMemoryToAccelerationStructureKHR;
 		PFN_vkCmdWriteAccelerationStructuresPropertiesKHR vkCmdWriteAccelerationStructuresPropertiesKHR;
 		PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR;
+		
+#if (_DEBUG)
+		PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
+#endif
+
 	private:
 #if (_DEBUG)
 		PFN_vkCreateDebugUtilsMessengerEXT createDebugUtilsFunction = nullptr;
 		VkDebugUtilsMessengerEXT debugMessenger = nullptr;
 		PFN_vkDestroyDebugUtilsMessengerEXT destroyDebugUtilsFunction = nullptr;
+
 #endif
 
 		VkInstance instance = nullptr;

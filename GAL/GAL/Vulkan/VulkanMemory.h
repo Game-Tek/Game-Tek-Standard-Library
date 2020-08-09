@@ -13,7 +13,7 @@ namespace GAL
 		
 		VulkanDeviceMemory() = default;
 
-		struct CreateInfo final : VulkanRenderInfo
+		struct CreateInfo final : VulkanCreateInfo
 		{
 			GTSL::uint32 Size{ 0 };
 			GTSL::uint32 MemoryType{ 0 };

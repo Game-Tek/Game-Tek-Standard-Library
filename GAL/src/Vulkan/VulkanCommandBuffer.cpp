@@ -165,6 +165,8 @@ GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)
 	vk_command_pool_create_info.queueFamilyIndex = createInfo.Queue->GetFamilyIndex();
 	VK_CHECK(vkCreateCommandPool(createInfo.RenderDevice->GetVkDevice(), &vk_command_pool_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &commandPool));
 
+	SET_NAME(commandPool, VK_OBJECT_TYPE_COMMAND_POOL, createInfo);
+	
 	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{ vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
 	vk_command_buffer_allocate_info.commandPool = commandPool;
 	vk_command_buffer_allocate_info.level = createInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
@@ -177,6 +179,7 @@ GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)
 	for(GTSL::uint32 i = 0; i < createInfo.CommandBuffers.ElementCount(); ++i)
 	{
 		createInfo.CommandBuffers[i].commandBuffer = command_buffers[i];
+		//SET_NAME(commandPool, VK_OBJECT_TYPE_COMMAND_POOL, createInfo.CommandBufferCreateInfos[i]);
 	}
 }
 

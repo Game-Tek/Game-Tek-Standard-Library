@@ -11,7 +11,7 @@ namespace GAL
 	public:
 		VulkanBuffer() = default;
 
-		struct CreateInfo final : VulkanRenderInfo
+		struct CreateInfo final : VulkanCreateInfo
 		{
 			GTSL::uint32 Size{ 0 };
 			GTSL::uint32 BufferType{ 0 };

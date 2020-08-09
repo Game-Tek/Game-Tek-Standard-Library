@@ -76,7 +76,7 @@ namespace GAL
 	public:
 		VulkanGraphicsPipeline() = default;
 		
-		struct CreateInfo : VulkanRenderInfo
+		struct CreateInfo : VulkanCreateInfo
 		{
 			const class VulkanRenderPass* RenderPass = nullptr;
 			GTSL::Extent2D SurfaceExtent;
@@ -129,7 +129,7 @@ namespace GAL
 	class VulkanRaytracingPipeline final : public VulkanPipeline
 	{
 	public:
-		struct CreateInfo : VulkanRenderInfo
+		struct CreateInfo : VulkanCreateInfo
 		{
 			bool IsInheritable = false;
 			const VulkanRaytracingPipeline* ParentPipeline = nullptr;

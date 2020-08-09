@@ -97,7 +97,7 @@ namespace GAL
 	public:
 		VulkanCommandPool() = default;
 
-		struct CreateInfo final : VulkanRenderInfo
+		struct CreateInfo final : VulkanCreateInfo
 		{
 			const class VulkanQueue* Queue{ nullptr };
 			bool IsPrimary = true;

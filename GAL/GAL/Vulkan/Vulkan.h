@@ -19,6 +19,18 @@
 #define MAKE_VK_HANDLE(object) typedef struct object##_T* (object);
 #undef OPAQUE
 
+#if (_DEBUG)
+
+#define SET_NAME(handle, type, createInfo) VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };\
+debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(handle);\
+debug_utils_object_name_info_ext.objectType = type;\
+debug_utils_object_name_info_ext.pObjectName = createInfo.Name;\
+createInfo.RenderDevice->vkSetDebugUtilsObjectNameEXT(createInfo.RenderDevice->GetVkDevice(), &debug_utils_object_name_info_ext);
+
+#else
+#define SET_NAME(handle, type, cInfo)
+#endif
+
 namespace GAL
 {
 	using VulkanDeviceAddress = GTSL::uint64;
@@ -26,6 +38,15 @@ namespace GAL
 	struct VulkanRenderInfo
 	{
 		const class VulkanRenderDevice* RenderDevice = nullptr;
+
+		VulkanRenderInfo() = default;
+	};
+
+	struct VulkanCreateInfo : VulkanRenderInfo
+	{
+		const char* Name = nullptr;
+
+		VulkanCreateInfo() = default;
 	};
 	
 	inline VkAttachmentLoadOp RenderTargetLoadOperationsToVkAttachmentLoadOp(const RenderTargetLoadOperations renderTargetLoadOperations)

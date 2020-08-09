@@ -582,8 +582,9 @@ namespace GTSL
 		{
 			Matrix4 result(1);
 
-			const float32 c = Cosine(angle); // cosine
-			const float32 s = Sine(angle); // sine
+			const float32 c = Cosine(angle);
+			const float32 s = Sine(angle);
+			const auto t = 1.0f - c;
 			const float32 xx = A.X * A.X;
 			const float32 xy = A.X * A.Y;
 			const float32 xz = A.X * A.Z;
@@ -592,23 +593,27 @@ namespace GTSL
 			const float32 zz = A.Z * A.Z;
 
 			// build rotation matrix
-			Matrix4 m;
-			m[0] = xx * (1 - c) + c;
-			m[1] = xy * (1 - c) - A.Z * s;
-			m[2] = xz * (1 - c) + A.Y * s;
-			m[3] = 0;
-			m[4] = xy * (1 - c) + A.Z * s;
-			m[5] = yy * (1 - c) + c;
-			m[6] = yz * (1 - c) - A.X * s;
-			m[7] = 0;
-			m[8] = xz * (1 - c) - A.Y * s;
-			m[9] = yz * (1 - c) + A.X * s;
-			m[10] = zz * (1 - c) + c;
-			m[11] = 0;
-			m[12] = 0;
-			m[13] = 0;
-			m[14] = 0;
-			m[15] = 1;
+			result(0, 0) = c + xx * t;
+			result(1, 1) = c + yy * t;
+			result(2, 2) = c + zz * t;
+
+			auto tmp1 = xy * t;
+			auto tmp2 = A.Z * s;
+			
+			result(1, 0) = tmp1 + tmp2;
+			result(0, 1) = tmp1 - tmp2;
+
+			tmp1 = xz * t;
+			tmp2 = A.Y * s;
+			
+			result(2, 0) = tmp1 - tmp2;
+			result(0, 2) = tmp1 + tmp2;
+
+			tmp1 = yz * t;
+			tmp2 = A.X * s;
+			
+			result(2, 1) = tmp1 + tmp2;
+			result(1, 2) = tmp1 - tmp2;
 
 			return result;
 		}
