@@ -291,6 +291,10 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	
 	VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vk_graphics_pipeline_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
 	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
+	
+	{
+		SET_NAME(pipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, createInfo);
+	}
 }
 
 void GAL::VulkanGraphicsPipeline::Destroy(const VulkanRenderDevice* renderDevice)
@@ -354,4 +358,8 @@ GAL::VulkanRaytracingPipeline::VulkanRaytracingPipeline(const CreateInfo& create
 	
 	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vk_ray_tracing_pipeline_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
 	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
+
+	{
+		SET_NAME(pipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, createInfo);
+	}
 }

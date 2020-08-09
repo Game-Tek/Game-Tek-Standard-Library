@@ -52,7 +52,7 @@ namespace GAL
 	{
 	public:
 		VulkanTopLevelAccelerationStructure() = default;
-		struct CreateInfo : VulkanRenderInfo
+		struct CreateInfo : VulkanCreateInfo
 		{
 			
 		};

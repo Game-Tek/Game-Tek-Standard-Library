@@ -6,10 +6,15 @@
 
 namespace GAL
 {
-	class VulkanRenderPass final : public GAL::RenderPass
+	class VulkanRenderPass final : public RenderPass
 	{
 	public:
 		VulkanRenderPass() = default;
+
+		struct CreateInfo final : VulkanCreateInfo
+		{
+			RenderPassDescriptor Descriptor;
+		};
 		explicit VulkanRenderPass(const CreateInfo& createInfo);
 		~VulkanRenderPass() = default;
 

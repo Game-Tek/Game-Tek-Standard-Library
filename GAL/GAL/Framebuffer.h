@@ -22,14 +22,6 @@ namespace GAL
 	{
 	public:
 		Framebuffer() = default;
-		
-		struct CreateInfo : RenderInfo
-		{
-			RenderPass* RenderPass = nullptr;
-			GTSL::Extent2D Extent = { 1280, 720 };
-			GTSL::Ranger<const class ImageView> ImageViews;
-			GTSL::Ranger<const GTSL::RGBA> ClearValues;
-		};
 
 		~Framebuffer() = default;
 	};

@@ -21,6 +21,7 @@ GAL::VulkanFramebuffer::VulkanFramebuffer(const CreateInfo& createInfo)
 	vk_framebuffer_create_info.pAttachments = vk_image_views.begin();
 
 	VK_CHECK(vkCreateFramebuffer(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_framebuffer_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &framebuffer));
+	SET_NAME(framebuffer, VK_OBJECT_TYPE_FRAMEBUFFER, createInfo);
 }
 
 void GAL::VulkanFramebuffer::Destroy(const VulkanRenderDevice* renderDevice) const

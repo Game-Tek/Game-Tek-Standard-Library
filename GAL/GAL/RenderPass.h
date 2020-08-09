@@ -61,11 +61,6 @@ namespace GAL
 	public:
 		RenderPass() = default;
 		
-		struct CreateInfo : RenderInfo
-		{
-			RenderPassDescriptor Descriptor;
-		};
-		
 		~RenderPass() = default;
 	};
 

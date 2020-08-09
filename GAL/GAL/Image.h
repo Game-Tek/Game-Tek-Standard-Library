@@ -16,17 +16,6 @@ namespace GAL
 		Image() = default;
 		~Image() = default;
 
-		struct CreateInfo final : RenderInfo
-		{	
-			ImageLayout InitialLayout{ ImageLayout::COLOR_ATTACHMENT };
-			GTSL::uint32 ImageUses{ 0 };
-			GTSL::uint32 SourceFormat{ 0 };
-			GTSL::Extent2D Extent{ 1280, 720 };
-			GTSL::uint32 ImageTiling{ 0 };
-			ImageDimensions Dimensions;
-			GTSL::uint8 MipLevels{ 1 };
-		};
-
 		static GTSL::uint64 GetImageSize(const GTSL::uint8 textureFormatSize, const GTSL::Extent2D extent)
 		{
 			return static_cast<GTSL::uint32>(textureFormatSize) * extent.Width * extent.Height;
@@ -82,25 +71,10 @@ namespace GAL
 	public:
 		ImageView() = default;
 		~ImageView() = default;
-
-		struct CreateInfo final : RenderInfo
-		{	
-			ImageLayout InitialLayout{ ImageLayout::COLOR_ATTACHMENT };
-			const Image* Image{ nullptr };
-			GTSL::uint32 SourceFormat{ 0 };
-			GTSL::Extent2D Extent{ 1280, 720 };
-			ImageDimensions Dimensions;
-			GTSL::uint8 MipLevels{ 1 };
-			ImageType Type;
-		};
 	};
 
 	class Sampler : public GALObject
 	{
 	public:
-		struct CreateInfo : RenderInfo
-		{
-			GTSL::uint8 Anisotropy{ 0 };
-		};
 	};
 }

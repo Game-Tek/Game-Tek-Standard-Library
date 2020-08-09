@@ -12,7 +12,8 @@ namespace GAL
 	{
 	public:
 		VulkanSurface() = default;
-		struct CreateInfo
+		
+		struct CreateInfo : VulkanCreateInfo
 		{
 			class VulkanRenderDevice* RenderDevice{ nullptr };
 			void* SystemData{ nullptr };
@@ -37,13 +38,24 @@ namespace GAL
 	{
 	public:
 		VulkanRenderContext() = default;
+
+		struct CreateInfo : VulkanCreateInfo
+		{
+			GTSL::Extent2D SurfaceArea;
+			GTSL::uint8 DesiredFramesInFlight = 0;
+			GTSL::uint32 PresentMode{ 0 };
+			GTSL::uint32 Format{ 0 };
+			GTSL::uint32 ColorSpace{ 0 };
+			GTSL::uint32 ImageUses{ 0 };
+			const Surface* Surface{ nullptr };
+		};
 		VulkanRenderContext(const CreateInfo& createInfo);
 		~VulkanRenderContext() = default;
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 
 
-		struct RecreateInfo : VulkanRenderInfo
+		struct RecreateInfo : VulkanCreateInfo
 		{
 			GTSL::Extent2D SurfaceArea;
 			GTSL::uint8 DesiredFramesInFlight = 0;
@@ -68,9 +80,10 @@ namespace GAL
 		[[nodiscard]] GTSL::uint8 AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
 		void Present(const PresentInfo& presentInfo);
 		
-		struct GetImagesInfo : RenderInfo
+		struct GetImagesInfo : VulkanRenderInfo
 		{
 			GTSL::uint32 SwapchainImagesFormat{ 0 };
+			GTSL::Ranger<const VulkanImageView::CreateInfo> ImageViewCreateInfos;
 		};
 		GTSL::Array<VulkanImageView, 5> GetImages(const GetImagesInfo& getImagesInfo);
 		

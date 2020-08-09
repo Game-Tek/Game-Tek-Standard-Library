@@ -166,21 +166,6 @@ GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)
 	VK_CHECK(vkCreateCommandPool(createInfo.RenderDevice->GetVkDevice(), &vk_command_pool_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &commandPool));
 
 	SET_NAME(commandPool, VK_OBJECT_TYPE_COMMAND_POOL, createInfo);
-	
-	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{ vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-	vk_command_buffer_allocate_info.commandPool = commandPool;
-	vk_command_buffer_allocate_info.level = createInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-	vk_command_buffer_allocate_info.commandBufferCount = createInfo.CommandBuffers.ElementCount();
-
-	GTSL::Array<VkCommandBuffer, 16> command_buffers(createInfo.CommandBuffers.ElementCount());
-	
-	VK_CHECK(vkAllocateCommandBuffers(createInfo.RenderDevice->GetVkDevice(), &vk_command_buffer_allocate_info, command_buffers.begin()));
-
-	for(GTSL::uint32 i = 0; i < createInfo.CommandBuffers.ElementCount(); ++i)
-	{
-		createInfo.CommandBuffers[i].commandBuffer = command_buffers[i];
-		//SET_NAME(commandPool, VK_OBJECT_TYPE_COMMAND_POOL, createInfo.CommandBufferCreateInfos[i]);
-	}
 }
 
 void GAL::VulkanCommandPool::ResetPool(RenderDevice* renderDevice) const
@@ -190,12 +175,23 @@ void GAL::VulkanCommandPool::ResetPool(RenderDevice* renderDevice) const
 
 void GAL::VulkanCommandPool::AllocateCommandBuffer(const AllocateCommandBuffersInfo& allocateCommandBuffersInfo)
 {
-	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{ vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
 	vk_command_buffer_allocate_info.commandPool = commandPool;
 	vk_command_buffer_allocate_info.level = allocateCommandBuffersInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 	vk_command_buffer_allocate_info.commandBufferCount = allocateCommandBuffersInfo.CommandBuffers.ElementCount();
-	
-	VK_CHECK(vkAllocateCommandBuffers(allocateCommandBuffersInfo.RenderDevice->GetVkDevice(), &vk_command_buffer_allocate_info, reinterpret_cast<VkCommandBuffer*>(allocateCommandBuffersInfo.CommandBuffers.begin())));
+
+	GTSL::Array<VkCommandBuffer, 16> command_buffers(allocateCommandBuffersInfo.CommandBuffers.ElementCount());
+
+	VK_CHECK(vkAllocateCommandBuffers(allocateCommandBuffersInfo.RenderDevice->GetVkDevice(), &vk_command_buffer_allocate_info, command_buffers.begin()));
+
+	if constexpr (_DEBUG)
+	{
+		for (GTSL::uint32 i = 0; i < allocateCommandBuffersInfo.CommandBuffers.ElementCount(); ++i)
+		{
+			allocateCommandBuffersInfo.CommandBuffers[i].commandBuffer = command_buffers[i];
+			SET_NAME(command_buffers[i], VK_OBJECT_TYPE_COMMAND_BUFFER, allocateCommandBuffersInfo.CommandBufferCreateInfos[i]);
+		}
+	}
 }
 
 void GAL::VulkanCommandPool::FreeCommandBuffers(const struct FreeCommandBuffersInfo& freeCommandBuffers) const

@@ -26,11 +26,6 @@ namespace GAL
 	public:
 		CommandBuffer() = default;
 		~CommandBuffer() = default;
-
-		struct CreateInfo : RenderInfo
-		{
-			bool IsPrimary = true;
-		};
 		
 		struct BeginRecordingInfo : RenderInfo
 		{

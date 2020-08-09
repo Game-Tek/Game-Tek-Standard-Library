@@ -9,7 +9,7 @@ namespace GAL
 	public:
 		VulkanQueryPool() = default;
 
-		struct CreateInfo : VulkanRenderInfo
+		struct CreateInfo : VulkanCreateInfo
 		{
 			VulkanQueryType QueryType;
 			GTSL::uint32 QueryCount;

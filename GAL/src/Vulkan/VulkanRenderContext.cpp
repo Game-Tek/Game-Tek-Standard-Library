@@ -32,8 +32,8 @@ GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo)
 	vk_swapchain_create_info_khr.clipped = VK_TRUE;
 	vk_swapchain_create_info_khr.oldSwapchain = nullptr;
 
-	VK_CHECK(vkCreateSwapchainKHR(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_swapchain_create_info_khr,
-		static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), reinterpret_cast<VkSwapchainKHR*>(&swapchain)));
+	VK_CHECK(vkCreateSwapchainKHR(createInfo.RenderDevice->GetVkDevice(), &vk_swapchain_create_info_khr, createInfo.RenderDevice->GetVkAllocationCallbacks(), reinterpret_cast<VkSwapchainKHR*>(&swapchain)));
+	SET_NAME(swapchain, VK_OBJECT_TYPE_SWAPCHAIN_KHR, createInfo);
 }
 
 void GAL::VulkanRenderContext::Destroy(const VulkanRenderDevice* renderDevice)
@@ -61,7 +61,8 @@ void GAL::VulkanRenderContext::Recreate(const RecreateInfo& resizeInfo)
 	vk_swapchain_create_info_khr.clipped = VK_TRUE;
 	vk_swapchain_create_info_khr.oldSwapchain = static_cast<VkSwapchainKHR>(swapchain);
 
-	VK_CHECK(vkCreateSwapchainKHR(resizeInfo.RenderDevice->GetVkDevice(), &vk_swapchain_create_info_khr,	resizeInfo.RenderDevice->GetVkAllocationCallbacks(), reinterpret_cast<VkSwapchainKHR*>(&swapchain)));
+	VK_CHECK(vkCreateSwapchainKHR(resizeInfo.RenderDevice->GetVkDevice(), &vk_swapchain_create_info_khr, resizeInfo.RenderDevice->GetVkAllocationCallbacks(), reinterpret_cast<VkSwapchainKHR*>(&swapchain)));
+	SET_NAME(swapchain, VK_OBJECT_TYPE_SWAPCHAIN_KHR, resizeInfo);
 }
 
 GTSL::uint8 GAL::VulkanRenderContext::AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo)
@@ -103,12 +104,11 @@ GTSL::Array<GAL::VulkanImageView, 5> GAL::VulkanRenderContext::GetImages(const G
 	GTSL::Array<VulkanImageView, 5> vulkan_images;
 	
 	GTSL::uint32 swapchain_image_count = 0;
-	VK_CHECK(vkGetSwapchainImagesKHR(static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), &swapchain_image_count, nullptr));
+	VK_CHECK(vkGetSwapchainImagesKHR(getImagesInfo.RenderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), &swapchain_image_count, nullptr));
 	vulkan_images.Resize(swapchain_image_count);
 
 	GTSL::Array<VkImage, 5> vk_images(swapchain_image_count);
-	VK_CHECK(vkGetSwapchainImagesKHR(static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain),
-		&swapchain_image_count, vk_images.begin()));
+	VK_CHECK(vkGetSwapchainImagesKHR(getImagesInfo.RenderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), &swapchain_image_count, vk_images.begin()));
 
 	for(auto& e : vulkan_images)
 	{
@@ -127,6 +127,7 @@ GTSL::Array<GAL::VulkanImageView, 5> GAL::VulkanRenderContext::GetImages(const G
 		vk_image_view_create_info.subresourceRange.levelCount = 1;
 		
 		VK_CHECK(vkCreateImageView(static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), &vk_image_view_create_info, static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkAllocationCallbacks(), &e.imageView));
+		SET_NAME(e.GetVkImageView(), VK_OBJECT_TYPE_IMAGE_VIEW, getImagesInfo.ImageViewCreateInfos[&e - vulkan_images.begin()]);
 	}
 	
 	return vulkan_images;
@@ -137,8 +138,8 @@ GAL::VulkanSurface::VulkanSurface(const CreateInfo& createInfo)
 	VkWin32SurfaceCreateInfoKHR vk_win32_surface_create_info_khr{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
 	vk_win32_surface_create_info_khr.hwnd = static_cast<HWND>(static_cast<WindowsWindowData*>(createInfo.SystemData)->WindowHandle);
 	vk_win32_surface_create_info_khr.hinstance = static_cast<HINSTANCE>(static_cast<WindowsWindowData*>(createInfo.SystemData)->InstanceHandle);
-	VK_CHECK(vkCreateWin32SurfaceKHR(createInfo.RenderDevice->GetVkInstance(), &vk_win32_surface_create_info_khr,
-		createInfo.RenderDevice->GetVkAllocationCallbacks(), reinterpret_cast<VkSurfaceKHR*>(&surface)));
+	VK_CHECK(vkCreateWin32SurfaceKHR(createInfo.RenderDevice->GetVkInstance(), &vk_win32_surface_create_info_khr, createInfo.RenderDevice->GetVkAllocationCallbacks(), reinterpret_cast<VkSurfaceKHR*>(&surface)));
+	SET_NAME(surface, VK_OBJECT_TYPE_SURFACE_KHR, createInfo);
 }
 
 void GAL::VulkanSurface::Destroy(VulkanRenderDevice* renderDevice)

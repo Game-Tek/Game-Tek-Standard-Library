@@ -17,6 +17,7 @@ GAL::VulkanTopLevelAccelerationStructure::VulkanTopLevelAccelerationStructure(co
 	//vk_acceleration_structure_create_info_khr.
 	
 	createInfo.RenderDevice->vkCreateAccelerationStructureKHR(createInfo.RenderDevice->GetVkDevice(), &vk_acceleration_structure_create_info_khr, createInfo.RenderDevice->GetVkAllocationCallbacks(), &accelerationStructure);
+	SET_NAME(accelerationStructure, VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR, createInfo);
 }
 
 void GAL::VulkanTopLevelAccelerationStructure::Destroy(VulkanRenderDevice* renderDevice)

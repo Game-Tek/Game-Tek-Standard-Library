@@ -32,17 +32,7 @@ namespace GAL
 	{
 	public:
 		RenderContext() = default;
-		
-		struct CreateInfo : RenderInfo
-		{
-			GTSL::Extent2D SurfaceArea;
-			GTSL::uint8 DesiredFramesInFlight = 0;
-			GTSL::uint32 PresentMode{ 0 };
-			GTSL::uint32 Format{ 0 };
-			GTSL::uint32 ColorSpace{ 0 };
-			GTSL::uint32 ImageUses{ 0 };
-			const Surface* Surface{ nullptr };
-		};
+
 		//explicit RenderContext(const CreateInfo& createInfo);
 		
 		~RenderContext() = default;

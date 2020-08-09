@@ -16,7 +16,7 @@ namespace GAL
 			GTSL::uint32 Count = 0;
 		};
 		
-		struct CreateInfo : RenderInfo
+		struct CreateInfo : VulkanCreateInfo
 		{
 			GTSL::Ranger<const DescriptorPoolSize> DescriptorPoolSizes;
 			GTSL::uint32 MaxSets = 0;
@@ -27,6 +27,7 @@ namespace GAL
 
 		struct AllocateBindingsSetsInfo : VulkanRenderInfo
 		{
+			GTSL::Ranger<const VulkanCreateInfo> BindingsSetCreateInfos;
 			GTSL::Ranger<class VulkanBindingsSet> BindingsSets;
 			GTSL::Ranger<const class VulkanBindingsSetLayout> BindingsSetLayouts;
 		};
@@ -70,7 +71,7 @@ namespace GAL
 
 		VulkanBindingsSetLayout() = default;
 		
-		struct CreateInfo : VulkanRenderInfo
+		struct CreateInfo : VulkanCreateInfo
 		{
 			GTSL::Ranger<const BindingDescriptor> BindingsDescriptors;
 		};
@@ -95,7 +96,7 @@ namespace GAL
 		};
 		void Update(const BindingsSetUpdateInfo& bindingsUpdateInfo);
 
-		[[nodiscard]] VkDescriptorSet GetVkDescriptorSets() const { return descriptorSet; }
+		[[nodiscard]] VkDescriptorSet GetVkDescriptorSet() const { return descriptorSet; }
 
 	private:
 		VkDescriptorSet descriptorSet{ nullptr };

@@ -20,6 +20,7 @@ GAL::VulkanBindingsPool::VulkanBindingsPool(const CreateInfo& createInfo)
 	vk_descriptor_pool_create_info.poolSizeCount = descriptor_pool_sizes.GetLength();
 	vk_descriptor_pool_create_info.pPoolSizes = descriptor_pool_sizes.begin();
 	VK_CHECK(vkCreateDescriptorPool(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_descriptor_pool_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &descriptorPool));
+	SET_NAME(descriptorPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL, createInfo);
 }
 
 void GAL::VulkanBindingsPool::Destroy(const VulkanRenderDevice* renderDevice)
@@ -35,6 +36,14 @@ void GAL::VulkanBindingsPool::AllocateBindingsSets(const AllocateBindingsSetsInf
 	vk_descriptor_set_allocate_info.descriptorSetCount = allocateBindingsSetsInfo.BindingsSets.ElementCount();
 	vk_descriptor_set_allocate_info.pSetLayouts = reinterpret_cast<const VkDescriptorSetLayout*>(allocateBindingsSetsInfo.BindingsSetLayouts.begin());
 	VK_CHECK(vkAllocateDescriptorSets(allocateBindingsSetsInfo.RenderDevice->GetVkDevice(), &vk_descriptor_set_allocate_info, reinterpret_cast<VkDescriptorSet*>(allocateBindingsSetsInfo.BindingsSets.begin())));
+
+	if constexpr (_DEBUG)
+	{
+		for(GTSL::uint32 i = 0; allocateBindingsSetsInfo.BindingsSetCreateInfos; ++i)
+		{
+			SET_NAME(allocateBindingsSetsInfo.BindingsSets[i].GetVkDescriptorSet(), VK_OBJECT_TYPE_DESCRIPTOR_SET, allocateBindingsSetsInfo.BindingsSetCreateInfos[i]);
+		}
+	}
 }
 
 void GAL::VulkanBindingsPool::FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo)
@@ -66,6 +75,8 @@ GAL::VulkanBindingsSetLayout::VulkanBindingsSetLayout(const CreateInfo& createIn
 	vk_descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.begin();
 
 	VK_CHECK(vkCreateDescriptorSetLayout(createInfo.RenderDevice->GetVkDevice(), &vk_descriptor_set_layout_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &descriptorSetLayout));
+
+	SET_NAME(descriptorSetLayout, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, createInfo);
 }
 
 void GAL::VulkanBindingsSetLayout::Destroy(const VulkanRenderDevice* renderDevice)

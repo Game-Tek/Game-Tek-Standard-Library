@@ -15,6 +15,10 @@ namespace GAL
 	public:
 		VulkanCommandBuffer() = default;
 
+		struct CreateInfo : VulkanCreateInfo
+		{
+		};
+		
 		explicit VulkanCommandBuffer(const VkCommandBuffer commandBuffer) : commandBuffer(commandBuffer) {}
 		
 		void BeginRecording(const BeginRecordingInfo& beginRecordingInfo);
@@ -100,8 +104,6 @@ namespace GAL
 		struct CreateInfo final : VulkanCreateInfo
 		{
 			const class VulkanQueue* Queue{ nullptr };
-			bool IsPrimary = true;
-			GTSL::Ranger<VulkanCommandBuffer> CommandBuffers;
 		};
 		VulkanCommandPool(const CreateInfo& createInfo);
 
@@ -110,6 +112,7 @@ namespace GAL
 		struct AllocateCommandBuffersInfo final : VulkanRenderInfo
 		{
 			bool IsPrimary = true;
+			GTSL::Ranger<const VulkanCommandBuffer::CreateInfo> CommandBufferCreateInfos;
 			GTSL::Ranger<VulkanCommandBuffer> CommandBuffers;
 		};
 		void AllocateCommandBuffer(const AllocateCommandBuffersInfo& allocateCommandBuffersInfo);

@@ -155,7 +155,8 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 	vk_renderpass_create_info.dependencyCount = array_length;
 	vk_renderpass_create_info.pDependencies = vk_subpass_dependencies.begin();
 
-	VK_CHECK(vkCreateRenderPass(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_renderpass_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &renderPass));
+	VK_CHECK(vkCreateRenderPass(createInfo.RenderDevice->GetVkDevice(), &vk_renderpass_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &renderPass));
+	SET_NAME(renderPass, VK_OBJECT_TYPE_RENDER_PASS, createInfo);
 }
 
 void GAL::VulkanRenderPass::Destroy(const VulkanRenderDevice* renderDevice)
