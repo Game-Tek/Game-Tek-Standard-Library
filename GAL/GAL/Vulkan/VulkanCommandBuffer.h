@@ -74,8 +74,25 @@ namespace GAL
 
 		void CopyImage(const CopyImageInfo& copyImageInfo);
 
+		struct CopyBufferToImageInfo : VulkanRenderInfo
+		{
+			const class VulkanBuffer* SourceBuffer{ nullptr };
+			ImageFormat SourceImageFormat;
+			VulkanImageLayout ImageLayout;
+			const class VulkanImage* DestinationImage{ nullptr };
+
+			GTSL::Extent3D Extent;
+			GTSL::Extent3D Offset;
+		};
 		void CopyBufferToImage(const CopyBufferToImageInfo& copyImageToBufferInfo);
 
+		struct TransitionImageInfo : RenderInfo
+		{
+			const VulkanImage* Texture{ nullptr };
+			VulkanImageLayout SourceLayout, DestinationLayout;
+			GTSL::uint32 SourceStage, DestinationStage;
+			AccessFlags SourceAccessFlags, DestinationAccessFlags;
+		};
 		void TransitionImage(const TransitionImageInfo& transitionImageInfo);
 
 		struct CopyBuffersInfo : VulkanRenderInfo

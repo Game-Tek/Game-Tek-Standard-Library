@@ -15,13 +15,13 @@ GAL::VulkanImage::VulkanImage(const CreateInfo& createInfo)
 	vk_image_create_info.arrayLayers = 1;
 	vk_image_create_info.format = static_cast<VkFormat>(createInfo.SourceFormat);
 	vk_image_create_info.tiling = static_cast<VkImageTiling>(createInfo.ImageTiling);
-	vk_image_create_info.initialLayout = ImageLayoutToVkImageLayout(createInfo.InitialLayout);
+	vk_image_create_info.initialLayout = VkImageLayout(createInfo.InitialLayout);
 	vk_image_create_info.usage = createInfo.ImageUses;
 	vk_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 	vk_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	
 	VK_CHECK(vkCreateImage(createInfo.RenderDevice->GetVkDevice(), &vk_image_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &image));
-	SET_NAME(image, VK_OBJECT_TYPE_IMAGE createInfo);
+	SET_NAME(image, VK_OBJECT_TYPE_IMAGE, createInfo);
 }
 
 void GAL::VulkanImage::Destroy(const VulkanRenderDevice* renderDevice)
@@ -31,14 +31,13 @@ void GAL::VulkanImage::Destroy(const VulkanRenderDevice* renderDevice)
 
 void GAL::VulkanImage::BindToMemory(const BindMemoryInfo& bindMemoryInfo) const
 {
-	vkBindImageMemory(static_cast<const VulkanRenderDevice*>(bindMemoryInfo.RenderDevice)->GetVkDevice(), image,
-	static_cast<VkDeviceMemory>(static_cast<VulkanDeviceMemory*>(bindMemoryInfo.Memory)->GetVkDeviceMemory()), bindMemoryInfo.Offset);
+	VK_CHECK(vkBindImageMemory(bindMemoryInfo.RenderDevice->GetVkDevice(), image, static_cast<VkDeviceMemory>(bindMemoryInfo.Memory->GetVkDeviceMemory()), bindMemoryInfo.Offset));
 }
 
 GAL::VulkanImageView::VulkanImageView(const CreateInfo& createInfo)
 {
 	VkImageViewCreateInfo vk_image_view_create_info{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-	vk_image_view_create_info.image = static_cast<const VulkanImage*>(createInfo.Image)->GetVkImage();
+	vk_image_view_create_info.image = createInfo.Image->GetVkImage();
 	vk_image_view_create_info.viewType = ImageDimensionsToVkImageViewType(createInfo.Dimensions);
 	vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 	vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;

@@ -127,18 +127,18 @@ void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& co
 	region.imageOffset = { 0, 0, 0 };
 	//region.imageOffset = Extent3DToVkExtent3D(copyImageToBufferInfo.Offset);
 	region.imageExtent = Extent3DToVkExtent3D(copyBufferToImageInfo.Extent);
-	vkCmdCopyBufferToImage(commandBuffer, static_cast<const VulkanBuffer*>(copyBufferToImageInfo.SourceBuffer)->GetVkBuffer(), static_cast<const VulkanImage*>(copyBufferToImageInfo.DestinationImage)->GetVkImage(), ImageLayoutToVkImageLayout(copyBufferToImageInfo.ImageLayout), 1, &region);
+	vkCmdCopyBufferToImage(commandBuffer, copyBufferToImageInfo.SourceBuffer->GetVkBuffer(), copyBufferToImageInfo.DestinationImage->GetVkImage(),
+		static_cast<VkImageLayout>(copyBufferToImageInfo.ImageLayout), 1, &region);
 }
 
 void GAL::VulkanCommandBuffer::TransitionImage(const TransitionImageInfo& transitionImageInfo)
 {	
-	VkImageMemoryBarrier barrier{};
-	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	barrier.oldLayout = ImageLayoutToVkImageLayout(transitionImageInfo.SourceLayout);
-	barrier.newLayout = ImageLayoutToVkImageLayout(transitionImageInfo.DestinationLayout);
+	VkImageMemoryBarrier barrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+	barrier.oldLayout = static_cast<VkImageLayout>(transitionImageInfo.SourceLayout);
+	barrier.newLayout = static_cast<VkImageLayout>(transitionImageInfo.DestinationLayout);
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.image = static_cast<const VulkanImage*>(transitionImageInfo.Texture)->GetVkImage();
+	barrier.image = transitionImageInfo.Texture->GetVkImage();
 	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	barrier.subresourceRange.baseMipLevel = 0;
 	barrier.subresourceRange.levelCount = 1;

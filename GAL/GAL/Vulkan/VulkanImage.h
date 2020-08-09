@@ -13,7 +13,7 @@ namespace GAL
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			ImageLayout InitialLayout{ ImageLayout::COLOR_ATTACHMENT };
+			VulkanImageLayout InitialLayout;
 			GTSL::uint32 ImageUses{ 0 };
 			GTSL::uint32 SourceFormat{ 0 };
 			GTSL::Extent2D Extent{ 1280, 720 };
@@ -25,9 +25,9 @@ namespace GAL
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 
-		struct BindMemoryInfo : RenderInfo
+		struct BindMemoryInfo : VulkanRenderInfo
 		{
-			class DeviceMemory* Memory{ nullptr };
+			class VulkanDeviceMemory* Memory{ nullptr };
 			GTSL::uint32 Offset{ 0 };
 		};
 		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;
@@ -47,8 +47,7 @@ namespace GAL
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			ImageLayout InitialLayout{ ImageLayout::COLOR_ATTACHMENT };
-			const Image* Image{ nullptr };
+			const VulkanImage* Image{ nullptr };
 			GTSL::uint32 SourceFormat{ 0 };
 			GTSL::Extent2D Extent{ 1280, 720 };
 			ImageDimensions Dimensions;

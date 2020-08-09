@@ -113,25 +113,6 @@ namespace GAL
 		struct CopyImageInfo : RenderInfo
 		{};
 		void CopyImage(const CopyImageInfo& copyImageInfo);
-
-		struct CopyBufferToImageInfo : RenderInfo
-		{
-			const class Buffer* SourceBuffer{ nullptr };
-			ImageFormat SourceImageFormat;
-			ImageLayout ImageLayout;
-			const class Image* DestinationImage{ nullptr };
-
-			GTSL::Extent3D Extent;
-			GTSL::Extent3D Offset;
-		};
-
-		struct TransitionImageInfo : RenderInfo
-		{
-			const Image* Texture{ nullptr };
-			ImageLayout SourceLayout, DestinationLayout;
-			GTSL::uint32 SourceStage, DestinationStage;
-			AccessFlags SourceAccessFlags, DestinationAccessFlags;
-		};
 	};
 
 	class CommandPool : public GALObject
