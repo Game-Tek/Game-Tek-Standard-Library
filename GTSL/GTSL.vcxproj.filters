@@ -266,9 +266,6 @@
     <ClCompile Include="src\Math\AxisAngle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Math\GTM.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Math\Matrix4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -312,6 +309,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Allocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Math\Vector4.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Math\Math.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

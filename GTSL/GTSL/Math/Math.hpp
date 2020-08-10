@@ -5,7 +5,6 @@
 #include "Vector2.h"
 #include "Vector3.h"
 #include "Vector4.h"
-
 #include "Quaternion.h"
 #include "Matrix4.h"
 
@@ -19,23 +18,8 @@ namespace GTSL
 {
 	class Math
 	{
-		// +  float32
-		// += float32
-		// +  type
-		// += type
-		// -  float32
-		// -= float32
-		// -  type
-		// -= type
-		// *  float32
-		// *= float32
-		// *  type
-		// *= type
-		// /  float32
-		// /= float32
-		// /  type
-		// /= type
-
+	public:
+		
 		static float32 StraightRaise(const float32 A, const uint8 Times)
 		{
 			float32 Result = A;
@@ -48,13 +32,13 @@ namespace GTSL
 			return Result;
 		}
 
-	public:
 		static constexpr float64 PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286;
 		static constexpr float64 e = 2.718281828459045235360287471352662497757247093699959574966967627724076630353;
+		//static constexpr float32 Epsilon = 2.718281828459045235360287471352662497757247093699959574966967627724076630353;
 
 		static int64 Random()
 		{
-			static int64 x = 123456789, y = -362436069, z = 521288629;
+			static thread_local int64 x = 123456789, y = -362436069, z = 521288629;
 
 			//period 2^96-1
 			
@@ -68,7 +52,7 @@ namespace GTSL
 
 		static int64 Random(const int64 min, const int64 max) { return Random() % (max - min + 1) + min; }
 
-		static float64 fRandom() { return Random() * 0.8123495678; }
+		static float64 RandomFloat() { return Random() * 0.8123495678; }
 
 		//STATIC
 
@@ -460,6 +444,25 @@ namespace GTSL
 					if (IsNearlyEqual(A.Z, Target.Z, Tolerance))
 					{
 						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		static bool IsVectorNearlyEqual(const Vector4& a, const Vector4& b, const float32 tolerance)
+		{
+			if (IsNearlyEqual(a.X, b.X, tolerance))
+			{
+				if (IsNearlyEqual(a.Y, b.Y, tolerance))
+				{
+					if (IsNearlyEqual(a.Z, b.Z, tolerance))
+					{
+						if (IsNearlyEqual(a.W, b.W, tolerance))
+						{
+							return true;
+						}
 					}
 				}
 			}
@@ -860,4 +863,21 @@ namespace GTSL
 			for (auto begin = range1.end() - remainder; begin != range1.end(); ++begin) { singlesFunction(range1.begin() + i, range2.begin() + i); i += multiple; }
 		}
 	};
+
+	// +  float32
+// += float32
+// +  type
+// += type
+// -  float32
+// -= float32
+// -  type
+// -= type
+// *  float32
+// *= float32
+// *  type
+// *= type
+// /  float32
+// /= float32
+// /  type
+// /= type
 }

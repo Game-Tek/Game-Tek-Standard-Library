@@ -246,6 +246,18 @@ void GTSL::Window::GetFramebufferExtent(Extent2D& extent) const
 	extent = clientSize;
 }
 
+void GTSL::Window::SetMousePosition(const Extent2D position)
+{
+	SetCursorPos(position.Width, position.Height);
+}
+
+void GTSL::Window::LimitMousePosition(Extent2D range)
+{
+	RECT rect;
+	GetClientRect(static_cast<HWND>(windowHandle), &rect);
+	ClipCursor(&rect);
+}
+
 void GTSL::Window::SetState(const WindowState& windowState)
 {
 	switch (windowState.NewWindowSizeState)

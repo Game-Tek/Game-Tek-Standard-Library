@@ -99,12 +99,13 @@
     <ClCompile Include="src\File.cpp" />
     <ClCompile Include="src\Filesystem.cpp" />
     <ClCompile Include="src\Math\AxisAngle.cpp" />
-    <ClCompile Include="src\Math\GTM.cpp" />
+    <ClCompile Include="src\Math\Math.cpp" />
     <ClCompile Include="src\Math\Matrix4.cpp" />
     <ClCompile Include="src\Math\Plane.cpp" />
     <ClCompile Include="src\Math\Quaternion.cpp" />
     <ClCompile Include="src\Math\Rotator.cpp" />
     <ClCompile Include="src\Math\Vector3.cpp" />
+    <ClCompile Include="src\Math\Vector4.cpp" />
     <ClCompile Include="src\Memory.cpp" />
     <ClCompile Include="src\GamepadQuery.cpp" />
     <ClCompile Include="src\Sockets.cpp" />

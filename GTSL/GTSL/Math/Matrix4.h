@@ -60,34 +60,32 @@ namespace GTSL
 
 		/**
 		 * \brief Constructs the matrix with every component set as the corresponding parameter.
-		 * \param row0_Column0 float to set the matrices' Row0; Column0 component as.
-		 * \param row0_Column1 float to set the matrices' Row0; Column1	component as.
-		 * \param row0_Column2 float to set the matrices' Row0; Column2	component as.
-		 * \param row0_Column3 float to set the matrices' Row0; Column3	component as.
-		 * \param row1_Column0 float to set the matrices' Row1; Column0	component as.
-		 * \param row1_Column1 float to set the matrices' Row1; Column1	component as.
-		 * \param row1_Column2 float to set the matrices' Row1; Column2	component as.
-		 * \param row1_Column3 float to set the matrices' Row1; Column3	component as.
-		 * \param row2_Column0 float to set the matrices' Row2; Column0	component as.
-		 * \param row2_Column1 float to set the matrices' Row2; Column1	component as.
-		 * \param row2_Column2 float to set the matrices' Row2; Column2	component as.
-		 * \param row2_Column3 float to set the matrices' Row2; Column3	component as.
-		 * \param row3_Column0 float to set the matrices' Row3; Column0	component as.
-		 * \param row3_Column1 float to set the matrices' Row3; Column1	component as.
-		 * \param row3_Column2 float to set the matrices' Row3; Column2	component as.
-		 * \param row3_Column3 float to set the matrices' Row3; Column3	component as.
+		 * \param row0Column0 float to set the matrices' Row0; Column0 component as.
+		 * \param row0Column1 float to set the matrices' Row0; Column1 component as.
+		 * \param row0Column2 float to set the matrices' Row0; Column2 component as.
+		 * \param row0Column3 float to set the matrices' Row0; Column3 component as.
+		 * \param row1Column0 float to set the matrices' Row1; Column0 component as.
+		 * \param row1Column1 float to set the matrices' Row1; Column1 component as.
+		 * \param row1Column2 float to set the matrices' Row1; Column2 component as.
+		 * \param row1Column3 float to set the matrices' Row1; Column3 component as.
+		 * \param row2Column0 float to set the matrices' Row2; Column0 component as.
+		 * \param row2Column1 float to set the matrices' Row2; Column1 component as.
+		 * \param row2Column2 float to set the matrices' Row2; Column2 component as.
+		 * \param row2Column3 float to set the matrices' Row2; Column3 component as.
+		 * \param row3Column0 float to set the matrices' Row3; Column0 component as.
+		 * \param row3Column1 float to set the matrices' Row3; Column1 component as.
+		 * \param row3Column2 float to set the matrices' Row3; Column2 component as.
+		 * \param row3Column3 float to set the matrices' Row3; Column3 component as.
 		 */
-		Matrix4(const float row0_Column0, const float row0_Column1, const float row0_Column2, const float row0_Column3,
-			const float row1_Column0, const float row1_Column1, const float row1_Column2, const float row1_Column3,
-			const float row2_Column0, const float row2_Column1, const float row2_Column2, const float row2_Column3,
-			const float row3_Column0, const float row3_Column1, const float row3_Column2,
-			const float row3_Column3) :
-			array{
-				row0_Column0, row0_Column1, row0_Column2, row0_Column3,
-				row1_Column0, row1_Column1, row1_Column2, row1_Column3,
-				row2_Column0, row2_Column1, row2_Column2, row2_Column3,
-				row3_Column0, row3_Column1, row3_Column2, row3_Column3
-		}
+		Matrix4(const float row0Column0, const float row0Column1, const float row0Column2, const float row0Column3,
+				const float row1Column0, const float row1Column1, const float row1Column2, const float row1Column3,
+				const float row2Column0, const float row2Column1, const float row2Column2, const float row2Column3,
+				const float row3Column0, const float row3Column1, const float row3Column2, const float row3Column3) :
+		array{
+				row0Column0, row0Column1, row0Column2, row0Column3,
+				row1Column0, row1Column1, row1Column2, row1Column3,
+				row2Column0, row2Column1, row2Column2, row2Column3,
+				row3Column0, row3Column1, row3Column2, row3Column3 }
 		{
 		}
 
@@ -117,6 +115,11 @@ namespace GTSL
 		 */
 		[[nodiscard]] const float* GetData() const { return array; }
 
+		[[nodiscard]] Vector4 GetXBasisVector() const { return Vector4(array[0], array[1], array[2], array[3]); }
+		[[nodiscard]] Vector4 GetYBasisVector() const { return Vector4(array[4], array[5], array[6], array[7]); }
+		[[nodiscard]] Vector4 GetZBasisVector() const { return Vector4(array[8], array[9], array[10], array[11]); }
+		[[nodiscard]] Vector4 GetWBasisVector() const { return Vector4(array[12], array[13], array[14], array[15]); }
+		
 		void Transpose();
 
 		Matrix4 operator+(const float other) const
@@ -231,67 +234,12 @@ namespace GTSL
 		}
 
 		Vector4 operator*(const Vector4& other) const;
-		//{
-		//	Vector4 Result;
-		//
-		//	Result.X = Array[0] * other.X + Array[1] * other.X + Array[2] * other.X + Array[3] * other.X;
-		//	Result.Y = Array[4] * other.Y + Array[5] * other.Y + Array[6] * other.Y+ Array[7] * other.Y;
-		//	Result.Z = Array[8] * other.Z + Array[9] * other.Z + Array[10] * other.Z + Array[11] * other.Z;
-		//	Result.W = Array[12] * other.W + Array[13] * other.W + Array[14] * other.W + Array[15] * other.W;
-		//
-		//	return Result;
-		//}
 
 		Matrix4 operator*(const Matrix4& other) const;
 
-		//Matrix4 operator* (const Matrix4& other) const
-		//{
-		//	Matrix4 Result(1);
-		//
-		//	for (int i = 0; i < 4; i++)
-		//	{
-		//		for (int j = 0; j < 4; j++)
-		//		{
-		//			Result[i + j] = 0;
-		//			for (int k = 0; k < 4; k++)
-		//			{
-		//				Result[i + j] += Array[i + k] * other[k + j];
-		//			}
-		//		}
-		//	}
-		//
-		//	return Result;
-		//}
-
 		Matrix4& operator*=(float other);
-		//{
-		//	for (uint8 i = 0; i < MATRIX_SIZE; i++)
-		//	{
-		//		Array[i] *= other;
-		//	}
-		//
-		//	return *this;
-		//}
 
 		Matrix4& operator*=(const Matrix4& other);
-		//{
-		//	for (uint8 y = 0; y < 4; y++)
-		//	{
-		//		for (uint8 x = 0; x < 4; x++)
-		//		{
-		//			float Sum = 0.0f;
-		//
-		//			for (uint8 e = 0; e < 4; e++)
-		//			{
-		//				Sum += Array[e + y * 4] * other[x + e * 4];
-		//			}
-		//
-		//			Array[x + y * 4] = Sum;
-		//		}
-		//	}
-		//
-		//	return *this;
-		//}
 
 		float& operator[](const uint8 index) { return array[index]; }
 		float operator[](const uint8 index) const { return array[index]; }

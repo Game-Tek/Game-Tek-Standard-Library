@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Vector3.h"
-#include "Math.hpp"
 
 namespace GTSL
 {
@@ -13,15 +12,15 @@ namespace GTSL
 		Vector3 Start;
 		Vector3 End;
 
-		[[nodiscard]] float32 Length() const
-		{
-			return GTSL::Math::Length(Segment());
-		}
-
-		[[nodiscard]] float32 LengthSquared() const
-		{
-			return Math::LengthSquared(Segment());
-		}
+		//[[nodiscard]] float32 Length() const
+		//{
+		//	return GTSL::Math::Length(Segment());
+		//}
+		//
+		//[[nodiscard]] float32 LengthSquared() const
+		//{
+		//	return Math::LengthSquared(Segment());
+		//}
 
 	private:
 		[[nodiscard]] Vector3 Segment() const

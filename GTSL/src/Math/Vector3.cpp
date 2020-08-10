@@ -7,6 +7,10 @@ Vector3::Vector3(const Rotator& rotator) : X(Math::Cosine(rotator.X) * Math::Sin
 	//CODE IS CORRECT
 }
 
+Vector3::Vector3(const Vector4& vector4) : X(vector4.X), Y(vector4.Y), Z(vector4.Z)
+{
+}
+
 Vector3 operator*(const float& lhs, const Vector3& rhs)
 {
 	return Vector3(rhs.X * lhs, rhs.Y * lhs, rhs.Z * lhs);

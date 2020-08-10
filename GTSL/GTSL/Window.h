@@ -98,6 +98,9 @@ namespace GTSL
 		void GetFramebufferExtent(Extent2D & extent) const;
 		void GetWindowExtent(Extent2D & windowExtent) const { windowExtent = windowSize; }
 
+		void SetMousePosition(Extent2D position);
+		void LimitMousePosition(Extent2D range);
+		
 		static void GetAspectRatio(const Extent2D & extent, float& aspectRatio) { aspectRatio = static_cast<float>(extent.Width) / static_cast<float>(extent.Height); }
 
 		struct WindowState

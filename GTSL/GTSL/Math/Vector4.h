@@ -4,6 +4,8 @@
 
 namespace GTSL
 {
+	class Vector3;
+
 	class alignas(16) Vector4
 	{
 	public:
@@ -23,6 +25,8 @@ namespace GTSL
 
 		Vector4(const float32 x, const float32 y, const float32 z, const float32 w) : X(x), Y(y), Z(z), W(w) {}
 
+		Vector4(const Vector3& vector3);
+		
 		~Vector4() = default;
 
 		Vector4 operator+(const float other) const
