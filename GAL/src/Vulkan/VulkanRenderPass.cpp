@@ -162,4 +162,5 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 void GAL::VulkanRenderPass::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroyRenderPass(renderDevice->GetVkDevice(), renderPass, renderDevice->GetVkAllocationCallbacks());
+	debugClear(renderPass);
 }

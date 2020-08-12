@@ -16,7 +16,7 @@ namespace GAL
 			VulkanImageLayout InitialLayout;
 			GTSL::uint32 ImageUses{ 0 };
 			GTSL::uint32 SourceFormat{ 0 };
-			GTSL::Extent2D Extent{ 1280, 720 };
+			GTSL::Extent3D Extent{ 1280, 720, 1 };
 			GTSL::uint32 ImageTiling{ 0 };
 			ImageDimensions Dimensions;
 			GTSL::uint8 MipLevels{ 1 };

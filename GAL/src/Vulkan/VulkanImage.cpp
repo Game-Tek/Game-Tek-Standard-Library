@@ -8,9 +8,7 @@ GAL::VulkanImage::VulkanImage(const CreateInfo& createInfo)
 {
 	VkImageCreateInfo vk_image_create_info{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	vk_image_create_info.imageType = ImageDimensionsToVkImageType(createInfo.Dimensions);
-	vk_image_create_info.extent.width = createInfo.Extent.Width;
-	vk_image_create_info.extent.height = createInfo.Extent.Height;
-	vk_image_create_info.extent.depth = 1;
+	vk_image_create_info.extent = Extent3DToVkExtent3D(createInfo.Extent);
 	vk_image_create_info.mipLevels = createInfo.MipLevels;
 	vk_image_create_info.arrayLayers = 1;
 	vk_image_create_info.format = static_cast<VkFormat>(createInfo.SourceFormat);

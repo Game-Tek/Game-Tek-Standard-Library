@@ -6,6 +6,8 @@
 
 namespace GAL
 {
+	class VulkanRenderPass;
+
 	class VulkanFramebuffer final : public Framebuffer
 	{
 	public:
@@ -13,9 +15,9 @@ namespace GAL
 
 		struct CreateInfo : VulkanCreateInfo
 		{
-			RenderPass* RenderPass = nullptr;
+			VulkanRenderPass* RenderPass = nullptr;
 			GTSL::Extent2D Extent = { 1280, 720 };
-			GTSL::Ranger<const class ImageView> ImageViews;
+			GTSL::Ranger<const class VulkanImageView> ImageViews;
 			GTSL::Ranger<const GTSL::RGBA> ClearValues;
 		};
 		explicit VulkanFramebuffer(const CreateInfo& createInfo);

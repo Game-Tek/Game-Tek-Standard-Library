@@ -145,17 +145,6 @@ void GAL::VulkanQueue::Wait() const { vkQueueWaitIdle(queue); }
 
 void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 {
-	auto vulkan_command_buffers = GTSL::Ranger<const VulkanCommandBuffer>(submitInfo.CommandBuffers);
-	
-	GTSL::Array<VkCommandBuffer, 16> vk_command_buffers(static_cast<GTSL::uint32>(vulkan_command_buffers.ElementCount()));
-	for(const auto& e : vulkan_command_buffers)
-	{
-		vk_command_buffers[RangeForIndex(e, vulkan_command_buffers)] = e.GetVkCommandBuffer();
-	}
-	
-	GTSL::Ranger<const VulkanSemaphore> vulkan_signal_semaphores(submitInfo.SignalSemaphores);
-	GTSL::Ranger<const VulkanSemaphore> vulkan_wait_semaphores(submitInfo.WaitSemaphores);
-
 	//VkTimelineSemaphoreSubmitInfo vk_timeline_semaphore_submit_info{ VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO };
 	//vk_timeline_semaphore_submit_info.waitSemaphoreValueCount = vk_wait_semaphores.GetLength();
 	//vk_timeline_semaphore_submit_info.pWaitSemaphoreValues = submitInfo.WaitValues.begin();
@@ -165,8 +154,8 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 	VkSubmitInfo vk_submit_info{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	//vk_submit_info.pNext = &vk_timeline_semaphore_submit_info;
 	
-	vk_submit_info.commandBufferCount = vk_command_buffers.GetLength();
-	vk_submit_info.pCommandBuffers = vk_command_buffers.begin();
+	vk_submit_info.commandBufferCount = submitInfo.CommandBuffers.ElementCount();
+	vk_submit_info.pCommandBuffers = reinterpret_cast<const VkCommandBuffer*>(submitInfo.CommandBuffers.begin());
 
 	GTSL::Array<GTSL::uint32, 16> vk_pipeline_stages(submitInfo.WaitPipelineStages.ElementCount());
 	{
@@ -177,11 +166,11 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 	}
 	vk_submit_info.pWaitDstStageMask = vk_pipeline_stages.begin();
 	
-	vk_submit_info.signalSemaphoreCount = vulkan_signal_semaphores.ElementCount();
-	vk_submit_info.pSignalSemaphores = reinterpret_cast<const VkSemaphore*>(vulkan_signal_semaphores.begin());
+	vk_submit_info.signalSemaphoreCount = submitInfo.SignalSemaphores.ElementCount();
+	vk_submit_info.pSignalSemaphores = reinterpret_cast<const VkSemaphore*>(submitInfo.SignalSemaphores.begin());
 
-	vk_submit_info.waitSemaphoreCount = vulkan_wait_semaphores.ElementCount();
-	vk_submit_info.pWaitSemaphores = reinterpret_cast<const VkSemaphore*>(vulkan_wait_semaphores.begin());
+	vk_submit_info.waitSemaphoreCount = submitInfo.WaitSemaphores.ElementCount();
+	vk_submit_info.pWaitSemaphores = reinterpret_cast<const VkSemaphore*>(submitInfo.WaitSemaphores.begin());
 	
 	VK_CHECK(vkQueueSubmit(queue, 1, &vk_submit_info, submitInfo.Fence ? static_cast<const VulkanFence*>(submitInfo.Fence)->GetVkFence() : nullptr));
 }
@@ -441,44 +430,44 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	{
 		GET_DEVICE_PROC(device, vkSetDebugUtilsObjectNameEXT);
 
-		//GTSL::StaticString<512> name(createInfo.ApplicationName);
+		GTSL::StaticString<512> name(createInfo.ApplicationName);
 
-		//{
-		//	//name += " device"; name += '\0';
-		//	
-		//	VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
-		//	debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(device);
-		//	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_DEVICE;
-		//	//debug_utils_object_name_info_ext.pObjectName = name.begin();
-		//	debug_utils_object_name_info_ext.pObjectName = "Device";
-		//	vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
-		//}
-		//
-		//{
-		//	//name.Resize(0);
-		//	//name += createInfo.ApplicationName;
-		//	//name += " physical device"; name += '\0';
-		//
-		//	VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
-		//	debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(physicalDevice);
-		//	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_PHYSICAL_DEVICE;
-		//	//debug_utils_object_name_info_ext.pObjectName = name.begin();
-		//	debug_utils_object_name_info_ext.pObjectName = "PhysicalDevice";
-		//	vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
-		//}
-		//
-		//{
-		//	//name.Resize(0);
-		//	//name += createInfo.ApplicationName;
-		//	//name += " instance"; name += '\0';
-		//	
-		//	VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
-		//	debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(instance);
-		//	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_INSTANCE;
-		//	//debug_utils_object_name_info_ext.pObjectName = name.begin();
-		//	debug_utils_object_name_info_ext.pObjectName = "Instance";
-		//	vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
-		//}
+		{
+			name += " device"; name += '\0';
+			
+			VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
+			debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(device);
+			debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_DEVICE;
+			debug_utils_object_name_info_ext.pObjectName = name.begin();
+			//debug_utils_object_name_info_ext.pObjectName = "Device";
+			vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
+		}
+		
+		{
+			name.Resize(0);
+			name += createInfo.ApplicationName;
+			name += " physical device"; name += '\0';
+		
+			VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
+			debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(physicalDevice);
+			debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_PHYSICAL_DEVICE;
+			debug_utils_object_name_info_ext.pObjectName = name.begin();
+			//debug_utils_object_name_info_ext.pObjectName = "PhysicalDevice";
+			vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
+		}
+		
+		{
+			name.Resize(0);
+			name += createInfo.ApplicationName;
+			name += " instance"; name += '\0';
+			
+			VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
+			debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(instance);
+			debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_INSTANCE;
+			debug_utils_object_name_info_ext.pObjectName = name.begin();
+			//debug_utils_object_name_info_ext.pObjectName = "Instance";
+			vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
+		}
 	}
 }
 
