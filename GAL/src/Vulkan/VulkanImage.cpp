@@ -27,6 +27,7 @@ GAL::VulkanImage::VulkanImage(const CreateInfo& createInfo)
 void GAL::VulkanImage::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroyImage(renderDevice->GetVkDevice(), image, renderDevice->GetVkAllocationCallbacks());
+	debugClear(image);
 }
 
 void GAL::VulkanImage::BindToMemory(const BindMemoryInfo& bindMemoryInfo) const
@@ -57,6 +58,7 @@ GAL::VulkanImageView::VulkanImageView(const CreateInfo& createInfo)
 void GAL::VulkanImageView::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroyImageView(renderDevice->GetVkDevice(), imageView, renderDevice->GetVkAllocationCallbacks());
+	debugClear(imageView);
 }
 
 GAL::VulkanSampler::VulkanSampler(const CreateInfo& createInfo)
@@ -87,4 +89,5 @@ GAL::VulkanSampler::VulkanSampler(const CreateInfo& createInfo)
 void GAL::VulkanSampler::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroySampler(renderDevice->GetVkDevice(), sampler, renderDevice->GetVkAllocationCallbacks());
+	debugClear(sampler);
 }

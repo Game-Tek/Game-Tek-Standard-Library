@@ -190,124 +190,130 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 
 GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : RenderDevice(createInfo.DebugPrintFunction)
 {
-	VkApplicationInfo vk_application_info{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
-	vk_application_info.pNext = nullptr;
-	vkEnumerateInstanceVersion(&vk_application_info.apiVersion);
-	vk_application_info.applicationVersion = VK_MAKE_VERSION(createInfo.ApplicationVersion[0], createInfo.ApplicationVersion[1], createInfo.ApplicationVersion[2]);
-	vk_application_info.engineVersion = VK_MAKE_VERSION(0, 0, 1);
-	GTSL::StaticString<512> name(createInfo.ApplicationName);
-	name += '\0';
-	vk_application_info.pApplicationName = name.begin();
-	vk_application_info.pEngineName = "Game-Tek | GAL";
+	{
+		VkApplicationInfo vk_application_info{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
+		vk_application_info.pNext = nullptr;
+		vkEnumerateInstanceVersion(&vk_application_info.apiVersion);
+		vk_application_info.applicationVersion = VK_MAKE_VERSION(createInfo.ApplicationVersion[0], createInfo.ApplicationVersion[1], createInfo.ApplicationVersion[2]);
+		vk_application_info.engineVersion = VK_MAKE_VERSION(0, 0, 1);
+		GTSL::StaticString<128> name(createInfo.ApplicationName);
+		name += '\0';
+		vk_application_info.pApplicationName = name.begin();
+		vk_application_info.pEngineName = "Game-Tek | GAL";
 
-	GTSL::Array<const char*, 32> instance_layers{
-#if(_DEBUG)
-		"VK_LAYER_KHRONOS_validation",
-		"VK_LAYER_LUNARG_standard_validation",
-	};
+		GTSL::Array<const char*, 32> instance_layers{
+	#if(_DEBUG)
+			"VK_LAYER_KHRONOS_validation",
+			"VK_LAYER_LUNARG_standard_validation",
+		};
 #else
-};
-#endif
-
-	GTSL::Array<const char*, 32> instance_extensions{
-#if(_DEBUG)
-		VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-		VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
-#endif
-
-		VK_KHR_SURFACE_EXTENSION_NAME,
-
-#if (_WIN32)
-		VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
-#endif
 	};
-
-#if (_DEBUG)
-	VkDebugUtilsMessengerCreateInfoEXT vk_debug_utils_messenger_create_info_EXT{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
-	vk_debug_utils_messenger_create_info_EXT.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-	vk_debug_utils_messenger_create_info_EXT.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-	vk_debug_utils_messenger_create_info_EXT.pfnUserCallback = debugCallback;
-	vk_debug_utils_messenger_create_info_EXT.pUserData = this;
 #endif
 
-	VkInstanceCreateInfo vk_instance_create_info{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
-	vk_instance_create_info.pNext = &vk_debug_utils_messenger_create_info_EXT;
-	vk_instance_create_info.pApplicationInfo = &vk_application_info;
-	vk_instance_create_info.enabledLayerCount = instance_layers.GetLength();
-	vk_instance_create_info.ppEnabledLayerNames = instance_layers.begin();
-	vk_instance_create_info.enabledExtensionCount = instance_extensions.GetLength();
-	vk_instance_create_info.ppEnabledExtensionNames = instance_extensions.begin();
+		GTSL::Array<const char*, 32> instance_extensions{
+	#if(_DEBUG)
+			VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+			VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+	#endif
 
-	VK_CHECK(vkCreateInstance(&vk_instance_create_info, GetVkAllocationCallbacks(), &instance))
+			VK_KHR_SURFACE_EXTENSION_NAME,
+
+	#if (_WIN32)
+			VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+	#endif
+		};
 
 #if (_DEBUG)
-	createDebugUtilsFunction = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
-	destroyDebugUtilsFunction = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
-
-	createDebugUtilsFunction(instance, &vk_debug_utils_messenger_create_info_EXT, GetVkAllocationCallbacks(), &debugMessenger);
+		VkDebugUtilsMessengerCreateInfoEXT vk_debug_utils_messenger_create_info_EXT{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
+		vk_debug_utils_messenger_create_info_EXT.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		vk_debug_utils_messenger_create_info_EXT.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		vk_debug_utils_messenger_create_info_EXT.pfnUserCallback = debugCallback;
+		vk_debug_utils_messenger_create_info_EXT.pUserData = this;
 #endif
 
-	uint32_t phsyical_device_count{ 0 };
-	vkEnumeratePhysicalDevices(instance, &phsyical_device_count, nullptr);
-	GTSL::Array<VkPhysicalDevice, 8> vk_physical_devices(phsyical_device_count);
-	vkEnumeratePhysicalDevices(instance, &phsyical_device_count, vk_physical_devices.begin());
+		VkInstanceCreateInfo vk_instance_create_info{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
+		vk_instance_create_info.pNext = &vk_debug_utils_messenger_create_info_EXT;
+		vk_instance_create_info.pApplicationInfo = &vk_application_info;
+		vk_instance_create_info.enabledLayerCount = instance_layers.GetLength();
+		vk_instance_create_info.ppEnabledLayerNames = instance_layers.begin();
+		vk_instance_create_info.enabledExtensionCount = instance_extensions.GetLength();
+		vk_instance_create_info.ppEnabledExtensionNames = instance_extensions.begin();
 
-	physicalDevice = vk_physical_devices[0];
+		VK_CHECK(vkCreateInstance(&vk_instance_create_info, GetVkAllocationCallbacks(), &instance))
+
+#if (_DEBUG)
+		createDebugUtilsFunction = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+		destroyDebugUtilsFunction = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
+
+		createDebugUtilsFunction(instance, &vk_debug_utils_messenger_create_info_EXT, GetVkAllocationCallbacks(), &debugMessenger);
+#endif
+	}
+
+	{
+		uint32_t phsyical_device_count{ 0 };
+		vkEnumeratePhysicalDevices(instance, &phsyical_device_count, nullptr);
+		GTSL::Array<VkPhysicalDevice, 8> vk_physical_devices(phsyical_device_count);
+		vkEnumeratePhysicalDevices(instance, &phsyical_device_count, vk_physical_devices.begin());
+
+		physicalDevice = vk_physical_devices[0];
+	}
 
 	VkPhysicalDeviceTimelineSemaphoreFeatures timeline_semaphore_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES };
 	timeline_semaphore_features.timelineSemaphore = true;
 
-	GTSL::Array<VkDeviceQueueCreateInfo, 16> vk_device_queue_create_infos;
+	GTSL::Array<VkDeviceQueueCreateInfo, 8> vk_device_queue_create_infos;
+	GTSL::Array<GTSL::Array<GTSL::uint16, 8>, 8> families_indices;
 
-	GTSL::uint32 queue_families_count = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, nullptr);
-	//Get the amount of queue families there are in the physical device.
-	GTSL::Array<VkQueueFamilyProperties, 32> vk_queue_families_properties(queue_families_count);
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, vk_queue_families_properties.begin());
-
-	GTSL::Array<bool, 32> used_families;
-
-	GTSL::Array<VkQueueFlags, 32> vk_queues_flag_bits(createInfo.QueueCreateInfos.ElementCount());
 	{
-		for (auto& e : vk_queues_flag_bits)
-		{
-			e = createInfo.QueueCreateInfos[&e - vk_queues_flag_bits.begin()].Capabilities;
-		}
-	}
+		GTSL::uint32 queue_families_count = 0;
+		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, nullptr);
+		//Get the amount of queue families there are in the physical device.
+		GTSL::Array<VkQueueFamilyProperties, 32> vk_queue_families_properties(queue_families_count);
+		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, vk_queue_families_properties.begin());
 
-	GTSL::Array<GTSL::Array<GTSL::float32, 64>, 64> families_priorities;
-	GTSL::Array<GTSL::Array<GTSL::uint32, 64>, 64> families_indeces;
+		GTSL::Array<bool, 8> used_families;
 
-	for (GTSL::uint8 QUEUE = 0; QUEUE < createInfo.QueueCreateInfos.ElementCount(); ++QUEUE)
-	{
-		for (GTSL::uint8 FAMILY = 0; FAMILY < queue_families_count; ++FAMILY)
+		GTSL::Array<VkQueueFlags, 16> vk_queues_flag_bits(createInfo.QueueCreateInfos.ElementCount());
 		{
-			if (vk_queue_families_properties[FAMILY].queueCount > 0 && vk_queue_families_properties[FAMILY].queueFlags & vk_queues_flag_bits[QUEUE]) //if family has vk_queue_flags_bits[FAMILY] create queue from this family
+			for (auto& e : vk_queues_flag_bits)
 			{
-				if (used_families[FAMILY]) //if a queue is already being used from this family add another
+				e = createInfo.QueueCreateInfos[&e - vk_queues_flag_bits.begin()].Capabilities;
+			}
+		}
+
+		GTSL::Array<GTSL::Array<GTSL::float32, 8>, 8> families_priorities;
+
+		for (GTSL::uint8 QUEUE = 0; QUEUE < createInfo.QueueCreateInfos.ElementCount(); ++QUEUE)
+		{
+			for (GTSL::uint8 FAMILY = 0; FAMILY < queue_families_count; ++FAMILY)
+			{
+				if (vk_queue_families_properties[FAMILY].queueCount > 0 && vk_queue_families_properties[FAMILY].queueFlags & vk_queues_flag_bits[QUEUE]) //if family has vk_queue_flags_bits[FAMILY] create queue from this family
 				{
-					++vk_device_queue_create_infos[FAMILY].queueCount;
+					if (used_families[FAMILY]) //if a queue is already being used from this family add another
+					{
+						++vk_device_queue_create_infos[FAMILY].queueCount;
+						families_priorities[FAMILY].EmplaceBack(createInfo.QueueCreateInfos[QUEUE].QueuePriority);
+						families_indices[FAMILY].EmplaceBack(QUEUE);
+						vk_device_queue_create_infos[FAMILY].pQueuePriorities = &families_priorities[FAMILY][vk_device_queue_create_infos[FAMILY].queueCount - 1];
+						break;
+					}
+
+					vk_device_queue_create_infos.EmplaceBack();
+					families_priorities.EmplaceBack();
+					families_indices.EmplaceBack();
+					used_families.EmplaceBack(true);
+
 					families_priorities[FAMILY].EmplaceBack(createInfo.QueueCreateInfos[QUEUE].QueuePriority);
-					families_indeces[FAMILY].EmplaceBack(QUEUE);
+					families_indices[FAMILY].EmplaceBack(QUEUE);
+
+					vk_device_queue_create_infos[FAMILY].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+					vk_device_queue_create_infos[FAMILY].pNext = nullptr;
+					vk_device_queue_create_infos[FAMILY].flags = 0;
+					vk_device_queue_create_infos[FAMILY].queueFamilyIndex = FAMILY;
+					vk_device_queue_create_infos[FAMILY].queueCount = 1;
 					vk_device_queue_create_infos[FAMILY].pQueuePriorities = &families_priorities[FAMILY][vk_device_queue_create_infos[FAMILY].queueCount - 1];
 					break;
 				}
-
-				vk_device_queue_create_infos.EmplaceBack();
-				families_priorities.EmplaceBack();
-				families_indeces.EmplaceBack();
-				used_families.EmplaceBack(true);
-				
-				families_priorities[FAMILY].EmplaceBack(createInfo.QueueCreateInfos[QUEUE].QueuePriority);
-				families_indeces[FAMILY].EmplaceBack(QUEUE);
-				
-				vk_device_queue_create_infos[FAMILY].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-				vk_device_queue_create_infos[FAMILY].pNext = nullptr;
-				vk_device_queue_create_infos[FAMILY].flags = 0;
-				vk_device_queue_create_infos[FAMILY].queueFamilyIndex = FAMILY;
-				vk_device_queue_create_infos[FAMILY].queueCount = 1;
-				vk_device_queue_create_infos[FAMILY].pQueuePriorities = &families_priorities[FAMILY][vk_device_queue_create_infos[FAMILY].queueCount - 1];
-				break;
 			}
 		}
 	}
@@ -320,79 +326,81 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	void** next_property = &properties2.pNext;
 	void** next_feature = &features2.pNext;
 
-	GTSL::Array<GTSL::byte, 32 * 1024> properties_structures;
-	GTSL::Array<GTSL::byte, 32 * 1024> features_structures;
-	GTSL::Array<const char*, 32> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-
-	auto place_properties_structure = [&](const GTSL::uint64 size, void* structure, void** structureNext)
 	{
-		auto& structure_array = properties_structures;
+		GTSL::Array<GTSL::byte, 12 * 256> properties_structures;
+		GTSL::Array<GTSL::byte, 12 * 256> features_structures;
+		GTSL::Array<const char*, 32> device_extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-		structure_array.Resize(structure_array.GetLength() + static_cast<GTSL::uint32>(size));
-		GTSL::MemCopy(size, structure, structure_array.end() - size);
-		*next_feature = structure_array.end() - size;
-		next_feature = structureNext;
-	};
-
-	auto place_features_structure = [&](const GTSL::uint64 size, void* structure, void** structureNext)
-	{
-		auto& structure_array = features_structures;
-		
-		structure_array.Resize(structure_array.GetLength() + static_cast<GTSL::uint32>(size));
-		GTSL::MemCopy(size, structure, structure_array.end() - size);
-		*next_feature = structure_array.end() - size;
-		next_feature = structureNext;
-	};
-
-	place_features_structure(sizeof(VkPhysicalDeviceTimelineSemaphoreFeatures), &timeline_semaphore_features, &timeline_semaphore_features.pNext);
-	device_extensions.EmplaceBack(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
-
-	for (auto e : createInfo.Extensions)
-	{
-		switch (e)
+		auto place_properties_structure = [&](const GTSL::uint64 size, void* structure, void** structureNext)
 		{
-		case Extension::RAY_TRACING:
+			auto& structure_array = properties_structures;
+
+			structure_array.Resize(structure_array.GetLength() + static_cast<GTSL::uint32>(size));
+			GTSL::MemCopy(size, structure, structure_array.end() - size);
+			*next_feature = structure_array.end() - size;
+			next_feature = structureNext;
+		};
+
+		auto place_features_structure = [&](const GTSL::uint64 size, void* structure, void** structureNext)
 		{
-			device_extensions.EmplaceBack(VK_KHR_RAY_TRACING_EXTENSION_NAME);
-			device_extensions.EmplaceBack(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME);
-			device_extensions.EmplaceBack(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
-			device_extensions.EmplaceBack(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
-			device_extensions.EmplaceBack(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+			auto& structure_array = features_structures;
 
-			VkPhysicalDeviceRayTracingPropertiesKHR ray_tracing_properties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_KHR };
-			VkPhysicalDeviceRayTracingFeaturesKHR ray_tracing_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_FEATURES_KHR };
+			structure_array.Resize(structure_array.GetLength() + static_cast<GTSL::uint32>(size));
+			GTSL::MemCopy(size, structure, structure_array.end() - size);
+			*next_feature = structure_array.end() - size;
+			next_feature = structureNext;
+		};
 
-			place_properties_structure(sizeof(VkPhysicalDeviceRayTracingPropertiesKHR), &ray_tracing_properties, &ray_tracing_properties.pNext);
-			place_features_structure(sizeof(VkPhysicalDeviceRayTracingFeaturesKHR), &ray_tracing_features, &ray_tracing_features.pNext);
-			
-			break;
+		place_features_structure(sizeof(VkPhysicalDeviceTimelineSemaphoreFeatures), &timeline_semaphore_features, &timeline_semaphore_features.pNext);
+		device_extensions.EmplaceBack(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
+
+		for (auto e : createInfo.Extensions)
+		{
+			switch (e)
+			{
+			case Extension::RAY_TRACING:
+			{
+				device_extensions.EmplaceBack(VK_KHR_RAY_TRACING_EXTENSION_NAME);
+				device_extensions.EmplaceBack(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME);
+				device_extensions.EmplaceBack(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
+				device_extensions.EmplaceBack(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
+				device_extensions.EmplaceBack(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+
+				VkPhysicalDeviceRayTracingPropertiesKHR ray_tracing_properties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_KHR };
+				VkPhysicalDeviceRayTracingFeaturesKHR ray_tracing_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_FEATURES_KHR };
+
+				place_properties_structure(sizeof(VkPhysicalDeviceRayTracingPropertiesKHR), &ray_tracing_properties, &ray_tracing_properties.pNext);
+				place_features_structure(sizeof(VkPhysicalDeviceRayTracingFeaturesKHR), &ray_tracing_features, &ray_tracing_features.pNext);
+
+				break;
+			}
+			default:;
+			}
 		}
-		default:;
-		}
+
+		vkGetPhysicalDeviceProperties2(physicalDevice, &properties2);
+		vkGetPhysicalDeviceFeatures2(physicalDevice, &features2);
+
+		deviceProperties = properties2.properties;
+
+		VkDeviceCreateInfo vk_device_create_info{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+		vk_device_create_info.pNext = &features2; //extended features
+		vk_device_create_info.queueCreateInfoCount = vk_device_queue_create_infos.GetLength();
+		vk_device_create_info.pQueueCreateInfos = vk_device_queue_create_infos.begin();
+		vk_device_create_info.pEnabledFeatures = nullptr;
+		vk_device_create_info.enabledExtensionCount = device_extensions.GetLength();
+		vk_device_create_info.ppEnabledExtensionNames = device_extensions.begin();
+
+		VK_CHECK(vkCreateDevice(physicalDevice, &vk_device_create_info, GetVkAllocationCallbacks(), &device));
 	}
-
-	vkGetPhysicalDeviceProperties2(physicalDevice, &properties2);
-	vkGetPhysicalDeviceFeatures2(physicalDevice, &features2);
-
-	deviceProperties = properties2.properties;
-
-	VkDeviceCreateInfo vk_device_create_info{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-	vk_device_create_info.pNext = &features2; //extended features
-	vk_device_create_info.queueCreateInfoCount = vk_device_queue_create_infos.GetLength();
-	vk_device_create_info.pQueueCreateInfos = vk_device_queue_create_infos.begin();
-	vk_device_create_info.pEnabledFeatures = nullptr;
-	vk_device_create_info.enabledExtensionCount = device_extensions.GetLength();
-	vk_device_create_info.ppEnabledExtensionNames = device_extensions.begin();
-
-	VK_CHECK(vkCreateDevice(physicalDevice, &vk_device_create_info, GetVkAllocationCallbacks(), &device));
-
-	for (GTSL::uint8 FAMILY = 0; FAMILY < families_indeces.GetLength(); ++FAMILY)
+	
+	for (GTSL::uint8 FAMILY = 0; FAMILY < families_indices.GetLength(); ++FAMILY)
 	{
-		for (GTSL::uint8 QUEUE = 0; QUEUE < families_indeces[FAMILY].GetLength(); ++QUEUE)
+		for (GTSL::uint8 QUEUE = 0; QUEUE < families_indices[FAMILY].GetLength(); ++QUEUE)
 		{
-			createInfo.Queues[families_indeces[FAMILY][QUEUE]].familyIndex = FAMILY;
-			createInfo.Queues[families_indeces[FAMILY][QUEUE]].queueIndex = QUEUE;
-			vkGetDeviceQueue(device, FAMILY, QUEUE, &createInfo.Queues[families_indeces[FAMILY][QUEUE]].queue);
+			createInfo.Queues[families_indices[FAMILY][QUEUE]].familyIndex = FAMILY;
+			createInfo.Queues[families_indices[FAMILY][QUEUE]].queueIndex = QUEUE;
+			vkGetDeviceQueue(device, FAMILY, QUEUE, &createInfo.Queues[families_indices[FAMILY][QUEUE]].queue);
 		}
 	}
 
@@ -480,6 +488,9 @@ GAL::VulkanRenderDevice::~VulkanRenderDevice()
 	vkDestroyDevice(device, GetVkAllocationCallbacks());
 #if (_DEBUG)
 	destroyDebugUtilsFunction(instance, debugMessenger, GetVkAllocationCallbacks());
+	debugClear(debugMessenger);
 #endif
 	vkDestroyInstance(instance, GetVkAllocationCallbacks());
+
+	debugClear(device); debugClear(instance);
 }

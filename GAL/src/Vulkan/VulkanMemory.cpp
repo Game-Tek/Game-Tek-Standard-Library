@@ -17,6 +17,7 @@ GAL::VulkanDeviceMemory::VulkanDeviceMemory(const CreateInfo& createInfo)
 void GAL::VulkanDeviceMemory::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkFreeMemory(renderDevice->GetVkDevice(), static_cast<::VkDeviceMemory>(deviceMemory), renderDevice->GetVkAllocationCallbacks());
+	debugClear(deviceMemory);
 }
 
 void* GAL::VulkanDeviceMemory::Map(const MapInfo& mapInfo) const

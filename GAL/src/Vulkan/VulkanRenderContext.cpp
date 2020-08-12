@@ -39,6 +39,7 @@ GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo)
 void GAL::VulkanRenderContext::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroySwapchainKHR(renderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), renderDevice->GetVkAllocationCallbacks());
+	debugClear(swapchain);
 }
 
 void GAL::VulkanRenderContext::Recreate(const RecreateInfo& resizeInfo)
@@ -155,6 +156,7 @@ GAL::VulkanSurface::VulkanSurface(const CreateInfo& createInfo)
 void GAL::VulkanSurface::Destroy(VulkanRenderDevice* renderDevice)
 {
 	vkDestroySurfaceKHR(renderDevice->GetVkInstance(), static_cast<VkSurfaceKHR>(surface), renderDevice->GetVkAllocationCallbacks());
+	debugClear(surface);
 }
 
 GTSL::uint32 GAL::VulkanSurface::GetSupportedRenderContextFormat(VulkanRenderDevice* renderDevice, GTSL::Ranger<GTSL::Pair<GTSL::uint32, GTSL::uint32>> formats)

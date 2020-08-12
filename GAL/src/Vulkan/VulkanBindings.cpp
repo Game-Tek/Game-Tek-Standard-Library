@@ -27,6 +27,7 @@ void GAL::VulkanBindingsPool::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	const auto vk_render_device = static_cast<const VulkanRenderDevice*>(renderDevice);
 	vkDestroyDescriptorPool(vk_render_device->GetVkDevice(), descriptorPool, vk_render_device->GetVkAllocationCallbacks());
+	debugClear(descriptorPool);
 }
 
 void GAL::VulkanBindingsPool::AllocateBindingsSets(const AllocateBindingsSetsInfo& allocateBindingsSetsInfo)
@@ -82,6 +83,7 @@ GAL::VulkanBindingsSetLayout::VulkanBindingsSetLayout(const CreateInfo& createIn
 void GAL::VulkanBindingsSetLayout::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroyDescriptorSetLayout(renderDevice->GetVkDevice(), descriptorSetLayout, renderDevice->GetVkAllocationCallbacks());
+	debugClear(descriptorSetLayout);
 }
 
 void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateInfo)

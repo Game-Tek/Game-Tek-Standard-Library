@@ -27,4 +27,5 @@ GAL::VulkanFramebuffer::VulkanFramebuffer(const CreateInfo& createInfo)
 void GAL::VulkanFramebuffer::Destroy(const VulkanRenderDevice* renderDevice) const
 {
 	vkDestroyFramebuffer(renderDevice->GetVkDevice(), framebuffer, renderDevice->GetVkAllocationCallbacks());
+	debugClear(framebuffer);
 }
