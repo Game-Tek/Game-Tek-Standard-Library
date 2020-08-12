@@ -14,7 +14,7 @@ namespace GTSL
 		{
 		}
 
-		constexpr AxisAngle(const class Vector3& vector, float angle);
+		AxisAngle(const class Vector3& vector, float angle);
 		AxisAngle(const class Quaternion& quaternion);
 
 		static AxisAngle Normalized(const AxisAngle& axisAngle);

@@ -14,6 +14,7 @@ GAL::VulkanFence::VulkanFence(const CreateInfo& createInfo)
 void GAL::VulkanFence::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroyFence(renderDevice->GetVkDevice(), fence, renderDevice->GetVkAllocationCallbacks());
+	debugClear(fence);
 }
 
 bool GAL::VulkanFence::GetStatus(const VulkanRenderDevice* renderDevice) const
@@ -49,4 +50,5 @@ GAL::VulkanSemaphore::VulkanSemaphore(const CreateInfo& createInfo)
 void GAL::VulkanSemaphore::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroySemaphore(renderDevice->GetVkDevice(), semaphore, renderDevice->GetVkAllocationCallbacks());
+	debugClear(semaphore);
 }

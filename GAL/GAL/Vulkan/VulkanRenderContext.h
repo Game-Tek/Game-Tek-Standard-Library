@@ -83,6 +83,7 @@ namespace GAL
 		struct GetImagesInfo : VulkanRenderInfo
 		{
 			GTSL::uint32 SwapchainImagesFormat{ 0 };
+			GTSL::Ranger<const GTSL::UTF8> ImageViewName;
 			GTSL::Ranger<const VulkanImageView::CreateInfo> ImageViewCreateInfos;
 		};
 		GTSL::Array<VulkanImageView, 5> GetImages(const GetImagesInfo& getImagesInfo);

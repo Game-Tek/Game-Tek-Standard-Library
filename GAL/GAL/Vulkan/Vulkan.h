@@ -33,6 +33,9 @@ createInfo.RenderDevice->vkSetDebugUtilsObjectNameEXT(createInfo.RenderDevice->G
 
 namespace GAL
 {
+	template<typename T>
+	constexpr void debugClear(T& handle) { if constexpr (_DEBUG) { handle = reinterpret_cast<T>(0xCCCCCCCCCCCCCCCC); } }
+	
 	using VulkanDeviceAddress = GTSL::uint64;
 	
 	struct VulkanRenderInfo

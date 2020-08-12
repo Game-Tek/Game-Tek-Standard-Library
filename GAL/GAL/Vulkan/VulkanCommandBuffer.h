@@ -6,9 +6,12 @@
 
 namespace GAL
 {
+	class VulkanQueue;
+	class VulkanImage;
 	class VulkanPipeline;
 	class VulkanBindingsSet;
 	class VulkanRenderDevice;
+	class VulkanBuffer;
 
 	class VulkanCommandBuffer final : public CommandBuffer
 	{
@@ -37,7 +40,7 @@ namespace GAL
 
 		struct BindIndexBufferInfo final : VulkanRenderInfo
 		{
-			const class VulkanBuffer* Buffer{ nullptr };
+			const VulkanBuffer* Buffer{ nullptr };
 			GTSL::uint32 Offset{ 0 };
 			VulkanIndexType IndexType;
 		};
@@ -57,10 +60,20 @@ namespace GAL
 
 		struct TraceRaysInfo : VulkanRenderInfo
 		{
+			struct ShaderTableDescriptor
+			{
+				VulkanBuffer* Buffer = nullptr;
+				GTSL::uint32 Size = 0, Offset = 0, Stride = 0;
+			} RaygenDescriptor, HitDescriptor, MissDescriptor;
 			
+			GTSL::Extent3D DispatchSize;
 		};
 		void TraceRays(const TraceRaysInfo& traceRaysInfo);
-		
+
+		struct DispatchInfo : VulkanRenderInfo
+		{
+			GTSL::Extent3D WorkGroups;
+		};
 		void Dispatch(const DispatchInfo& dispatchInfo);
 
 		struct BindBindingsSetInfo : VulkanRenderInfo
@@ -76,10 +89,10 @@ namespace GAL
 
 		struct CopyBufferToImageInfo : VulkanRenderInfo
 		{
-			const class VulkanBuffer* SourceBuffer{ nullptr };
+			const VulkanBuffer* SourceBuffer{ nullptr };
 			ImageFormat SourceImageFormat;
 			VulkanImageLayout ImageLayout;
-			const class VulkanImage* DestinationImage{ nullptr };
+			const VulkanImage* DestinationImage{ nullptr };
 
 			GTSL::Extent3D Extent;
 			GTSL::Extent3D Offset;
@@ -97,7 +110,7 @@ namespace GAL
 
 		struct CopyBuffersInfo : VulkanRenderInfo
 		{
-			const class VulkanBuffer* Source{ nullptr };
+			const VulkanBuffer* Source{ nullptr };
 			GTSL::uint32 SourceOffset{ 0 };
 			const class VulkanBuffer* Destination{ nullptr };
 			GTSL::uint32 DestinationOffset{ 0 };
@@ -120,7 +133,7 @@ namespace GAL
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			const class VulkanQueue* Queue{ nullptr };
+			const VulkanQueue* Queue{ nullptr };
 		};
 		VulkanCommandPool(const CreateInfo& createInfo);
 

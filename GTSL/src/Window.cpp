@@ -258,6 +258,8 @@ void GTSL::Window::LimitMousePosition(Extent2D range)
 	ClipCursor(&rect);
 }
 
+void GTSL::Window::ShowMouse(const bool show) { ShowCursor(show); }
+
 void GTSL::Window::SetState(const WindowState& windowState)
 {
 	switch (windowState.NewWindowSizeState)

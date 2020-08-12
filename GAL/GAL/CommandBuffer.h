@@ -84,10 +84,6 @@ namespace GAL
 
 		//  COMPUTE COMMANDS
 
-		struct DispatchInfo : RenderInfo
-		{
-			GTSL::Extent3D WorkGroups;
-		};
 		//Adds a Dispatch command to the command queue.
 
 		//  RENDER PASS COMMANDS

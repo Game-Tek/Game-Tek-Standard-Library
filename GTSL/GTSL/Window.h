@@ -100,6 +100,8 @@ namespace GTSL
 
 		void SetMousePosition(Extent2D position);
 		void LimitMousePosition(Extent2D range);
+
+		void ShowMouse(bool show);
 		
 		static void GetAspectRatio(const Extent2D & extent, float& aspectRatio) { aspectRatio = static_cast<float>(extent.Width) / static_cast<float>(extent.Height); }
 

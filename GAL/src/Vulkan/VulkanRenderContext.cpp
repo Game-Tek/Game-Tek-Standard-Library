@@ -110,8 +110,12 @@ GTSL::Array<GAL::VulkanImageView, 5> GAL::VulkanRenderContext::GetImages(const G
 	GTSL::Array<VkImage, 5> vk_images(swapchain_image_count);
 	VK_CHECK(vkGetSwapchainImagesKHR(getImagesInfo.RenderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), &swapchain_image_count, vk_images.begin()));
 
+	GTSL::uint32 i = 0;
+	
 	for(auto& e : vulkan_images)
 	{
+		GTSL::StaticString<128> name(getImagesInfo.ImageViewName); name += i;
+		
 		VkImageViewCreateInfo vk_image_view_create_info{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 		vk_image_view_create_info.image = vk_images[&e - vulkan_images.begin()];
 		vk_image_view_create_info.format = static_cast<VkFormat>(getImagesInfo.SwapchainImagesFormat);
@@ -127,7 +131,13 @@ GTSL::Array<GAL::VulkanImageView, 5> GAL::VulkanRenderContext::GetImages(const G
 		vk_image_view_create_info.subresourceRange.levelCount = 1;
 		
 		VK_CHECK(vkCreateImageView(static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkDevice(), &vk_image_view_create_info, static_cast<const VulkanRenderDevice*>(getImagesInfo.RenderDevice)->GetVkAllocationCallbacks(), &e.imageView));
-		SET_NAME(e.GetVkImageView(), VK_OBJECT_TYPE_IMAGE_VIEW, getImagesInfo.ImageViewCreateInfos[&e - vulkan_images.begin()]);
+
+		VulkanCreateInfo create_info;
+		create_info.RenderDevice = getImagesInfo.RenderDevice;
+		create_info.Name = name.begin();
+		SET_NAME(e.GetVkImageView(), VK_OBJECT_TYPE_IMAGE_VIEW, create_info);
+
+		++i;
 	}
 	
 	return vulkan_images;

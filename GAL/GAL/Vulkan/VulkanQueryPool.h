@@ -16,6 +16,14 @@ namespace GAL
 		};
 		
 		VulkanQueryPool(const CreateInfo& createInfo);
+
+		struct QueryResultsInfo : VulkanRenderInfo
+		{
+			void* Data = nullptr;
+			GTSL::uint32 Size = 0, QueryCount = 0, Stride = 0;
+			bool Wait = true;
+		};
+		void GetQueryResults(const QueryResultsInfo& info) const;
 		
 		void Destroy(VulkanRenderDevice* renderDevice);
 		

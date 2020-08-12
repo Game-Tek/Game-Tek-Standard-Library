@@ -93,7 +93,23 @@ void GAL::VulkanCommandBuffer::DrawIndexed(const DrawIndexedInfo& drawIndexedInf
 
 void GAL::VulkanCommandBuffer::TraceRays(const TraceRaysInfo& traceRaysInfo)
 {
-	//traceRaysInfo.RenderDevice->vkCmdTraceRaysKHR(commandBuffer);
+	VkStridedBufferRegionKHR raygen_sbt, hit_sbt, miss_sbt;
+	raygen_sbt.size = traceRaysInfo.RaygenDescriptor.Size;
+	raygen_sbt.offset = traceRaysInfo.RaygenDescriptor.Offset;
+	raygen_sbt.buffer = traceRaysInfo.RaygenDescriptor.Buffer->GetVkBuffer();
+	raygen_sbt.stride = traceRaysInfo.RaygenDescriptor.Stride;
+
+	hit_sbt.size = traceRaysInfo.HitDescriptor.Size;
+	hit_sbt.offset = traceRaysInfo.HitDescriptor.Offset;
+	hit_sbt.buffer = traceRaysInfo.HitDescriptor.Buffer->GetVkBuffer();
+	hit_sbt.stride = traceRaysInfo.HitDescriptor.Stride;
+
+	miss_sbt.size = traceRaysInfo.MissDescriptor.Size;
+	miss_sbt.offset = traceRaysInfo.MissDescriptor.Offset;
+	miss_sbt.buffer = traceRaysInfo.MissDescriptor.Buffer->GetVkBuffer();
+	miss_sbt.stride = traceRaysInfo.MissDescriptor.Stride;
+	
+	traceRaysInfo.RenderDevice->vkCmdTraceRaysKHR(commandBuffer, &raygen_sbt, &miss_sbt, &hit_sbt, nullptr, traceRaysInfo.DispatchSize.Width, traceRaysInfo.DispatchSize.Height, traceRaysInfo.DispatchSize.Depth);
 }
 
 void GAL::VulkanCommandBuffer::Dispatch(const DispatchInfo& dispatchInfo)
@@ -197,9 +213,11 @@ void GAL::VulkanCommandPool::AllocateCommandBuffer(const AllocateCommandBuffersI
 void GAL::VulkanCommandPool::FreeCommandBuffers(const struct FreeCommandBuffersInfo& freeCommandBuffers) const
 {
 	vkFreeCommandBuffers(freeCommandBuffers.RenderDevice->GetVkDevice(), commandPool, freeCommandBuffers.CommandBuffers.ElementCount(),	reinterpret_cast<const VkCommandBuffer*>(freeCommandBuffers.CommandBuffers.begin()));
+	for(auto& e : freeCommandBuffers.CommandBuffers) { debugClear(e); }
 }
 
 void GAL::VulkanCommandPool::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroyCommandPool(renderDevice->GetVkDevice(), commandPool, renderDevice->GetVkAllocationCallbacks());
+	debugClear(commandPool);
 }

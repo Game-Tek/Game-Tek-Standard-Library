@@ -385,26 +385,6 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	vk_device_create_info.ppEnabledExtensionNames = device_extensions.begin();
 
 	VK_CHECK(vkCreateDevice(physicalDevice, &vk_device_create_info, GetVkAllocationCallbacks(), &device));
-	
-	if constexpr (_DEBUG)
-	{		
-		GTSL::StaticString<512> name(createInfo.ApplicationName); name += " device";
-		VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
-		debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(device);
-		debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_DEVICE;
-		debug_utils_object_name_info_ext.pObjectName = name.begin();
-		vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
-
-		name.Resize(0); name += createInfo.ApplicationName; name += " physical device";
-		debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(physicalDevice);
-		debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_PHYSICAL_DEVICE;
-		vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
-
-		name.Resize(0); name += createInfo.ApplicationName; name += " instance";
-		debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(instance);
-		debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_INSTANCE;
-		vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
-	}
 
 	for (GTSL::uint8 FAMILY = 0; FAMILY < families_indeces.GetLength(); ++FAMILY)
 	{
@@ -449,9 +429,49 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		}
 	}
 
-#if (_DEBUG)
-	GET_DEVICE_PROC(device, vkSetDebugUtilsObjectNameEXT);
-#endif
+	if constexpr (_DEBUG)
+	{
+		GET_DEVICE_PROC(device, vkSetDebugUtilsObjectNameEXT);
+
+		//GTSL::StaticString<512> name(createInfo.ApplicationName);
+
+		//{
+		//	//name += " device"; name += '\0';
+		//	
+		//	VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
+		//	debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(device);
+		//	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_DEVICE;
+		//	//debug_utils_object_name_info_ext.pObjectName = name.begin();
+		//	debug_utils_object_name_info_ext.pObjectName = "Device";
+		//	vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
+		//}
+		//
+		//{
+		//	//name.Resize(0);
+		//	//name += createInfo.ApplicationName;
+		//	//name += " physical device"; name += '\0';
+		//
+		//	VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
+		//	debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(physicalDevice);
+		//	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_PHYSICAL_DEVICE;
+		//	//debug_utils_object_name_info_ext.pObjectName = name.begin();
+		//	debug_utils_object_name_info_ext.pObjectName = "PhysicalDevice";
+		//	vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
+		//}
+		//
+		//{
+		//	//name.Resize(0);
+		//	//name += createInfo.ApplicationName;
+		//	//name += " instance"; name += '\0';
+		//	
+		//	VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
+		//	debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(instance);
+		//	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_INSTANCE;
+		//	//debug_utils_object_name_info_ext.pObjectName = name.begin();
+		//	debug_utils_object_name_info_ext.pObjectName = "Instance";
+		//	vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
+		//}
+	}
 }
 
 GAL::VulkanRenderDevice::~VulkanRenderDevice()

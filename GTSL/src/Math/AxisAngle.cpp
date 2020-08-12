@@ -5,8 +5,7 @@
 
 using namespace GTSL;
 
-constexpr AxisAngle::AxisAngle(const Vector3& vector, const float angle) :
-	X(vector.X), Y(vector.Y), Z(vector.Z), Angle(angle)
+AxisAngle::AxisAngle(const Vector3& vector, const float32 angle) : X(vector.X), Y(vector.Y), Z(vector.Z), Angle(angle)
 {
 }
 
