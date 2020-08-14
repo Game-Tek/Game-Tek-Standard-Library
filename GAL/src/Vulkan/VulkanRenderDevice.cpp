@@ -219,8 +219,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 		GTSL::Array<const char*, 32> instance_layers{
 	#if(_DEBUG)
-			"VK_LAYER_KHRONOS_validation",
-			"VK_LAYER_LUNARG_standard_validation",
+			"VK_LAYER_KHRONOS_validation"
 		};
 #else
 	};
@@ -462,9 +461,10 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 	if constexpr (_DEBUG)
 	{
-		GET_DEVICE_PROC(device, vkSetDebugUtilsObjectNameEXT);
+		vkSetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT"));
 	}
 
+	//NVIDIA's driver have a bug when setting the name for this 3 object types, TODO. fix in the future
 	//{
 	//	GTSL::StaticString<128> name(createInfo.ApplicationName);
 	//	name += " instance"; name += '\0';
@@ -474,9 +474,9 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	//	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_INSTANCE;
 	//	debug_utils_object_name_info_ext.pObjectName = name.begin();
 	//	//debug_utils_object_name_info_ext.pObjectName = "Instance";
-	//	this->vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
+	//	vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
 	//}
-
+	//
 	//{
 	//	GTSL::StaticString<128> name(createInfo.ApplicationName);
 	//	name += " physical device"; name += '\0';
@@ -486,9 +486,9 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	//	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_PHYSICAL_DEVICE;
 	//	debug_utils_object_name_info_ext.pObjectName = name.begin();
 	//	//debug_utils_object_name_info_ext.pObjectName = "PhysicalDevice";
-	//	this->vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
+	//	vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
 	//}
-
+	//
 	//{
 	//	GTSL::StaticString<128> name(createInfo.ApplicationName);
 	//	name += " device"; name += '\0';
@@ -498,7 +498,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	//	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_DEVICE;
 	//	debug_utils_object_name_info_ext.pObjectName = name.begin();
 	//	//debug_utils_object_name_info_ext.pObjectName = "Device";
-	//	this->vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
+	//	vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
 	//}
 }
 
