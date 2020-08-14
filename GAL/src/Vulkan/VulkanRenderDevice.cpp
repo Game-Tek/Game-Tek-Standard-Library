@@ -9,11 +9,29 @@
 #include "GAL/Vulkan/VulkanAccelerationStructures.h"
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanBuffer.h"
-#include "GAL/Vulkan/VulkanCommandBuffer.h"
 #include "GAL/Vulkan/VulkanImage.h"
 #include "GAL/Vulkan/VulkanSynchronization.h"
+#include "GAL/Vulkan/VulkanCommandBuffer.h"
 #include "GTSL/Console.h"
 #include "GTSL/StaticString.hpp"
+
+void* vkAllocate(void* data, GTSL::uint64 size, GTSL::uint64 alignment, VkSystemAllocationScope)
+{
+	auto* allocation_info = static_cast<GAL::VulkanRenderDevice::AllocationInfo*>(data);
+	return allocation_info->Allocate(allocation_info->UserData, size, alignment);
+}
+
+void* vkReallocate(void* data, void* originalAlloc, GTSL::uint64 size, GTSL::uint64 alignment, VkSystemAllocationScope)
+{
+	auto* allocation_info = static_cast<GAL::VulkanRenderDevice::AllocationInfo*>(data);
+	return allocation_info->Reallocate(allocation_info->UserData, originalAlloc, size, alignment);
+}
+
+void vkFree(void* data, void* alloc)
+{
+	auto* allocation_info = static_cast<GAL::VulkanRenderDevice::AllocationInfo*>(data);
+	allocation_info->Deallocate(allocation_info->UserData, alloc);
+}
 
 void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(const VulkanBuffer* buffer, MemoryRequirements& bufferMemoryRequirements) const
 {
@@ -179,6 +197,15 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 
 GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : RenderDevice(createInfo.DebugPrintFunction)
 {
+	allocationCallbacks.pUserData = &allocationInfo;
+	allocationCallbacks.pfnAllocation = &vkAllocate;
+	allocationCallbacks.pfnReallocation = &vkReallocate;
+	allocationCallbacks.pfnFree = &vkFree;
+	allocationCallbacks.pfnInternalAllocation = nullptr;
+	allocationCallbacks.pfnInternalFree = nullptr;
+
+	allocationInfo = createInfo.AllocationInfo;
+	
 	{
 		VkApplicationInfo vk_application_info{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
 		vk_application_info.pNext = nullptr;
@@ -239,10 +266,10 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	}
 
 	{
-		uint32_t phsyical_device_count{ 0 };
-		vkEnumeratePhysicalDevices(instance, &phsyical_device_count, nullptr);
-		GTSL::Array<VkPhysicalDevice, 8> vk_physical_devices(phsyical_device_count);
-		vkEnumeratePhysicalDevices(instance, &phsyical_device_count, vk_physical_devices.begin());
+		uint32_t physical_device_count{ 0 };
+		vkEnumeratePhysicalDevices(instance, &physical_device_count, nullptr);
+		GTSL::Array<VkPhysicalDevice, 8> vk_physical_devices(physical_device_count);
+		vkEnumeratePhysicalDevices(instance, &physical_device_count, vk_physical_devices.begin());
 
 		physicalDevice = vk_physical_devices[0];
 	}
@@ -311,6 +338,10 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	VkPhysicalDeviceFeatures2 features2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
 
 	features2.features.samplerAnisotropy = true;
+	//features2.features.shaderSampledImageArrayDynamicIndexing = true;
+	//features2.features.shaderStorageImageArrayDynamicIndexing = true;
+	//features2.features.shaderUniformBufferArrayDynamicIndexing = true;
+	//features2.features.shaderStorageBufferArrayDynamicIndexing = true;
 
 	void** next_property = &properties2.pNext;
 	void** next_feature = &features2.pNext;
@@ -343,9 +374,9 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		place_features_structure(sizeof(VkPhysicalDeviceTimelineSemaphoreFeatures), &timeline_semaphore_features, &timeline_semaphore_features.pNext);
 		device_extensions.EmplaceBack(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
 
-		for (auto e : createInfo.Extensions)
+		for (GTSL::uint32 extension = 0; extension < createInfo.Extensions.ElementCount(); ++extension)
 		{
-			switch (e)
+			switch (createInfo.Extensions[extension])
 			{
 			case Extension::RAY_TRACING:
 			{
@@ -355,15 +386,17 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 				device_extensions.EmplaceBack(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
 				device_extensions.EmplaceBack(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
 
-				VkPhysicalDeviceRayTracingPropertiesKHR ray_tracing_properties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_KHR };
-				VkPhysicalDeviceRayTracingFeaturesKHR ray_tracing_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_FEATURES_KHR };
+				VkPhysicalDeviceRayTracingPropertiesKHR vk_ray_tracing_properties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_KHR };
+				VkPhysicalDeviceRayTracingFeaturesKHR vk_ray_tracing_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_FEATURES_KHR };
 
-				place_properties_structure(sizeof(VkPhysicalDeviceRayTracingPropertiesKHR), &ray_tracing_properties, &ray_tracing_properties.pNext);
-				place_features_structure(sizeof(VkPhysicalDeviceRayTracingFeaturesKHR), &ray_tracing_features, &ray_tracing_features.pNext);
+				//const auto* ray_tracing_properties = static_cast<const RayTracingProperties*>(createInfo.ExtensionProperties[extension]);
+				
+				place_properties_structure(sizeof(VkPhysicalDeviceRayTracingPropertiesKHR), &vk_ray_tracing_properties, &vk_ray_tracing_properties.pNext);
+				place_features_structure(sizeof(VkPhysicalDeviceRayTracingFeaturesKHR), &vk_ray_tracing_features, &vk_ray_tracing_features.pNext);
 
 				break;
 			}
-			default:;
+			default: __debugbreak();
 			}
 		}
 
@@ -382,7 +415,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 		VK_CHECK(vkCreateDevice(physicalDevice, &vk_device_create_info, GetVkAllocationCallbacks(), &device));
 	}
-	
+
 	for (GTSL::uint8 FAMILY = 0; FAMILY < families_indices.GetLength(); ++FAMILY)
 	{
 		for (GTSL::uint8 QUEUE = 0; QUEUE < families_indices[FAMILY].GetLength(); ++QUEUE)
@@ -409,6 +442,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 				
 			GET_DEVICE_PROC(device, vkGetAccelerationStructureMemoryRequirementsKHR);
 			GET_DEVICE_PROC(device, vkGetAccelerationStructureDeviceAddressKHR);
+			GET_DEVICE_PROC(device, vkGetRayTracingShaderGroupHandlesKHR);
 				
 			GET_DEVICE_PROC(device, vkCreateDeferredOperationKHR);
 			GET_DEVICE_PROC(device, vkDestroyDeferredOperationKHR);
@@ -429,46 +463,43 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	if constexpr (_DEBUG)
 	{
 		GET_DEVICE_PROC(device, vkSetDebugUtilsObjectNameEXT);
-
-		GTSL::StaticString<512> name(createInfo.ApplicationName);
-
-		{
-			name += " device"; name += '\0';
-			
-			VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
-			debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(device);
-			debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_DEVICE;
-			debug_utils_object_name_info_ext.pObjectName = name.begin();
-			//debug_utils_object_name_info_ext.pObjectName = "Device";
-			vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
-		}
-		
-		{
-			name.Resize(0);
-			name += createInfo.ApplicationName;
-			name += " physical device"; name += '\0';
-		
-			VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
-			debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(physicalDevice);
-			debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_PHYSICAL_DEVICE;
-			debug_utils_object_name_info_ext.pObjectName = name.begin();
-			//debug_utils_object_name_info_ext.pObjectName = "PhysicalDevice";
-			vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
-		}
-		
-		{
-			name.Resize(0);
-			name += createInfo.ApplicationName;
-			name += " instance"; name += '\0';
-			
-			VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
-			debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(instance);
-			debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_INSTANCE;
-			debug_utils_object_name_info_ext.pObjectName = name.begin();
-			//debug_utils_object_name_info_ext.pObjectName = "Instance";
-			vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
-		}
 	}
+
+	//{
+	//	GTSL::StaticString<128> name(createInfo.ApplicationName);
+	//	name += " instance"; name += '\0';
+	//
+	//	VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
+	//	debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(instance);
+	//	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_INSTANCE;
+	//	debug_utils_object_name_info_ext.pObjectName = name.begin();
+	//	//debug_utils_object_name_info_ext.pObjectName = "Instance";
+	//	this->vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
+	//}
+
+	//{
+	//	GTSL::StaticString<128> name(createInfo.ApplicationName);
+	//	name += " physical device"; name += '\0';
+	//
+	//	VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
+	//	debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(physicalDevice);
+	//	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_PHYSICAL_DEVICE;
+	//	debug_utils_object_name_info_ext.pObjectName = name.begin();
+	//	//debug_utils_object_name_info_ext.pObjectName = "PhysicalDevice";
+	//	this->vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
+	//}
+
+	//{
+	//	GTSL::StaticString<128> name(createInfo.ApplicationName);
+	//	name += " device"; name += '\0';
+	//	
+	//	VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
+	//	debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(device);
+	//	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_DEVICE;
+	//	debug_utils_object_name_info_ext.pObjectName = name.begin();
+	//	//debug_utils_object_name_info_ext.pObjectName = "Device";
+	//	this->vkSetDebugUtilsObjectNameEXT(device, &debug_utils_object_name_info_ext);
+	//}
 }
 
 GAL::VulkanRenderDevice::~VulkanRenderDevice()

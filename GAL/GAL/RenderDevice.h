@@ -36,21 +36,7 @@ namespace GAL
 			GTSL::uint32 Capabilities{ 0 };
 			GTSL::float32 QueuePriority = 1.0f;
 		};
-
-		struct SubmitInfo : RenderInfo
-		{
-			GTSL::Ranger<const class CommandBuffer> CommandBuffers;
-			GTSL::Ranger<const class Semaphore> SignalSemaphores;
-			GTSL::Ranger<const GTSL::uint64> SignalValues;
-			GTSL::Ranger<const class Semaphore> WaitSemaphores;
-			GTSL::Ranger<const GTSL::uint64> WaitValues;
-			/**
-			 * \brief Pipeline stages at which each corresponding semaphore wait will occur.
-			 */
-			GTSL::Ranger<const GTSL::uint32> WaitPipelineStages;
-			const class Fence* Fence{ nullptr };
-		};
-		void Submit(const SubmitInfo& dispatchInfo);
+		//void Submit(const SubmitInfo& dispatchInfo);
 
 	private:
 		friend RenderDevice;

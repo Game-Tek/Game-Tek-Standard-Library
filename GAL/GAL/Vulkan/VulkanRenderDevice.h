@@ -7,6 +7,10 @@
 
 namespace GAL
 {
+	class VulkanFence;
+	class VulkanSemaphore;
+	class VulkanCommandBuffer;
+
 	class VulkanQueue final : public Queue
 	{
 	public:
@@ -14,7 +18,20 @@ namespace GAL
 		~VulkanQueue() = default;
 
 		void Wait() const;
-		
+
+		struct SubmitInfo : RenderInfo
+		{
+			GTSL::Ranger<const VulkanCommandBuffer> CommandBuffers;
+			GTSL::Ranger<const VulkanSemaphore> SignalSemaphores;
+			GTSL::Ranger<const VulkanSemaphore> WaitSemaphores;
+			GTSL::Ranger<const GTSL::uint64> SignalValues;
+			GTSL::Ranger<const GTSL::uint64> WaitValues;
+			/**
+			 * \brief Pipeline stages at which each corresponding semaphore wait will occur.
+			 */
+			GTSL::Ranger<const GTSL::uint32> WaitPipelineStages;
+			const VulkanFence* Fence{ nullptr };
+		};
 		void Submit(const SubmitInfo& submitInfo);
 
 		[[nodiscard]] VkQueue GetVkQueue() const { return queue; }
@@ -39,6 +56,43 @@ namespace GAL
 			RAY_TRACING
 		};
 		
+		struct AllocationInfo
+		{
+			/**
+			 * \brief void* UserData. uint64 Size. uint64 Alignment.
+			 */
+			GTSL::Delegate<void*(void*, GTSL::uint64, GTSL::uint64)> Allocate;
+			/**
+			 * \brief void* UserData. void* Original Allocation. uint64 Size. uint64 Alignment.
+			 */
+			GTSL::Delegate<void*(void*, void*, GTSL::uint64, GTSL::uint64)> Reallocate;
+			/**
+			 * \brief void* UserData. void* Allocation.
+			 */
+			GTSL::Delegate<void(void*, void*)> Deallocate;
+
+			/**
+			 * \brief void* UserData. uint64 Size. uint64 Alignment.
+			 */
+			GTSL::Delegate<void(void*, GTSL::uint64, GTSL::uint64)> InternalAllocate;
+			/**
+			* \brief void* UserData. void* Allocation.
+			*/
+			GTSL::Delegate<void(void*, void*)> InternalDeallocate;
+
+			void* UserData;
+		};
+
+		struct RayTracingFeatures
+		{
+			GTSL::uint32 RecursionDepth = 0;
+		};
+
+		struct RayTracingCapabilities
+		{
+			GTSL::uint32 RecursionDepth = 0;
+		};
+		
 		struct CreateInfo
 		{
 			GTSL::Ranger<const GTSL::UTF8> ApplicationName;
@@ -47,6 +101,9 @@ namespace GAL
 			GTSL::Ranger<VulkanQueue> Queues;
 			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
 			GTSL::Ranger<const Extension> Extensions;
+			//GTSL::Ranger<const void*> ExtensionFeatures;
+			//GTSL::Ranger<const void*> ExtensionCapabilities;
+			AllocationInfo AllocationInfo;
 		};
 		explicit VulkanRenderDevice(const CreateInfo& createInfo);
 		
@@ -96,6 +153,7 @@ namespace GAL
 
 		PFN_vkGetAccelerationStructureMemoryRequirementsKHR vkGetAccelerationStructureMemoryRequirementsKHR;
 		PFN_vkGetAccelerationStructureDeviceAddressKHR vkGetAccelerationStructureDeviceAddressKHR;
+		PFN_vkGetRayTracingShaderGroupHandlesKHR vkGetRayTracingShaderGroupHandlesKHR;
 		
 		PFN_vkCreateDeferredOperationKHR vkCreateDeferredOperationKHR;
 		PFN_vkDestroyDeferredOperationKHR vkDestroyDeferredOperationKHR;
@@ -113,21 +171,23 @@ namespace GAL
 
 	private:
 #if (_DEBUG)
-		PFN_vkCreateDebugUtilsMessengerEXT createDebugUtilsFunction = nullptr;
-		VkDebugUtilsMessengerEXT debugMessenger = nullptr;
-		PFN_vkDestroyDebugUtilsMessengerEXT destroyDebugUtilsFunction = nullptr;
+		PFN_vkCreateDebugUtilsMessengerEXT createDebugUtilsFunction;
+		VkDebugUtilsMessengerEXT debugMessenger;
+		PFN_vkDestroyDebugUtilsMessengerEXT destroyDebugUtilsFunction;
 
 #endif
 
-		VkInstance instance = nullptr;
-		VkPhysicalDevice physicalDevice = nullptr;
-		VkDevice device = nullptr;
+		VkInstance instance;
+		VkPhysicalDevice physicalDevice;
+		VkDevice device;
 
+		AllocationInfo allocationInfo;
+		
 		VkAllocationCallbacks allocationCallbacks;
 
 		VkPhysicalDeviceProperties deviceProperties;
 		VkPhysicalDeviceMemoryProperties memoryProperties;
-
+		
 		friend VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 	};
 }

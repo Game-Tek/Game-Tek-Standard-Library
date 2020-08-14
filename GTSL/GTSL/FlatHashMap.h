@@ -183,7 +183,7 @@ namespace GTSL
 			auto bucket = modulo(key, this->capacity); auto index = getIndexForKeyInBucket(bucket, key, max_bucket_length);
 			key_type bucket_length = getBucketLength(bucket, max_bucket_length)--;
 			GTSL_ASSERT(findKeyInBucket(bucket, key, max_bucket_length) == nullptr, "Key doesn't exist!")
-			getKeysBucket(bucket, max_bucket_length)[index].~T();
+			getValuesBucket(bucket, max_bucket_length)[index].~T();
 			MemCopy((bucket_length - index) * sizeof(key_type), getKeysBucket(bucket, max_bucket_length) + index + 1, getKeysBucket(bucket, max_bucket_length) + index);
 			MemCopy((bucket_length - index) * sizeof(T), getValuesBucket(bucket, max_bucket_length) + index + 1, getValuesBucket(bucket, max_bucket_length) + index);
 		}

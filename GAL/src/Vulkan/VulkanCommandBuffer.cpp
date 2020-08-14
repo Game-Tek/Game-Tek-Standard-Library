@@ -213,7 +213,7 @@ void GAL::VulkanCommandPool::AllocateCommandBuffer(const AllocateCommandBuffersI
 void GAL::VulkanCommandPool::FreeCommandBuffers(const struct FreeCommandBuffersInfo& freeCommandBuffers) const
 {
 	vkFreeCommandBuffers(freeCommandBuffers.RenderDevice->GetVkDevice(), commandPool, freeCommandBuffers.CommandBuffers.ElementCount(),	reinterpret_cast<const VkCommandBuffer*>(freeCommandBuffers.CommandBuffers.begin()));
-	for(auto& e : freeCommandBuffers.CommandBuffers) { debugClear(e); }
+	for(auto& e : freeCommandBuffers.CommandBuffers) { debugClear(reinterpret_cast<VkCommandBuffer&>(e)); }
 }
 
 void GAL::VulkanCommandPool::Destroy(const VulkanRenderDevice* renderDevice)

@@ -13,9 +13,8 @@ namespace GAL
 	public:
 		VulkanSurface() = default;
 		
-		struct CreateInfo : VulkanCreateInfo
+		struct CreateInfo final : VulkanCreateInfo
 		{
-			class VulkanRenderDevice* RenderDevice{ nullptr };
 			void* SystemData{ nullptr };
 		};
 		VulkanSurface(const CreateInfo& createInfo);
@@ -29,9 +28,9 @@ namespace GAL
 
 		bool IsSupported(class VulkanRenderDevice* renderDevice);
 
-		void* GetVkSurface() const { return surface; }
+		[[nodiscard]] VulkanHandle GetVkSurface() const { return surface; }
 	private:
-		void* surface{ 0 };
+		VulkanHandle surface{ 0 };
 	};
 
 	class VulkanRenderContext final : public RenderContext

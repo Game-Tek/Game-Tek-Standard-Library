@@ -3,9 +3,9 @@
 #include <GAL/ext/vulkan/vulkan.h>
 
 #if (_DEBUG)
-#define COMBINE(x, y) x ## y
-#define COMBINE2(x, y) COMBINE(x, y)
-#define VK_CHECK(func) VkResult COMBINE2(result, __LINE__) = VK_RESULT_MAX_ENUM; COMBINE2(result, __LINE__) = func; { if ((COMBINE2(result, __LINE__)) != VK_SUCCESS) { __debugbreak(); } }
+#define COMBINE2(x, y) x ## y
+#define COMBINE(x, y) COMBINE2(x, y)
+#define VK_CHECK(func) VkResult COMBINE(result, __LINE__) = VK_ERROR_UNKNOWN; COMBINE(result, __LINE__) = func; { if ((COMBINE(result, __LINE__)) != VK_SUCCESS) { __debugbreak(); } }
 #else
 #define VK_CHECK(func) func
 #endif // (_DEBUG)
@@ -28,7 +28,7 @@ debug_utils_object_name_info_ext.pObjectName = createInfo.Name;\
 createInfo.RenderDevice->vkSetDebugUtilsObjectNameEXT(createInfo.RenderDevice->GetVkDevice(), &debug_utils_object_name_info_ext);
 
 #else
-#define SET_NAME(handle, type, cInfo)
+#define SET_NAME(handle, type, createInfo)
 #endif
 
 namespace GAL
@@ -37,6 +37,7 @@ namespace GAL
 	constexpr void debugClear(T& handle) { if constexpr (_DEBUG) { handle = reinterpret_cast<T>(0xCCCCCCCCCCCCCCCC); } }
 	
 	using VulkanDeviceAddress = GTSL::uint64;
+	using VulkanHandle = void*;
 	
 	struct VulkanRenderInfo
 	{
@@ -310,13 +311,9 @@ namespace GAL
 		OCCLUSION = 0,
 		PIPELINE_STATISTICS = 1,
 		TIMESTAMP = 2,
-		// Provided by VK_EXT_transform_feedback
 		TRANSFORM_FEEDBACK_STREAM = 1000028004,
-		// Provided by VK_KHR_performance_query
 		PERFORMANCE_QUERY = 1000116000,
-		// Provided by VK_KHR_ray_tracing
 		ACCELERATION_STRUCTURE_COMPACTED_SIZE = 1000165000,
-		// Provided by VK_KHR_ray_tracing
 		ACCELERATION_STRUCTURE_SERIALIZATION_SIZE = 1000150000,
 	};
 
@@ -420,15 +417,15 @@ namespace GAL
 	
 	enum class VulkanShaderDataType
 	{
-		FLOAT = VK_FORMAT_R32_SFLOAT,
-		FLOAT2 = VK_FORMAT_R32G32_SFLOAT,
-		FLOAT3 = VK_FORMAT_R32G32B32_SFLOAT,
-		FLOAT4 = VK_FORMAT_R32G32B32A32_SFLOAT,
-		INT = VK_FORMAT_R32_SINT,
-		INT2 = VK_FORMAT_R32G32_SINT,
-		INT3 = VK_FORMAT_R32G32B32_SINT,
-		INT4 = VK_FORMAT_R32G32B32A32_SINT,
-		BOOL = VK_FORMAT_R32_SINT
+		FLOAT = 100,
+		FLOAT2 = 103,
+		FLOAT3 = 106,
+		FLOAT4 = 109,
+		INT = 99,
+		INT2 = 102,
+		INT3 = 105,
+		INT4 = 108,
+		BOOL = 99
 	};
 	
 	inline VulkanBindingType BindingTypeToVulkanBindingType(const BindingType binding)
