@@ -142,7 +142,7 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	vkVertexInputBindingDescriptions[0].stride = GetVertexSizeAndOffsetsToMembers(createInfo.VertexDescriptor, offsets);
 	vkVertexInputBindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	GTSL::Array<VkVertexInputAttributeDescription, MAX_VERTEX_ELEMENTS> vkVertexInputAttributeDescriptions(createInfo.VertexDescriptor.ElementCount());
+	GTSL::Array<VkVertexInputAttributeDescription, MAX_VERTEX_ELEMENTS> vkVertexInputAttributeDescriptions(static_cast<GTSL::uint32>(createInfo.VertexDescriptor.ElementCount()));
 	for (GTSL::uint8 i = 0; i < vkVertexInputAttributeDescriptions.GetLength(); ++i)
 	{
 		vkVertexInputAttributeDescriptions[i].binding = 0;

@@ -31,12 +31,17 @@ void GAL::VulkanBindingsPool::Destroy(const VulkanRenderDevice* renderDevice)
 }
 
 void GAL::VulkanBindingsPool::AllocateBindingsSets(const AllocateBindingsSetsInfo& allocateBindingsSetsInfo)
-{
-	VkDescriptorSetAllocateInfo vk_descriptor_set_allocate_info{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-	vk_descriptor_set_allocate_info.descriptorPool = descriptorPool;
-	vk_descriptor_set_allocate_info.descriptorSetCount = allocateBindingsSetsInfo.BindingsSets.ElementCount();
-	vk_descriptor_set_allocate_info.pSetLayouts = reinterpret_cast<const VkDescriptorSetLayout*>(allocateBindingsSetsInfo.BindingsSetLayouts.begin());
-	VK_CHECK(vkAllocateDescriptorSets(allocateBindingsSetsInfo.RenderDevice->GetVkDevice(), &vk_descriptor_set_allocate_info, reinterpret_cast<VkDescriptorSet*>(allocateBindingsSetsInfo.BindingsSets.begin())));
+{	
+	VkDescriptorSetVariableDescriptorCountAllocateInfo vkDescriptorSetVariableDescriptorCountAllocateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO };
+	vkDescriptorSetVariableDescriptorCountAllocateInfo.descriptorSetCount = static_cast<GTSL::uint32>(allocateBindingsSetsInfo.BindingsSets.ElementCount());
+	vkDescriptorSetVariableDescriptorCountAllocateInfo.pDescriptorCounts = allocateBindingsSetsInfo.BindingsSetDynamicBindingsCounts.begin();
+	
+	VkDescriptorSetAllocateInfo vkDescriptorSetAllocateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
+	vkDescriptorSetAllocateInfo.pNext = &vkDescriptorSetVariableDescriptorCountAllocateInfo;
+	vkDescriptorSetAllocateInfo.descriptorPool = descriptorPool;
+	vkDescriptorSetAllocateInfo.descriptorSetCount = allocateBindingsSetsInfo.BindingsSets.ElementCount();
+	vkDescriptorSetAllocateInfo.pSetLayouts = reinterpret_cast<const VkDescriptorSetLayout*>(allocateBindingsSetsInfo.BindingsSetLayouts.begin());
+	VK_CHECK(vkAllocateDescriptorSets(allocateBindingsSetsInfo.RenderDevice->GetVkDevice(), &vkDescriptorSetAllocateInfo, reinterpret_cast<VkDescriptorSet*>(allocateBindingsSetsInfo.BindingsSets.begin())));
 
 	if constexpr (_DEBUG)
 	{
@@ -55,27 +60,36 @@ void GAL::VulkanBindingsPool::FreeBindingsSet(const FreeBindingsSetInfo& freeBin
 
 GAL::VulkanBindingsSetLayout::VulkanBindingsSetLayout(const CreateInfo& createInfo)
 {
-	VkDescriptorSetLayoutCreateInfo vk_descriptor_set_layout_create_info{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-
-	GTSL::Array<VkDescriptorSetLayoutBinding, MAX_BINDINGS_PER_SET> descriptor_set_layout_bindings(createInfo.BindingsDescriptors.ElementCount());
+	GTSL::Array<VkDescriptorBindingFlags, 16> vkDescriptorBindingFlags;
+	VkDescriptorSetLayoutBindingFlagsCreateInfo vkDescriptorSetLayoutBindingFlagsCreateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO };
+	vkDescriptorSetLayoutBindingFlagsCreateInfo.bindingCount = static_cast<GTSL::uint32>(createInfo.BindingsDescriptors.ElementCount());
+	vkDescriptorSetLayoutBindingFlagsCreateInfo.pBindingFlags = vkDescriptorBindingFlags.begin();
+	
+	VkDescriptorSetLayoutCreateInfo vkDescriptorSetLayoutCreateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+	vkDescriptorSetLayoutCreateInfo.pNext = &vkDescriptorSetLayoutBindingFlagsCreateInfo;
+	
+	GTSL::Array<VkDescriptorSetLayoutBinding, MAX_BINDINGS_PER_SET> vkDescriptorSetLayoutBindings(createInfo.BindingsDescriptors.ElementCount());
 	{
 		GTSL::uint8 i = 0;
 
-		for (auto& binding : descriptor_set_layout_bindings)
+		for (auto& binding : vkDescriptorSetLayoutBindings)
 		{
 			binding.binding = i;
 			binding.descriptorCount = createInfo.BindingsDescriptors[i].UniformCount;
 			binding.descriptorType = static_cast<VkDescriptorType>(createInfo.BindingsDescriptors[i].BindingType);
 			binding.stageFlags = createInfo.BindingsDescriptors[i].ShaderStage;
 			binding.pImmutableSamplers = nullptr;
+
 			++i;
 		}
+		
+		vkDescriptorBindingFlags[i - 1] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
 	}
 
-	vk_descriptor_set_layout_create_info.bindingCount = descriptor_set_layout_bindings.GetLength();
-	vk_descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.begin();
+	vkDescriptorSetLayoutCreateInfo.bindingCount = vkDescriptorSetLayoutBindings.GetLength();
+	vkDescriptorSetLayoutCreateInfo.pBindings = vkDescriptorSetLayoutBindings.begin();
 
-	VK_CHECK(vkCreateDescriptorSetLayout(createInfo.RenderDevice->GetVkDevice(), &vk_descriptor_set_layout_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &descriptorSetLayout));
+	VK_CHECK(vkCreateDescriptorSetLayout(createInfo.RenderDevice->GetVkDevice(), &vkDescriptorSetLayoutCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &descriptorSetLayout));
 
 	SET_NAME(descriptorSetLayout, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, createInfo);
 }

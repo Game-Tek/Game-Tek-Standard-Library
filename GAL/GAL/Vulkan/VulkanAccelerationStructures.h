@@ -8,7 +8,7 @@ namespace GAL
 	class VulkanAccelerationStructure
 	{
 	public:
-		VkAccelerationStructureKHR GetVkAccelerationStructure() const { return accelerationStructure; }
+		[[nodiscard]] VkAccelerationStructureKHR GetVkAccelerationStructure() const { return accelerationStructure; }
 
 		struct AccelerationStructureGeometryType : VulkanRenderInfo
 		{

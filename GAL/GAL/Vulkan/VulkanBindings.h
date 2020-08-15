@@ -30,6 +30,7 @@ namespace GAL
 			GTSL::Ranger<const VulkanCreateInfo> BindingsSetCreateInfos;
 			GTSL::Ranger<class VulkanBindingsSet> BindingsSets;
 			GTSL::Ranger<const class VulkanBindingsSetLayout> BindingsSetLayouts;
+			GTSL::Ranger<const GTSL::uint32> BindingsSetDynamicBindingsCounts;
 		};
 		void AllocateBindingsSets(const AllocateBindingsSetsInfo& allocateBindingsSetsInfo);
 		
@@ -52,7 +53,7 @@ namespace GAL
 		{
 			VulkanBindingType BindingType = VulkanBindingType::UNIFORM_BUFFER;
 			VulkanShaderStage::value_type ShaderStage = VulkanShaderStage::ALL;
-			GTSL::uint8 UniformCount = 0;
+			GTSL::uint32 UniformCount = 0;
 		};
 
 		struct ImageBindingDescriptor : BindingDescriptor
