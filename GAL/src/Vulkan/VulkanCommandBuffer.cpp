@@ -81,9 +81,9 @@ void GAL::VulkanCommandBuffer::BindVertexBuffer(const BindVertexBufferInfo& buff
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vk_buffer, &offset);
 }
 
-void GAL::VulkanCommandBuffer::UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo)
+void GAL::VulkanCommandBuffer::UpdatePushConstant(const UpdatePushConstantsInfo& info)
 {
-	vkCmdPushConstants(commandBuffer, updatePushConstantsInfo.Pipeline->GetVkPipelineLayout(), VK_SHADER_STAGE_ALL_GRAPHICS, updatePushConstantsInfo.Offset, updatePushConstantsInfo.Size, updatePushConstantsInfo.Data);
+	vkCmdPushConstants(commandBuffer, info.PipelineLayout->GetVkPipelineLayout(), VK_SHADER_STAGE_ALL_GRAPHICS, info.Offset, info.Size, info.Data);
 }
 
 void GAL::VulkanCommandBuffer::DrawIndexed(const DrawIndexedInfo& drawIndexedInfo)
@@ -117,11 +117,10 @@ void GAL::VulkanCommandBuffer::Dispatch(const DispatchInfo& dispatchInfo)
 	vkCmdDispatch(commandBuffer, dispatchInfo.WorkGroups.Width, dispatchInfo.WorkGroups.Height, dispatchInfo.WorkGroups.Depth);
 }
 
-void GAL::VulkanCommandBuffer::BindBindingsSet(const BindBindingsSetInfo& bindBindingsSetInfo)
+void GAL::VulkanCommandBuffer::BindBindingsSet(const BindBindingsSetInfo& info)
 {
-	vkCmdBindDescriptorSets(commandBuffer, static_cast<VkPipelineBindPoint>(bindBindingsSetInfo.PipelineType), bindBindingsSetInfo.Pipeline->GetVkPipelineLayout(), 0,
-	bindBindingsSetInfo.BindingsSets.ElementCount(), reinterpret_cast<const VkDescriptorSet*>(bindBindingsSetInfo.BindingsSets.begin()), bindBindingsSetInfo.Offsets.ElementCount(),
-	bindBindingsSetInfo.Offsets.begin());
+	vkCmdBindDescriptorSets(commandBuffer, static_cast<VkPipelineBindPoint>(info.PipelineType), info.PipelineLayout->GetVkPipelineLayout(), 0,
+	info.BindingsSets.ElementCount(), reinterpret_cast<const VkDescriptorSet*>(info.BindingsSets.begin()), info.Offsets.ElementCount(), info.Offsets.begin());
 }
 
 void GAL::VulkanCommandBuffer::CopyImage(const CopyImageInfo& copyImageInfo)

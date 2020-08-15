@@ -129,6 +129,8 @@ namespace GTSL
 		uint32 alignment{ 0 };
 		T* data{ nullptr };
 
+#pragma warning(disable : 4648)
 		[[no_unique_address]] ALLOCATOR allocator;
+#pragma warning(default : 4648)
 	};
 }

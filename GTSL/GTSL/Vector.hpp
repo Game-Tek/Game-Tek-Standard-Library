@@ -66,8 +66,8 @@ namespace GTSL
 		 * \brief Constructs a Vector from a reference to another Vector.
 		 * \param other Reference to another Vector.
 		 */
-		template<class ALLOCATOR2>
-		Vector(const Vector<T, ALLOCATOR2>& other, const ALLOCATOR& allocatorReference) : allocator(allocatorReference), capacity(other.capacity),
+		template<class ALLOC>
+		Vector(const Vector<T, ALLOC>& other, const ALLOCATOR& allocatorReference) : allocator(allocatorReference), capacity(other.capacity),
 		length(other.length), data(this->allocate(this->capacity, this->capacity))
 		{
 			for (auto& e : other) { ::new(this->data + GTSL::RangeForIndex(e, other)) T(e); }
@@ -266,17 +266,19 @@ namespace GTSL
 			for (auto& e : ranger) { this->data[GTSL::RangeForIndex(e, ranger)] = e; }
 			return static_cast<uint32>((this->length += static_cast<uint32>(ranger.ElementCount())) - ranger.ElementCount());
 		}
-		
+
 		/**
 		 * \brief Places a copy of the elements from the passed in Vector At the end of the vector.
 		 * \param other Vector to copy elements from.
 		 * \return Length of vector after inserting other's elements.
 		 */
-		length_type PushBack(const Vector& other)
+		template<class ALLOC>
+		void PushBack(const Vector<T, ALLOC>& other)
 		{
+			const auto new_length = this->length + other.GetLength();
 			if (this->length + (this->length - other.length) > this->capacity) { reallocate(); }
-			copyArray(other.data, getIterator(this->length), other.length);
-			return (this->length += other.length) - other.length;
+			for (uint32 i = this->length, o_i = 0; o_i < other.GetLength(); ++i, ++o_i) { this->data[i] = other.data[o_i]; }
+			this->length = new_length;
 		}
 
 		/**
@@ -472,10 +474,12 @@ namespace GTSL
 		[[nodiscard]] operator Ranger<const T>() const noexcept { return Ranger<const T>(this->data, this->data + this->length); }
 
 	private:
+#pragma warning(disable : 4648)
 		[[no_unique_address]] ALLOCATOR allocator;
 		length_type capacity{ 0 };
 		length_type length{ 0 };
 		T* data{ nullptr };
+#pragma warning(default : 4648)
 
 		/**
 		 * \brief Copies data from from to to.

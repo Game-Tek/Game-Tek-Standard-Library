@@ -6,6 +6,7 @@
 
 namespace GAL
 {
+	class VulkanPipelineLayout;
 	class VulkanQueue;
 	class VulkanImage;
 	class VulkanPipeline;
@@ -49,12 +50,12 @@ namespace GAL
 
 		struct UpdatePushConstantsInfo : VulkanRenderInfo
 		{
-			const VulkanPipeline* Pipeline = nullptr;
+			const VulkanPipelineLayout* PipelineLayout = nullptr;
 			size_t Offset = 0;
 			size_t Size = 0;
 			GTSL::byte* Data = nullptr;
 		};
-		void UpdatePushConstant(const UpdatePushConstantsInfo& updatePushConstantsInfo);
+		void UpdatePushConstant(const UpdatePushConstantsInfo& info);
 
 		void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo);
 
@@ -81,9 +82,9 @@ namespace GAL
 			VulkanPipelineType PipelineType;
 			GTSL::Ranger<const VulkanBindingsSet> BindingsSets;
 			GTSL::Ranger<const GTSL::uint32> Offsets;
-			const VulkanPipeline* Pipeline = nullptr;
+			const VulkanPipelineLayout* PipelineLayout = nullptr;
 		};
-		void BindBindingsSet(const BindBindingsSetInfo& bindBindingsSetInfo);
+		void BindBindingsSet(const BindBindingsSetInfo& info);
 
 		void CopyImage(const CopyImageInfo& copyImageInfo);
 

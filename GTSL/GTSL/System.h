@@ -1,6 +1,5 @@
 #pragma once
-
-#include "String.hpp"
+#include "Core.h"
 
 namespace GTSL
 {

@@ -65,10 +65,28 @@ namespace GAL
 
 
 		[[nodiscard]] VkPipeline GetVkPipeline() const { return pipeline; }
-		[[nodiscard]] VkPipelineLayout GetVkPipelineLayout() const { return pipelineLayout; }
 	protected:
-		VkPipelineLayout pipelineLayout = nullptr;
 		VkPipeline pipeline = nullptr;
+	};
+
+	class VulkanPipelineLayout final
+	{
+	public:
+		VulkanPipelineLayout() = default;
+
+		struct CreateInfo final : VulkanCreateInfo
+		{
+			const struct PushConstant* PushConstant = nullptr;
+			GTSL::Ranger<const class VulkanBindingsSetLayout> BindingsSetLayouts;
+		};
+		VulkanPipelineLayout(const CreateInfo& createInfo);
+
+		void Initialize(const CreateInfo& createInfo);
+		void Destroy(const VulkanRenderDevice* renderDevice);
+
+		[[nodiscard]] VkPipelineLayout GetVkPipelineLayout() const { return pipelineLayout; }
+	private:
+		VkPipelineLayout pipelineLayout = nullptr;
 	};
 	
 	class VulkanGraphicsPipeline final : public VulkanPipeline
@@ -82,12 +100,10 @@ namespace GAL
 			GTSL::Extent2D SurfaceExtent;
 			GTSL::Ranger<const VulkanShaderDataType> VertexDescriptor;
 			VulkanPipelineDescriptor PipelineDescriptor;
-			GTSL::Ranger<const VulkanPipeline::ShaderInfo> Stages;
+			GTSL::Ranger<const ShaderInfo> Stages;
 			bool IsInheritable = false;
+			const VulkanPipelineLayout* PipelineLayout = nullptr;
 			const VulkanGraphicsPipeline* ParentPipeline = nullptr;
-
-			const PushConstant* PushConstant = nullptr;
-			GTSL::Ranger<const class VulkanBindingsSetLayout> BindingsSetLayouts;
 			const VulkanPipelineCache* PipelineCache = nullptr;
 		};
 		
@@ -133,6 +149,8 @@ namespace GAL
 		{
 			bool IsInheritable = false;
 			const VulkanRaytracingPipeline* ParentPipeline = nullptr;
+
+			const VulkanPipelineLayout* PipelineLayout = nullptr;
 			
 			GTSL::uint32 MaxRecursionDepth = 0;
 			VulkanPipelineDescriptor PipelineDescriptor;
@@ -140,11 +158,7 @@ namespace GAL
 			GTSL::Ranger<const VulkanBindingsSetLayout> BindingsSetLayouts;
 		};
 
-		VkPipeline GetVkPipeline() const { return pipeline; }
 		VulkanRaytracingPipeline(const CreateInfo& createInfo);
-		
-	private:
-		VkPipeline pipeline;
-		VkPipelineLayout pipelineLayout;
+		void Destroy(const VulkanRenderDevice* renderDevice);
 	};
 }

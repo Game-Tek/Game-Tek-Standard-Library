@@ -31,14 +31,15 @@ namespace GAL
 	
 	class RenderPass;
 
+	struct PushConstant
+	{
+		GTSL::uint32 Size = 0;
+		ShaderType Stage = ShaderType::VERTEX_SHADER;
+	};
+	
 	class Pipeline : public GALObject
 	{
 	public:
-		struct PushConstant
-		{
-			GTSL::uint32 Size = 0;
-			ShaderType Stage = ShaderType::VERTEX_SHADER;
-		};
 
 		static constexpr GTSL::uint8 MAX_VERTEX_ELEMENTS = 20;
 		
