@@ -100,13 +100,13 @@ namespace GTSL
 
 		constexpr T& operator[](const uint32 i) noexcept
 		{
-			GTSL_ASSERT(i < CAPACITY, "Out of Bounds! Requested index is greater than the Array's statically allocated size!");
+			GTSL_ASSERT(i < CAPACITY && i < this->length, "Out of Bounds! Requested index is greater than the Array's size!");
 			return this->data[i];
 		}
 
 		constexpr const T& operator[](const uint32 i) const noexcept
 		{
-			GTSL_ASSERT(i < CAPACITY, "Out of Bounds! Requested index is greater than the Array's statically allocated size!");
+			GTSL_ASSERT(i < CAPACITY && i < this->length, "Out of Bounds! Requested index is greater than the Array's size!");
 			return this->data[i];
 		}
 
