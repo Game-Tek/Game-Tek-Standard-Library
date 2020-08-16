@@ -286,7 +286,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		GTSL::Array<VkQueueFamilyProperties, 32> vk_queue_families_properties(queue_families_count);
 		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queue_families_count, vk_queue_families_properties.begin());
 
-		GTSL::Array<bool, 8> used_families;
+		GTSL::Array<bool, 8> usedFamilies;
 
 		GTSL::Array<VkQueueFlags, 16> vk_queues_flag_bits(createInfo.QueueCreateInfos.ElementCount());
 		{
@@ -304,7 +304,9 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 			{
 				if (vk_queue_families_properties[FAMILY].queueCount > 0 && vk_queue_families_properties[FAMILY].queueFlags & vk_queues_flag_bits[QUEUE]) //if family has vk_queue_flags_bits[FAMILY] create queue from this family
 				{
-					if (used_families[FAMILY]) //if a queue is already being used from this family add another
+					usedFamilies.EmplaceBack(false);
+					
+					if (usedFamilies[FAMILY]) //if a queue is already being used from this family add another
 					{
 						++vk_device_queue_create_infos[FAMILY].queueCount;
 						families_priorities[FAMILY].EmplaceBack(createInfo.QueueCreateInfos[QUEUE].QueuePriority);
@@ -316,7 +318,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 					vk_device_queue_create_infos.EmplaceBack();
 					families_priorities.EmplaceBack();
 					families_indices.EmplaceBack();
-					used_families.EmplaceBack(true);
+					usedFamilies[FAMILY] = true;
 
 					families_priorities[FAMILY].EmplaceBack(createInfo.QueueCreateInfos[QUEUE].QueuePriority);
 					families_indices[FAMILY].EmplaceBack(QUEUE);
@@ -337,10 +339,10 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	VkPhysicalDeviceFeatures2 features2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
 
 	features2.features.samplerAnisotropy = true;
-	//features2.features.shaderSampledImageArrayDynamicIndexing = true;
-	//features2.features.shaderStorageImageArrayDynamicIndexing = true;
-	//features2.features.shaderUniformBufferArrayDynamicIndexing = true;
-	//features2.features.shaderStorageBufferArrayDynamicIndexing = true;
+	features2.features.shaderSampledImageArrayDynamicIndexing = true;
+	features2.features.shaderStorageImageArrayDynamicIndexing = true;
+	features2.features.shaderUniformBufferArrayDynamicIndexing = true;
+	features2.features.shaderStorageBufferArrayDynamicIndexing = true;
 
 	void** next_property = &properties2.pNext;
 	void** next_feature = &features2.pNext;
@@ -372,6 +374,18 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 		place_features_structure(sizeof(VkPhysicalDeviceTimelineSemaphoreFeatures), &timeline_semaphore_features, &timeline_semaphore_features.pNext);
 		device_extensions.EmplaceBack(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
+
+		{
+			VkPhysicalDeviceDescriptorIndexingFeatures vkPhysicalDeviceDescriptorIndexingFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES };
+			vkPhysicalDeviceDescriptorIndexingFeatures.descriptorBindingPartiallyBound = true;
+			vkPhysicalDeviceDescriptorIndexingFeatures.descriptorBindingVariableDescriptorCount = true;
+			vkPhysicalDeviceDescriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing = true;
+			vkPhysicalDeviceDescriptorIndexingFeatures.shaderStorageBufferArrayNonUniformIndexing = true;
+			vkPhysicalDeviceDescriptorIndexingFeatures.shaderUniformBufferArrayNonUniformIndexing = true;
+			
+			device_extensions.EmplaceBack(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
+			place_features_structure(sizeof(vkPhysicalDeviceDescriptorIndexingFeatures), &vkPhysicalDeviceDescriptorIndexingFeatures, &vkPhysicalDeviceDescriptorIndexingFeatures.pNext);
+		}
 
 		for (GTSL::uint32 extension = 0; extension < createInfo.Extensions.ElementCount(); ++extension)
 		{

@@ -117,10 +117,10 @@ void GAL::VulkanCommandBuffer::Dispatch(const DispatchInfo& dispatchInfo)
 	vkCmdDispatch(commandBuffer, dispatchInfo.WorkGroups.Width, dispatchInfo.WorkGroups.Height, dispatchInfo.WorkGroups.Depth);
 }
 
-void GAL::VulkanCommandBuffer::BindBindingsSet(const BindBindingsSetInfo& info)
+void GAL::VulkanCommandBuffer::BindBindingsSets(const BindBindingsSetInfo& info)
 {
-	vkCmdBindDescriptorSets(commandBuffer, static_cast<VkPipelineBindPoint>(info.PipelineType), info.PipelineLayout->GetVkPipelineLayout(), 0,
-	info.BindingsSets.ElementCount(), reinterpret_cast<const VkDescriptorSet*>(info.BindingsSets.begin()), info.Offsets.ElementCount(), info.Offsets.begin());
+	vkCmdBindDescriptorSets(commandBuffer, static_cast<VkPipelineBindPoint>(info.PipelineType), info.PipelineLayout->GetVkPipelineLayout(), info.FirstSet,
+	info.BoundSets, reinterpret_cast<const VkDescriptorSet*>(info.BindingsSets.begin()), info.Offsets.ElementCount(), info.Offsets.begin());
 }
 
 void GAL::VulkanCommandBuffer::CopyImage(const CopyImageInfo& copyImageInfo)

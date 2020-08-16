@@ -57,7 +57,7 @@ namespace GAL
 		
 		//    BIND PIPELINE COMMANDS
 
-		//Adds a BindBindingsSet to the command queue.
+		//Adds a BindBindingsSets to the command queue.
 
 		struct BindGraphicsPipelineInfo : RenderInfo
 		{

@@ -60,9 +60,9 @@ void GAL::VulkanBindingsPool::FreeBindingsSet(const FreeBindingsSetInfo& freeBin
 
 GAL::VulkanBindingsSetLayout::VulkanBindingsSetLayout(const CreateInfo& createInfo)
 {
-	GTSL::Array<VkDescriptorBindingFlags, 16> vkDescriptorBindingFlags;
+	GTSL::Array<VkDescriptorBindingFlags, 16> vkDescriptorBindingFlags(createInfo.BindingsDescriptors.ElementCount());
 	VkDescriptorSetLayoutBindingFlagsCreateInfo vkDescriptorSetLayoutBindingFlagsCreateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO };
-	vkDescriptorSetLayoutBindingFlagsCreateInfo.bindingCount = static_cast<GTSL::uint32>(createInfo.BindingsDescriptors.ElementCount());
+	vkDescriptorSetLayoutBindingFlagsCreateInfo.bindingCount = static_cast<GTSL::uint32>(createInfo.SpecialBindings.ElementCount());
 	vkDescriptorSetLayoutBindingFlagsCreateInfo.pBindingFlags = vkDescriptorBindingFlags.begin();
 	
 	VkDescriptorSetLayoutCreateInfo vkDescriptorSetLayoutCreateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };

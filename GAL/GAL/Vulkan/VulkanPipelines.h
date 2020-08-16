@@ -4,6 +4,7 @@
 
 #define VK_ENABLE_BETA_EXTENSIONS
 #include "Vulkan.h"
+#include "GTSL/Array.hpp"
 
 namespace GTSL {
 	class Buffer;
@@ -113,12 +114,12 @@ namespace GAL
 		void Destroy(const VulkanRenderDevice* renderDevice);
 
 	private:
-		static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Ranger<const VulkanShaderDataType> vertex, GTSL::Ranger<GTSL::uint8> offsets)
+		static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Ranger<const VulkanShaderDataType> vertex, GTSL::Array<GTSL::uint8, 20>& offsets)
 		{
 			GTSL::uint32 size = 0;
 			for (const auto& e : vertex)
 			{
-				*(offsets + RangeForIndex(e, vertex)) = size;
+				offsets.EmplaceBack(size);
 				size += VulkanShaderDataTypeSize(e);
 			}
 			return size;

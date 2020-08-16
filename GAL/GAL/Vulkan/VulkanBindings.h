@@ -75,6 +75,7 @@ namespace GAL
 		struct CreateInfo : VulkanCreateInfo
 		{
 			GTSL::Ranger<const BindingDescriptor> BindingsDescriptors;
+			GTSL::Ranger<const GTSL::uint32> SpecialBindings;
 		};
 		VulkanBindingsSetLayout(const CreateInfo& createInfo);
 		void Destroy(const VulkanRenderDevice* renderDevice);
