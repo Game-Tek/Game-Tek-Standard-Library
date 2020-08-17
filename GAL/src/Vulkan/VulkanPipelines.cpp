@@ -131,7 +131,7 @@ void GAL::VulkanPipelineLayout::Destroy(const VulkanRenderDevice* renderDevice)
 	debugClear(pipelineLayout);
 }
 
-GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo)
+GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& createInfo)
 {
 	//  VERTEX INPUT STATE
 
@@ -147,7 +147,7 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 	{
 		vkVertexInputAttributeDescriptions[i].binding = 0;
 		vkVertexInputAttributeDescriptions[i].location = i;
-		vkVertexInputAttributeDescriptions[i].format = VkFormat(createInfo.VertexDescriptor[i]);
+		vkVertexInputAttributeDescriptions[i].format = static_cast<VkFormat>(createInfo.VertexDescriptor[i]);
 		vkVertexInputAttributeDescriptions[i].offset = offsets[i];
 	}
 
@@ -259,41 +259,41 @@ GAL::VulkanGraphicsPipeline::VulkanGraphicsPipeline(const CreateInfo& createInfo
 		vkPipelineShaderStageCreateInfos[i].pSpecializationInfo = nullptr;
 	}
 	
-	VkGraphicsPipelineCreateInfo vk_graphics_pipeline_create_info{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-	vk_graphics_pipeline_create_info.flags = createInfo.IsInheritable ? VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT : 0;
-	vk_graphics_pipeline_create_info.flags |= createInfo.ParentPipeline ? VK_PIPELINE_CREATE_DERIVATIVE_BIT : 0;
-	vk_graphics_pipeline_create_info.stageCount = vkPipelineShaderStageCreateInfos.GetLength();
-	vk_graphics_pipeline_create_info.pStages = vkPipelineShaderStageCreateInfos.begin();
-	vk_graphics_pipeline_create_info.pVertexInputState = &vkPipelineVertexInputStateCreateInfo;
-	vk_graphics_pipeline_create_info.pInputAssemblyState = &vkPipelineInputAssemblyStateCreateInfo;
-	vk_graphics_pipeline_create_info.pTessellationState = &vkPipelineTessellationStateCreateInfo;
-	vk_graphics_pipeline_create_info.pViewportState = &vkPipelineViewportStateCreateInfo;
-	vk_graphics_pipeline_create_info.pRasterizationState = &vkPipelineRasterizationStateCreateInfo;
-	vk_graphics_pipeline_create_info.pMultisampleState = &vkPipelineMultisampleStateCreateInfo;
-	vk_graphics_pipeline_create_info.pDepthStencilState = &vkPipelineDepthStencilStateCreateInfo;
-	vk_graphics_pipeline_create_info.pColorBlendState = &vkPipelineColorblendStateCreateInfo;
-	vk_graphics_pipeline_create_info.pDynamicState = &vkPipelineDynamicStateCreateInfo;
-	vk_graphics_pipeline_create_info.layout = createInfo.PipelineLayout->GetVkPipelineLayout();
-	vk_graphics_pipeline_create_info.renderPass = createInfo.RenderPass->GetVkRenderPass();
-	vk_graphics_pipeline_create_info.subpass = 0;
-	vk_graphics_pipeline_create_info.basePipelineHandle = createInfo.ParentPipeline ? createInfo.ParentPipeline->pipeline : nullptr; // Optional
-	vk_graphics_pipeline_create_info.basePipelineIndex = createInfo.ParentPipeline ? 0 : -1;
+	VkGraphicsPipelineCreateInfo vkGraphicsPipelineCreateInfo{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
+	vkGraphicsPipelineCreateInfo.flags = createInfo.IsInheritable ? VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT : 0;
+	vkGraphicsPipelineCreateInfo.flags |= createInfo.ParentPipeline ? VK_PIPELINE_CREATE_DERIVATIVE_BIT : 0;
+	vkGraphicsPipelineCreateInfo.stageCount = vkPipelineShaderStageCreateInfos.GetLength();
+	vkGraphicsPipelineCreateInfo.pStages = vkPipelineShaderStageCreateInfos.begin();
+	vkGraphicsPipelineCreateInfo.pVertexInputState = &vkPipelineVertexInputStateCreateInfo;
+	vkGraphicsPipelineCreateInfo.pInputAssemblyState = &vkPipelineInputAssemblyStateCreateInfo;
+	vkGraphicsPipelineCreateInfo.pTessellationState = &vkPipelineTessellationStateCreateInfo;
+	vkGraphicsPipelineCreateInfo.pViewportState = &vkPipelineViewportStateCreateInfo;
+	vkGraphicsPipelineCreateInfo.pRasterizationState = &vkPipelineRasterizationStateCreateInfo;
+	vkGraphicsPipelineCreateInfo.pMultisampleState = &vkPipelineMultisampleStateCreateInfo;
+	vkGraphicsPipelineCreateInfo.pDepthStencilState = &vkPipelineDepthStencilStateCreateInfo;
+	vkGraphicsPipelineCreateInfo.pColorBlendState = &vkPipelineColorblendStateCreateInfo;
+	vkGraphicsPipelineCreateInfo.pDynamicState = &vkPipelineDynamicStateCreateInfo;
+	vkGraphicsPipelineCreateInfo.layout = createInfo.PipelineLayout->GetVkPipelineLayout();
+	vkGraphicsPipelineCreateInfo.renderPass = createInfo.RenderPass->GetVkRenderPass();
+	vkGraphicsPipelineCreateInfo.subpass = 0;
+	vkGraphicsPipelineCreateInfo.basePipelineHandle = createInfo.ParentPipeline ? createInfo.ParentPipeline->pipeline : nullptr; // Optional
+	vkGraphicsPipelineCreateInfo.basePipelineIndex = createInfo.ParentPipeline ? 0 : -1;
 
 	if(createInfo.PipelineCache)
 	{
 		VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), 
-			createInfo.PipelineCache->GetVkPipelineCache(), 1, &vk_graphics_pipeline_create_info,
+			createInfo.PipelineCache->GetVkPipelineCache(), 1, &vkGraphicsPipelineCreateInfo,
 			createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
 
 		SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
 		return;
 	}
 	
-	VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vk_graphics_pipeline_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
+	VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vkGraphicsPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
 	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
 }
 
-void GAL::VulkanGraphicsPipeline::Destroy(const VulkanRenderDevice* renderDevice)
+void GAL::VulkanRasterizationPipeline::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroyPipeline(renderDevice->GetVkDevice(), pipeline, renderDevice->GetVkAllocationCallbacks());
 	debugClear(pipeline);
@@ -310,21 +310,21 @@ GAL::VulkanRaytracingPipeline::VulkanRaytracingPipeline(const CreateInfo& create
 	VkRayTracingPipelineCreateInfoKHR vk_ray_tracing_pipeline_create_info{VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
 	vk_ray_tracing_pipeline_create_info.maxRecursionDepth = createInfo.MaxRecursionDepth;
 
-	GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vk_pipeline_shader_stage_create_infos(createInfo.Stages.ElementCount());
+	GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vkPipelineShaderStageCreateInfos(static_cast<GTSL::uint32>(createInfo.Stages.ElementCount()));
 
-	for (GTSL::uint64 i = 0; i < createInfo.Stages.ElementCount(); ++i)
+	for (GTSL::uint32 i = 0; i < vkPipelineShaderStageCreateInfos.GetLength(); ++i)
 	{
-		vk_pipeline_shader_stage_create_infos[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vk_pipeline_shader_stage_create_infos[i].pNext = nullptr;
-		vk_pipeline_shader_stage_create_infos[i].flags = 0;
-		vk_pipeline_shader_stage_create_infos[i].stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
-		vk_pipeline_shader_stage_create_infos[i].pName = "main";
-		vk_pipeline_shader_stage_create_infos[i].module = createInfo.Stages[i].Shader->GetVkShaderModule();
-		vk_pipeline_shader_stage_create_infos[i].pSpecializationInfo = nullptr;
+		vkPipelineShaderStageCreateInfos[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		vkPipelineShaderStageCreateInfos[i].pNext = nullptr;
+		vkPipelineShaderStageCreateInfos[i].flags = 0;
+		vkPipelineShaderStageCreateInfos[i].stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
+		vkPipelineShaderStageCreateInfos[i].pName = "main";
+		vkPipelineShaderStageCreateInfos[i].module = createInfo.Stages[i].Shader->GetVkShaderModule();
+		vkPipelineShaderStageCreateInfos[i].pSpecializationInfo = nullptr;
 	}
 	
-	vk_ray_tracing_pipeline_create_info.stageCount = vk_pipeline_shader_stage_create_infos.GetLength();
-	vk_ray_tracing_pipeline_create_info.pStages = vk_pipeline_shader_stage_create_infos.begin();
+	vk_ray_tracing_pipeline_create_info.stageCount = vkPipelineShaderStageCreateInfos.GetLength();
+	vk_ray_tracing_pipeline_create_info.pStages = vkPipelineShaderStageCreateInfos.begin();
 	
 	vk_ray_tracing_pipeline_create_info.layout = createInfo.PipelineLayout->GetVkPipelineLayout();
 

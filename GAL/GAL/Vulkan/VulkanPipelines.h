@@ -90,10 +90,10 @@ namespace GAL
 		VkPipelineLayout pipelineLayout = nullptr;
 	};
 	
-	class VulkanGraphicsPipeline final : public VulkanPipeline
+	class VulkanRasterizationPipeline final : public VulkanPipeline
 	{
 	public:
-		VulkanGraphicsPipeline() = default;
+		VulkanRasterizationPipeline() = default;
 		
 		struct CreateInfo : VulkanCreateInfo
 		{
@@ -104,12 +104,12 @@ namespace GAL
 			GTSL::Ranger<const ShaderInfo> Stages;
 			bool IsInheritable = false;
 			const VulkanPipelineLayout* PipelineLayout = nullptr;
-			const VulkanGraphicsPipeline* ParentPipeline = nullptr;
+			const VulkanRasterizationPipeline* ParentPipeline = nullptr;
 			const VulkanPipelineCache* PipelineCache = nullptr;
 		};
 		
-		VulkanGraphicsPipeline(const CreateInfo& createInfo);
-		~VulkanGraphicsPipeline() = default;
+		VulkanRasterizationPipeline(const CreateInfo& createInfo);
+		~VulkanRasterizationPipeline() = default;
 
 		void Destroy(const VulkanRenderDevice* renderDevice);
 

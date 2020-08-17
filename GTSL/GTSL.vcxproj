@@ -91,7 +91,9 @@
     <ClInclude Include="Math\Vector4.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GTSL\StaticMap.ixx" />
     <ClCompile Include="src\Allocator.cpp" />
+    <ClCompile Include="src\ArrayCommon.ixx" />
     <ClCompile Include="src\Console.cpp" />
     <ClCompile Include="src\DLL.cpp" />
     <ClCompile Include="src\Application.cpp" />
@@ -175,6 +177,7 @@
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <FloatingPointExceptions>false</FloatingPointExceptions>
+      <EnableModules>true</EnableModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -197,6 +200,7 @@
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <FloatingPointExceptions>false</FloatingPointExceptions>
+      <EnableModules>true</EnableModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

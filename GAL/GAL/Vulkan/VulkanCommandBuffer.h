@@ -45,8 +45,8 @@ namespace GAL
 			GTSL::uint32 Offset{ 0 };
 			VulkanIndexType IndexType;
 		};
-		void BindIndexBuffer(const BindIndexBufferInfo& buffer);
-		void BindVertexBuffer(const BindVertexBufferInfo& buffer);
+		void BindIndexBuffer(const BindIndexBufferInfo& buffer) const;
+		void BindVertexBuffer(const BindVertexBufferInfo& buffer) const;
 
 		struct UpdatePushConstantsInfo : VulkanRenderInfo
 		{
@@ -57,7 +57,7 @@ namespace GAL
 		};
 		void UpdatePushConstant(const UpdatePushConstantsInfo& info);
 
-		void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo);
+		void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo) const;
 
 		struct TraceRaysInfo : VulkanRenderInfo
 		{
@@ -99,7 +99,7 @@ namespace GAL
 			GTSL::Extent3D Extent;
 			GTSL::Extent3D Offset;
 		};
-		void CopyBufferToImage(const CopyBufferToImageInfo& copyImageToBufferInfo);
+		void CopyBufferToImage(const CopyBufferToImageInfo& copyBufferToImageInfo);
 
 		struct TransitionImageInfo : RenderInfo
 		{
