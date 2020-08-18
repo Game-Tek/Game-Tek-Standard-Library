@@ -6,6 +6,8 @@
 
 namespace GAL
 {
+	class VulkanFramebuffer;
+	class VulkanRenderPass;
 	class VulkanPipelineLayout;
 	class VulkanQueue;
 	class VulkanImage;
@@ -24,12 +26,38 @@ namespace GAL
 		};
 		
 		explicit VulkanCommandBuffer(const VkCommandBuffer commandBuffer) : commandBuffer(commandBuffer) {}
-		
+
+		struct BeginRecordingInfo final : VulkanRenderInfo
+		{
+			/**
+			 * \brief Pointer to primary/parent command buffer, can be null if this command buffer is primary/has no children.
+			 */
+			const CommandBuffer* PrimaryCommandBuffer{ nullptr };
+		};
 		void BeginRecording(const BeginRecordingInfo& beginRecordingInfo);
+
+		struct EndRecordingInfo final : VulkanRenderInfo
+		{
+		};
 		void EndRecording(const EndRecordingInfo& endRecordingInfo);
 
+		struct BeginRenderPassInfo final : VulkanRenderInfo
+		{
+			const VulkanRenderPass* RenderPass = nullptr;
+			const VulkanFramebuffer* Framebuffer = nullptr;
+			GTSL::Extent2D RenderArea;
+			GTSL::Ranger<const GTSL::RGBA> ClearValues;
+		};
 		void BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo);
+
+		struct AdvanceSubpassInfo final : VulkanRenderInfo
+		{
+		};
 		void AdvanceSubPass(const AdvanceSubpassInfo& advanceSubpassInfo);
+
+		struct EndRenderPassInfo final : VulkanRenderInfo
+		{
+		};
 		void EndRenderPass(const EndRenderPassInfo& endRenderPassInfo);
 
 		struct BindPipelineInfo : VulkanRenderInfo
@@ -46,6 +74,12 @@ namespace GAL
 			VulkanIndexType IndexType;
 		};
 		void BindIndexBuffer(const BindIndexBufferInfo& buffer) const;
+
+		struct BindVertexBufferInfo final : VulkanRenderInfo
+		{
+			const VulkanBuffer* Buffer{ nullptr };
+			GTSL::uint32 Offset{ 0 };
+		};
 		void BindVertexBuffer(const BindVertexBufferInfo& buffer) const;
 
 		struct UpdatePushConstantsInfo : VulkanRenderInfo
@@ -57,6 +91,10 @@ namespace GAL
 		};
 		void UpdatePushConstant(const UpdatePushConstantsInfo& info);
 
+		struct DrawIndexedInfo final : VulkanRenderInfo
+		{
+			GTSL::uint32 InstanceCount = 0, IndexCount = 0;
+		};
 		void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo) const;
 
 		struct TraceRaysInfo : VulkanRenderInfo
@@ -87,6 +125,8 @@ namespace GAL
 		};
 		void BindBindingsSets(const BindBindingsSetInfo& info);
 
+		struct CopyImageInfo final : VulkanRenderInfo
+		{};
 		void CopyImage(const CopyImageInfo& copyImageInfo);
 
 		struct CopyBufferToImageInfo : VulkanRenderInfo
@@ -101,7 +141,7 @@ namespace GAL
 		};
 		void CopyBufferToImage(const CopyBufferToImageInfo& copyBufferToImageInfo);
 
-		struct TransitionImageInfo : RenderInfo
+		struct TransitionImageInfo : VulkanRenderInfo
 		{
 			const VulkanImage* Texture{ nullptr };
 			VulkanImageLayout SourceLayout, DestinationLayout;

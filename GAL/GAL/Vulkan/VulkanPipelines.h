@@ -16,6 +16,11 @@ namespace GAL
 	{
 	public:
 		VulkanShader() = default;
+
+		struct CreateInfo final : VulkanCreateInfo
+		{
+			GTSL::Ranger<const GTSL::byte> ShaderData;
+		};
 		explicit VulkanShader(const CreateInfo& createInfo);
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
@@ -31,6 +36,11 @@ namespace GAL
 	{
 	public:
 		VulkanPipelineCache() = default;
+
+		struct CreateInfo final : VulkanCreateInfo
+		{
+			GTSL::Ranger<const GTSL::byte> Data;
+		};
 		VulkanPipelineCache(const CreateInfo& createInfo);
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);

@@ -26,20 +26,9 @@ namespace GAL
 	public:
 		CommandBuffer() = default;
 		~CommandBuffer() = default;
-		
-		struct BeginRecordingInfo : RenderInfo
-		{
-			/**
-			 * \brief Pointer to primary/parent command buffer, can be null if this command buffer is primary/has no children.
-			 */
-			const CommandBuffer* PrimaryCommandBuffer{ nullptr };
-		};
 		//Starts recording of commands.
 
 		
-		struct EndRecordingInfo : RenderInfo
-		{
-		};
 		//Ends recording of commands.
 
 		// COMMANDS
@@ -48,39 +37,17 @@ namespace GAL
 		//    BIND BUFFER COMMANDS
 
 		//Adds a BindMesh command to the command queue.
-
-		struct BindVertexBufferInfo final : RenderInfo
-		{
-			const class Buffer* Buffer{ nullptr };
-			GTSL::uint32 Offset{ 0 };
-		};
 		
 		//    BIND PIPELINE COMMANDS
 
 		//Adds a BindBindingsSets to the command queue.
 
-		struct BindGraphicsPipelineInfo : RenderInfo
-		{
-			const GraphicsPipeline* GraphicsPipeline = nullptr;
-			GTSL::Extent2D RenderExtent;
-		};
 		//Adds a BindGraphicsPipeline command to the command queue.
-
-		struct BindComputePipelineInfo : RenderInfo
-		{
-			const ComputePipeline* Pipeline = nullptr;
-		};
 		//Adds a BindComputePipeline to the command queue.
-
 
 		//  DRAW COMMANDS
 
 		//Adds a DrawIndexed command to the command queue.
-		struct DrawIndexedInfo : RenderInfo
-		{
-			GTSL::uint32 IndexCount = 0;
-			GTSL::uint32 InstanceCount = 0;
-		};
 
 		//  COMPUTE COMMANDS
 
@@ -88,27 +55,9 @@ namespace GAL
 
 		//  RENDER PASS COMMANDS
 
-		struct BeginRenderPassInfo : RenderInfo
-		{
-			const RenderPass* RenderPass = nullptr;
-			const Framebuffer* Framebuffer = nullptr;
-			GTSL::Extent2D RenderArea;
-			GTSL::Ranger<const GTSL::RGBA> ClearValues;
-		};
 		//Adds a BeginRenderPass command to the command queue.
 
-		struct AdvanceSubpassInfo : RenderInfo
-		{
-		};
 		//Adds a AdvanceSubPass command to the command buffer.
-
-		struct EndRenderPassInfo : RenderInfo
-		{
-		};
-
-		struct CopyImageInfo : RenderInfo
-		{};
-		void CopyImage(const CopyImageInfo& copyImageInfo);
 	};
 
 	class CommandPool : public GALObject

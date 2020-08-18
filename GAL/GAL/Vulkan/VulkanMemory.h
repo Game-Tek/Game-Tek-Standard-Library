@@ -25,14 +25,14 @@ namespace GAL
 		
 		[[nodiscard]] VkDeviceMemory GetVkDeviceMemory() const { return deviceMemory; }
 
-		struct MapInfo : VulkanRenderInfo
+		struct MapInfo final : VulkanRenderInfo
 		{
 			GTSL::uint32 Size{ 0 };
 			GTSL::uint32 Offset{ 0 };
 		};
 		[[nodiscard]] void* Map(const MapInfo& mapInfo) const;
 
-		struct UnmapInfo : RenderInfo
+		struct UnmapInfo final : VulkanRenderInfo
 		{
 		};
 		void Unmap(const UnmapInfo& unmapInfo) const;

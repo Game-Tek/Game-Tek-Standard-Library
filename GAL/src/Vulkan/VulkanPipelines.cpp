@@ -253,7 +253,7 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 		vkPipelineShaderStageCreateInfos[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vkPipelineShaderStageCreateInfos[i].pNext = nullptr;
 		vkPipelineShaderStageCreateInfos[i].flags = 0;
-		vkPipelineShaderStageCreateInfos[i].stage = VulkanShaderTypeToVkShaderStageFlagBits(createInfo.Stages[i].Type);
+		vkPipelineShaderStageCreateInfos[i].stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
 		vkPipelineShaderStageCreateInfos[i].pName = "main";
 		vkPipelineShaderStageCreateInfos[i].module = createInfo.Stages[i].Shader->GetVkShaderModule();
 		vkPipelineShaderStageCreateInfos[i].pSpecializationInfo = nullptr;

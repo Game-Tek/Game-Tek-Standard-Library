@@ -23,10 +23,6 @@ namespace GAL
 	class Shader : public GALObject
 	{
 	public:
-		struct CreateInfo : RenderInfo
-		{
-			GTSL::Ranger<const GTSL::byte> ShaderData;
-		};
 	};
 	
 	class RenderPass;
@@ -53,10 +49,6 @@ namespace GAL
 	class PipelineCache
 	{
 	public:
-		struct CreateInfo : RenderInfo
-		{
-			GTSL::Ranger<const GTSL::byte> Data;
-		};
 	private:
 	};
 
@@ -118,9 +110,6 @@ namespace GAL
 	class ComputePipeline : public Pipeline
 	{
 	public:
-		struct CreateInfo : RenderInfo
-		{
-		};
 	};
 
 }

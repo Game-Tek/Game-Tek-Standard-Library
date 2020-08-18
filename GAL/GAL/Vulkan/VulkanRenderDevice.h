@@ -19,7 +19,7 @@ namespace GAL
 
 		void Wait() const;
 
-		struct SubmitInfo : RenderInfo
+		struct SubmitInfo final : VulkanRenderInfo
 		{
 			GTSL::Ranger<const VulkanCommandBuffer> CommandBuffers;
 			GTSL::Ranger<const VulkanSemaphore> SignalSemaphores;
@@ -137,7 +137,7 @@ namespace GAL
 		
 		[[nodiscard]] GTSL::uint32 FindMemoryType(GTSL::uint32 typeFilter, GTSL::uint32 memoryType) const;
 
-		[[nodiscard]] GTSL::uint32 GetMinUniformBufferOffset() const { return deviceProperties.limits.minUniformBufferOffsetAlignment; }
+		[[nodiscard]] GTSL::uint32 GetMinUniformBufferOffset() const { return static_cast<GTSL::uint32>(deviceProperties.limits.minUniformBufferOffsetAlignment); }
 		
 		[[nodiscard]] const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const { return deviceProperties; }
 

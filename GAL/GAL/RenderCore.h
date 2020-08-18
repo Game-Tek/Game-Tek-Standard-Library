@@ -7,11 +7,6 @@ namespace GAL
 	constexpr GTSL::uint8 MAX_SHADER_STAGES = 8;
 
 	class RenderDevice;
-	
-	struct RenderInfo
-	{
-		const RenderDevice* RenderDevice = nullptr;
-	};
 
 	enum class PipelineStage : GTSL::uint32
 	{
@@ -155,7 +150,9 @@ namespace GAL
 		GEOMETRY_SHADER,
 		FRAGMENT_SHADER,
 
-		COMPUTE_SHADER
+		COMPUTE_SHADER,
+
+		RAY_GEN, ANY_HIT, CLOSEST_HIT, MISS, INTERSECTION, CALLABLE
 	};
 
 	enum class ShaderDataType : GTSL::uint8
@@ -279,23 +276,25 @@ namespace GAL
 		DEPTH32_STENCIL8 = 130
 	};
 
-	inline GTSL::uint8 ShaderDataTypesSize(const ShaderDataType _SDT)
+	inline GTSL::uint8 ShaderDataTypesSize(const ShaderDataType type)
 	{
-		switch (_SDT)
+		switch (type)
 		{
-		case ShaderDataType::FLOAT: return 4;
-		case ShaderDataType::FLOAT2: return 4 * 2;
-		case ShaderDataType::FLOAT3: return 4 * 3;
-		case ShaderDataType::FLOAT4: return 4 * 4;
-		case ShaderDataType::INT: return 4;
-		case ShaderDataType::INT2: return 4 * 2;
-		case ShaderDataType::INT3: return 4 * 3;
-		case ShaderDataType::INT4: return 4 * 4;
-		case ShaderDataType::BOOL: return 4;
-		case ShaderDataType::MAT3: return 4 * 3 * 3;
-		case ShaderDataType::MAT4: return 4 * 4 * 4;
-		default: return 0;
+			case ShaderDataType::FLOAT: return 4;
+			case ShaderDataType::FLOAT2: return 8;
+			case ShaderDataType::FLOAT3: return 12;
+			case ShaderDataType::FLOAT4: return 16;
+			case ShaderDataType::INT: return 4;
+			case ShaderDataType::INT2: return 8;
+			case ShaderDataType::INT3: return 12;
+			case ShaderDataType::INT4: return 16;
+			case ShaderDataType::BOOL: return 1;
+			case ShaderDataType::MAT3: return 36;
+			case ShaderDataType::MAT4: return 64;
+			default: __debugbreak();
 		}
+		
+		return 0;
 	}
 
 	inline GTSL::uint8 ImageFormatChannelSize(const ImageFormat imageFormat)

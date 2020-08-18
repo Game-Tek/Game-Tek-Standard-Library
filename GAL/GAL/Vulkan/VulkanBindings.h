@@ -91,7 +91,7 @@ namespace GAL
 	public:
 		VulkanBindingsSet() = default;
 
-		struct BindingsSetUpdateInfo : RenderInfo
+		struct BindingsSetUpdateInfo final : VulkanRenderInfo
 		{
 			GTSL::Array<VulkanBindingsSetLayout::ImageBindingDescriptor, MAX_BINDINGS_PER_SET> ImageBindingsSetLayout;
 			GTSL::Array<VulkanBindingsSetLayout::BufferBindingDescriptor, MAX_BINDINGS_PER_SET> BufferBindingsSetLayout;

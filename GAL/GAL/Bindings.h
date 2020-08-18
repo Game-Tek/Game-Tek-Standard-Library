@@ -57,11 +57,6 @@ namespace GAL
 	class BindingsSet : public GALObject
 	{
 	public:
-		struct CreateInfo : RenderInfo
-		{
-		};
-		
-		~BindingsSet() = default;
 
 		//struct BindingsSetUpdateInfo : RenderInfo
 		//{
