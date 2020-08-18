@@ -52,6 +52,12 @@ void GAL::VulkanCommandBuffer::BeginRenderPass(const BeginRenderPassInfo& beginR
 	viewport.width = beginRenderPassInfo.RenderArea.Width;
 	viewport.height = beginRenderPassInfo.RenderArea.Height;
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+	VkRect2D scissor;
+	scissor.extent.width = beginRenderPassInfo.RenderArea.Width;
+	scissor.extent.height = beginRenderPassInfo.RenderArea.Height;
+	scissor.offset = { 0, 0 };
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 }
 
 void GAL::VulkanCommandBuffer::AdvanceSubPass(const AdvanceSubpassInfo& advanceSubpassInfo)

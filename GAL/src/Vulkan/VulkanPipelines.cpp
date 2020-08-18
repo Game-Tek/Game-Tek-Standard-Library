@@ -240,9 +240,9 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 
 	//  DYNAMIC STATE
 	VkPipelineDynamicStateCreateInfo vkPipelineDynamicStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
-	GTSL::Array<VkDynamicState, 1> vk_dynamic_states = { VK_DYNAMIC_STATE_VIEWPORT };
-	vkPipelineDynamicStateCreateInfo.dynamicStateCount = vk_dynamic_states.GetCapacity();
-	vkPipelineDynamicStateCreateInfo.pDynamicStates = vk_dynamic_states.begin();
+	GTSL::Array<VkDynamicState, 4> vkDynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+	vkPipelineDynamicStateCreateInfo.dynamicStateCount = vkDynamicStates.GetLength();
+	vkPipelineDynamicStateCreateInfo.pDynamicStates = vkDynamicStates.begin();
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
