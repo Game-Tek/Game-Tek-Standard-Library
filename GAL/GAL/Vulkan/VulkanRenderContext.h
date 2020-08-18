@@ -4,10 +4,13 @@
 
 #include "VulkanBindings.h"
 #include "VulkanImage.h"
-#include <GTSL\Pair.h>
+#include <GTSL/Pair.h>
 
 namespace GAL
 {
+	class VulkanQueue;
+	class VulkanSemaphore;
+
 	class VulkanSurface final : public Surface
 	{
 	public:
@@ -77,6 +80,13 @@ namespace GAL
 		 * \return Returns true if the contexts needs to be recreated.
 		 */
 		[[nodiscard]] GTSL::uint8 AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
+
+		struct PresentInfo final : VulkanRenderInfo
+		{
+			GTSL::Ranger<const VulkanSemaphore> WaitSemaphores;
+			GTSL::uint32 ImageIndex = 0;
+			const VulkanQueue* Queue = nullptr;
+		};
 		void Present(const PresentInfo& presentInfo);
 		
 		struct GetImagesInfo : VulkanRenderInfo

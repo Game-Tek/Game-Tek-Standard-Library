@@ -5,8 +5,6 @@
 #include <GTSL/Extent.h>
 #include <GTSL/Ranger.h>
 
-#include "Vulkan/VulkanSynchronization.h"
-
 namespace GAL
 {
 	class Window;
@@ -22,7 +20,7 @@ namespace GAL
 	};
 #endif
 	
-	class Surface : public GALObject
+	class Surface
 	{
 	public:
 		Surface() = default;
@@ -36,13 +34,5 @@ namespace GAL
 		//explicit RenderContext(const CreateInfo& createInfo);
 		
 		~RenderContext() = default;
-
-		struct PresentInfo : RenderInfo
-		{
-			const Queue* Queue = nullptr;
-			GTSL::Ranger<const class Semaphore> WaitSemaphores;
-			GTSL::uint8 ImageIndex{ 0 };
-		};
-		void Present(const PresentInfo& presentInfo);
 	};
 }

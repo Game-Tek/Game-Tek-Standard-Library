@@ -12,6 +12,11 @@ namespace GTSL
 		Extent2D(const uint16 width, const uint16 height) noexcept : Width(width), Height(height) {}
 
 		uint16 Width = 0, Height = 0;
+
+		bool operator==(const Extent2D& other) const { return Width == other.Width && Height == other.Height; }
+		bool operator!=(const Extent2D& other) const { return Width != other.Width && Height != other.Height; }
+		bool operator==(const uint16 other) const { return Width == other && Height == other; }
+		bool operator!=(const uint16 other) const { return Width != other && Height != other; }
 	};
 
 

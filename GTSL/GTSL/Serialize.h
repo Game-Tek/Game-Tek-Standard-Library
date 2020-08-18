@@ -44,13 +44,13 @@ namespace GTSL
 		Insert(map.capacity, buffer);
 		Insert(map.loadFactor, buffer);
 
-		for(uint32 keys_bucket = 0; keys_bucket < map.capacity; ++keys_bucket)
+		for(uint32 bucket = 0; bucket < map.capacity; ++bucket)
 		{
 			auto max_bucket_length = map.getMaxBucketLength();
-			Insert(map.getBucketLength(keys_bucket, max_bucket_length), buffer);
-			auto keys_bucket = map.getKeysBucket(keys_bucket, max_bucket_length);
+			Insert(map.getBucketLength(bucket, max_bucket_length), buffer);
+			auto keys_bucket = map.getKeysBucket(bucket, max_bucket_length);
 			for(auto e : keys_bucket) { Insert(e, buffer); }
-			auto values_bucket = map.getValuesBucket(keys_bucket, max_bucket_length);
+			auto values_bucket = map.getValuesBucket(bucket, max_bucket_length);
 			for(auto& e : values_bucket) { Insert(e, buffer); }
 		}
 	}
@@ -62,13 +62,13 @@ namespace GTSL
 		Extract(capacity, buffer);
 		Extract(load_factor, buffer);
 		
-		for (uint32 keys_bucket = 0; keys_bucket < capacity; ++keys_bucket)
+		for (uint32 bucket = 0; bucket < capacity; ++bucket)
 		{
 			auto max_bucket_length = map.getMaxBucketLength();
-			Extract(map.getBucketLength(keys_bucket, max_bucket_length), buffer);
-			auto keys_bucket = map.getKeysBucket(keys_bucket, max_bucket_length);
+			Extract(map.getBucketLength(bucket, max_bucket_length), buffer);
+			auto keys_bucket = map.getKeysBucket(bucket, max_bucket_length);
 			for (auto& e : keys_bucket) { Extract(e, buffer); }
-			auto values_bucket = map.getValuesBucket(keys_bucket, max_bucket_length);
+			auto values_bucket = map.getValuesBucket(bucket, max_bucket_length);
 			for (auto& e : values_bucket) { Extract(e, buffer); }
 		}
 	}
