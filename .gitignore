@@ -345,3 +345,5 @@ healthchecksdb
 #dirs
 bin/
 bin-int/
+
+*.ifc

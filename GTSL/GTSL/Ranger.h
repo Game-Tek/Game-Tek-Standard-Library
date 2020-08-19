@@ -13,6 +13,8 @@ namespace GTSL
 
 		Ranger() = default;
 
+		Ranger(const Ranger& other) noexcept : from(other.from), to(other.to) {}
+		
 		constexpr Ranger(T* start, T* end) noexcept : from(start), to(end)
 		{
 		}
@@ -21,8 +23,8 @@ namespace GTSL
 		{
 		}
 
-		template<typename TT>
-		Ranger(const Ranger<TT>& other) noexcept : from(static_cast<T*>(other.begin())), to(static_cast<T*>(other.end())) {}
+		//template<typename TT>
+		//Ranger(const Ranger<TT>& other) noexcept : from(static_cast<T*>(other.begin())), to(static_cast<T*>(other.end())) {}
 		
 		constexpr T* begin() noexcept { return from; }
 		constexpr T* end() noexcept { return to; }
@@ -31,7 +33,7 @@ namespace GTSL
 
 		[[nodiscard]] constexpr uint64 Bytes() const noexcept { return ((to - from) * sizeof(type)); }
 
-		[[nodiscard]] uint64 ElementCount() const { return to - from; }
+		[[nodiscard]] constexpr uint64 ElementCount() const { return to - from; }
 
 		//T* operator+(const uint64 i) const { return this->from + i; }
 		T* operator*(const uint64 i) const { return this->from * i; }
@@ -43,7 +45,10 @@ namespace GTSL
 		T& operator[](const uint64 i) { return this->from[i]; }
 		//T& operator[](const uint64 i) const { return this->from[i]; }
 
+		operator Ranger<const T>() const { return Ranger<const T>(static_cast<const T*>(this->from), static_cast<const T*>(this->to)); }
+
 	protected:
 		T* from = nullptr, * to = nullptr;
+		friend class Ranger;
 	};
 }

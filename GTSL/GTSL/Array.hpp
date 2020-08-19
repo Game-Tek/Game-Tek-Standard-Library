@@ -41,7 +41,7 @@ namespace GTSL
 		constexpr Array(std::initializer_list<T> list) noexcept : length(static_cast<uint32>(list.size()))
 		{
 			GTSL_ASSERT(list.size() <= CAPACITY, "Initializer list is bigger than array capacity!")
-			copyToData(list.begin(), this->length);
+			for (uint32 i = 0; i < list.size(); ++i) { this->data[i] = MoveRef(*(list.begin() + i)); }
 		}
 
 		constexpr explicit Array(const uint32 length) noexcept : length(length)
@@ -49,47 +49,66 @@ namespace GTSL
 			GTSL_ASSERT(length <= CAPACITY, "Array is not big enough to insert the elements requested!")
 		}
 
-		constexpr Array(const Ranger<T>& ranger) noexcept : length(static_cast<uint32>(ranger.ElementCount()))
+		constexpr Array(const Ranger<const T> ranger) noexcept : length(static_cast<uint32>(ranger.ElementCount()))
 		{
-			GTSL_ASSERT(ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
-			copyToData(ranger.begin(), ranger.ElementCount());
+			GTSL_ASSERT(ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!");
+			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { this->data[i] = ranger[i]; }
 		}
 
-		constexpr Array(const Ranger<const T>& ranger) noexcept : length(static_cast<uint32>(ranger.ElementCount()))
-		{
-			GTSL_ASSERT(ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
-			copyToData(ranger.begin(), ranger.ElementCount());
-		}
-
-		constexpr Array(const Array& other) noexcept : length(other.length) { copyToData(other.data, other.length); }
+		constexpr Array(const Array& other) noexcept : length(other.length) { for (uint32 i = 0; i < other.length; ++i) { this->data[i] = other[i]; } }
 
 		template<uint32 N>
 		constexpr Array(const Array<T, N>& other) noexcept : length(other.GetLength())
 		{
 			GTSL_ASSERT(other.GetLength() <= CAPACITY, "Other array has more elements than this can handle.")
-			copyToData(other.begin(), other.GetLength());
+			for (uint32 i = 0; i < other.length; ++i) { this->data[i] = other[i]; }
 		}
 
 		constexpr Array(Array&& other) noexcept : length(other.length)
 		{
-			copyToData(other.data, other.length);
+			for (uint32 i = 0; i < other.length; ++i) { this->data[i] = MoveRef(other[i]); }
 			for (auto& e : other) { e.~T(); }
 			other.length = 0;
 		}
 
 		constexpr Array& operator=(const Array& other) noexcept
 		{
-			copyToData(other.data, other.length);
+			for (uint32 i = 0; i < other.length; ++i) { this->data[i] = other[i]; }
+			length = other.length;
+			return *this;
+		}
+
+		template<uint32 CAP>
+		constexpr Array& operator=(const Array<T, CAP>& other) noexcept
+		{
+			for (uint32 i = 0; i < other.length; ++i) { this->data[i] = other[i]; }
 			length = other.length;
 			return *this;
 		}
 
 		constexpr Array& operator=(Array&& other) noexcept
 		{
-			copyToData(other.data, other.length);
+			for (uint32 i = 0; i < other.length; ++i) { this->data[i] = MoveRef(other[i]); }
 			length = other.length;
 			for (auto& e : other) { e.~T(); }
 			other.length = 0;
+			return *this;
+		}
+
+		template<uint32 CAP>
+		constexpr Array& operator=(Array<T, CAP>&& other) noexcept
+		{
+			for (uint32 i = 0; i < other.length; ++i) { this->data[i] = MoveRef(other[i]); }
+			length = other.length;
+			for (auto& e : other) { e.~T(); }
+			other.length = 0;
+			return *this;
+		}
+
+		constexpr Array& operator=(const Ranger<const T> ranger) noexcept
+		{
+			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { this->data[i] = ranger[i]; }
+			length = ranger.ElementCount();
 			return *this;
 		}
 
@@ -110,7 +129,7 @@ namespace GTSL
 			return this->data[i];
 		}
 
-		constexpr bool operator==(const Array& other)
+		constexpr bool operator==(const Array& other) const
 		{
 			for (iterator begin = this->begin(), begin_other = other.begin(); begin != this->end(); ++begin)
 			{
@@ -133,19 +152,10 @@ namespace GTSL
 			return this->length++;
 		}
 
-		constexpr uint32 PushBack(const Ranger<T>& ranger) noexcept
+		constexpr uint32 PushBack(const Ranger<const T> ranger) noexcept
 		{
 			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
-			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
-			auto ret = this->length;
-			this->length += static_cast<uint32>(ranger.ElementCount());
-			return ret;
-		}
-
-		constexpr uint32 PushBack(const Ranger<const T>& ranger) noexcept
-		{
-			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
-			copy(ranger.ElementCount(), ranger.begin(), this->data + this->length);
+			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { this->data[i] = ranger[i]; }
 			auto ret = this->length;
 			this->length += static_cast<uint32>(ranger.ElementCount());
 			return ret;
@@ -203,5 +213,7 @@ namespace GTSL
 		{
 			MemCopy(length * sizeof(T), from, to);
 		}
+
+		friend class Array;
 	};
 }

@@ -18,24 +18,9 @@ namespace GTSL
 			HashType primary_hash(525201411107845655ull);
 			HashType secondary_hash(0xAAAAAAAAAAAAAAAAull);
 
-			for (auto const& e : ranger)
+			for (uint32 i = 0; i < ranger.ElementCount() - 1; ++i)
 			{
-				primary_hash ^= e;					secondary_hash ^= e;
-				primary_hash *= 0x5bd1e9955bd1e995; secondary_hash *= 0x80638e;
-				primary_hash ^= primary_hash >> 47; secondary_hash ^= secondary_hash >> 35;
-			}
-
-			return (primary_hash & 0xFF00FF00FF00FF00ull) ^ (secondary_hash & 0x00FF00FF00FF00FFull);
-		}
-
-		static constexpr HashType hashString(const Ranger<UTF8>& ranger) noexcept
-		{
-			HashType primary_hash(525201411107845655ull);
-			HashType secondary_hash(0xAAAAAAAAAAAAAAAAull);
-
-			for (auto const& e : ranger)
-			{
-				primary_hash ^= e;					secondary_hash ^= e;
+				primary_hash ^= ranger[i];			secondary_hash ^= ranger[i];
 				primary_hash *= 0x5bd1e9955bd1e995; secondary_hash *= 0x80638e;
 				primary_hash ^= primary_hash >> 47; secondary_hash ^= secondary_hash >> 35;
 			}
@@ -50,7 +35,6 @@ namespace GTSL
 		constexpr Id64(const char(&string)[N]) noexcept : hashValue(hashString(GTSL::Ranger<const UTF8>(N - 1, string))) {}
 		
 		constexpr Id64(const Ranger<const UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
-		constexpr Id64(const Ranger<UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
 		constexpr Id64(const char* text) noexcept : hashValue(hashString(GTSL::Ranger<const UTF8>(StringLength(text) - 1, text))) {}
 		constexpr Id64(const HashType id) noexcept : hashValue(id) {}
 		constexpr Id64(const Id64& other) noexcept = default;
