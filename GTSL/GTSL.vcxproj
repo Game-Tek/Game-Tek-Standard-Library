@@ -91,7 +91,6 @@
     <ClInclude Include="Math\Vector4.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GTSL\StaticMap.ixx" />
     <ClCompile Include="src\Allocator.cpp" />
     <ClCompile Include="src\ArrayCommon.ixx" />
     <ClCompile Include="src\Console.cpp" />
