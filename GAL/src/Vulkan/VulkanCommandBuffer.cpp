@@ -149,7 +149,7 @@ void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& co
 	//region.imageOffset = Extent3DToVkExtent3D(copyImageToBufferInfo.Offset);
 	region.imageExtent = Extent3DToVkExtent3D(copyBufferToImageInfo.Extent);
 	vkCmdCopyBufferToImage(commandBuffer, copyBufferToImageInfo.SourceBuffer->GetVkBuffer(), copyBufferToImageInfo.DestinationImage->GetVkImage(),
-		static_cast<VkImageLayout>(copyBufferToImageInfo.ImageLayout), 1, &region);
+		static_cast<VkImageLayout>(copyBufferToImageInfo.TextureLayout), 1, &region);
 }
 
 void GAL::VulkanCommandBuffer::TransitionImage(const TransitionImageInfo& transitionImageInfo)

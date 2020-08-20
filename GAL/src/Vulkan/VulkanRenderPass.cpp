@@ -19,8 +19,8 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 		vkAttachmentDescriptions[i].storeOp = RenderTargetStoreOperationsToVkAttachmentStoreOp(createInfo.Descriptor.RenderPassColorAttachments[i].StoreOperation);
 		vkAttachmentDescriptions[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		vkAttachmentDescriptions[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		vkAttachmentDescriptions[i].initialLayout = ImageLayoutToVkImageLayout(createInfo.Descriptor.RenderPassColorAttachments[i].InitialLayout);
-		vkAttachmentDescriptions[i].finalLayout = ImageLayoutToVkImageLayout(createInfo.Descriptor.RenderPassColorAttachments[i].FinalLayout);
+		vkAttachmentDescriptions[i].initialLayout = static_cast<VkImageLayout>(createInfo.Descriptor.RenderPassColorAttachments[i].InitialLayout);
+		vkAttachmentDescriptions[i].finalLayout = static_cast<VkImageLayout>(createInfo.Descriptor.RenderPassColorAttachments[i].FinalLayout);
 	}
 	if (depth_attachment)
 	{
@@ -32,8 +32,8 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 		vkAttachmentDescriptions[vkAttachmentDescriptions.GetLength() - 1].storeOp = RenderTargetStoreOperationsToVkAttachmentStoreOp(createInfo.Descriptor.DepthStencilAttachment.StoreOperation);
 		vkAttachmentDescriptions[vkAttachmentDescriptions.GetLength() - 1].stencilLoadOp = RenderTargetLoadOperationsToVkAttachmentLoadOp(createInfo.Descriptor.DepthStencilAttachment.LoadOperation);
 		vkAttachmentDescriptions[vkAttachmentDescriptions.GetLength() - 1].stencilStoreOp = RenderTargetStoreOperationsToVkAttachmentStoreOp(createInfo.Descriptor.DepthStencilAttachment.StoreOperation);
-		vkAttachmentDescriptions[vkAttachmentDescriptions.GetLength() - 1].initialLayout = ImageLayoutToVkImageLayout(createInfo.Descriptor.DepthStencilAttachment.InitialLayout);
-		vkAttachmentDescriptions[vkAttachmentDescriptions.GetLength() - 1].finalLayout = ImageLayoutToVkImageLayout(createInfo.Descriptor.DepthStencilAttachment.FinalLayout);
+		vkAttachmentDescriptions[vkAttachmentDescriptions.GetLength() - 1].initialLayout = static_cast<VkImageLayout>(createInfo.Descriptor.DepthStencilAttachment.InitialLayout);
+		vkAttachmentDescriptions[vkAttachmentDescriptions.GetLength() - 1].finalLayout = static_cast<VkImageLayout>(createInfo.Descriptor.DepthStencilAttachment.FinalLayout);
 	}
 
 
@@ -61,7 +61,7 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 			else
 			{
 				writeAttachmentsReferences[SUBPASS + ATT].attachment = createInfo.Descriptor.SubPasses[SUBPASS].WriteColorAttachments[ATT].Index;
-				writeAttachmentsReferences[SUBPASS + ATT].layout = ImageLayoutToVkImageLayout(createInfo.Descriptor.SubPasses[SUBPASS].WriteColorAttachments[ATT].Layout);
+				writeAttachmentsReferences[SUBPASS + ATT].layout = static_cast<VkImageLayout>(createInfo.Descriptor.SubPasses[SUBPASS].WriteColorAttachments[ATT].Layout);
 
 				++write_attachments_count;
 				++written_attachment_references_this_subpass_loop;
@@ -78,7 +78,7 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 			else
 			{
 				readAttachmentsReferences[SUBPASS + ATT].attachment = createInfo.Descriptor.SubPasses[SUBPASS].ReadColorAttachments[ATT].Index;
-				readAttachmentsReferences[SUBPASS + ATT].layout = ImageLayoutToVkImageLayout(createInfo.Descriptor.SubPasses[SUBPASS].ReadColorAttachments[ATT].Layout);
+				readAttachmentsReferences[SUBPASS + ATT].layout = static_cast<VkImageLayout>(createInfo.Descriptor.SubPasses[SUBPASS].ReadColorAttachments[ATT].Layout);
 
 				++read_attachments_count;
 				++written_attachment_references_this_subpass_loop;
@@ -103,7 +103,7 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 		if (createInfo.Descriptor.SubPasses[SUBPASS].DepthAttachmentReference)
 		{
 			depthAttachmentReferences[SUBPASS].attachment = createInfo.Descriptor.SubPasses[SUBPASS].DepthAttachmentReference->Index;
-			depthAttachmentReferences[SUBPASS].layout = ImageLayoutToVkImageLayout(createInfo.Descriptor.SubPasses[SUBPASS].DepthAttachmentReference->Layout);
+			depthAttachmentReferences[SUBPASS].layout = static_cast<VkImageLayout>(createInfo.Descriptor.SubPasses[SUBPASS].DepthAttachmentReference->Layout);
 		}
 		else
 		{

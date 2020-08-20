@@ -74,23 +74,23 @@ namespace GAL
 		}
 	}
 
-	inline VkImageLayout ImageLayoutToVkImageLayout(const ImageLayout imageLayout)
-	{
-		switch (imageLayout)
-		{
-		case ImageLayout::UNDEFINED: return VK_IMAGE_LAYOUT_UNDEFINED;
-		case ImageLayout::SHADER_READ: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		case ImageLayout::GENERAL: return VK_IMAGE_LAYOUT_GENERAL;
-		case ImageLayout::COLOR_ATTACHMENT: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		case ImageLayout::DEPTH_STENCIL_ATTACHMENT: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		case ImageLayout::DEPTH_STENCIL_READ_ONLY: return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
-		case ImageLayout::TRANSFER_SOURCE: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		case ImageLayout::TRANSFER_DESTINATION: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		case ImageLayout::PREINITIALIZED: return VK_IMAGE_LAYOUT_PREINITIALIZED;
-		case ImageLayout::PRESENTATION: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-		default: return VK_IMAGE_LAYOUT_MAX_ENUM;
-		}
-	}
+	//inline VkImageLayout ImageLayoutToVkImageLayout(const TextureLayout textureLayout)
+	//{
+	//	switch (textureLayout)
+	//	{
+	//	case TextureLayout::UNDEFINED: return VK_IMAGE_LAYOUT_UNDEFINED;
+	//	case TextureLayout::SHADER_READ: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	//	case TextureLayout::GENERAL: return VK_IMAGE_LAYOUT_GENERAL;
+	//	case TextureLayout::COLOR_ATTACHMENT: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	//	case TextureLayout::DEPTH_STENCIL_ATTACHMENT: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	//	case TextureLayout::DEPTH_STENCIL_READ_ONLY: return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
+	//	case TextureLayout::TRANSFER_SOURCE: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+	//	case TextureLayout::TRANSFER_DESTINATION: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	//	case TextureLayout::PREINITIALIZED: return VK_IMAGE_LAYOUT_PREINITIALIZED;
+	//	case TextureLayout::PRESENTATION: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	//	default: return VK_IMAGE_LAYOUT_MAX_ENUM;
+	//	}
+	//}
 
 	inline VkPipelineStageFlags PipelineStageToVkPipelineStageFlags(const GTSL::uint32 pipeline)
 	{
@@ -124,28 +124,6 @@ namespace GAL
 	inline VkExtent3D Extent3DToVkExtent3D(const GTSL::Extent3D extent)
 	{
 		return { extent.Width, extent.Height, extent.Depth };
-	}
-
-	inline VkImageViewType ImageDimensionsToVkImageViewType(const ImageDimensions imageDimensions)
-	{
-		switch (imageDimensions)
-		{
-		case ImageDimensions::IMAGE_1D: return VK_IMAGE_VIEW_TYPE_1D;
-		case ImageDimensions::IMAGE_2D: return VK_IMAGE_VIEW_TYPE_2D;
-		case ImageDimensions::IMAGE_3D: return VK_IMAGE_VIEW_TYPE_3D;
-		default: return VK_IMAGE_VIEW_TYPE_MAX_ENUM;
-		}
-	}
-
-	inline VkImageType ImageDimensionsToVkImageType(const ImageDimensions imageDimensions)
-	{
-		switch (imageDimensions)
-		{
-		case ImageDimensions::IMAGE_1D: return VK_IMAGE_TYPE_1D;
-		case ImageDimensions::IMAGE_2D: return VK_IMAGE_TYPE_2D;
-		case ImageDimensions::IMAGE_3D: return VK_IMAGE_TYPE_3D;
-		default: return VK_IMAGE_TYPE_MAX_ENUM;
-		}
 	}
 
 	inline GTSL::uint32 ImageTypeToVkImageAspectFlagBits(const ImageType imageType)
@@ -234,7 +212,24 @@ namespace GAL
 		static constexpr value_type TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, SAMPLE = 4, STORAGE = 8, COLOR_ATTACHMENT = 16, DEPTH_STENCIL_ATTACHMENT = 32, TRANSIENT_ATTACHMENT = 64, INPUT_ATTACHMENT = 128;
 	};
 
-	enum class VulkanImageLayout
+	enum class VulkanDimensions
+	{
+		LINEAR = 0, SQUARE = 1, CUBE = 2
+	};
+
+	inline VulkanDimensions DimensionsToVulkanDimension(const Dimension dimension)
+	{
+		switch (dimension)
+		{
+		case Dimension::LINEAR: return VulkanDimensions::LINEAR;
+		case Dimension::SQUARE: return VulkanDimensions::SQUARE;
+		case Dimension::CUBE: return VulkanDimensions::CUBE;
+		}
+
+		GAL_DEBUG_BREAK;
+	}
+
+	enum class VulkanTextureLayout
 	{
 		UNDEFINED = 0,
 		GENERAL = 1,

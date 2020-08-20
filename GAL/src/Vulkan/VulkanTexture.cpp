@@ -7,13 +7,13 @@
 GAL::VulkanTexture::VulkanTexture(const CreateInfo& createInfo)
 {
 	VkImageCreateInfo vk_image_create_info{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	vk_image_create_info.imageType = ImageDimensionsToVkImageType(createInfo.Dimensions);
+	vk_image_create_info.imageType = static_cast<VkImageType>(createInfo.Dimensions);
 	vk_image_create_info.extent = Extent3DToVkExtent3D(createInfo.Extent);
 	vk_image_create_info.mipLevels = createInfo.MipLevels;
 	vk_image_create_info.arrayLayers = 1;
 	vk_image_create_info.format = static_cast<VkFormat>(createInfo.SourceFormat);
 	vk_image_create_info.tiling = static_cast<VkImageTiling>(createInfo.ImageTiling);
-	vk_image_create_info.initialLayout = VkImageLayout(createInfo.InitialLayout);
+	vk_image_create_info.initialLayout = static_cast<VkImageLayout>(createInfo.InitialLayout);
 	vk_image_create_info.usage = createInfo.ImageUses;
 	vk_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 	vk_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -37,7 +37,7 @@ GAL::VulkanTextureView::VulkanTextureView(const CreateInfo& createInfo)
 {
 	VkImageViewCreateInfo vk_image_view_create_info{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	vk_image_view_create_info.image = createInfo.Image->GetVkImage();
-	vk_image_view_create_info.viewType = ImageDimensionsToVkImageViewType(createInfo.Dimensions);
+	vk_image_view_create_info.viewType = static_cast<VkImageViewType>(createInfo.Dimensions);
 	vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 	vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 	vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;

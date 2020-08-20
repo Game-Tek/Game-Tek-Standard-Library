@@ -122,7 +122,7 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 			vk_descriptor_image_infos[image_set].EmplaceBack();
 			
 			vk_descriptor_image_infos[image_set][i].imageView = e.ImageViews[i].GetVkImageView();
-			vk_descriptor_image_infos[image_set][i].imageLayout = ImageLayoutToVkImageLayout(e.Layouts[i]);
+			vk_descriptor_image_infos[image_set][i].imageLayout = static_cast<VkImageLayout>(e.Layouts[i]);
 			vk_descriptor_image_infos[image_set][i].sampler = e.Samplers[i].GetVkSampler();
 		}
 

@@ -133,7 +133,7 @@ namespace GAL
 		{
 			const VulkanBuffer* SourceBuffer{ nullptr };
 			TextureFormat SourceImageFormat;
-			VulkanImageLayout ImageLayout;
+			VulkanTextureLayout TextureLayout;
 			const VulkanTexture* DestinationImage{ nullptr };
 
 			GTSL::Extent3D Extent;
@@ -144,7 +144,7 @@ namespace GAL
 		struct TransitionImageInfo : VulkanRenderInfo
 		{
 			const VulkanTexture* Texture{ nullptr };
-			VulkanImageLayout SourceLayout, DestinationLayout;
+			VulkanTextureLayout SourceLayout, DestinationLayout;
 			GTSL::uint32 SourceStage, DestinationStage;
 			AccessFlags SourceAccessFlags, DestinationAccessFlags;
 		};

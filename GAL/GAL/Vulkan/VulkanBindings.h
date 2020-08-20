@@ -60,7 +60,7 @@ namespace GAL
 		{
 			GTSL::Ranger<const class VulkanTextureView> ImageViews;
 			GTSL::Ranger<const class VulkanSampler> Samplers;
-			GTSL::Ranger<const ImageLayout> Layouts;
+			GTSL::Ranger<const VulkanTextureLayout> Layouts;
 		};
 
 		struct BufferBindingDescriptor : BindingDescriptor

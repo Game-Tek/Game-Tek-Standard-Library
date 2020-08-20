@@ -13,12 +13,12 @@ namespace GAL
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			VulkanImageLayout InitialLayout;
+			VulkanTextureLayout InitialLayout;
 			GTSL::uint32 ImageUses{ 0 };
 			GTSL::uint32 SourceFormat{ 0 };
 			GTSL::Extent3D Extent{ 1280, 720, 1 };
 			GTSL::uint32 ImageTiling{ 0 };
-			ImageDimensions Dimensions;
+			VulkanDimensions Dimensions;
 			GTSL::uint8 MipLevels{ 1 };
 		};
 		explicit VulkanTexture(const CreateInfo& createInfo);
@@ -50,7 +50,7 @@ namespace GAL
 			const VulkanTexture* Image{ nullptr };
 			GTSL::uint32 SourceFormat{ 0 };
 			GTSL::Extent2D Extent{ 1280, 720 };
-			ImageDimensions Dimensions;
+			VulkanDimensions Dimensions;
 			GTSL::uint8 MipLevels{ 1 };
 			ImageType Type;
 		};

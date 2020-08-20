@@ -73,7 +73,7 @@ namespace GAL
 	// IMAGE
 
 	//Specifies all available image layouts.
-	enum class ImageLayout : GTSL::uint8
+	enum class TextureLayout : GTSL::uint8
 	{
 		UNDEFINED,
 		GENERAL,
@@ -87,11 +87,11 @@ namespace GAL
 		PRESENTATION
 	};
 	
-	enum class ImageDimensions : GTSL::uint8
+	enum class Dimension : GTSL::uint8
 	{
-		IMAGE_1D,
-		IMAGE_2D,
-		IMAGE_3D
+		LINEAR,
+		SQUARE,
+		CUBE
 	};
 
 	enum class ImageType : GTSL::uint8
