@@ -42,34 +42,32 @@ namespace GTSL
 	void Insert(const FlatHashMap<T, ALLOCATOR>& map, Buffer& buffer)
 	{
 		Insert(map.capacity, buffer);
-		Insert(map.loadFactor, buffer);
+		Insert(map.maxBucketLength, buffer);
 
 		for(uint32 bucket = 0; bucket < map.capacity; ++bucket)
 		{
-			auto max_bucket_length = map.getMaxBucketLength();
-			Insert(map.getBucketLength(bucket, max_bucket_length), buffer);
-			auto keys_bucket = map.getKeysBucket(bucket, max_bucket_length);
-			for(auto e : keys_bucket) { Insert(e, buffer); }
-			auto values_bucket = map.getValuesBucket(bucket, max_bucket_length);
-			for(auto& e : values_bucket) { Insert(e, buffer); }
+			Insert(map.getBucketLength(bucket), buffer);
+			auto keysBucket = map.getKeysBucket(bucket);
+			for(auto e : keysBucket) { Insert(e, buffer); }
+			auto valuesBucket = map.getValuesBucket(bucket);
+			for(auto& e : valuesBucket) { Insert(e, buffer); }
 		}
 	}
 
 	template<typename T, class ALLOCATOR>
 	void Extract(FlatHashMap<T, ALLOCATOR>& map, Buffer& buffer)
 	{
-		uint32 capacity{ 0 }; float32 load_factor = 0;
+		uint32 capacity{ 0 }, maxBucketLength = 0;
 		Extract(capacity, buffer);
-		Extract(load_factor, buffer);
+		Extract(maxBucketLength, buffer);
 		
 		for (uint32 bucket = 0; bucket < capacity; ++bucket)
 		{
-			auto max_bucket_length = map.getMaxBucketLength();
-			Extract(map.getBucketLength(bucket, max_bucket_length), buffer);
-			auto keys_bucket = map.getKeysBucket(bucket, max_bucket_length);
-			for (auto& e : keys_bucket) { Extract(e, buffer); }
-			auto values_bucket = map.getValuesBucket(bucket, max_bucket_length);
-			for (auto& e : values_bucket) { Extract(e, buffer); }
+			Extract(map.getBucketLength(bucket), buffer);
+			auto keysBucket = map.getKeysBucket(bucket);
+			for (auto& e : keysBucket) { Extract(e, buffer); }
+			auto valuesBucket = map.getValuesBucket(bucket);
+			for (auto& e : valuesBucket) { Extract(e, buffer); }
 		}
 	}
 }
