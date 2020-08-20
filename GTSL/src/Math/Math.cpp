@@ -5,33 +5,29 @@
 
 using namespace GTSL;
 
-#if (_WIN64)
-void Math::RoundDown(const uint64 x, const uint32 multiple, uint32& quotient, uint32& remainder) { quotient = _udiv64(x, multiple, &remainder); }
-#endif
-
 float32 Math::Power(const float32 x, const float32 y) { return powf(x, y); }
 
 float32 Math::Log10(const float32 x) { return log10f(x); }
 
-float32 Math::Sine(const float32 Degrees) { return sinf(DegreesToRadians(Degrees)); }
+float32 Math::Sine(const float32 radians) { return sinf(radians); }
 
-float64 Math::Sine(const float64 Degrees) { return sin(DegreesToRadians(Degrees)); }
+float64 Math::Sine(const float64 radians) { return sin(radians); }
 
-float32 Math::Cosine(const float32 Degrees) { return cosf(DegreesToRadians(Degrees)); }
+float32 Math::Cosine(const float32 radians) { return cosf(radians); }
 
-float64 Math::Cosine(const float64 Degrees) { return cos(DegreesToRadians(Degrees)); }
+float64 Math::Cosine(const float64 radians) { return cos(radians); }
 
-float32 Math::Tangent(const float32 Degrees) { return tanf(DegreesToRadians(Degrees)); }
+float32 Math::Tangent(const float32 radians) { return tanf(radians); }
 
-float64 Math::Tangent(const float64 Degrees) { return tan(DegreesToRadians(Degrees)); }
+float64 Math::Tangent(const float64 radians) { return tan(radians); }
 
-float32 Math::ArcSine(const float32 A) {	return RadiansToDegrees(asin(A)); }
+float32 Math::ArcSine(const float32 A) {	return asin(A); }
 
-float32 Math::ArcCosine(const float32 A) { return RadiansToDegrees(acos(A)); }
+float32 Math::ArcCosine(const float32 A) { return acos(A); }
 
-float32 Math::ArcTangent(const float32 A) { return RadiansToDegrees(atan(A)); }
+float32 Math::ArcTangent(const float32 A) { return atan(A); }
 
-float32 Math::ArcTan2(const float32 X, const float32 Y) { return RadiansToDegrees(atan2(Y, X)); }
+float32 Math::ArcTan2(const float32 X, const float32 Y) { return atan2(Y, X); }
 
 float32 Math::LengthSquared(const Vector2& a)
 {

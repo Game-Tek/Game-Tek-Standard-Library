@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <immintrin.h>
+
 #include "GTSL/Core.h"
 
 #include "Vector2.h"
@@ -61,7 +63,7 @@ namespace GTSL
 		static float32 Modulo(const float32 A, const float32 B)
 		{
 			const float32 C = A / B;
-			return (C - static_cast<int32>(C)) * B;
+			return (C - static_cast<float32>(static_cast<int32>(C))) * B;
 		}
 
 		static uint32 Fact(const int8 A)
@@ -76,19 +78,31 @@ namespace GTSL
 			return result;
 		}
 
-		static uint64 PowerOf2RoundUp(const uint64 number, const uint32 alignment) { return (number + alignment - 1) & -static_cast<int64>(alignment); }
-
 #if (!_WIN64)
 		static void RoundDown(const uint64 x, const uint64 multiple, uint64& quotient, uint64& remainder) { const uint64 rem = x % multiple; remainder = rem; quotient = x - rem; }
 #endif
-		static void RoundDown(uint64 x, uint32 multiple, uint32& quotient, uint32& remainder);
+#if (_WIN64)
+		static void RoundDown(const uint64 x, const uint32 multiple, uint32& quotient, uint32& remainder) { quotient = _udiv64(x, multiple, &remainder); }
+#endif
 
-		static bool IsPowerOfTwo(const uint64 n) {return (n & (n - 1)) == 0; }
+		static bool IsPowerOfTwo(const uint64 n) { return (n & (n - 1)) == 0; }
 		
-		static uint64 RoundUpToPowerOf2Multiple(const uint64 n, const uint64 multiple)
+		static uint64 PowerOf2RoundUp(const uint64 n, const uint64 powerOfTwo)
 		{
-			GTSL_ASSERT(IsPowerOfTwo(multiple), "Is not multiple of two!");
-			return n + (multiple - 1) & ~(multiple - 1);
+			GTSL_ASSERT(IsPowerOfTwo(powerOfTwo), "Is not multiple of two!")
+			return n + (powerOfTwo - 1) & ~(powerOfTwo - 1);
+		}
+
+		static uint32 PowerOf2RoundUp(const uint32 n, const uint32 powerOfTwo)
+		{
+			GTSL_ASSERT(IsPowerOfTwo(powerOfTwo), "Is not multiple of two!")
+			return n + (powerOfTwo - 1) & ~(powerOfTwo - 1);
+		}
+
+		static uint16 PowerOf2RoundUp(const uint16 n, const uint16 powerOfTwo)
+		{
+			GTSL_ASSERT(IsPowerOfTwo(powerOfTwo), "Is not multiple of two!")
+			return n + (powerOfTwo - 1) & ~(powerOfTwo - 1);
 		}
 		
 		static uint64 RoundUp(const uint64 number, const uint32 multiple)
@@ -112,64 +126,64 @@ namespace GTSL
 
 		/**
 		 * \brief Returns the sine of an angle.
-		 * \param Degrees Angle in degrees.
-		 * \return Sine of Degrees
+		 * \param radians Angle in radians.
+		 * \return Sine of radians
 		 */
-		static float32 Sine(float32 Degrees);
+		static float32 Sine(float32 radians);
 
 		/**
 		 * \brief Returns the sine of an angle.
-		 * \param Degrees Angle in degrees.
-		 * \return Sine of Degrees
+		 * \param radians Angle in radians.
+		 * \return Sine of radians
 		 */
-		static float64 Sine(float64 Degrees);
+		static float64 Sine(float64 radians);
 
 		/**
 		* \brief Returns the cosine of an angle.
-		* \param Degrees Angle in degrees.
-		* \return Cosine of Degrees
+		* \param radians Angle in radians.
+		* \return Cosine of radians
 		*/
-		static float32 Cosine(float32 Degrees);
+		static float32 Cosine(float32 radians);
 
 		/**
 		* \brief Returns the cosine of an angle.
-		* \param Degrees Angle in degrees.
-		* \return Cosine of Degrees
+		* \param radians Angle in radians.
+		* \return Cosine of radians
 		*/
-		static float64 Cosine(float64 Degrees);
+		static float64 Cosine(float64 radians);
 
 		/**
 		* \brief Returns the tangent of an angle.
-		* \param Degrees Angle in degrees.
-		* \return Tangent of Degrees
+		* \param radians Angle in radians.
+		* \return Tangent of radians
 		*/
-		static float32 Tangent(float32 Degrees);
+		static float32 Tangent(float32 radians);
 
 		/**
 		* \brief Returns the tangent of an angle.
-		* \param Degrees Angle in degrees.
-		* \return Tangent of Degrees
+		* \param radians Angle in radians.
+		* \return Tangent of radians
 		*/
-		static float64 Tangent(float64 Degrees);
+		static float64 Tangent(float64 radians);
 
 		/**
-		* \brief Returns the arcsine of A in degrees.
-		* \param A
-		* \return Degrees of A
+		* \brief Returns the arcsine of A in radians.
+		* \param A value
+		* \return Radians of A
 		*/
 		static float32 ArcSine(float32 A);
 
 		/**
-		* \brief Returns the arccosine of A in degrees.
-		* \param A
-		* \return Degrees of A
+		* \brief Returns the arccosine of A in radians.
+		* \param A value
+		* \return Radians of A
 		*/
 		static float32 ArcCosine(float32 A);
 
 		/**
-		* \brief Returns the arctangent of A in degrees.
-		* \param A
-		* \return Degrees of A
+		* \brief Returns the arctangent of A in radians.
+		* \param A value
+		* \return Radians of A
 		*/
 		static float32 ArcTangent(float32 A);
 
