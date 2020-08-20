@@ -231,7 +231,7 @@ namespace GAL
 		ACCELERATION_STRUCTURE = 11
 	};
 	
-	enum class ImageFormat
+	enum class TextureFormat
 	{
 		UNDEFINED = 0,
 
@@ -297,55 +297,55 @@ namespace GAL
 		return 0;
 	}
 
-	inline GTSL::uint8 ImageFormatChannelSize(const ImageFormat imageFormat)
+	inline GTSL::uint8 ImageFormatChannelSize(const TextureFormat imageFormat)
 	{
 		switch (imageFormat)
 		{
-		case ImageFormat::RGBA_I8: return 1;
-		case ImageFormat::RGB_I8: return 1;
+		case TextureFormat::RGBA_I8: return 1;
+		case TextureFormat::RGB_I8: return 1;
 		default: __debugbreak();
 		}
 		return 0;
 	}
 
-	inline GTSL::uint8 ImageFormatChannelCount(const ImageFormat imageFormat)
+	inline GTSL::uint8 ImageFormatChannelCount(const TextureFormat imageFormat)
 	{
 		switch (imageFormat)
 		{
-		case ImageFormat::RGBA_I8: return 4;
-		case ImageFormat::RGB_I8: return 3;
+		case TextureFormat::RGBA_I8: return 4;
+		case TextureFormat::RGB_I8: return 3;
 		default: __debugbreak();
 		}
 		return 0;
 	}
 
-	inline GTSL::uint8 ImageFormatSize(const  ImageFormat imageFormat)
+	inline GTSL::uint8 ImageFormatSize(const  TextureFormat imageFormat)
 	{
 		switch (imageFormat)
 		{
-		case ImageFormat::R_I8: break;
-		case ImageFormat::R_I16: break;
-		case ImageFormat::R_I32: break;
-		case ImageFormat::R_I64: break;
-		case ImageFormat::RG_I8: break;
-		case ImageFormat::RG_I16: break;
-		case ImageFormat::RG_I32: break;
-		case ImageFormat::RG_I64: break;
-		case ImageFormat::RGB_I8: break;
-		case ImageFormat::RGB_I16: break;
-		case ImageFormat::RGB_I32: break;
-		case ImageFormat::RGB_I64: break;
-		case ImageFormat::RGBA_I8: return 1 * 4;
-		case ImageFormat::RGBA_I16: break;
-		case ImageFormat::RGBA_I32: break;
-		case ImageFormat::RGBA_I64: break;
-		case ImageFormat::BGRA_I8: break;
-		case ImageFormat::BGR_I8: break;
-		case ImageFormat::DEPTH16: break;
-		case ImageFormat::DEPTH32: break;
-		case ImageFormat::DEPTH16_STENCIL8: break;
-		case ImageFormat::DEPTH24_STENCIL8: break;
-		case ImageFormat::DEPTH32_STENCIL8: break;
+		case TextureFormat::R_I8: break;
+		case TextureFormat::R_I16: break;
+		case TextureFormat::R_I32: break;
+		case TextureFormat::R_I64: break;
+		case TextureFormat::RG_I8: break;
+		case TextureFormat::RG_I16: break;
+		case TextureFormat::RG_I32: break;
+		case TextureFormat::RG_I64: break;
+		case TextureFormat::RGB_I8: break;
+		case TextureFormat::RGB_I16: break;
+		case TextureFormat::RGB_I32: break;
+		case TextureFormat::RGB_I64: break;
+		case TextureFormat::RGBA_I8: return 1 * 4;
+		case TextureFormat::RGBA_I16: break;
+		case TextureFormat::RGBA_I32: break;
+		case TextureFormat::RGBA_I64: break;
+		case TextureFormat::BGRA_I8: break;
+		case TextureFormat::BGR_I8: break;
+		case TextureFormat::DEPTH16: break;
+		case TextureFormat::DEPTH32: break;
+		case TextureFormat::DEPTH16_STENCIL8: break;
+		case TextureFormat::DEPTH24_STENCIL8: break;
+		case TextureFormat::DEPTH32_STENCIL8: break;
 		default: __debugbreak();
 		}
 		return 0;

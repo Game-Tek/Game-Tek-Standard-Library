@@ -28,7 +28,7 @@ namespace GAL
 		 * \param imageExtent 
 		 * \param buffer 
 		 */
-		static void ConvertImageToFormat(const ImageFormat sourceImageFormat, const ImageFormat targetImageFormat, const GTSL::Extent2D imageExtent, GTSL::AlignedPointer<GTSL::byte, 16> buffer, GTSL::uint32 alphaValue)
+		static void ConvertImageToFormat(const TextureFormat sourceImageFormat, const TextureFormat targetImageFormat, const GTSL::Extent2D imageExtent, GTSL::AlignedPointer<GTSL::byte, 16> buffer, GTSL::uint32 alphaValue)
 		{
 			const auto source_format_size{ ImageFormatSize(sourceImageFormat) }; const auto target_format_size{ ImageFormatSize(targetImageFormat) };
 			const GTSL::uint64 target_texture_size = GetImageSize(target_format_size, imageExtent);

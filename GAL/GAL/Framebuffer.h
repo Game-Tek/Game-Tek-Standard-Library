@@ -13,8 +13,8 @@ namespace GAL
 
 	struct FramebufferAttachments
 	{
-		GTSL::Array<ImageFormat, 8> ColorAttachmentsFormat;
-		ImageFormat DepthStencilFormat = ImageFormat::DEPTH16_STENCIL8;
+		GTSL::Array<TextureFormat, 8> ColorAttachmentsFormat;
+		TextureFormat DepthStencilFormat = TextureFormat::DEPTH16_STENCIL8;
 		class Image* Images = nullptr;
 	};
 
