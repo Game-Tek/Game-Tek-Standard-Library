@@ -1,7 +1,7 @@
 #include "GAL/Vulkan/VulkanBindings.h"
 
 #include "GAL/Vulkan/VulkanRenderDevice.h"
-#include "GAL/Vulkan/VulkanImage.h"
+#include "GAL/Vulkan/VulkanTexture.h"
 #include "GAL/Vulkan/VulkanBuffer.h"
 
 GAL::VulkanBindingsPool::VulkanBindingsPool(const CreateInfo& createInfo)

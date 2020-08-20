@@ -1,10 +1,10 @@
-#include "GAL/Vulkan/VulkanImage.h"
+#include "GAL/Vulkan/VulkanTexture.h"
 
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
 #include "GAL/Vulkan/VulkanMemory.h"
 
-GAL::VulkanImage::VulkanImage(const CreateInfo& createInfo)
+GAL::VulkanTexture::VulkanTexture(const CreateInfo& createInfo)
 {
 	VkImageCreateInfo vk_image_create_info{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	vk_image_create_info.imageType = ImageDimensionsToVkImageType(createInfo.Dimensions);
@@ -22,18 +22,18 @@ GAL::VulkanImage::VulkanImage(const CreateInfo& createInfo)
 	SET_NAME(image, VK_OBJECT_TYPE_IMAGE, createInfo);
 }
 
-void GAL::VulkanImage::Destroy(const VulkanRenderDevice* renderDevice)
+void GAL::VulkanTexture::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroyImage(renderDevice->GetVkDevice(), image, renderDevice->GetVkAllocationCallbacks());
 	debugClear(image);
 }
 
-void GAL::VulkanImage::BindToMemory(const BindMemoryInfo& bindMemoryInfo) const
+void GAL::VulkanTexture::BindToMemory(const BindMemoryInfo& bindMemoryInfo) const
 {
 	VK_CHECK(vkBindImageMemory(bindMemoryInfo.RenderDevice->GetVkDevice(), image, static_cast<VkDeviceMemory>(bindMemoryInfo.Memory->GetVkDeviceMemory()), bindMemoryInfo.Offset));
 }
 
-GAL::VulkanImageView::VulkanImageView(const CreateInfo& createInfo)
+GAL::VulkanTextureView::VulkanTextureView(const CreateInfo& createInfo)
 {
 	VkImageViewCreateInfo vk_image_view_create_info{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	vk_image_view_create_info.image = createInfo.Image->GetVkImage();
@@ -53,7 +53,7 @@ GAL::VulkanImageView::VulkanImageView(const CreateInfo& createInfo)
 	SET_NAME(imageView, VK_OBJECT_TYPE_IMAGE_VIEW, createInfo);
 }
 
-void GAL::VulkanImageView::Destroy(const VulkanRenderDevice* renderDevice)
+void GAL::VulkanTextureView::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroyImageView(renderDevice->GetVkDevice(), imageView, renderDevice->GetVkAllocationCallbacks());
 	debugClear(imageView);

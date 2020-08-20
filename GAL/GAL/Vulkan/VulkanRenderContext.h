@@ -3,7 +3,7 @@
 #include "GAL/RenderContext.h"
 
 #include "VulkanBindings.h"
-#include "VulkanImage.h"
+#include "VulkanTexture.h"
 #include <GTSL/Pair.h>
 
 namespace GAL
@@ -93,9 +93,9 @@ namespace GAL
 		{
 			GTSL::uint32 SwapchainImagesFormat{ 0 };
 			GTSL::Ranger<const GTSL::UTF8> ImageViewName;
-			GTSL::Ranger<const VulkanImageView::CreateInfo> ImageViewCreateInfos;
+			GTSL::Ranger<const VulkanTextureView::CreateInfo> ImageViewCreateInfos;
 		};
-		GTSL::Array<VulkanImageView, 5> GetImages(const GetImagesInfo& getImagesInfo);
+		GTSL::Array<VulkanTextureView, 5> GetImages(const GetImagesInfo& getImagesInfo);
 		
 	private:
 		void* swapchain{ 0 };

@@ -17,7 +17,7 @@ namespace GAL
 		{
 			VulkanRenderPass* RenderPass = nullptr;
 			GTSL::Extent2D Extent = { 1280, 720 };
-			GTSL::Ranger<const class VulkanImageView> ImageViews;
+			GTSL::Ranger<const class VulkanTextureView> ImageViews;
 			GTSL::Ranger<const GTSL::RGBA> ClearValues;
 		};
 		explicit VulkanFramebuffer(const CreateInfo& createInfo);

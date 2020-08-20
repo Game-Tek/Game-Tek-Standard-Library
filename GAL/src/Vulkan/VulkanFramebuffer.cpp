@@ -1,6 +1,6 @@
 #include "GAL/Vulkan/VulkanFramebuffer.h"
 
-#include "GAL/Vulkan/VulkanImage.h"
+#include "GAL/Vulkan/VulkanTexture.h"
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
 #include "GAL/Vulkan/VulkanRenderPass.h"

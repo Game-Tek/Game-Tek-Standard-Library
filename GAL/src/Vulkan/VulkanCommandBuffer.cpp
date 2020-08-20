@@ -7,7 +7,7 @@
 #include "GAL/Vulkan/VulkanFramebuffer.h"
 #include "GAL/Vulkan/VulkanPipelines.h"
 #include "GAL/Vulkan/VulkanRenderPass.h"
-#include "GAL/Vulkan/VulkanImage.h"
+#include "GAL/Vulkan/VulkanTexture.h"
 
 void GAL::VulkanCommandBuffer::BeginRecording(const BeginRecordingInfo& beginRecordingInfo)
 {

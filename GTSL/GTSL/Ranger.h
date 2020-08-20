@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "Assert.h"
 
 namespace GTSL
 {
@@ -42,7 +43,11 @@ namespace GTSL
 		operator T*() { return this->from; }
 		operator T*() const { return this->from; }
 		
-		T& operator[](const uint64 i) { return this->from[i]; }
+		T& operator[](const uint64 i)
+		{
+			GTSL_ASSERT((this->from + i) < to, "Unbounded access!")
+			return this->from[i];
+		}
 		//T& operator[](const uint64 i) const { return this->from[i]; }
 
 		operator Ranger<const T>() const { return Ranger<const T>(static_cast<const T*>(this->from), static_cast<const T*>(this->to)); }

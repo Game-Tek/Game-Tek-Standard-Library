@@ -58,7 +58,7 @@ namespace GAL
 
 		struct ImageBindingDescriptor : BindingDescriptor
 		{
-			GTSL::Ranger<const class VulkanImageView> ImageViews;
+			GTSL::Ranger<const class VulkanTextureView> ImageViews;
 			GTSL::Ranger<const class VulkanSampler> Samplers;
 			GTSL::Ranger<const ImageLayout> Layouts;
 		};

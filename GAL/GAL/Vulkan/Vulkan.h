@@ -340,7 +340,7 @@ namespace GAL
 		NONLINEAR_SRGB = 0,
 	};
 	
-	enum class VulkanFormat : GTSL::uint32
+	enum class VulkanTextureFormat : GTSL::uint32
 	{
 		UNDEFINED = 0,
 		
@@ -483,9 +483,10 @@ namespace GAL
 		case ShaderDataType::BOOL: return VulkanShaderDataType::BOOL;
 		case ShaderDataType::MAT3: break;
 		case ShaderDataType::MAT4: break;
-		default: GAL_DEBUG_BREAK;
 		}
 
+		GAL_DEBUG_BREAK;
+		
 		return VulkanShaderDataType::FLOAT;
 	}
 	
@@ -527,5 +528,41 @@ namespace GAL
 		}
 
 		return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
+	}
+
+	inline VulkanTextureFormat ImageFormatToVulkanTextureFormat(const ImageFormat format)
+	{
+		switch (format)
+		{
+		case ImageFormat::UNDEFINED:		return VulkanTextureFormat::UNDEFINED;
+		case ImageFormat::R_I8: 		    return VulkanTextureFormat::R_I8;
+		case ImageFormat::R_I16: 		    return VulkanTextureFormat::R_I16;
+		case ImageFormat::R_I32: 		    return VulkanTextureFormat::R_I32;
+		case ImageFormat::R_I64: 		    return VulkanTextureFormat::R_I64;
+		case ImageFormat::RG_I8: 		    return VulkanTextureFormat::RG_I8;
+		case ImageFormat::RG_I16:		    return VulkanTextureFormat::RG_I16;
+		case ImageFormat::RG_I32:		    return VulkanTextureFormat::RG_I32;
+		case ImageFormat::RG_I64:		    return VulkanTextureFormat::RG_I64;
+		case ImageFormat::RGB_I8:		    return VulkanTextureFormat::RGB_I8;
+		case ImageFormat::RGB_I16:		    return VulkanTextureFormat::RGB_I16;
+		case ImageFormat::RGB_I32:		    return VulkanTextureFormat::RGB_I32;
+		case ImageFormat::RGB_I64:		    return VulkanTextureFormat::RGB_I64;
+		case ImageFormat::RGBA_I8:		    return VulkanTextureFormat::RGBA_I8;
+		case ImageFormat::RGBA_I16:		    return VulkanTextureFormat::RGBA_I16;
+		case ImageFormat::RGBA_I32:		    return VulkanTextureFormat::RGBA_I32;
+		case ImageFormat::RGBA_I64:		    return VulkanTextureFormat::RGBA_I64;
+		case ImageFormat::BGRA_I8: 		    return VulkanTextureFormat::BGRA_I8;
+		case ImageFormat::BGR_I8:		    return VulkanTextureFormat::BGR_I8;
+		case ImageFormat::DEPTH16: 		    return VulkanTextureFormat::DEPTH16;
+		case ImageFormat::DEPTH32: 		    return VulkanTextureFormat::DEPTH32;
+		case ImageFormat::DEPTH16_STENCIL8: return VulkanTextureFormat::DEPTH16_STENCIL8;
+		case ImageFormat::DEPTH24_STENCIL8: return VulkanTextureFormat::DEPTH24_STENCIL8;
+		case ImageFormat::DEPTH32_STENCIL8: return VulkanTextureFormat::DEPTH32_STENCIL8;
+		default: break;
+		}
+
+		__debugbreak();
+
+		return VulkanTextureFormat::UNDEFINED;
 	}
 }

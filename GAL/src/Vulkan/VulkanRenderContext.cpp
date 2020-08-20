@@ -98,9 +98,9 @@ void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)
 	VK_CHECK(vkQueuePresentKHR(static_cast<const VulkanQueue*>(presentInfo.Queue)->GetVkQueue(), &vkPresentInfoKhr));
 }
 
-GTSL::Array<GAL::VulkanImageView, 5> GAL::VulkanRenderContext::GetImages(const GetImagesInfo& getImagesInfo)
+GTSL::Array<GAL::VulkanTextureView, 5> GAL::VulkanRenderContext::GetImages(const GetImagesInfo& getImagesInfo)
 {
-	GTSL::Array<VulkanImageView, 5> vulkan_images;
+	GTSL::Array<VulkanTextureView, 5> vulkan_images;
 	
 	GTSL::uint32 swapchain_image_count = 0;
 	VK_CHECK(vkGetSwapchainImagesKHR(getImagesInfo.RenderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), &swapchain_image_count, nullptr));

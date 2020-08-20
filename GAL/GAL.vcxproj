@@ -36,7 +36,7 @@
     <ClInclude Include="GAL\Vulkan\VulkanRenderDevice.h" />
     <ClInclude Include="GAL\Vulkan\VulkanRenderPass.h" />
     <ClInclude Include="GAL\Vulkan\VulkanSynchronization.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanImage.h" />
+    <ClInclude Include="GAL\Vulkan\VulkanTexture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Vulkan\VulkanAccelerationStructures.cpp" />
@@ -51,7 +51,7 @@
     <ClCompile Include="src\Vulkan\VulkanRenderDevice.cpp" />
     <ClCompile Include="src\Vulkan\VulkanRenderPass.cpp" />
     <ClCompile Include="src\Vulkan\VulkanSynchronization.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanImage.cpp" />
+    <ClCompile Include="src\Vulkan\VulkanTexture.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

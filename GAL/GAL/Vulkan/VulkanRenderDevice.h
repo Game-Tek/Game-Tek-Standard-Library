@@ -124,7 +124,7 @@ namespace GAL
 		[[nodiscard]] VkDevice GetVkDevice() const { return device; }
 
 		void GetBufferMemoryRequirements(const class VulkanBuffer* buffer, MemoryRequirements& bufferMemoryRequirements) const;
-		void GetImageMemoryRequirements(const class VulkanImage* image, MemoryRequirements& imageMemoryRequirements) const;
+		void GetImageMemoryRequirements(const class VulkanTexture* image, MemoryRequirements& imageMemoryRequirements) const;
 
 		struct GetAccelerationStructureMemoryRequirementsInfo
 		{

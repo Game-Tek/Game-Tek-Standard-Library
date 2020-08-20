@@ -10,7 +10,7 @@ namespace GAL
 	class VulkanRenderPass;
 	class VulkanPipelineLayout;
 	class VulkanQueue;
-	class VulkanImage;
+	class VulkanTexture;
 	class VulkanPipeline;
 	class VulkanBindingsSet;
 	class VulkanRenderDevice;
@@ -134,7 +134,7 @@ namespace GAL
 			const VulkanBuffer* SourceBuffer{ nullptr };
 			ImageFormat SourceImageFormat;
 			VulkanImageLayout ImageLayout;
-			const VulkanImage* DestinationImage{ nullptr };
+			const VulkanTexture* DestinationImage{ nullptr };
 
 			GTSL::Extent3D Extent;
 			GTSL::Extent3D Offset;
@@ -143,7 +143,7 @@ namespace GAL
 
 		struct TransitionImageInfo : VulkanRenderInfo
 		{
-			const VulkanImage* Texture{ nullptr };
+			const VulkanTexture* Texture{ nullptr };
 			VulkanImageLayout SourceLayout, DestinationLayout;
 			GTSL::uint32 SourceStage, DestinationStage;
 			AccessFlags SourceAccessFlags, DestinationAccessFlags;

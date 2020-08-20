@@ -6,10 +6,10 @@
 
 namespace GAL
 {
-	class VulkanImage final : public Image
+	class VulkanTexture final : public Image
 	{
 	public:
-		VulkanImage() = default;
+		VulkanTexture() = default;
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
@@ -21,7 +21,7 @@ namespace GAL
 			ImageDimensions Dimensions;
 			GTSL::uint8 MipLevels{ 1 };
 		};
-		explicit VulkanImage(const CreateInfo& createInfo);
+		explicit VulkanTexture(const CreateInfo& createInfo);
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 
@@ -40,21 +40,21 @@ namespace GAL
 		friend class VulkanRenderContext;
 	};
 
-	class VulkanImageView final : public ImageView
+	class VulkanTextureView final : public ImageView
 	{
 	public:
-		VulkanImageView() = default;
+		VulkanTextureView() = default;
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			const VulkanImage* Image{ nullptr };
+			const VulkanTexture* Image{ nullptr };
 			GTSL::uint32 SourceFormat{ 0 };
 			GTSL::Extent2D Extent{ 1280, 720 };
 			ImageDimensions Dimensions;
 			GTSL::uint8 MipLevels{ 1 };
 			ImageType Type;
 		};
-		explicit VulkanImageView(const CreateInfo& createInfo);
+		explicit VulkanTextureView(const CreateInfo& createInfo);
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		

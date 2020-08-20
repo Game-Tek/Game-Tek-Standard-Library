@@ -9,7 +9,7 @@
 #include "GAL/Vulkan/VulkanAccelerationStructures.h"
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanBuffer.h"
-#include "GAL/Vulkan/VulkanImage.h"
+#include "GAL/Vulkan/VulkanTexture.h"
 #include "GAL/Vulkan/VulkanSynchronization.h"
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
 #include "GTSL/Console.h"
@@ -42,7 +42,7 @@ void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(const VulkanBuffer* bu
 	bufferMemoryRequirements.Size = vk_memory_requirements.size;
 }
 
-void GAL::VulkanRenderDevice::GetImageMemoryRequirements(const VulkanImage* image,	MemoryRequirements& imageMemoryRequirements) const
+void GAL::VulkanRenderDevice::GetImageMemoryRequirements(const VulkanTexture* image,	MemoryRequirements& imageMemoryRequirements) const
 {
 	VkMemoryRequirements vk_memory_requirements;
 	vkGetImageMemoryRequirements(device, image->GetVkImage(), &vk_memory_requirements);
