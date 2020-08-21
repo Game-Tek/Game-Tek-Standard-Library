@@ -132,7 +132,6 @@ namespace GAL
 		struct CopyBufferToImageInfo : VulkanRenderInfo
 		{
 			const VulkanBuffer* SourceBuffer{ nullptr };
-			TextureFormat SourceImageFormat;
 			VulkanTextureLayout TextureLayout;
 			const VulkanTexture* DestinationImage{ nullptr };
 

@@ -137,7 +137,7 @@ void GAL::VulkanCommandBuffer::CopyImage(const CopyImageInfo& copyImageInfo)
 
 void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& copyBufferToImageInfo)
 {
-	VkBufferImageCopy region{};
+	VkBufferImageCopy region;
 	region.bufferOffset = 0;
 	region.bufferRowLength = 0;
 	region.bufferImageHeight = 0;
@@ -145,8 +145,7 @@ void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& co
 	region.imageSubresource.mipLevel = 0;
 	region.imageSubresource.baseArrayLayer = 0;
 	region.imageSubresource.layerCount = 1;
-	region.imageOffset = { 0, 0, 0 };
-	//region.imageOffset = Extent3DToVkExtent3D(copyImageToBufferInfo.Offset);
+	region.imageOffset = VkOffset3D{ copyBufferToImageInfo.Offset.Width, copyBufferToImageInfo.Offset.Depth, copyBufferToImageInfo.Offset.Height };
 	region.imageExtent = Extent3DToVkExtent3D(copyBufferToImageInfo.Extent);
 	vkCmdCopyBufferToImage(commandBuffer, copyBufferToImageInfo.SourceBuffer->GetVkBuffer(), copyBufferToImageInfo.DestinationImage->GetVkImage(),
 		static_cast<VkImageLayout>(copyBufferToImageInfo.TextureLayout), 1, &region);
