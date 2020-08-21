@@ -15,9 +15,9 @@ namespace GAL
 		{
 			VulkanTextureLayout InitialLayout;
 			GTSL::uint32 ImageUses{ 0 };
-			GTSL::uint32 SourceFormat{ 0 };
+			VulkanTextureFormat SourceFormat;
 			GTSL::Extent3D Extent{ 1280, 720, 1 };
-			GTSL::uint32 ImageTiling{ 0 };
+			VulkanTextureTiling Tiling;
 			VulkanDimensions Dimensions;
 			GTSL::uint8 MipLevels{ 1 };
 		};
@@ -52,7 +52,7 @@ namespace GAL
 			GTSL::Extent2D Extent{ 1280, 720 };
 			VulkanDimensions Dimensions;
 			GTSL::uint8 MipLevels{ 1 };
-			ImageType Type;
+			TextureType Type;
 		};
 		explicit VulkanTextureView(const CreateInfo& createInfo);
 

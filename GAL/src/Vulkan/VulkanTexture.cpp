@@ -12,7 +12,7 @@ GAL::VulkanTexture::VulkanTexture(const CreateInfo& createInfo)
 	vk_image_create_info.mipLevels = createInfo.MipLevels;
 	vk_image_create_info.arrayLayers = 1;
 	vk_image_create_info.format = static_cast<VkFormat>(createInfo.SourceFormat);
-	vk_image_create_info.tiling = static_cast<VkImageTiling>(createInfo.ImageTiling);
+	vk_image_create_info.tiling = static_cast<VkImageTiling>(createInfo.Tiling);
 	vk_image_create_info.initialLayout = static_cast<VkImageLayout>(createInfo.InitialLayout);
 	vk_image_create_info.usage = createInfo.ImageUses;
 	vk_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;

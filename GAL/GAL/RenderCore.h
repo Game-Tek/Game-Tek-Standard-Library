@@ -94,7 +94,7 @@ namespace GAL
 		CUBE
 	};
 
-	enum class ImageType : GTSL::uint8
+	enum class TextureType : GTSL::uint8
 	{
 		COLOR,
 		DEPTH,

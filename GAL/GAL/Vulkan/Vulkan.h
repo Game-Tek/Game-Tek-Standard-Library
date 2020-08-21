@@ -126,14 +126,14 @@ namespace GAL
 		return { extent.Width, extent.Height, extent.Depth };
 	}
 
-	inline GTSL::uint32 ImageTypeToVkImageAspectFlagBits(const ImageType imageType)
+	inline GTSL::uint32 ImageTypeToVkImageAspectFlagBits(const TextureType imageType)
 	{
 		switch (imageType)
 		{
-		case ImageType::COLOR: return VK_IMAGE_ASPECT_COLOR_BIT;
-		case ImageType::DEPTH: return VK_IMAGE_ASPECT_DEPTH_BIT;
-		case ImageType::STENCIL: return VK_IMAGE_ASPECT_STENCIL_BIT;
-		case ImageType::DEPTH_STENCIL: return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+		case TextureType::COLOR: return VK_IMAGE_ASPECT_COLOR_BIT;
+		case TextureType::DEPTH: return VK_IMAGE_ASPECT_DEPTH_BIT;
+		case TextureType::STENCIL: return VK_IMAGE_ASPECT_STENCIL_BIT;
+		case TextureType::DEPTH_STENCIL: return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 		default: return VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM;
 		}
 	}
@@ -201,7 +201,7 @@ namespace GAL
 		}
 	}
 	
-	enum class VulkanImageTiling : GTSL::uint32
+	enum class VulkanTextureTiling : GTSL::uint32
 	{
 		OPTIMAL = 0,
 		LINEAR = 1,
@@ -229,6 +229,8 @@ namespace GAL
 		GAL_DEBUG_BREAK;
 	}
 
+	VkImageLayout;
+	
 	enum class VulkanTextureLayout
 	{
 		UNDEFINED = 0,
@@ -246,8 +248,7 @@ namespace GAL
 		DEPTH_READ_ONLY = 1000241001,
 		STENCIL_ATTACHMENT = 1000241002,
 		STENCIL_READ_ONLY = 1000241003,
-		PRESENT_SRC = 1000001002,
-		SHARED_PRESENT = 1000111000,
+		PRESENTATION = 1000001002
 	};
 	
 	enum class VulkanBindingType : GTSL::uint32
