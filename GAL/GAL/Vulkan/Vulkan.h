@@ -92,11 +92,68 @@ namespace GAL
 	//	}
 	//}
 
-	inline VkPipelineStageFlags PipelineStageToVkPipelineStageFlags(const GTSL::uint32 pipeline)
+	enum class VulkanPipelineStage : GTSL::uint32
 	{
-		return static_cast<VkPipelineStageFlags>(pipeline);
-	}
+		TOP_OF_PIPE = 1,
+		DRAW_INDIRECT = 2,
+		VERTEX_INPUT = 4,
+		VERTEX_SHADER = 8,
+		TESSELLATION_CONTROL_SHADER = 16,
+		TESSELLATION_EVALUATION_SHADER = 32,
+		GEOMETRY_SHADER = 64,
+		FRAGMENT_SHADER = 128,
+		EARLY_FRAGMENT_TESTS = 256,
+		LATE_FRAGMENT_TESTS = 512,
+		COLOR_ATTACHMENT_OUTPUT = 1024,
+		COMPUTE_SHADER = 2048,
+		TRANSFER = 4096,
+		BOTTOM_OF_PIPE = 8192,
+		HOST_BIT = 16384,
+		ALL_GRAPHICS = 32768,
+		ALL_COMMANDS = 65536,
+		TRANSFORM_FEEDBACK_BIT = 131072,
+		CONDITIONAL_RENDERING_BIT = 262144,
+		RAY_TRACING_SHADER = 524288,
+		ACCELERATION_STRUCTURE_BUILD = 1048576,
+		SHADING_RATE_IMAGE_BIT = 2097152,
+		TASK_SHADER = 4194304,
+		MESH_SHADER = 8388608,
+		FRAGMENT_DENSITY_PROCESS = 16777216,
+		COMMAND_PREPROCESS_BIT = 33554432,
+	};
 
+	struct VulkanAccessFlags : GTSL::Flags<GTSL::uint32>
+	{
+		static constexpr value_type INDIRECT_COMMAND_READ = 0x00000001;
+		static constexpr value_type INDEX_READ = 0x00000002;
+		static constexpr value_type VERTEX_ATTRIBUTE_READ = 0x00000004;
+		static constexpr value_type UNIFORM_READ = 0x00000008;
+		static constexpr value_type INPUT_ATTACHMENT_READ = 0x00000010;
+		static constexpr value_type SHADER_READ = 0x00000020;
+		static constexpr value_type SHADER_WRITE = 0x00000040;
+		static constexpr value_type COLOR_ATTACHMENT_READ = 0x00000080;
+		static constexpr value_type COLOR_ATTACHMENT_WRITE = 0x00000100;
+		static constexpr value_type DEPTH_STENCIL_ATTACHMENT_READ = 0x00000200;
+		static constexpr value_type DEPTH_STENCIL_ATTACHMENT_WRITE = 0x00000400;
+		static constexpr value_type TRANSFER_READ = 0x00000800;
+		static constexpr value_type TRANSFER_WRITE = 0x00001000;
+		static constexpr value_type HOST_READ = 0x00002000;
+		static constexpr value_type HOST_WRITE = 0x00004000;
+		static constexpr value_type MEMORY_READ = 0x00008000;
+		static constexpr value_type MEMORY_WRITE = 0x00010000;
+		static constexpr value_type TRANSFORM_FEEDBACK_WRITE = 0x02000000;
+		static constexpr value_type TRANSFORM_FEEDBACK_COUNTER_READ = 0x04000000;
+		static constexpr value_type TRANSFORM_FEEDBACK_COUNTER_WRITE = 0x08000000;
+		static constexpr value_type CONDITIONAL_RENDERING_READ = 0x00100000;
+		static constexpr value_type COLOR_ATTACHMENT_READ_NONCOHERENT = 0x00080000;
+		static constexpr value_type ACCELERATION_STRUCTURE_READ = 0x00200000;
+		static constexpr value_type ACCELERATION_STRUCTURE_WRITE = 0x00400000;
+		static constexpr value_type SHADING_RATE_IMAGE_READ = 0x00800000;
+		static constexpr value_type FRAGMENT_DENSITY_MAP_READ_EXT = 0x01000000;
+		static constexpr value_type COMMAND_PREPROCESS_READ = 0x00020000;
+		static constexpr value_type COMMAND_PREPROCESS_WRITE = 0x00040000;
+	};
+	
 	inline VkAccessFlags AccessFlagsToVkAccessFlags(const AccessFlags accessFlags)
 	{
 		return static_cast<VkPipelineStageFlags>(accessFlags);

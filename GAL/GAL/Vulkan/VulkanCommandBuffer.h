@@ -3,6 +3,7 @@
 #include "GAL/CommandBuffer.h"
 
 #include "Vulkan.h"
+#include "VulkanTexture.h"
 
 namespace GAL
 {
@@ -140,14 +141,37 @@ namespace GAL
 		};
 		void CopyBufferToImage(const CopyBufferToImageInfo& copyBufferToImageInfo);
 
-		struct TransitionImageInfo : VulkanRenderInfo
+		//struct TransitionImageInfo : VulkanRenderInfo
+		//{
+		//	const VulkanTexture* Texture{ nullptr };
+		//	VulkanTextureLayout SourceLayout, DestinationLayout;
+		//	GTSL::uint32 SourceStage, DestinationStage;
+		//	AccessFlags SourceAccessFlags, DestinationAccessFlags;
+		//};
+		struct MemoryBarrier
 		{
-			const VulkanTexture* Texture{ nullptr };
-			VulkanTextureLayout SourceLayout, DestinationLayout;
-			GTSL::uint32 SourceStage, DestinationStage;
-			AccessFlags SourceAccessFlags, DestinationAccessFlags;
 		};
-		void TransitionImage(const TransitionImageInfo& transitionImageInfo);
+
+		struct BufferBarrier
+		{
+		};
+
+		struct TextureBarrier
+		{
+			VulkanTexture Texture;
+
+			VulkanTextureLayout CurrentLayout, TargetLayout;
+			VulkanAccessFlags SourceAccessFlags, DestinationAccessFlags;
+		};
+
+		struct AddPipelineBarrierInfo : VulkanRenderInfo
+		{
+			GTSL::Ranger<const MemoryBarrier> MemoryBarriers;
+			GTSL::Ranger<const BufferBarrier> BufferBarriers;
+			GTSL::Ranger<const TextureBarrier> TextureBarriers;
+			VulkanPipelineStage InitialStage, FinalStage;
+		};
+		void AddPipelineBarrier(const AddPipelineBarrierInfo& pipelineBarrier);
 
 		struct CopyBuffersInfo : VulkanRenderInfo
 		{

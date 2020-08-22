@@ -169,28 +169,21 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 	//vk_timeline_semaphore_submit_info.signalSemaphoreValueCount = vk_signal_semaphores.GetLength();
 	//vk_timeline_semaphore_submit_info.pSignalSemaphoreValues = submitInfo.SignalValues.begin();
 	
-	VkSubmitInfo vk_submit_info{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
+	VkSubmitInfo vkSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	//vk_submit_info.pNext = &vk_timeline_semaphore_submit_info;
 	
-	vk_submit_info.commandBufferCount = submitInfo.CommandBuffers.ElementCount();
-	vk_submit_info.pCommandBuffers = reinterpret_cast<const VkCommandBuffer*>(submitInfo.CommandBuffers.begin());
-
-	GTSL::Array<GTSL::uint32, 16> vk_pipeline_stages(submitInfo.WaitPipelineStages.ElementCount());
-	{
-		for(const auto& e : submitInfo.WaitPipelineStages)
-		{
-			vk_pipeline_stages[RangeForIndex(e, submitInfo.WaitPipelineStages)] = PipelineStageToVkPipelineStageFlags(e);
-		}
-	}
-	vk_submit_info.pWaitDstStageMask = vk_pipeline_stages.begin();
+	vkSubmitInfo.commandBufferCount = submitInfo.CommandBuffers.ElementCount();
+	vkSubmitInfo.pCommandBuffers = reinterpret_cast<const VkCommandBuffer*>(submitInfo.CommandBuffers.begin());
 	
-	vk_submit_info.signalSemaphoreCount = submitInfo.SignalSemaphores.ElementCount();
-	vk_submit_info.pSignalSemaphores = reinterpret_cast<const VkSemaphore*>(submitInfo.SignalSemaphores.begin());
-
-	vk_submit_info.waitSemaphoreCount = submitInfo.WaitSemaphores.ElementCount();
-	vk_submit_info.pWaitSemaphores = reinterpret_cast<const VkSemaphore*>(submitInfo.WaitSemaphores.begin());
+	vkSubmitInfo.pWaitDstStageMask = submitInfo.WaitPipelineStages.begin();
 	
-	VK_CHECK(vkQueueSubmit(queue, 1, &vk_submit_info, submitInfo.Fence ? static_cast<const VulkanFence*>(submitInfo.Fence)->GetVkFence() : nullptr));
+	vkSubmitInfo.signalSemaphoreCount = submitInfo.SignalSemaphores.ElementCount();
+	vkSubmitInfo.pSignalSemaphores = reinterpret_cast<const VkSemaphore*>(submitInfo.SignalSemaphores.begin());
+
+	vkSubmitInfo.waitSemaphoreCount = submitInfo.WaitSemaphores.ElementCount();
+	vkSubmitInfo.pWaitSemaphores = reinterpret_cast<const VkSemaphore*>(submitInfo.WaitSemaphores.begin());
+	
+	VK_CHECK(vkQueueSubmit(queue, 1, &vkSubmitInfo, submitInfo.Fence ? static_cast<const VulkanFence*>(submitInfo.Fence)->GetVkFence() : nullptr));
 }
 
 #define GET_DEVICE_PROC(device, var) var = reinterpret_cast<PFN_##var>(vkGetDeviceProcAddr(device, #var))

@@ -151,23 +151,31 @@ void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& co
 		static_cast<VkImageLayout>(copyBufferToImageInfo.TextureLayout), 1, &region);
 }
 
-void GAL::VulkanCommandBuffer::TransitionImage(const TransitionImageInfo& transitionImageInfo)
-{	
-	VkImageMemoryBarrier barrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-	barrier.oldLayout = static_cast<VkImageLayout>(transitionImageInfo.SourceLayout);
-	barrier.newLayout = static_cast<VkImageLayout>(transitionImageInfo.DestinationLayout);
-	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.image = transitionImageInfo.Texture->GetVkImage();
-	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	barrier.subresourceRange.baseMipLevel = 0;
-	barrier.subresourceRange.levelCount = 1;
-	barrier.subresourceRange.baseArrayLayer = 0;
-	barrier.subresourceRange.layerCount = 1;
-	barrier.srcAccessMask = AccessFlagsToVkAccessFlags(transitionImageInfo.SourceAccessFlags);
-	barrier.dstAccessMask = AccessFlagsToVkAccessFlags(transitionImageInfo.DestinationAccessFlags);
+void GAL::VulkanCommandBuffer::AddPipelineBarrier(const AddPipelineBarrierInfo& pipelineBarrier)
+{
+	GTSL::Array<VkImageMemoryBarrier, 1024> imageMemoryBarriers(pipelineBarrier.TextureBarriers.ElementCount());
+	//GTSL::Array<VkBufferMemoryBarrier, 1024> bufferMemoryBarriers;
+	//GTSL::Array<VkMemoryBarrier, 1024> memoryBarriers;
+
+	for (GTSL::uint32 i = 0; i < pipelineBarrier.TextureBarriers.ElementCount(); ++i)
+	{
+		imageMemoryBarriers[i].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		imageMemoryBarriers[i].pNext = nullptr;
+		imageMemoryBarriers[i].oldLayout = static_cast<VkImageLayout>(pipelineBarrier.TextureBarriers[i].CurrentLayout);
+		imageMemoryBarriers[i].newLayout = static_cast<VkImageLayout>(pipelineBarrier.TextureBarriers[i].TargetLayout);
+		imageMemoryBarriers[i].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarriers[i].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarriers[i].image = pipelineBarrier.TextureBarriers[i].Texture.GetVkImage();
+		imageMemoryBarriers[i].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		imageMemoryBarriers[i].subresourceRange.baseMipLevel = 0;
+		imageMemoryBarriers[i].subresourceRange.levelCount = 1;
+		imageMemoryBarriers[i].subresourceRange.baseArrayLayer = 0;
+		imageMemoryBarriers[i].subresourceRange.layerCount = 1;
+		imageMemoryBarriers[i].srcAccessMask = static_cast<VkAccessFlags>(pipelineBarrier.TextureBarriers[i].SourceAccessFlags);
+		imageMemoryBarriers[i].dstAccessMask = static_cast<VkAccessFlags>(pipelineBarrier.TextureBarriers[i].DestinationAccessFlags);
+	}
 	
-	vkCmdPipelineBarrier(commandBuffer, PipelineStageToVkPipelineStageFlags(transitionImageInfo.SourceStage), PipelineStageToVkPipelineStageFlags(transitionImageInfo.DestinationStage), 0, 0, nullptr, 0, nullptr, 1, &barrier);
+	vkCmdPipelineBarrier(commandBuffer, static_cast<VkPipelineStageFlags>(pipelineBarrier.InitialStage), static_cast<VkPipelineStageFlags>(pipelineBarrier.FinalStage), 0, 0, nullptr, 0, nullptr, imageMemoryBarriers.GetLength(), imageMemoryBarriers.begin());
 }
 
 void GAL::VulkanCommandBuffer::CopyBuffers(const CopyBuffersInfo& copyBuffersInfo)
