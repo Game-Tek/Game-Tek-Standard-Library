@@ -2,40 +2,25 @@
 
 #include <GTSL/Core.h>
 
+#include <GTSL/Flags.h>
+
 namespace GAL
 {
 	constexpr GTSL::uint8 MAX_SHADER_STAGES = 8;
 
 	class RenderDevice;
-
-	enum class PipelineStage : GTSL::uint32
+	
+	struct PipelineStage : GTSL::Flags<GTSL::uint32>
 	{
-		TOP_OF_PIPE = 1,
-		DRAW_INDIRECT = 2,
-		VERTEX_INPUT = 4,
-		VERTEX_SHADER = 8,
-		TESSELLATION_CONTROL_SHADER = 16,
-		TESSELLATION_EVALUATION_SHADER = 32,
-		GEOMETRY_SHADER = 64,
-		FRAGMENT_SHADER = 128,
-		EARLY_FRAGMENT_TESTS = 256,
-		LATE_FRAGMENT_TESTS = 512,
-		COLOR_ATTACHMENT_OUTPUT = 1024,
-		COMPUTE_SHADER = 2048,
-		TRANSFER = 4096,
-		BOTTOM_OF_PIPE = 8192,
-		HOST_BIT = 16384,
-		ALL_GRAPHICS = 32768,
-		ALL_COMMANDS = 65536,
-		TRANSFORM_FEEDBACK_BIT = 131072,
-		CONDITIONAL_RENDERING_BIT = 262144,
-		RAY_TRACING_SHADER = 524288,
-		ACCELERATION_STRUCTURE_BUILD = 1048576,
-		SHADING_RATE_IMAGE_BIT = 2097152,
-		TASK_SHADER = 4194304,
-		MESH_SHADER = 8388608,
-		FRAGMENT_DENSITY_PROCESS = 16777216,
-		COMMAND_PREPROCESS_BIT = 33554432,
+		static constexpr value_type VERTEX = 1;
+		static constexpr value_type TESSELLATION_CONTROL = 2;
+		static constexpr value_type TESSELLATION_EVALUATION = 4;
+		static constexpr value_type GEOMETRY = 8;
+		static constexpr value_type FRAGMENT = 16;
+		static constexpr value_type COMPUTE = 32;
+		static constexpr value_type TASK = 64;
+		static constexpr value_type MESH = 128;
+		static constexpr value_type RAY_GEN = 256, ANY_HIT = 512, CLOSEST_HIT = 1024, MISS = 2048, INTERSECTION = 4096, CALLABLE = 8192;
 	};
 
 	enum class AccessFlags : GTSL::uint32

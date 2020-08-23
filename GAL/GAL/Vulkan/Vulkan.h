@@ -14,6 +14,8 @@
 
 #include <GTSL/Extent.h>
 
+
+#include "GTSL/Bitman.h"
 #include "GTSL/Flags.h"
 
 #define MAKE_VK_HANDLE(object) typedef struct object##_T* (object);
@@ -91,7 +93,7 @@ namespace GAL
 	//	default: return VK_IMAGE_LAYOUT_MAX_ENUM;
 	//	}
 	//}
-
+	
 	enum class VulkanShaderGroupType
 	{
 		GENERAL, TRIANGLES, PROCEDURAL
@@ -371,7 +373,7 @@ namespace GAL
 	{
 		static constexpr value_type VERTEX = 1, TESSELLATION_CONTROL = 2;
 		static constexpr value_type TESSELLATION_EVALUATION = 4, GEOMETRY = 8, FRAGMENT = 16, COMPUTE = 32, ALL = 0x7FFFFFFF;
-		static constexpr value_type RAYGEN = 0x00000100, ANY_HIT = 0x00000200, CLOSEST_HIT = 0x00000400, MISS = 0x00000800, INTERSECTION = 0x00001000, CALLABLE = 0x00002000;
+		static constexpr value_type RAY_GEN = 0x00000100, ANY_HIT = 0x00000200, CLOSEST_HIT = 0x00000400, MISS = 0x00000800, INTERSECTION = 0x00001000, CALLABLE = 0x00002000;
 	};
 
 	enum class VulkanQueryType
@@ -627,5 +629,27 @@ namespace GAL
 		__debugbreak();
 
 		return VulkanTextureFormat::UNDEFINED;
+	}
+	
+	inline VulkanShaderStage PipelineStageToVulkanShaderStage(PipelineStage pipelineStage)
+	{
+		VulkanShaderStage stage{};
+
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::VERTEX), pipelineStage & PipelineStage::VERTEX, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::TESSELLATION_CONTROL), pipelineStage & PipelineStage::TESSELLATION_CONTROL, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::TESSELLATION_EVALUATION), pipelineStage & PipelineStage::TESSELLATION_EVALUATION, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::GEOMETRY), pipelineStage & PipelineStage::GEOMETRY, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::FRAGMENT), pipelineStage & PipelineStage::FRAGMENT, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::COMPUTE), pipelineStage & PipelineStage::COMPUTE, stage);
+		//GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::TASK), pipelineStage & PipelineStage::TASK, stage);
+		//GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::MESH), pipelineStage & PipelineStage::MESH, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::RAY_GEN), pipelineStage & PipelineStage::RAY_GEN, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::ANY_HIT), pipelineStage & PipelineStage::ANY_HIT, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::CLOSEST_HIT), pipelineStage & PipelineStage::CLOSEST_HIT, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::MISS), pipelineStage & PipelineStage::MISS, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::INTERSECTION), pipelineStage & PipelineStage::INTERSECTION, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::CALLABLE), pipelineStage & PipelineStage::CALLABLE, stage);
+
+		return stage;
 	}
 }

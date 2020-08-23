@@ -45,7 +45,7 @@ void GAL::VulkanBindingsPool::AllocateBindingsSets(const AllocateBindingsSetsInf
 
 	if constexpr (_DEBUG)
 	{
-		for(GTSL::uint32 i = 0; allocateBindingsSetsInfo.BindingsSetCreateInfos; ++i)
+		for(GTSL::uint32 i = 0; i < allocateBindingsSetsInfo.BindingsSetCreateInfos.ElementCount(); ++i)
 		{
 			SET_NAME(allocateBindingsSetsInfo.BindingsSets[i].GetVkDescriptorSet(), VK_OBJECT_TYPE_DESCRIPTOR_SET, allocateBindingsSetsInfo.BindingsSetCreateInfos[i]);
 		}

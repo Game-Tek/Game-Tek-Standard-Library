@@ -11,6 +11,17 @@ namespace GTSL
 	void NumberOfSetBits(uint32 number, uint8& count);
 	void NumberOfSetBits(uint64 number, uint8& count);
 
+	constexpr uint8 FindFirstSetBit(uint32 number)
+	{
+		uint8 r = 0;
+
+		while (number >>= 1) {
+			r++;
+		}
+
+		return r;
+	}
+	
 	inline void SetBit(const uint8 bitN, uint64& n) { n |= 1ULL << bitN; }
 	inline void ClearBit(const uint8 bitN, uint64& n) { n &= ~(1ULL << bitN); }
 	inline void FlipBit(const uint8 bitN, uint64& n) { n ^= 1ULL << bitN; }
