@@ -3,6 +3,8 @@
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 #include "GAL/Vulkan/VulkanRenderPass.h"
 #include <GAL/ext/shaderc/shaderc.hpp>
+
+#include "GTSL/Bitman.h"
 #include "GTSL/Buffer.h"
 #include "GTSL/String.hpp"
 
@@ -260,8 +262,8 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	}
 	
 	VkGraphicsPipelineCreateInfo vkGraphicsPipelineCreateInfo{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-	vkGraphicsPipelineCreateInfo.flags = createInfo.IsInheritable ? VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT : 0;
-	vkGraphicsPipelineCreateInfo.flags |= createInfo.ParentPipeline ? VK_PIPELINE_CREATE_DERIVATIVE_BIT : 0;
+	GTSL::SetBitAs(1, createInfo.IsInheritable, vkGraphicsPipelineCreateInfo.flags);
+	GTSL::SetBitAs(2, createInfo.ParentPipeline, vkGraphicsPipelineCreateInfo.flags);
 	vkGraphicsPipelineCreateInfo.stageCount = vkPipelineShaderStageCreateInfos.GetLength();
 	vkGraphicsPipelineCreateInfo.pStages = vkPipelineShaderStageCreateInfos.begin();
 	vkGraphicsPipelineCreateInfo.pVertexInputState = &vkPipelineVertexInputStateCreateInfo;
@@ -281,9 +283,7 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 
 	if(createInfo.PipelineCache)
 	{
-		VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), 
-			createInfo.PipelineCache->GetVkPipelineCache(), 1, &vkGraphicsPipelineCreateInfo,
-			createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
+		VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), createInfo.PipelineCache->GetVkPipelineCache(), 1, &vkGraphicsPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
 
 		SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
 		return;
@@ -305,10 +305,12 @@ void GAL::VulkanComputePipeline::Destroy(const VulkanRenderDevice* renderDevice)
 	debugClear(pipeline);
 }
 
+static_assert(sizeof(GAL::VulkanRaytracingPipeline::Group) == sizeof(VkRayTracingShaderGroupCreateInfoKHR), "Size doesn't match!");
+
 GAL::VulkanRaytracingPipeline::VulkanRaytracingPipeline(const CreateInfo& createInfo)
 {
-	VkRayTracingPipelineCreateInfoKHR vk_ray_tracing_pipeline_create_info{VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
-	vk_ray_tracing_pipeline_create_info.maxRecursionDepth = createInfo.MaxRecursionDepth;
+	VkRayTracingPipelineCreateInfoKHR vkRayTracingPipelineCreateInfo{VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
+	vkRayTracingPipelineCreateInfo.maxRecursionDepth = createInfo.MaxRecursionDepth;
 
 	GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vkPipelineShaderStageCreateInfos(static_cast<GTSL::uint32>(createInfo.Stages.ElementCount()));
 
@@ -322,24 +324,36 @@ GAL::VulkanRaytracingPipeline::VulkanRaytracingPipeline(const CreateInfo& create
 		vkPipelineShaderStageCreateInfos[i].module = createInfo.Stages[i].Shader->GetVkShaderModule();
 		vkPipelineShaderStageCreateInfos[i].pSpecializationInfo = nullptr;
 	}
-	
-	vk_ray_tracing_pipeline_create_info.stageCount = vkPipelineShaderStageCreateInfos.GetLength();
-	vk_ray_tracing_pipeline_create_info.pStages = vkPipelineShaderStageCreateInfos.begin();
-	
-	vk_ray_tracing_pipeline_create_info.layout = createInfo.PipelineLayout->GetVkPipelineLayout();
 
+	for(uint32_t i = 0; i < createInfo.Groups.ElementCount(); ++i)
+	{
+		reinterpret_cast<VkRayTracingShaderGroupCreateInfoKHR*>(createInfo.Groups.begin())->sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+		reinterpret_cast<VkRayTracingShaderGroupCreateInfoKHR*>(createInfo.Groups.begin())->pNext = nullptr;
+		reinterpret_cast<VkRayTracingShaderGroupCreateInfoKHR*>(createInfo.Groups.begin())->pShaderGroupCaptureReplayHandle = nullptr;
+	}
+	
+	vkRayTracingPipelineCreateInfo.stageCount = vkPipelineShaderStageCreateInfos.GetLength();
+	vkRayTracingPipelineCreateInfo.pStages = vkPipelineShaderStageCreateInfos.begin();
+	
+	vkRayTracingPipelineCreateInfo.layout = createInfo.PipelineLayout->GetVkPipelineLayout();
+
+	vkRayTracingPipelineCreateInfo.groupCount = createInfo.Groups.ElementCount();
+	vkRayTracingPipelineCreateInfo.pGroups = reinterpret_cast<const VkRayTracingShaderGroupCreateInfoKHR*>(createInfo.Groups.begin());
+	vkRayTracingPipelineCreateInfo.libraries.sType = VK_STRUCTURE_TYPE_PIPELINE_LIBRARY_CREATE_INFO_KHR;
+	vkRayTracingPipelineCreateInfo.pLibraryInterface;
+	
 	if (createInfo.ParentPipeline)
 	{
-		vk_ray_tracing_pipeline_create_info.basePipelineIndex = createInfo.ParentPipeline ? 0 : -1;
-		vk_ray_tracing_pipeline_create_info.basePipelineHandle = createInfo.ParentPipeline->GetVkPipeline();
+		vkRayTracingPipelineCreateInfo.basePipelineIndex = createInfo.ParentPipeline ? 0 : -1;
+		vkRayTracingPipelineCreateInfo.basePipelineHandle = createInfo.ParentPipeline->GetVkPipeline();
 	}
 	else
 	{
-		vk_ray_tracing_pipeline_create_info.basePipelineIndex = -1;
-		vk_ray_tracing_pipeline_create_info.basePipelineHandle = nullptr;
+		vkRayTracingPipelineCreateInfo.basePipelineIndex = -1;
+		vkRayTracingPipelineCreateInfo.basePipelineHandle = nullptr;
 	}
 	
-	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vk_ray_tracing_pipeline_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
+	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vkRayTracingPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
 	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
 }
 

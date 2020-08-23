@@ -14,7 +14,7 @@ namespace GAL
 		struct CreateInfo final : VulkanCreateInfo
 		{
 			VulkanTextureLayout InitialLayout;
-			GTSL::uint32 ImageUses{ 0 };
+			VulkanTextureUses::value_type Uses;
 			VulkanTextureFormat SourceFormat;
 			GTSL::Extent3D Extent{ 1280, 720, 1 };
 			VulkanTextureTiling Tiling;
@@ -28,7 +28,7 @@ namespace GAL
 		struct BindMemoryInfo : VulkanRenderInfo
 		{
 			class VulkanDeviceMemory* Memory{ nullptr };
-			GTSL::uint32 Offset{ 0 };
+			GTSL::uint32 Offset = 0;
 		};
 		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;
 		
@@ -47,12 +47,12 @@ namespace GAL
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			const VulkanTexture* Image{ nullptr };
-			GTSL::uint32 SourceFormat{ 0 };
+			VulkanTexture Image;
+			VulkanTextureFormat SourceFormat;
 			GTSL::Extent2D Extent{ 1280, 720 };
 			VulkanDimensions Dimensions;
-			GTSL::uint8 MipLevels{ 1 };
-			TextureType Type;
+			GTSL::uint8 MipLevels = 1;
+			VulkanTextureType::value_type Type;
 		};
 		explicit VulkanTextureView(const CreateInfo& createInfo);
 
@@ -71,7 +71,7 @@ namespace GAL
 	public:
 		struct CreateInfo : VulkanCreateInfo
 		{
-			GTSL::uint8 Anisotropy{ 0 };
+			GTSL::uint8 Anisotropy = 0;
 		};
 		explicit VulkanSampler(const CreateInfo& createInfo);
 		

@@ -92,6 +92,16 @@ namespace GAL
 	//	}
 	//}
 
+	enum class VulkanShaderGroupType
+	{
+		GENERAL, TRIANGLES, PROCEDURAL
+	};
+	
+	struct VulkanTextureType : GTSL::Flags<GTSL::uint32>
+	{		
+		static constexpr value_type COLOR = 1, DEPTH = 2, STENCIL = 4;
+	};
+	
 	enum class VulkanPipelineStage : GTSL::uint32
 	{
 		TOP_OF_PIPE = 1,
@@ -264,7 +274,7 @@ namespace GAL
 		LINEAR = 1,
 	};
 	
-	struct VulkanImageUse : GTSL::Flags<GTSL::uint32>
+	struct VulkanTextureUses : GTSL::Flags<GTSL::uint32>
 	{
 		static constexpr value_type TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, SAMPLE = 4, STORAGE = 8, COLOR_ATTACHMENT = 16, DEPTH_STENCIL_ATTACHMENT = 32, TRANSIENT_ATTACHMENT = 64, INPUT_ATTACHMENT = 128;
 	};

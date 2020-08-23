@@ -6,19 +6,19 @@
 
 GAL::VulkanTexture::VulkanTexture(const CreateInfo& createInfo)
 {
-	VkImageCreateInfo vk_image_create_info{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	vk_image_create_info.imageType = static_cast<VkImageType>(createInfo.Dimensions);
-	vk_image_create_info.extent = Extent3DToVkExtent3D(createInfo.Extent);
-	vk_image_create_info.mipLevels = createInfo.MipLevels;
-	vk_image_create_info.arrayLayers = 1;
-	vk_image_create_info.format = static_cast<VkFormat>(createInfo.SourceFormat);
-	vk_image_create_info.tiling = static_cast<VkImageTiling>(createInfo.Tiling);
-	vk_image_create_info.initialLayout = static_cast<VkImageLayout>(createInfo.InitialLayout);
-	vk_image_create_info.usage = createInfo.ImageUses;
-	vk_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
-	vk_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	VkImageCreateInfo vkImageCreateInfo{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+	vkImageCreateInfo.imageType = static_cast<VkImageType>(createInfo.Dimensions);
+	vkImageCreateInfo.extent = Extent3DToVkExtent3D(createInfo.Extent);
+	vkImageCreateInfo.mipLevels = createInfo.MipLevels;
+	vkImageCreateInfo.arrayLayers = 1;
+	vkImageCreateInfo.format = static_cast<VkFormat>(createInfo.SourceFormat);
+	vkImageCreateInfo.tiling = static_cast<VkImageTiling>(createInfo.Tiling);
+	vkImageCreateInfo.initialLayout = static_cast<VkImageLayout>(createInfo.InitialLayout);
+	vkImageCreateInfo.usage = createInfo.Uses;
+	vkImageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	vkImageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	
-	VK_CHECK(vkCreateImage(createInfo.RenderDevice->GetVkDevice(), &vk_image_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &image));
+	VK_CHECK(vkCreateImage(createInfo.RenderDevice->GetVkDevice(), &vkImageCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &image));
 	SET_NAME(image, VK_OBJECT_TYPE_IMAGE, createInfo);
 }
 
@@ -35,21 +35,21 @@ void GAL::VulkanTexture::BindToMemory(const BindMemoryInfo& bindMemoryInfo) cons
 
 GAL::VulkanTextureView::VulkanTextureView(const CreateInfo& createInfo)
 {
-	VkImageViewCreateInfo vk_image_view_create_info{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-	vk_image_view_create_info.image = createInfo.Image->GetVkImage();
-	vk_image_view_create_info.viewType = static_cast<VkImageViewType>(createInfo.Dimensions);
-	vk_image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-	vk_image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-	vk_image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-	vk_image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-	vk_image_view_create_info.format = static_cast<VkFormat>(createInfo.SourceFormat);
-	vk_image_view_create_info.subresourceRange.aspectMask = ImageTypeToVkImageAspectFlagBits(createInfo.Type);
-	vk_image_view_create_info.subresourceRange.baseMipLevel = 0;
-	vk_image_view_create_info.subresourceRange.levelCount = createInfo.MipLevels;
-	vk_image_view_create_info.subresourceRange.baseArrayLayer = 0;
-	vk_image_view_create_info.subresourceRange.layerCount = 1;
+	VkImageViewCreateInfo vkImageViewCreateInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+	vkImageViewCreateInfo.image = createInfo.Image.GetVkImage();
+	vkImageViewCreateInfo.viewType = static_cast<VkImageViewType>(createInfo.Dimensions);
+	vkImageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+	vkImageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+	vkImageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+	vkImageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+	vkImageViewCreateInfo.format = static_cast<VkFormat>(createInfo.SourceFormat);
+	vkImageViewCreateInfo.subresourceRange.aspectMask = createInfo.Type;
+	vkImageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+	vkImageViewCreateInfo.subresourceRange.levelCount = createInfo.MipLevels;
+	vkImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+	vkImageViewCreateInfo.subresourceRange.layerCount = 1;
 	
-	VK_CHECK(vkCreateImageView(createInfo.RenderDevice->GetVkDevice(), &vk_image_view_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &imageView));
+	VK_CHECK(vkCreateImageView(createInfo.RenderDevice->GetVkDevice(), &vkImageViewCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &imageView));
 	SET_NAME(imageView, VK_OBJECT_TYPE_IMAGE_VIEW, createInfo);
 }
 
@@ -68,7 +68,7 @@ GAL::VulkanSampler::VulkanSampler(const CreateInfo& createInfo)
 	vk_sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	vk_sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 
-	vk_sampler_create_info.anisotropyEnable = VkBool32(createInfo.Anisotropy);
+	vk_sampler_create_info.anisotropyEnable = static_cast<VkBool32>(createInfo.Anisotropy);
 	vk_sampler_create_info.maxAnisotropy = static_cast<float>(createInfo.Anisotropy == 0 ? 1 : createInfo.Anisotropy);
 
 	vk_sampler_create_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;

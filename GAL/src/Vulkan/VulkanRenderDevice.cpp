@@ -24,13 +24,28 @@ void* vkAllocate(void* data, GTSL::uint64 size, GTSL::uint64 alignment, VkSystem
 void* vkReallocate(void* data, void* originalAlloc, GTSL::uint64 size, GTSL::uint64 alignment, VkSystemAllocationScope)
 {
 	auto* allocation_info = static_cast<GAL::VulkanRenderDevice::AllocationInfo*>(data);
-	return allocation_info->Reallocate(allocation_info->UserData, originalAlloc, size, alignment);
+
+	if(originalAlloc && size)
+	{
+		return allocation_info->Reallocate(allocation_info->UserData, originalAlloc, size, alignment);
+	}
+
+	if(!originalAlloc && size)
+	{
+		return allocation_info->Allocate(allocation_info->UserData, size, alignment);
+	}
+
+	allocation_info->Deallocate(allocation_info->UserData, originalAlloc);
+	return nullptr;
 }
 
 void vkFree(void* data, void* alloc)
 {
-	auto* allocation_info = static_cast<GAL::VulkanRenderDevice::AllocationInfo*>(data);
-	allocation_info->Deallocate(allocation_info->UserData, alloc);
+	if (alloc)
+	{
+		auto* allocation_info = static_cast<GAL::VulkanRenderDevice::AllocationInfo*>(data);
+		allocation_info->Deallocate(allocation_info->UserData, alloc);
+	}
 }
 
 void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(const VulkanBuffer* buffer, MemoryRequirements& bufferMemoryRequirements) const
@@ -133,14 +148,14 @@ GTSL::uint32 GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const Find
 	
 	switch (findSupportedImageFormat.ImageUse)
 	{
-	case VulkanImageUse::TRANSFER_SOURCE: features = VK_FORMAT_FEATURE_TRANSFER_SRC_BIT; break;
-	case VulkanImageUse::TRANSFER_DESTINATION: features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT; break;
-	case VulkanImageUse::SAMPLE: features = VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT; break;
-	case VulkanImageUse::STORAGE: features = VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT; break;
-	case VulkanImageUse::COLOR_ATTACHMENT: features = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT; break;
-	case VulkanImageUse::DEPTH_STENCIL_ATTACHMENT: features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT; break;
-	case VulkanImageUse::TRANSIENT_ATTACHMENT: [[fallthrough]];
-	case VulkanImageUse::INPUT_ATTACHMENT: [[fallthrough]];
+	case VulkanTextureUses::TRANSFER_SOURCE: features = VK_FORMAT_FEATURE_TRANSFER_SRC_BIT; break;
+	case VulkanTextureUses::TRANSFER_DESTINATION: features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT; break;
+	case VulkanTextureUses::SAMPLE: features = VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT; break;
+	case VulkanTextureUses::STORAGE: features = VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT; break;
+	case VulkanTextureUses::COLOR_ATTACHMENT: features = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT; break;
+	case VulkanTextureUses::DEPTH_STENCIL_ATTACHMENT: features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT; break;
+	case VulkanTextureUses::TRANSIENT_ATTACHMENT: [[fallthrough]];
+	case VulkanTextureUses::INPUT_ATTACHMENT: [[fallthrough]];
 	default: features = 0; break;
 	}
 	

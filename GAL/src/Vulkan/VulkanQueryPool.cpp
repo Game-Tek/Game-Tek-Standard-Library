@@ -2,6 +2,8 @@
 
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
+#include <GTSL/Bitman.h>
+
 GAL::VulkanQueryPool::VulkanQueryPool(const CreateInfo& createInfo)
 {
 	VkQueryPoolCreateInfo vk_query_pool_create_info{ VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO };
@@ -14,7 +16,8 @@ GAL::VulkanQueryPool::VulkanQueryPool(const CreateInfo& createInfo)
 
 void GAL::VulkanQueryPool::GetQueryResults(const QueryResultsInfo& info) const
 {
-	VkQueryResultFlags flags = 0; flags |= info.Wait ? VK_QUERY_RESULT_WAIT_BIT : 0;
+	VkQueryResultFlags flags = 0;
+	GTSL::SetBitAs(1, info.Wait, flags);
 	
 	VK_CHECK(vkGetQueryPoolResults(info.RenderDevice->GetVkDevice(), queryPool, 0, info.QueryCount, info.Size, info.Data, info.Stride, flags));
 }

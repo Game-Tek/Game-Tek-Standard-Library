@@ -161,7 +161,7 @@ namespace GAL
 			VulkanTexture Texture;
 
 			VulkanTextureLayout CurrentLayout, TargetLayout;
-			VulkanAccessFlags SourceAccessFlags, DestinationAccessFlags;
+			VulkanAccessFlags::value_type SourceAccessFlags, DestinationAccessFlags;
 		};
 
 		struct AddPipelineBarrierInfo : VulkanRenderInfo

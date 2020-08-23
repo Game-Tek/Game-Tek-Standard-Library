@@ -16,6 +16,7 @@ namespace GTSL
 	inline void FlipBit(const uint8 bitN, uint64& n) { n ^= 1ULL << bitN; }
 	inline bool CheckBit(const uint8 bitN, const uint64 n) { return (n >> bitN) & 1ULL; }
 	inline void SetBitAs(const uint8 bitN, const bool value, uint64& n) { n = (n & ~(1ull << bitN)) | (static_cast<uint64>(value) << bitN); }
+	inline void SetBitAs(const uint8 bitN, const bool value, uint32& n) { n = (n & ~(1u << bitN)) | (static_cast<uint32>(value) << bitN); }
 	
 	inline void NextPowerOfTwo(uint8 number, uint8& nextPow2)
 	{

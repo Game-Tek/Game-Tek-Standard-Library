@@ -156,6 +156,20 @@ namespace GAL
 	class VulkanRaytracingPipeline final : public VulkanPipeline
 	{
 	public:
+		struct Group
+		{
+		private:
+			uint32_t type; void* next;
+		public:
+			VulkanShaderGroupType ShaderGroup;
+			uint32_t GeneralShader;
+			uint32_t ClosestHitShader;
+			uint32_t AnyHitShader;
+			uint32_t IntersectionShader;
+		private:
+			void* replayGroupHandle;
+		};
+		
 		struct CreateInfo : VulkanCreateInfo
 		{
 			bool IsInheritable = false;
@@ -164,9 +178,10 @@ namespace GAL
 			const VulkanPipelineLayout* PipelineLayout = nullptr;
 			
 			GTSL::uint32 MaxRecursionDepth = 0;
-			VulkanPipelineDescriptor PipelineDescriptor;
 			GTSL::Ranger<const ShaderInfo> Stages;
 			GTSL::Ranger<const VulkanBindingsSetLayout> BindingsSetLayouts;
+
+			GTSL::Ranger<Group> Groups;
 		};
 
 		VulkanRaytracingPipeline(const CreateInfo& createInfo);

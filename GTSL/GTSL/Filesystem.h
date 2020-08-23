@@ -38,7 +38,11 @@ namespace GTSL
 			function(query_result);
 			while(fileQuery.NextQuery(query_result)) { function(query_result); }
 		}
-
+		else
+		{
+			return;
+		}
+		
 		fileQuery.EndQuery();
 	}
 }
