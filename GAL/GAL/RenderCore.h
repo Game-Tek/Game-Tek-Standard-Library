@@ -10,7 +10,7 @@ namespace GAL
 
 	class RenderDevice;
 	
-	struct PipelineStage : GTSL::Flags<GTSL::uint32>
+	struct ShaderStage : GTSL::Flags<GTSL::uint32>
 	{
 		static constexpr value_type VERTEX = 1;
 		static constexpr value_type TESSELLATION_CONTROL = 2;

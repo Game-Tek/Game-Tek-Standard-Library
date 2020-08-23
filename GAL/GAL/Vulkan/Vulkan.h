@@ -104,34 +104,34 @@ namespace GAL
 		static constexpr value_type COLOR = 1, DEPTH = 2, STENCIL = 4;
 	};
 	
-	enum class VulkanPipelineStage : GTSL::uint32
+	struct VulkanPipelineStage : GTSL::Flags<GTSL::uint32>
 	{
-		TOP_OF_PIPE = 1,
-		DRAW_INDIRECT = 2,
-		VERTEX_INPUT = 4,
-		VERTEX_SHADER = 8,
-		TESSELLATION_CONTROL_SHADER = 16,
-		TESSELLATION_EVALUATION_SHADER = 32,
-		GEOMETRY_SHADER = 64,
-		FRAGMENT_SHADER = 128,
-		EARLY_FRAGMENT_TESTS = 256,
-		LATE_FRAGMENT_TESTS = 512,
-		COLOR_ATTACHMENT_OUTPUT = 1024,
-		COMPUTE_SHADER = 2048,
-		TRANSFER = 4096,
-		BOTTOM_OF_PIPE = 8192,
-		HOST_BIT = 16384,
-		ALL_GRAPHICS = 32768,
-		ALL_COMMANDS = 65536,
-		TRANSFORM_FEEDBACK_BIT = 131072,
-		CONDITIONAL_RENDERING_BIT = 262144,
-		RAY_TRACING_SHADER = 524288,
-		ACCELERATION_STRUCTURE_BUILD = 1048576,
-		SHADING_RATE_IMAGE_BIT = 2097152,
-		TASK_SHADER = 4194304,
-		MESH_SHADER = 8388608,
-		FRAGMENT_DENSITY_PROCESS = 16777216,
-		COMMAND_PREPROCESS_BIT = 33554432,
+		static constexpr value_type TOP_OF_PIPE = 1;
+		static constexpr value_type DRAW_INDIRECT = 2;
+		static constexpr value_type VERTEX_INPUT = 4;
+		static constexpr value_type VERTEX_SHADER = 8;
+		static constexpr value_type TESSELLATION_CONTROL_SHADER = 16;
+		static constexpr value_type TESSELLATION_EVALUATION_SHADER = 32;
+		static constexpr value_type GEOMETRY_SHADER = 64;
+		static constexpr value_type FRAGMENT_SHADER = 128;
+		static constexpr value_type EARLY_FRAGMENT_TESTS = 256;
+		static constexpr value_type LATE_FRAGMENT_TESTS = 512;
+		static constexpr value_type COLOR_ATTACHMENT_OUTPUT = 1024;
+		static constexpr value_type COMPUTE_SHADER = 2048;
+		static constexpr value_type TRANSFER = 4096;
+		static constexpr value_type BOTTOM_OF_PIPE = 8192;
+		static constexpr value_type HOST_BIT = 16384;
+		static constexpr value_type ALL_GRAPHICS = 32768;
+		static constexpr value_type ALL_COMMANDS = 65536;
+		static constexpr value_type TRANSFORM_FEEDBACK_BIT = 131072;
+		static constexpr value_type CONDITIONAL_RENDERING_BIT = 262144;
+		static constexpr value_type RAY_TRACING_SHADER = 524288;
+		static constexpr value_type ACCELERATION_STRUCTURE_BUILD = 1048576;
+		static constexpr value_type SHADING_RATE_IMAGE_BIT = 2097152;
+		static constexpr value_type TASK_SHADER = 4194304;
+		static constexpr value_type MESH_SHADER = 8388608;
+		static constexpr value_type FRAGMENT_DENSITY_PROCESS = 16777216;
+		static constexpr value_type COMMAND_PREPROCESS_BIT = 33554432;
 	};
 
 	struct VulkanAccessFlags : GTSL::Flags<GTSL::uint32>
@@ -631,25 +631,25 @@ namespace GAL
 		return VulkanTextureFormat::UNDEFINED;
 	}
 	
-	inline VulkanShaderStage PipelineStageToVulkanShaderStage(PipelineStage pipelineStage)
+	inline VulkanShaderStage ShaderStageToVulkanShaderStage(const ShaderStage::value_type stage)
 	{
-		VulkanShaderStage stage{};
+		VulkanShaderStage shaderStage{};
 
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::VERTEX), pipelineStage & PipelineStage::VERTEX, stage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::TESSELLATION_CONTROL), pipelineStage & PipelineStage::TESSELLATION_CONTROL, stage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::TESSELLATION_EVALUATION), pipelineStage & PipelineStage::TESSELLATION_EVALUATION, stage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::GEOMETRY), pipelineStage & PipelineStage::GEOMETRY, stage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::FRAGMENT), pipelineStage & PipelineStage::FRAGMENT, stage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::COMPUTE), pipelineStage & PipelineStage::COMPUTE, stage);
-		//GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::TASK), pipelineStage & PipelineStage::TASK, stage);
-		//GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::MESH), pipelineStage & PipelineStage::MESH, stage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::RAY_GEN), pipelineStage & PipelineStage::RAY_GEN, stage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::ANY_HIT), pipelineStage & PipelineStage::ANY_HIT, stage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::CLOSEST_HIT), pipelineStage & PipelineStage::CLOSEST_HIT, stage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::MISS), pipelineStage & PipelineStage::MISS, stage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::INTERSECTION), pipelineStage & PipelineStage::INTERSECTION, stage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::CALLABLE), pipelineStage & PipelineStage::CALLABLE, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::VERTEX), stage & ShaderStage::VERTEX, shaderStage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::TESSELLATION_CONTROL), stage & ShaderStage::TESSELLATION_CONTROL, shaderStage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::TESSELLATION_EVALUATION), stage & ShaderStage::TESSELLATION_EVALUATION, shaderStage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::GEOMETRY), stage & ShaderStage::GEOMETRY, shaderStage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::FRAGMENT), stage & ShaderStage::FRAGMENT, shaderStage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::COMPUTE), stage & ShaderStage::COMPUTE, shaderStage);
+		//GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::TASK), stage & ShaderStage::TASK, stage);
+		//GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::MESH), stage & ShaderStage::MESH, stage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::RAY_GEN), stage & ShaderStage::RAY_GEN, shaderStage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::ANY_HIT), stage & ShaderStage::ANY_HIT, shaderStage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::CLOSEST_HIT), stage & ShaderStage::CLOSEST_HIT, shaderStage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::MISS), stage & ShaderStage::MISS, shaderStage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::INTERSECTION), stage & ShaderStage::INTERSECTION, shaderStage);
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::CALLABLE), stage & ShaderStage::CALLABLE, shaderStage);
 
-		return stage;
+		return shaderStage;
 	}
 }

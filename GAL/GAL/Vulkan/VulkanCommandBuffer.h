@@ -169,7 +169,7 @@ namespace GAL
 			GTSL::Ranger<const MemoryBarrier> MemoryBarriers;
 			GTSL::Ranger<const BufferBarrier> BufferBarriers;
 			GTSL::Ranger<const TextureBarrier> TextureBarriers;
-			VulkanPipelineStage InitialStage, FinalStage;
+			VulkanPipelineStage::value_type InitialStage, FinalStage;
 		};
 		void AddPipelineBarrier(const AddPipelineBarrierInfo& pipelineBarrier);
 
