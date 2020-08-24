@@ -113,11 +113,11 @@ namespace GAL
 
 		struct FindSupportedImageFormat
 		{
-			GTSL::Ranger<GTSL::uint32> Candidates;
-			GTSL::uint32 ImageUse{ 0 };
-			GTSL::uint32 ImageTiling{ 0 };
+			GTSL::Ranger<VulkanTextureFormat> Candidates;
+			VulkanTextureUses::value_type TextureUses;
+			VulkanTextureTiling TextureTiling;
 		};
-		[[nodiscard]] GTSL::uint32 FindNearestSupportedImageFormat(const FindSupportedImageFormat& findSupportedImageFormat) const;
+		[[nodiscard]] VulkanTextureFormat FindNearestSupportedImageFormat(const FindSupportedImageFormat& findSupportedImageFormat) const;
 		
 		[[nodiscard]] VkInstance GetVkInstance() const { return instance; }
 		[[nodiscard]] VkPhysicalDevice GetVkPhysicalDevice() const { return physicalDevice; }

@@ -308,23 +308,23 @@ namespace GAL
 	{
 		switch (imageFormat)
 		{
-		case TextureFormat::R_I8: break;
+		case TextureFormat::R_I8: return 1;
 		case TextureFormat::R_I16: break;
 		case TextureFormat::R_I32: break;
 		case TextureFormat::R_I64: break;
-		case TextureFormat::RG_I8: break;
+		case TextureFormat::RG_I8: return 2;
 		case TextureFormat::RG_I16: break;
 		case TextureFormat::RG_I32: break;
 		case TextureFormat::RG_I64: break;
-		case TextureFormat::RGB_I8: break;
+		case TextureFormat::RGB_I8: return 3;
 		case TextureFormat::RGB_I16: break;
 		case TextureFormat::RGB_I32: break;
 		case TextureFormat::RGB_I64: break;
-		case TextureFormat::RGBA_I8: return 1 * 4;
+		case TextureFormat::RGBA_I8: return 4;
 		case TextureFormat::RGBA_I16: break;
 		case TextureFormat::RGBA_I32: break;
 		case TextureFormat::RGBA_I64: break;
-		case TextureFormat::BGRA_I8: break;
+		case TextureFormat::BGRA_I8: return 4;
 		case TextureFormat::BGR_I8: break;
 		case TextureFormat::DEPTH16: break;
 		case TextureFormat::DEPTH32: break;

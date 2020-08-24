@@ -22,7 +22,7 @@
     <ClInclude Include="GAL\RenderDevice.h" />
     <ClInclude Include="GAL\RenderPass.h" />
     <ClInclude Include="GAL\Synchronization.h" />
-    <ClInclude Include="GAL\Image.h" />
+    <ClInclude Include="GAL\Texture.h" />
     <ClInclude Include="GAL\Vulkan\Vulkan.h" />
     <ClInclude Include="GAL\Vulkan\VulkanAccelerationStructures.h" />
     <ClInclude Include="GAL\Vulkan\VulkanMemory.h" />

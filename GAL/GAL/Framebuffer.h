@@ -15,7 +15,7 @@ namespace GAL
 	{
 		GTSL::Array<TextureFormat, 8> ColorAttachmentsFormat;
 		TextureFormat DepthStencilFormat = TextureFormat::DEPTH16_STENCIL8;
-		class Image* Images = nullptr;
+		class Texture* Images = nullptr;
 	};
 
 	class Framebuffer : public GALObject

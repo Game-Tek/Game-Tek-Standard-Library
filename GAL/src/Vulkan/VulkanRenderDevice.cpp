@@ -140,38 +140,43 @@ GAL::GPUInfo GAL::VulkanRenderDevice::GetGPUInfo()
 	return result;
 }
 
-GTSL::uint32 GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const FindSupportedImageFormat& findSupportedImageFormat) const
+GAL::VulkanTextureFormat GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const FindSupportedImageFormat& findSupportedImageFormat) const
 {
 	VkFormatProperties format_properties;
 
-	VkFormatFeatureFlags features;
-	
-	switch (findSupportedImageFormat.ImageUse)
-	{
-	case VulkanTextureUses::TRANSFER_SOURCE: features = VK_FORMAT_FEATURE_TRANSFER_SRC_BIT; break;
-	case VulkanTextureUses::TRANSFER_DESTINATION: features = VK_FORMAT_FEATURE_TRANSFER_DST_BIT; break;
-	case VulkanTextureUses::SAMPLE: features = VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT; break;
-	case VulkanTextureUses::STORAGE: features = VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT; break;
-	case VulkanTextureUses::COLOR_ATTACHMENT: features = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT; break;
-	case VulkanTextureUses::DEPTH_STENCIL_ATTACHMENT: features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT; break;
-	case VulkanTextureUses::TRANSIENT_ATTACHMENT: [[fallthrough]];
-	case VulkanTextureUses::INPUT_ATTACHMENT: [[fallthrough]];
-	default: features = 0; break;
-	}
+	VkFormatFeatureFlags features{};
+
+	GTSL::SetBitAs(GTSL::FindFirstSetBit(VK_FORMAT_FEATURE_TRANSFER_SRC_BIT), findSupportedImageFormat.TextureUses & VulkanTextureUses::TRANSFER_SOURCE, features);
+	GTSL::SetBitAs(GTSL::FindFirstSetBit(VK_FORMAT_FEATURE_TRANSFER_DST_BIT), findSupportedImageFormat.TextureUses & VulkanTextureUses::TRANSFER_DESTINATION, features);
+	GTSL::SetBitAs(GTSL::FindFirstSetBit(VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT), findSupportedImageFormat.TextureUses & VulkanTextureUses::SAMPLE, features);
+	GTSL::SetBitAs(GTSL::FindFirstSetBit(VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT), findSupportedImageFormat.TextureUses & VulkanTextureUses::STORAGE, features);
+	GTSL::SetBitAs(GTSL::FindFirstSetBit(VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT), findSupportedImageFormat.TextureUses & VulkanTextureUses::COLOR_ATTACHMENT, features);
+	GTSL::SetBitAs(GTSL::FindFirstSetBit(VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT), findSupportedImageFormat.TextureUses & VulkanTextureUses::DEPTH_STENCIL_ATTACHMENT, features);
 	
 	for (auto e : findSupportedImageFormat.Candidates)
 	{
 		vkGetPhysicalDeviceFormatProperties(physicalDevice, static_cast<VkFormat>(e), &format_properties);
 
-		switch (findSupportedImageFormat.ImageTiling)
+		switch (static_cast<VkImageTiling>(findSupportedImageFormat.TextureTiling))
 		{
-		case VK_IMAGE_TILING_LINEAR: if (format_properties.linearTilingFeatures & features) return e;
-		case VK_IMAGE_TILING_OPTIMAL: if (format_properties.optimalTilingFeatures & features) return e;
+		case VK_IMAGE_TILING_LINEAR:
+		{
+			if (format_properties.linearTilingFeatures & features) { return e; }
+
+			break;
+		}
+		case VK_IMAGE_TILING_OPTIMAL:
+		{
+			if (format_properties.optimalTilingFeatures & features) { return e; }
+
+			break;
+		}
+			
 		default: __debugbreak();
 		}
 	}
 
-	return VK_FORMAT_UNDEFINED;
+	return VulkanTextureFormat::UNDEFINED;
 }
 
 void GAL::VulkanQueue::Wait() const { vkQueueWaitIdle(queue); }

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "GAL/Image.h"
+#include "GAL/Texture.h"
 
 #include "Vulkan.h"
 
 namespace GAL
 {
-	class VulkanTexture final : public Image
+	class VulkanTexture final : public Texture
 	{
 	public:
 		VulkanTexture() = default;
