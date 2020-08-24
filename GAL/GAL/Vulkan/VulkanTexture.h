@@ -69,6 +69,8 @@ namespace GAL
 	class VulkanSampler final : public Sampler
 	{
 	public:
+		VulkanSampler() = default;
+		
 		struct CreateInfo : VulkanCreateInfo
 		{
 			GTSL::uint8 Anisotropy = 0;

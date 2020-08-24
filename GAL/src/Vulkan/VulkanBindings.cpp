@@ -102,68 +102,52 @@ void GAL::VulkanBindingsSetLayout::Destroy(const VulkanRenderDevice* renderDevic
 
 void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateInfo)
 {
-	GTSL::Array<VkWriteDescriptorSet, 32> write_descriptors;
+	GTSL::Array<VkWriteDescriptorSet, 128> vkWriteDescriptorSets(static_cast<uint32_t>(bindingsUpdateInfo.BindingUpdateInfos.ElementCount()));
 
-	GTSL::Array<GTSL::Array<VkDescriptorImageInfo, 16>, 16> vk_descriptor_image_infos;
-	GTSL::Array<GTSL::Array<VkDescriptorBufferInfo, 16>, 16> vk_descriptor_buffer_infos;
-	
-	uint32_t write_descriptor_index = 0;
-	uint32_t image_set = 0;
-	uint32_t buffer_set = 0;
-	
-	for(const auto& e : bindingsUpdateInfo.ImageBindingsSetLayout)
+	for(GTSL::uint32 binding = 0; binding < bindingsUpdateInfo.BindingUpdateInfos.ElementCount(); ++binding)
 	{
-		write_descriptor_index = write_descriptors.EmplaceBack();
-		
-		image_set = vk_descriptor_image_infos.EmplaceBack();
-		
-		for(GTSL::uint8 i = 0; i < e.ImageViews.ElementCount(); ++i)
+		auto& writeSet = vkWriteDescriptorSets[binding];
+
+		writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		writeSet.pNext = nullptr;
+		writeSet.dstSet = descriptorSet;
+		writeSet.dstBinding = binding;
+		writeSet.dstArrayElement = bindingsUpdateInfo.BindingUpdateInfos[binding].ArrayElement;
+		writeSet.descriptorCount = bindingsUpdateInfo.BindingUpdateInfos[binding].Count;
+		writeSet.descriptorType = static_cast<VkDescriptorType>(bindingsUpdateInfo.BindingUpdateInfos[binding].Type);
+
+		switch (bindingsUpdateInfo.BindingUpdateInfos[binding].Type)
 		{
-			vk_descriptor_image_infos[image_set].EmplaceBack();
-			
-			vk_descriptor_image_infos[image_set][i].imageView = e.ImageViews[i].GetVkImageView();
-			vk_descriptor_image_infos[image_set][i].imageLayout = static_cast<VkImageLayout>(e.Layouts[i]);
-			vk_descriptor_image_infos[image_set][i].sampler = e.Samplers[i].GetVkSampler();
-		}
-
-		write_descriptors[write_descriptor_index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		write_descriptors[write_descriptor_index].pNext = nullptr;
-		write_descriptors[write_descriptor_index].dstSet = descriptorSet;
-		write_descriptors[write_descriptor_index].dstBinding = write_descriptor_index;
-		write_descriptors[write_descriptor_index].dstArrayElement = 0;
-		write_descriptors[write_descriptor_index].descriptorCount = e.ImageViews.ElementCount();
-		write_descriptors[write_descriptor_index].descriptorType = static_cast<VkDescriptorType>(e.BindingType);
-		write_descriptors[write_descriptor_index].pImageInfo = vk_descriptor_image_infos[image_set].begin();
-		write_descriptors[write_descriptor_index].pBufferInfo = nullptr;
-		write_descriptors[write_descriptor_index].pTexelBufferView = nullptr;
-	}
-
-	for(const auto& e : bindingsUpdateInfo.BufferBindingsSetLayout)
-	{
-		write_descriptor_index = write_descriptors.EmplaceBack();
-		
-		buffer_set = vk_descriptor_buffer_infos.EmplaceBack();
-		
-		for(GTSL::uint8 i = 0; i < e.Buffers.ElementCount(); ++i)
+		case VulkanBindingType::SAMPLER:
+		case VulkanBindingType::COMBINED_IMAGE_SAMPLER:
+		case VulkanBindingType::SAMPLED_IMAGE:
+		case VulkanBindingType::STORAGE_IMAGE: 
 		{
-			vk_descriptor_buffer_infos[buffer_set].EmplaceBack();
-			
-			vk_descriptor_buffer_infos[buffer_set][i].buffer = e.Buffers[i].GetVkBuffer();
-			vk_descriptor_buffer_infos[buffer_set][i].range = e.Sizes[i];
-			vk_descriptor_buffer_infos[buffer_set][i].offset = e.Offsets[i];
+			writeSet.pImageInfo = static_cast<VkDescriptorImageInfo*>(bindingsUpdateInfo.BindingUpdateInfos[binding].BindingsUpdates);
+			writeSet.pBufferInfo = nullptr;
+			writeSet.pTexelBufferView = nullptr;
+			break;	
 		}
-
-		write_descriptors[write_descriptor_index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		write_descriptors[write_descriptor_index].pNext = nullptr;
-		write_descriptors[write_descriptor_index].dstSet = descriptorSet;
-		write_descriptors[write_descriptor_index].dstBinding = write_descriptor_index;
-		write_descriptors[write_descriptor_index].dstArrayElement = 0;
-		write_descriptors[write_descriptor_index].descriptorCount = e.Buffers.ElementCount();
-		write_descriptors[write_descriptor_index].descriptorType = static_cast<VkDescriptorType>(e.BindingType);
-		write_descriptors[write_descriptor_index].pImageInfo = nullptr;
-		write_descriptors[write_descriptor_index].pBufferInfo = vk_descriptor_buffer_infos[buffer_set].begin();
-		write_descriptors[write_descriptor_index].pTexelBufferView = nullptr;
+			
+		case VulkanBindingType::UNIFORM_TEXEL_BUFFER: GAL_DEBUG_BREAK;
+		case VulkanBindingType::STORAGE_TEXEL_BUFFER: GAL_DEBUG_BREAK;
+			
+		case VulkanBindingType::UNIFORM_BUFFER:
+		case VulkanBindingType::STORAGE_BUFFER:
+		case VulkanBindingType::UNIFORM_BUFFER_DYNAMIC:
+		case VulkanBindingType::STORAGE_BUFFER_DYNAMIC:
+		{				
+			writeSet.pImageInfo = nullptr;
+			writeSet.pBufferInfo = static_cast<VkDescriptorBufferInfo*>(bindingsUpdateInfo.BindingUpdateInfos[binding].BindingsUpdates);
+			writeSet.pTexelBufferView = nullptr;
+			break;
+		}
+			
+		case VulkanBindingType::INPUT_ATTACHMENT: GAL_DEBUG_BREAK;
+		case VulkanBindingType::ACCELERATION_STRUCTURE: GAL_DEBUG_BREAK;
+		default: __debugbreak();
+		}
 	}
-
-	vkUpdateDescriptorSets(static_cast<const VulkanRenderDevice*>(bindingsUpdateInfo.RenderDevice)->GetVkDevice(), write_descriptors.GetLength(), write_descriptors.begin(), 0, nullptr);
+	
+	vkUpdateDescriptorSets(static_cast<const VulkanRenderDevice*>(bindingsUpdateInfo.RenderDevice)->GetVkDevice(), vkWriteDescriptorSets.GetLength(), vkWriteDescriptorSets.begin(), 0, nullptr);
 }

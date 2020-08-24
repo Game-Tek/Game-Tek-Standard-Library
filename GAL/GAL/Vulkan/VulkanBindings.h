@@ -3,6 +3,8 @@
 #include "GAL/Bindings.h"
 
 #include "Vulkan.h"
+#include "VulkanBuffer.h"
+#include "VulkanTexture.h"
 
 namespace GAL
 {
@@ -91,10 +93,32 @@ namespace GAL
 	public:
 		VulkanBindingsSet() = default;
 
+		struct TextureBindingsUpdateInfo
+		{
+			VulkanSampler Sampler;
+			VulkanTextureView TextureView;
+			VulkanTextureLayout TextureLayout;
+		};
+
+		struct BufferBindingsUpdateInfo
+		{
+			VulkanBuffer Buffer;
+			GTSL::uint64 Offset, Range;
+		};
+
+		struct BindingUpdateInfo
+		{
+			VulkanBindingType Type;
+
+			GTSL::uint32 ArrayElement = 0;
+			GTSL::uint32 Count;
+			
+			void* BindingsUpdates;
+		};
+		
 		struct BindingsSetUpdateInfo final : VulkanRenderInfo
 		{
-			GTSL::Array<VulkanBindingsSetLayout::ImageBindingDescriptor, MAX_BINDINGS_PER_SET> ImageBindingsSetLayout;
-			GTSL::Array<VulkanBindingsSetLayout::BufferBindingDescriptor, MAX_BINDINGS_PER_SET> BufferBindingsSetLayout;
+			GTSL::Ranger<const BindingUpdateInfo> BindingUpdateInfos;
 		};
 		void Update(const BindingsSetUpdateInfo& bindingsUpdateInfo);
 
