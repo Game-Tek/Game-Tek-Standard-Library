@@ -3,7 +3,9 @@
 #include "Buffer.h"
 #include "FlatHashMap.h"
 #include "Array.hpp"
+#include "Extent.h"
 #include "Vector.hpp"
+#include "Algorithm.h"
 
 namespace GTSL
 {
@@ -69,5 +71,37 @@ namespace GTSL
 			auto valuesBucket = map.getValuesBucket(bucket);
 			for (auto& e : valuesBucket) { Extract(e, buffer); }
 		}
+	}
+
+	template<Enum T>
+	void Insert(const T enu, Buffer& buffer)
+	{
+		buffer.WriteBytes(sizeof(T), reinterpret_cast<const byte*>(&enu));
+	}
+
+	template<Enum T>
+	void Extract(T& enu, Buffer& buffer)
+	{
+		buffer.ReadBytes(sizeof(T), reinterpret_cast<byte*>(&enu));
+	}
+
+	inline void Insert(const Extent2D extent, Buffer& buffer)
+	{
+		buffer.WriteBytes(sizeof(Extent2D), reinterpret_cast<const byte*>(&extent));
+	}
+
+	inline void Extract(Extent2D& extent, Buffer& buffer)
+	{
+		buffer.ReadBytes(sizeof(Extent2D), reinterpret_cast<byte*>(&extent));
+	}
+	
+	inline void Insert(const Extent3D extent, Buffer& buffer)
+	{
+		buffer.WriteBytes(sizeof(Extent3D), reinterpret_cast<const byte*>(&extent));
+	}
+
+	inline void Extract(Extent3D& extent, Buffer& buffer)
+	{
+		buffer.ReadBytes(sizeof(Extent3D), reinterpret_cast<byte*>(&extent));
 	}
 }
