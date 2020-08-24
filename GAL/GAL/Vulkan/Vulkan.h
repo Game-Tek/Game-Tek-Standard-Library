@@ -652,4 +652,16 @@ namespace GAL
 
 		return shaderStage;
 	}
+
+	inline VulkanTextureType::value_type TextureTypeToVulkanTextureType(const TextureType type)
+	{
+		switch (type) {
+		case TextureType::COLOR: return VulkanTextureType::COLOR;
+		case TextureType::DEPTH: return VulkanTextureType::DEPTH;
+		case TextureType::STENCIL: return VulkanTextureType::STENCIL;
+		case TextureType::DEPTH_STENCIL: return VulkanTextureType::DEPTH | VulkanTextureType::STENCIL;
+		}
+
+		return 0;
+	}
 }
