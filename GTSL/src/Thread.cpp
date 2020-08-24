@@ -5,9 +5,11 @@
 #include <Windows.h>
 #endif
 
+thread_local GTSL::uint8 GTSL::Thread::threadId = 0;
+
 void* GTSL::Thread::createThread(unsigned long(*function)(void*), void* data) noexcept { return CreateThread(0, 0, function, data, 0, nullptr); }
 
-GTSL::uint32 GTSL::Thread::ThisTreadID() noexcept { return GetCurrentThreadId(); }
+GTSL::uint32 GTSL::Thread::ThisTreadID() noexcept { return threadId; }
 
 void GTSL::Thread::SetPriority(const Priority threadPriority) const noexcept
 {
@@ -25,7 +27,7 @@ void GTSL::Thread::SetPriority(const Priority threadPriority) const noexcept
 	SetThreadPriority(handle, priority);
 }
 
-void GTSL::Thread::Join() noexcept { WaitForSingleObject(handle, INFINITE); handle = nullptr; }
+void GTSL::Thread::join() noexcept { WaitForSingleObject(handle, INFINITE); handle = nullptr; }
 
 void GTSL::Thread::Detach() noexcept { handle = nullptr; }
 

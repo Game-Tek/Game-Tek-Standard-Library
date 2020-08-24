@@ -12,13 +12,17 @@ namespace GTSL
 	public:
 		Thread() = default;
 
-		template<typename T, typename... ARGS>
-		Thread(Delegate<T> delegate, ARGS... args) noexcept
+		template<class ALLOCATOR, typename T, typename... ARGS>
+		Thread(const ALLOCATOR& allocator, const uint8 threadIdParam, Delegate<T> delegate, ARGS... args) noexcept
 		{
-			auto data = new FunctionCallData<T, ARGS...>(delegate, GTSL::ForwardRef<ARGS>(args)...);
+			uint64 allocatedSize;
 			
-			auto p = &Thread::launchThread<T, ARGS...>;
-			handle = createThread(p, data);
+			this->dataSize = static_cast<uint32>(sizeof(FunctionCallData<T, ARGS...>));
+			
+			allocator.Allocate(this->dataSize, 8, &this->data, &allocatedSize);
+			new(this->data) FunctionCallData<T, ARGS...>(threadIdParam, delegate, GTSL::ForwardRef<ARGS>(args)...);
+			
+			this->handle = createThread(&Thread::launchThread<T, ARGS...>, this->data);
 		}
 
 		static uint32 ThisTreadID() noexcept;
@@ -29,7 +33,13 @@ namespace GTSL
 		};
 		void SetPriority(Priority threadPriority) const noexcept;
 
-		void Join() noexcept;
+		template<class ALLOCATOR>
+		void Join(const ALLOCATOR& allocator) noexcept
+		{
+			this->join(); //wait first
+			allocator.Deallocate(this->dataSize, 8, this->data); //deallocate next
+		}
+		
 		void Detach() noexcept;
 
 		[[nodiscard]] uint32 GetId() const noexcept;
@@ -42,29 +52,36 @@ namespace GTSL
 		template<typename FT, typename... ARGS>
 		struct FunctionCallData
 		{
-			FunctionCallData(Delegate<FT> delegate, ARGS&&... args) : Delegate(delegate), Parameters(GTSL::ForwardRef<ARGS>(args)...)
+			FunctionCallData(const uint8 tId, Delegate<FT> delegate, ARGS&&... args) : ThreadId(tId), Delegate(delegate), Parameters(GTSL::ForwardRef<ARGS>(args)...)
 			{
 			}
 
+			uint8 ThreadId;
 			Delegate<FT> Delegate;
 			Tuple<ARGS...> Parameters;
 		};
 
 		void* handle{ nullptr };
-
+		void* data;
+		uint32 dataSize;
+		
 		template<typename FT, typename... ARGS>
 		static unsigned long launchThread(void* data)
 		{
-			FunctionCallData<FT, ARGS...>* function_data = static_cast<FunctionCallData<FT, ARGS...>*>(data);
+			FunctionCallData<FT, ARGS...>* functionData = static_cast<FunctionCallData<FT, ARGS...>*>(data);
 
-			Call(function_data->Delegate, function_data->Parameters);
-
-			delete function_data;
+			threadId = functionData->ThreadId;
+			
+			Call(functionData->Delegate, functionData->Parameters);
 
 			return 0;
 		}
 
 
 		static void* createThread(unsigned long(*function)(void*), void* data) noexcept;
+
+		thread_local static uint8 threadId;
+
+		void join() noexcept;
 	};
 }
