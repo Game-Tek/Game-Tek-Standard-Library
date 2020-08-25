@@ -192,6 +192,12 @@ namespace GTSL
 			MemCopy((bucketLength - elementIndex) * sizeof(key_type), getKeysBucket(bucketIndex) + elementIndex + 1, getKeysBucket(bucketIndex) + elementIndex);
 			MemCopy((bucketLength - elementIndex) * sizeof(T), getValuesBucket(bucketIndex) + elementIndex + 1, getValuesBucket(bucketIndex) + elementIndex);
 		}
+
+		void Clear()
+		{
+			for (uint32 bucket = 0; bucket < this->capacity; ++bucket) { for (auto& e : getValuesBucket(bucket)) { e.~T(); } }
+			for(uint32 bucket = 0; bucket < this->capacity; ++bucket) { getBucketLength(bucket) = 0; }
+		}
 		
 	private:
 		friend class Iterator<T>;
