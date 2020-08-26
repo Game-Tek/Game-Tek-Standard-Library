@@ -24,7 +24,7 @@ void GAL::VulkanAsyncHostOperation::Destroy(const VulkanRenderDevice* renderDevi
 
 GAL::VulkanAsyncHostOperation::JoinResult GAL::VulkanAsyncHostOperation::Join(const VulkanRenderDevice* renderDevice)
 {
-	switch (renderDevice->vkDeferredOperationJoinKhr(renderDevice->GetVkDevice(), static_cast<VkDeferredOperationKHR>(deferredOperation)))
+	switch (renderDevice->vkDeferredOperationJoinKHR(renderDevice->GetVkDevice(), static_cast<VkDeferredOperationKHR>(deferredOperation)))
 	{
 	case VK_SUCCESS: return JoinResult::DONE;
 	case VK_THREAD_DONE_KHR: return JoinResult::PENDING;

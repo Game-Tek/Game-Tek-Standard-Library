@@ -39,6 +39,16 @@ namespace GTSL
 		[[nodiscard]] constexpr uint32 GetLength() const { return this->length + 1; }
 		[[nodiscard]] constexpr uint32 GetCapacity() const { return N; }
 
+		bool operator==(const StaticString& other) const
+		{
+			if (this->length != other.length) { return false; }
+			
+			for(uint32 i = 0; i < this->length; ++i) { if (this->array[i] != other.array[i]) { return false; } }
+
+			return true;
+		}
+		
+		
 		void Resize(uint32 newLength)
 		{
 			GTSL_ASSERT(newLength <= N, "New size larger tnah capacity")
