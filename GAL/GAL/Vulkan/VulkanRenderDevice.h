@@ -156,6 +156,9 @@ namespace GAL
 		PFN_vkGetRayTracingShaderGroupHandlesKHR vkGetRayTracingShaderGroupHandlesKHR;
 		
 		PFN_vkCreateDeferredOperationKHR vkCreateDeferredOperationKHR;
+		PFN_vkDeferredOperationJoinKHR vkDeferredOperationJoinKhr;
+		PFN_vkGetDeferredOperationResultKHR vkGetDeferredOperationResultKHR;
+		PFN_vkGetDeferredOperationMaxConcurrencyKHR vkGetDeferredOperationMaxConcurrencyKHR;
 		PFN_vkDestroyDeferredOperationKHR vkDestroyDeferredOperationKHR;
 
 		PFN_vkCmdCopyAccelerationStructureKHR vkCmdCopyAccelerationStructureKHR;

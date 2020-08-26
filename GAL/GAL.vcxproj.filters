@@ -93,6 +93,9 @@
     <ClInclude Include="GAL\Texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GAL\Vulkan\VulkanAsyncHostOperation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Vulkan\VulkanBindings.cpp">
@@ -132,6 +135,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Vulkan\VulkanTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Vulkan\VulkanAsyncHostOperation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
