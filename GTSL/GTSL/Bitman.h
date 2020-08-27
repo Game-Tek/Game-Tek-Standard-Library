@@ -23,9 +23,13 @@ namespace GTSL
 	}
 	
 	inline void SetBit(const uint8 bitN, uint64& n) { n |= 1ULL << bitN; }
+	inline void SetBit(const uint8 bitN, uint32& n) { n |= 1U << bitN; }
 	inline void ClearBit(const uint8 bitN, uint64& n) { n &= ~(1ULL << bitN); }
+	inline void ClearBit(const uint8 bitN, uint32& n) { n &= ~(1U << bitN); }
 	inline void FlipBit(const uint8 bitN, uint64& n) { n ^= 1ULL << bitN; }
+	inline void FlipBit(const uint8 bitN, uint32& n) { n ^= 1U << bitN; }
 	inline bool CheckBit(const uint8 bitN, const uint64 n) { return (n >> bitN) & 1ULL; }
+	inline bool CheckBit(const uint8 bitN, const uint32 n) { return (n >> bitN) & 1U; }
 	inline void SetBitAs(const uint8 bitN, const bool value, uint64& n) { n = (n & ~(1ull << bitN)) | (static_cast<uint64>(value) << bitN); }
 	inline void SetBitAs(const uint8 bitN, const bool value, uint32& n) { n = (n & ~(1u << bitN)) | (static_cast<uint32>(value) << bitN); }
 	

@@ -252,38 +252,38 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		};
 
 #if (_DEBUG)
-		VkDebugUtilsMessengerCreateInfoEXT vk_debug_utils_messenger_create_info_EXT{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
-		vk_debug_utils_messenger_create_info_EXT.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-		vk_debug_utils_messenger_create_info_EXT.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-		vk_debug_utils_messenger_create_info_EXT.pfnUserCallback = debugCallback;
-		vk_debug_utils_messenger_create_info_EXT.pUserData = this;
+		VkDebugUtilsMessengerCreateInfoEXT vkDebugUtilsMessengerCreateInfoExt{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
+		vkDebugUtilsMessengerCreateInfoExt.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		vkDebugUtilsMessengerCreateInfoExt.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		vkDebugUtilsMessengerCreateInfoExt.pfnUserCallback = debugCallback;
+		vkDebugUtilsMessengerCreateInfoExt.pUserData = this;
 #endif
 
-		VkInstanceCreateInfo vk_instance_create_info{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
-		vk_instance_create_info.pNext = &vk_debug_utils_messenger_create_info_EXT;
-		vk_instance_create_info.pApplicationInfo = &vk_application_info;
-		vk_instance_create_info.enabledLayerCount = instanceLayers.GetLength();
-		vk_instance_create_info.ppEnabledLayerNames = instanceLayers.begin();
-		vk_instance_create_info.enabledExtensionCount = instanceExtensions.GetLength();
-		vk_instance_create_info.ppEnabledExtensionNames = instanceExtensions.begin();
+		VkInstanceCreateInfo vkInstanceCreateInfo{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
+		vkInstanceCreateInfo.pNext = &vkDebugUtilsMessengerCreateInfoExt;
+		vkInstanceCreateInfo.pApplicationInfo = &vk_application_info;
+		vkInstanceCreateInfo.enabledLayerCount = instanceLayers.GetLength();
+		vkInstanceCreateInfo.ppEnabledLayerNames = instanceLayers.begin();
+		vkInstanceCreateInfo.enabledExtensionCount = instanceExtensions.GetLength();
+		vkInstanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.begin();
 
-		VK_CHECK(vkCreateInstance(&vk_instance_create_info, GetVkAllocationCallbacks(), &instance))
+		VK_CHECK(vkCreateInstance(&vkInstanceCreateInfo, GetVkAllocationCallbacks(), &instance))
 
 #if (_DEBUG)
 		createDebugUtilsFunction = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
 		destroyDebugUtilsFunction = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
 
-		createDebugUtilsFunction(instance, &vk_debug_utils_messenger_create_info_EXT, GetVkAllocationCallbacks(), &debugMessenger);
+		createDebugUtilsFunction(instance, &vkDebugUtilsMessengerCreateInfoExt, GetVkAllocationCallbacks(), &debugMessenger);
 #endif
 	}
 
 	{
-		uint32_t physical_device_count{ 0 };
-		vkEnumeratePhysicalDevices(instance, &physical_device_count, nullptr);
-		Array<VkPhysicalDevice, 8> vk_physical_devices(physical_device_count);
-		vkEnumeratePhysicalDevices(instance, &physical_device_count, vk_physical_devices.begin());
+		uint32_t physicalDeviceCount{ 0 };
+		vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
+		Array<VkPhysicalDevice, 8> vkPhysicalDevices(physicalDeviceCount);
+		vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, vkPhysicalDevices.begin());
 
-		physicalDevice = vk_physical_devices[0];
+		physicalDevice = vkPhysicalDevices[0];
 	}
 
 	{
@@ -388,7 +388,13 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 			[[no_discard]] auto tryAddExtension = [&](const char* extensionName)
 			{
 				StaticString<32> name(extensionName);
-				for (auto& e : deviceExtensions) { if (e == name) { return false; } }
+				for (auto& e : deviceExtensions)
+				{
+					if (e == name)
+					{
+						return false;
+					}
+				}
 				deviceExtensions.EmplaceBack(name); return true;
 			};
 			
@@ -448,21 +454,21 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 			deviceProperties = properties2.properties;
 
-			VkDeviceCreateInfo vk_device_create_info{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-			vk_device_create_info.pNext = &features2; //extended features
-			vk_device_create_info.queueCreateInfoCount = vkDeviceQueueCreateInfos.GetLength();
-			vk_device_create_info.pQueueCreateInfos = vkDeviceQueueCreateInfos.begin();
-			vk_device_create_info.pEnabledFeatures = nullptr;
-			vk_device_create_info.enabledExtensionCount = deviceExtensions.GetLength();
+			VkDeviceCreateInfo vkDeviceCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+			vkDeviceCreateInfo.pNext = &features2; //extended features
+			vkDeviceCreateInfo.queueCreateInfoCount = vkDeviceQueueCreateInfos.GetLength();
+			vkDeviceCreateInfo.pQueueCreateInfos = vkDeviceQueueCreateInfos.begin();
+			vkDeviceCreateInfo.pEnabledFeatures = nullptr;
+			vkDeviceCreateInfo.enabledExtensionCount = deviceExtensions.GetLength();
 
 			Array<const char*, 32> strings(deviceExtensions.GetLength());
 			{
 				for (uint32 i = 0; i < deviceExtensions.GetLength(); ++i) { strings[i] = deviceExtensions[i].begin(); }
 			}
 			
-			vk_device_create_info.ppEnabledExtensionNames = strings.begin();
+			vkDeviceCreateInfo.ppEnabledExtensionNames = strings.begin();
 
-			VK_CHECK(vkCreateDevice(physicalDevice, &vk_device_create_info, GetVkAllocationCallbacks(), &device));
+			VK_CHECK(vkCreateDevice(physicalDevice, &vkDeviceCreateInfo, GetVkAllocationCallbacks(), &device));
 		}
 
 		for (uint8 FAMILY = 0; FAMILY < familiesIndices.GetLength(); ++FAMILY)
