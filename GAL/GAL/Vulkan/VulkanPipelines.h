@@ -39,9 +39,16 @@ namespace GAL
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
+			bool ExternallySync = false;
 			GTSL::Ranger<const GTSL::byte> Data;
 		};
 		VulkanPipelineCache(const CreateInfo& createInfo);
+
+		struct CreateFromMultipleInfo final : VulkanCreateInfo
+		{
+			GTSL::Ranger<const VulkanPipelineCache> Caches;
+		};
+		VulkanPipelineCache(const CreateFromMultipleInfo& createInfo);
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 

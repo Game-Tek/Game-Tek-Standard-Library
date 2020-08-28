@@ -71,12 +71,21 @@ bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL:
 
 GAL::VulkanPipelineCache::VulkanPipelineCache(const CreateInfo& createInfo)
 {
-	VkPipelineCacheCreateInfo vk_pipeline_cache_create_info{ VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO };
-	vk_pipeline_cache_create_info.initialDataSize = createInfo.Data.Bytes();
-	vk_pipeline_cache_create_info.pInitialData = createInfo.Data.begin();
+	VkPipelineCacheCreateInfo vkPipelineCacheCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO };
+	GTSL::SetBitAs(0, createInfo.ExternallySync, vkPipelineCacheCreateInfo.flags);
+	vkPipelineCacheCreateInfo.initialDataSize = createInfo.Data.Bytes();
+	vkPipelineCacheCreateInfo.pInitialData = createInfo.Data.begin();
 
-	VK_CHECK(vkCreatePipelineCache(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_pipeline_cache_create_info,
-		static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipelineCache));
+	VK_CHECK(vkCreatePipelineCache(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vkPipelineCacheCreateInfo, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &pipelineCache))
+}
+
+GAL::VulkanPipelineCache::VulkanPipelineCache(const CreateFromMultipleInfo& createInfo)
+{
+	VkPipelineCacheCreateInfo vkPipelineCacheCreateInfo { VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO };
+	
+	VK_CHECK(vkCreatePipelineCache(createInfo.RenderDevice->GetVkDevice(), &vkPipelineCacheCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipelineCache))
+	
+	vkMergePipelineCaches(createInfo.RenderDevice->GetVkDevice(), pipelineCache, static_cast<GTSL::uint32>(createInfo.Caches.ElementCount()), reinterpret_cast<const VkPipelineCache*>(createInfo.Caches.begin()));
 }
 
 void GAL::VulkanPipelineCache::Destroy(const VulkanRenderDevice* renderDevice)
