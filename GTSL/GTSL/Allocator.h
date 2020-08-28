@@ -54,11 +54,6 @@ namespace GTSL
 		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size);
 		void Deallocate(uint64 size, uint64 alignment, void* data);
 	};
-	
-	struct Allocation
-	{
-		void* Data = nullptr;
-	};
 
 	template<typename T, class ALLOCATOR, typename... ARGS>
 	T* New(const ALLOCATOR& allocator, ARGS&&... args)
@@ -78,10 +73,6 @@ namespace GTSL
 	struct SmartPointer
 	{
 		SmartPointer() = default;
-		
-		SmartPointer(const SmartPointer& other) : size(other.size), alignment(other.alignment), data(other.data)
-		{
-		}
 
 		SmartPointer(SmartPointer&& other) noexcept : size(other.size), alignment(other.alignment), data(other.data)
 		{
@@ -89,15 +80,15 @@ namespace GTSL
 		}
 
 		void Free() { this->data->~T(); this->data = nullptr; }
-
-		template<typename TT>
-		void Free() { reinterpret_cast<TT*>(this->data)->~TT(); this->data = nullptr; }
 		
-		~SmartPointer() { if (this->data) { this->data->~T(); this->allocator.Deallocate(this->size, this->alignment, this->data); this->data = nullptr; } }
-
-		SmartPointer& operator=(const SmartPointer& other)
+		~SmartPointer()
 		{
-			size = other.size; alignment = other.alignment; data = other.data; return *this;
+			if (this->data)
+			{
+				this->data->~T();
+				this->allocator.Deallocate(this->size, this->alignment, this->data);
+				this->data = nullptr;
+			}
 		}
 
 		SmartPointer& operator=(SmartPointer&& other) noexcept

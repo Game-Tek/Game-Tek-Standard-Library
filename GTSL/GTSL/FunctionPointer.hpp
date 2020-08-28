@@ -21,6 +21,8 @@ namespace GTSL
 		template <class T, RET(T::* CONST_METHOD)(ARGS ...) const>
 		static constexpr RET constMethodCaller(void* callee, ARGS&&... params) { return (static_cast<const T*>(callee)->*CONST_METHOD)(GTSL::ForwardRef<ARGS>(params)...); }
 	public:
+		FunctionPointer() = default;
+		
 		constexpr explicit FunctionPointer(decltype(callerFunction) cF) : callerFunction(cF)
 		{
 		}
