@@ -27,8 +27,22 @@ namespace GTSL
 		}
 
 		~KeepVector()
-		{
-			if(data) [[likely]] { free(); }
+		{			
+			if(data) [[likely]]
+			{
+				uint32 num = 0;
+				for (auto& index : getIndices())
+				{
+					for (uint32 i = 0; i < 32; ++i)
+					{
+						if (!GTSL::CheckBit(i, index)) { (getObjects() + num + i)->~T(); }
+					}
+
+					num += 32;
+				}
+				
+				free();
+			}
 		}
 		
 		/**
@@ -61,11 +75,28 @@ namespace GTSL
 		 */
 		void Pop(const length_type index)
 		{
-			auto number = index / 32; auto bit = index % 32;
+			const auto number = index / 32; const auto bit = index % 32;
 			GTSL::SetBit(bit, *(getIndices() + number));
 			(getObjects() + index)->~T();
 		}
 
+		void Clear()
+		{
+			uint32 num = 0;
+			for (auto& index : getIndices())
+			{
+				for (uint32 i = 0; i < 32; ++i)
+				{
+					if (!GTSL::CheckBit(i, index)) { (getObjects() + num + i)->~T(); }
+				}
+
+				num += 32;
+				index = 0xFFFFFFFF;
+			}
+		}
+		
+		[[nodiscard]] uint32 GetCapacity() const { return capacity; }
+		
 		const T& operator[](const uint32 i) const
 		{
 			const auto number = i / 32; const auto bit = i % 32;
