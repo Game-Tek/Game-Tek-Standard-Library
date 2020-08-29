@@ -445,6 +445,13 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 					break;
 				}
+				case Extension::PIPELINE_CACHE_EXTERNAL_SYNC:
+				{
+					VkPhysicalDevicePipelineCreationCacheControlFeaturesEXT pipelineCacheSyncControl{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT };
+					placeFeaturesStructure(sizeof(pipelineCacheSyncControl), &pipelineCacheSyncControl, &pipelineCacheSyncControl.pNext);
+					
+					break;
+				}
 				default: __debugbreak();
 				}
 			}

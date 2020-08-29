@@ -53,7 +53,7 @@ namespace GAL
 
 		enum class Extension
 		{
-			RAY_TRACING
+			RAY_TRACING, PIPELINE_CACHE_EXTERNAL_SYNC
 		};
 		
 		struct AllocationInfo

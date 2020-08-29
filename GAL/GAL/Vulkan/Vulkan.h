@@ -482,7 +482,7 @@ namespace GAL
 
 	enum class VulkanPipelineType : GTSL::uint32
 	{
-		GRAPHICS = 0, COMPUTE = 1, RAY_TRACING = 1000165000
+		RASTER = 0, COMPUTE = 1, RAY_TRACING = 1000165000
 	};
 	
 	enum class VulkanShaderDataType
