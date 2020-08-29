@@ -166,7 +166,7 @@ namespace GTSL
 			return *new(getValuesBucket(bucketIndex) + placeIndex) T(ForwardRef<ARGS>(args)...);
 		}
 
-		bool Find(const key_type key) { return findKeyInBucket(modulo(key, this->capacity), key); }
+		[[nodiscard]] bool Find(const key_type key) const { return findKeyInBucket(modulo(key, this->capacity), key); }
 		
 		bool Find(const key_type key, T*& obj)
 		{

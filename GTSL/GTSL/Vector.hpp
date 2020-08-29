@@ -387,7 +387,7 @@ namespace GTSL
 		 * \param obj Object to look for.
 		 * \return Iterator to element if it was found, iterator to end if object was not found.
 		 */
-		iterator Find(const T& obj) noexcept
+		const_iterator Find(const T& obj) const noexcept
 		{
 			for (const auto& e : *this) { if (obj == e) { return this->begin(); } } return this->end();
 		}
