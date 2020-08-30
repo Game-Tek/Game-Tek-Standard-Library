@@ -308,8 +308,11 @@ namespace GTSL
 
 		T* getValuesBucketPointer(const uint32 keys_bucket) const { return reinterpret_cast<T*>(this->data + getKeysAllocationSize(this->capacity, maxBucketLength)) + keys_bucket * maxBucketLength; }
 		
-		template<typename TT, class ALLOCATOR, typename L >
+		template<typename TT, class ALLOCATOR, typename L>
 		friend void ForEach(FlatHashMap<TT, ALLOCATOR>& collection, L&& lambda);
+
+		template<typename TT, class ALLOCATOR, typename L>
+		friend void PairForEach(FlatHashMap<TT, ALLOCATOR>& collection, L&& lambda);
 
 		template<typename T, class ALLOCATOR>
 		friend void Insert(const FlatHashMap<T, ALLOCATOR>&, class Buffer& buffer);
@@ -321,5 +324,17 @@ namespace GTSL
 	void ForEach(FlatHashMap<T, ALLOCATOR>& collection, L&& lambda)
 	{
 		for (uint32 bucketIndex = 0; bucketIndex < collection.capacity; ++bucketIndex) { for (auto& e : collection.getValuesBucket(bucketIndex)) { lambda(e); } }
+	}
+
+	template<typename T, class ALLOCATOR, typename L>
+	void PairForEach(FlatHashMap<T, ALLOCATOR>& collection, L&& lambda)
+	{
+		for (uint32 bucketIndex = 0; bucketIndex < collection.capacity; ++bucketIndex)
+		{
+			for (uint32 i = 0; i < collection.getKeysBucket(bucketIndex).ElementCount(); ++i)
+			{
+				lambda(collection.getKeysBucket(bucketIndex)[i], collection.getValuesBucket(bucketIndex)[i]);
+			}
+		}
 	}
 }

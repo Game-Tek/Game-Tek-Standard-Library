@@ -97,6 +97,17 @@ namespace GTSL
 		
 		[[nodiscard]] uint32 GetCapacity() const { return capacity; }
 		
+		T& operator[](const uint32 i)
+		{
+			const auto number = i / 32; const auto bit = i % 32;
+			if constexpr (_DEBUG)
+			{
+				auto c = getIndices()[number];
+				GTSL_ASSERT(!CheckBit(bit, getIndices()[number]), "No valid value in that slot!")
+			}
+			return getObjects()[number + bit];
+		}
+
 		const T& operator[](const uint32 i) const
 		{
 			const auto number = i / 32; const auto bit = i % 32;
@@ -175,6 +186,9 @@ namespace GTSL
 
 		template<typename TT, class ALLOC, typename L>
 		friend void ForEach(KeepVector<TT, ALLOC>& keepVector, L&& lambda);
+
+		template<typename TT, class ALLOC, typename L>
+		friend void ReverseForEach(KeepVector<TT, ALLOC>& keepVector, L&& lambda);
 	};
 
 	template<typename T, class ALLOCATOR, typename L>
@@ -189,6 +203,22 @@ namespace GTSL
 			}
 
 			num += 32;
+		}
+	}
+
+	template<typename T, class ALLOCATOR, typename L>
+	void ReverseForEach(KeepVector<T, ALLOCATOR>& keepVector, L&& lambda)
+	{
+		uint32 num = (keepVector.getIndices().ElementCount() - 1) * 32;
+		
+		for(auto* end = keepVector.getIndices().end() - 1; end != (keepVector.getIndices().begin() - 1); --end)
+		{
+			for(int64 i = 31; i > -1; --i)
+			{
+				if (!GTSL::CheckBit(i, *end)) { lambda(keepVector.getObjects().operator[](num + i)); }
+			}
+			
+			num -= 32;
 		}
 	}
 }
