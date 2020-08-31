@@ -317,6 +317,7 @@
     <ClCompile Include="src\Math\Math.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ArrayCommon.ixx" />
+    <ClCompile Include="GTSL\StaticMap.hpp" />
+    <ClCompile Include="GTSL\ArrayCommon.hpp" />
   </ItemGroup>
 </Project>

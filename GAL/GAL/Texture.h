@@ -30,8 +30,9 @@ namespace GAL
 		 */
 		static void ConvertImageToFormat(const TextureFormat sourceImageFormat, const TextureFormat targetImageFormat, const GTSL::Extent2D imageExtent, GTSL::AlignedPointer<GTSL::byte, 16> buffer, GTSL::uint8 alphaValue)
 		{
-			const auto sourceFormatSize{ ImageFormatSize(sourceImageFormat) }; const auto textureFormatSize{ ImageFormatSize(targetImageFormat) };
-			const GTSL::uint64 targetTextureSize = GetImageSize(textureFormatSize, imageExtent);
+			const auto sourceFormatSize{ ImageFormatSize(sourceImageFormat) }; const auto targetFormatSize{ ImageFormatSize(targetImageFormat) };
+			const GTSL::uint64 targetTextureSize = GetImageSize(targetFormatSize, imageExtent);
+			const GTSL::uint64 sourceTextureSize = GetImageSize(sourceFormatSize, imageExtent);
 
 			auto byte3_channel_swap = [&]()
 			{
@@ -57,15 +58,15 @@ namespace GAL
 				//	GTSL::MemCopy(sourceFormatSize, source, target); *(target + 3) = alphaValue;
 				//}
 
-				GTSL::byte* source = buffer.Get(),* target = buffer.Get() + targetTextureSize;
+				GTSL::byte* source = buffer.Get() + sourceTextureSize - sourceFormatSize,* target = buffer.Get() + targetTextureSize - targetFormatSize;
 				
-				for(GTSL::uint32 i = 0; i < imageExtent.Width + imageExtent.Height; ++i)
+				for(GTSL::uint32 i = 0; i < imageExtent.Width * imageExtent.Height; ++i)
 				{
 					GTSL::MemCopy(sourceFormatSize, source, target);
 					*(target + 3) = alphaValue;
 
-					source += sourceFormatSize;
-					target -= textureFormatSize;
+					source -= sourceFormatSize;
+					target -= targetFormatSize;
 				}
 			};
 			
