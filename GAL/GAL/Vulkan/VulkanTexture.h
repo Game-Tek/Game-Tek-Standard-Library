@@ -15,7 +15,7 @@ namespace GAL
 		{
 			VulkanTextureLayout InitialLayout;
 			VulkanTextureUses::value_type Uses;
-			VulkanTextureFormat SourceFormat;
+			VulkanTextureFormat Format;
 			GTSL::Extent3D Extent{ 1280, 720, 1 };
 			VulkanTextureTiling Tiling;
 			VulkanDimensions Dimensions;
@@ -47,9 +47,8 @@ namespace GAL
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			VulkanTexture Image;
-			VulkanTextureFormat SourceFormat;
-			GTSL::Extent2D Extent{ 1280, 720 };
+			VulkanTexture Texture;
+			VulkanTextureFormat Format;
 			VulkanDimensions Dimensions;
 			GTSL::uint8 MipLevels = 1;
 			VulkanTextureType::value_type Type;

@@ -11,7 +11,7 @@ GAL::VulkanTexture::VulkanTexture(const CreateInfo& createInfo)
 	vkImageCreateInfo.extent = Extent3DToVkExtent3D(createInfo.Extent);
 	vkImageCreateInfo.mipLevels = createInfo.MipLevels;
 	vkImageCreateInfo.arrayLayers = 1;
-	vkImageCreateInfo.format = static_cast<VkFormat>(createInfo.SourceFormat);
+	vkImageCreateInfo.format = static_cast<VkFormat>(createInfo.Format);
 	vkImageCreateInfo.tiling = static_cast<VkImageTiling>(createInfo.Tiling);
 	vkImageCreateInfo.initialLayout = static_cast<VkImageLayout>(createInfo.InitialLayout);
 	vkImageCreateInfo.usage = createInfo.Uses;
@@ -36,13 +36,13 @@ void GAL::VulkanTexture::BindToMemory(const BindMemoryInfo& bindMemoryInfo) cons
 GAL::VulkanTextureView::VulkanTextureView(const CreateInfo& createInfo)
 {
 	VkImageViewCreateInfo vkImageViewCreateInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-	vkImageViewCreateInfo.image = createInfo.Image.GetVkImage();
+	vkImageViewCreateInfo.image = createInfo.Texture.GetVkImage();
 	vkImageViewCreateInfo.viewType = static_cast<VkImageViewType>(createInfo.Dimensions);
 	vkImageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 	vkImageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 	vkImageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
 	vkImageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-	vkImageViewCreateInfo.format = static_cast<VkFormat>(createInfo.SourceFormat);
+	vkImageViewCreateInfo.format = static_cast<VkFormat>(createInfo.Format);
 	vkImageViewCreateInfo.subresourceRange.aspectMask = createInfo.Type;
 	vkImageViewCreateInfo.subresourceRange.baseMipLevel = 0;
 	vkImageViewCreateInfo.subresourceRange.levelCount = createInfo.MipLevels;

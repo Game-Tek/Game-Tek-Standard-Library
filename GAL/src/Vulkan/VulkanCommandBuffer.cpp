@@ -9,6 +9,8 @@
 #include "GAL/Vulkan/VulkanRenderPass.h"
 #include "GAL/Vulkan/VulkanTexture.h"
 
+using namespace GTSL;
+
 void GAL::VulkanCommandBuffer::BeginRecording(const BeginRecordingInfo& beginRecordingInfo)
 {
 	VkCommandBufferBeginInfo vk_command_buffer_begin_info{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -26,23 +28,24 @@ void GAL::VulkanCommandBuffer::EndRecording(const EndRecordingInfo& endRecording
 
 void GAL::VulkanCommandBuffer::BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo)
 {
-	VkRenderPassBeginInfo vk_render_pass_begin_info{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-	vk_render_pass_begin_info.renderPass = static_cast<const VulkanRenderPass*>(beginRenderPassInfo.RenderPass)->GetVkRenderPass();
+	VkRenderPassBeginInfo vkRenderPassBeginInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+	vkRenderPassBeginInfo.renderPass = static_cast<const VulkanRenderPass*>(beginRenderPassInfo.RenderPass)->GetVkRenderPass();
 	
-	GTSL::Array<VkClearValue, 32> vk_clear_clear_values(beginRenderPassInfo.ClearValues.ElementCount());
+	GTSL::Array<VkClearValue, 32> vkClearValues(static_cast<uint32>(beginRenderPassInfo.ClearValues.ElementCount()));
 	
-	for(const auto& e : beginRenderPassInfo.ClearValues)
+	for(GTSL::uint8 i = 0; i < static_cast<uint8>(beginRenderPassInfo.ClearValues.ElementCount()); ++i)
 	{
-		vk_clear_clear_values.EmplaceBack(VkClearValue{ e.R(), e.G(), e.B(), e.A() });
+		const auto& color = beginRenderPassInfo.ClearValues[i];
+		vkClearValues[i] = VkClearValue{ color.R(), color.G(), color.B(), color.A() };
 	}
 	
-	vk_render_pass_begin_info.pClearValues = vk_clear_clear_values.begin();
-	vk_render_pass_begin_info.clearValueCount = vk_clear_clear_values.GetLength();
-	vk_render_pass_begin_info.framebuffer = static_cast<const VulkanFramebuffer*>(beginRenderPassInfo.Framebuffer)->GetVkFramebuffer();
-	vk_render_pass_begin_info.renderArea.extent = Extent2DToVkExtent2D(beginRenderPassInfo.RenderArea);
-	vk_render_pass_begin_info.renderArea.offset = { 0, 0 };
+	vkRenderPassBeginInfo.pClearValues = vkClearValues.begin();
+	vkRenderPassBeginInfo.clearValueCount = vkClearValues.GetLength();
+	vkRenderPassBeginInfo.framebuffer = static_cast<const VulkanFramebuffer*>(beginRenderPassInfo.Framebuffer)->GetVkFramebuffer();
+	vkRenderPassBeginInfo.renderArea.extent = Extent2DToVkExtent2D(beginRenderPassInfo.RenderArea);
+	vkRenderPassBeginInfo.renderArea.offset = { 0, 0 };
 
-	vkCmdBeginRenderPass(commandBuffer, &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBeginRenderPass(commandBuffer, &vkRenderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 	VkViewport viewport;
 	viewport.x = 0;

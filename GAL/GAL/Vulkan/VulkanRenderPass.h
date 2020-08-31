@@ -3,6 +3,7 @@
 #include "GAL/RenderPass.h"
 
 #include "GAL/Vulkan/Vulkan.h"
+#include <GTSL/Ranger.h>
 
 namespace GAL
 {
@@ -21,7 +22,7 @@ namespace GAL
 
 		struct AttachmentDescriptor
 		{
-			GTSL::uint32 Format{ 0 };
+			VulkanTextureFormat Format;
 			//Defines the operation that should be run when the attachment is loaded for rendering.
 			RenderTargetLoadOperations LoadOperation = RenderTargetLoadOperations::UNDEFINED;
 			//Defines the operation that should be run when the attachment is done being rendered to.
@@ -36,13 +37,13 @@ namespace GAL
 		struct SubPassDescriptor
 		{
 			//Array of AttachmentsReferences for attachments which the subpass reads from.
-			GTSL::Ranger<AttachmentReference> ReadColorAttachments;
+			GTSL::Ranger<const AttachmentReference> ReadColorAttachments;
 
 			//Array of AttachmentsReferences for attachments which the subpass writes to.
-			GTSL::Ranger<AttachmentReference> WriteColorAttachments;
+			GTSL::Ranger<const AttachmentReference> WriteColorAttachments;
 
 			//Array of indices identifying attachments that are not used by this subpass, but whose contents MUST be preserved throughout the subpass.
-			GTSL::Ranger<GTSL::uint8> PreserveAttachments;
+			GTSL::Ranger<const GTSL::uint8> PreserveAttachments;
 
 			AttachmentReference* DepthAttachmentReference = nullptr;
 		};
@@ -51,13 +52,13 @@ namespace GAL
 		struct RenderPassDescriptor
 		{
 			//Array of pointer to images that will be used as attachments in the render pass.
-			GTSL::Ranger<AttachmentDescriptor> RenderPassColorAttachments;
+			GTSL::Ranger<const AttachmentDescriptor> RenderPassColorAttachments;
 			//Pointer to an image that will be used as the depth stencil attachment in the render pass.
 			AttachmentDescriptor DepthStencilAttachment;
 			bool DepthStencilAttachmentAvailable = false;
 
 			//Array of SubpassDescriptor used to describes the properties of every subpass in the renderpass.
-			GTSL::Ranger<SubPassDescriptor> SubPasses;
+			GTSL::Ranger<const SubPassDescriptor> SubPasses;
 		};
 		
 		struct CreateInfo final : VulkanCreateInfo

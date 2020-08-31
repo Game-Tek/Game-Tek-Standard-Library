@@ -1,7 +1,6 @@
 #pragma once
 
 #include "RenderCore.h"
-#include <GTSL/Ranger.h>
 
 namespace GAL
 {
