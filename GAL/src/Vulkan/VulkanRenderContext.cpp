@@ -127,7 +127,7 @@ GTSL::Array<GAL::VulkanTextureView, 5> GAL::VulkanRenderContext::GetTextureViews
 		vkImageViewCreateInfo.subresourceRange.layerCount = 1;
 		vkImageViewCreateInfo.subresourceRange.levelCount = 1;
 		
-		VK_CHECK(vkCreateImageView(static_cast<const VulkanRenderDevice*>(getTextureViewsInfo.RenderDevice)->GetVkDevice(), &vkImageViewCreateInfo, static_cast<const VulkanRenderDevice*>(getTextureViewsInfo.RenderDevice)->GetVkAllocationCallbacks(), &e.imageView))
+		VK_CHECK(vkCreateImageView(getTextureViewsInfo.RenderDevice->GetVkDevice(), &vkImageViewCreateInfo, getTextureViewsInfo.RenderDevice->GetVkAllocationCallbacks(), &e.imageView))
 
 		if constexpr (_DEBUG)
 		{
@@ -146,8 +146,8 @@ GTSL::Array<GAL::VulkanTextureView, 5> GAL::VulkanRenderContext::GetTextureViews
 GAL::VulkanSurface::VulkanSurface(const CreateInfo& createInfo)
 {
 	VkWin32SurfaceCreateInfoKHR vkWin32SurfaceCreateInfoKhr{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
-	vkWin32SurfaceCreateInfoKhr.hwnd = static_cast<HWND>(static_cast<WindowsWindowData*>(createInfo.SystemData)->WindowHandle);
-	vkWin32SurfaceCreateInfoKhr.hinstance = static_cast<HINSTANCE>(static_cast<WindowsWindowData*>(createInfo.SystemData)->InstanceHandle);
+	vkWin32SurfaceCreateInfoKhr.hwnd = static_cast<HWND>(createInfo.SystemData->WindowHandle);
+	vkWin32SurfaceCreateInfoKhr.hinstance = static_cast<HINSTANCE>(createInfo.SystemData->InstanceHandle);
 	VK_CHECK(vkCreateWin32SurfaceKHR(createInfo.RenderDevice->GetVkInstance(), &vkWin32SurfaceCreateInfoKhr, createInfo.RenderDevice->GetVkAllocationCallbacks(), reinterpret_cast<VkSurfaceKHR*>(&surface)));
 	SET_NAME(surface, VK_OBJECT_TYPE_SURFACE_KHR, createInfo);
 }
@@ -170,7 +170,6 @@ GTSL::uint32 GAL::VulkanSurface::GetSupportedRenderContextFormat(const VulkanRen
 	{
 		for (auto p : formats) { if (e.colorSpace == static_cast<VkColorSpaceKHR>(p.First) && e.format == static_cast<VkFormat>(p.Second)) { return &e - surfaceFormats.begin(); } }
 	}
-
 
 	return 0xFFFFFFFF;
 }
