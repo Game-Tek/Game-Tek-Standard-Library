@@ -7,7 +7,7 @@
 #define COMBINE(x, y) COMBINE2(x, y)
 #define VK_CHECK(func) VkResult COMBINE(result, __LINE__) = VK_ERROR_UNKNOWN; COMBINE(result, __LINE__) = func; { if ((COMBINE(result, __LINE__)) != VK_SUCCESS) { __debugbreak(); } }
 #else
-#define VK_CHECK(func) func
+#define VK_CHECK(func) func;
 #endif // (_DEBUG)
 
 #include "GAL/RenderCore.h"

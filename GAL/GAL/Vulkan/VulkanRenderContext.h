@@ -18,22 +18,21 @@ namespace GAL
 		
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			void* SystemData{ nullptr };
+			WindowsWindowData* SystemData;
 		};
 		VulkanSurface(const CreateInfo& createInfo);
 
 		void Destroy(class VulkanRenderDevice* renderDevice);
 
-		//colorspace / format
-		GTSL::uint32 GetSupportedRenderContextFormat(class VulkanRenderDevice* renderDevice, GTSL::Ranger<GTSL::Pair<GTSL::uint32, GTSL::uint32>> formats);
+		GTSL::uint32 GetSupportedRenderContextFormat(const class VulkanRenderDevice* renderDevice, GTSL::Ranger<const GTSL::Pair<VulkanColorSpace, VulkanTextureFormat>> formats);
 
-		GTSL::uint32 GetSupportedPresentMode(class VulkanRenderDevice* renderDevice, GTSL::Ranger<GTSL::uint32> presentModes);
+		GTSL::uint32 GetSupportedPresentMode(class VulkanRenderDevice* renderDevice, GTSL::Ranger<const VulkanPresentMode> presentModes);
 
 		bool IsSupported(class VulkanRenderDevice* renderDevice);
 
 		[[nodiscard]] VulkanHandle GetVkSurface() const { return surface; }
 	private:
-		VulkanHandle surface{ 0 };
+		VulkanHandle surface;
 	};
 
 	class VulkanRenderContext final : public RenderContext
@@ -45,10 +44,10 @@ namespace GAL
 		{
 			GTSL::Extent2D SurfaceArea;
 			GTSL::uint8 DesiredFramesInFlight = 0;
-			GTSL::uint32 PresentMode{ 0 };
-			GTSL::uint32 Format{ 0 };
-			GTSL::uint32 ColorSpace{ 0 };
-			GTSL::uint32 ImageUses{ 0 };
+			VulkanPresentMode PresentMode;
+			VulkanTextureFormat Format;
+			VulkanColorSpace ColorSpace;
+			VulkanTextureUses::value_type TextureUses;
 			const Surface* Surface{ nullptr };
 		};
 		VulkanRenderContext(const CreateInfo& createInfo);
@@ -57,14 +56,14 @@ namespace GAL
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 
 
-		struct RecreateInfo : VulkanCreateInfo
+		struct RecreateInfo final : VulkanCreateInfo
 		{
 			GTSL::Extent2D SurfaceArea;
 			GTSL::uint8 DesiredFramesInFlight = 0;
-			GTSL::uint32 PresentMode{ 0 };
-			GTSL::uint32 Format{ 0 };
-			GTSL::uint32 ColorSpace{ 0 };
-			GTSL::uint32 ImageUses{ 0 };
+			VulkanPresentMode PresentMode;
+			VulkanTextureFormat Format;
+			VulkanColorSpace ColorSpace{ 0 };
+			VulkanTextureUses::value_type TextureUses;
 			const VulkanSurface* Surface{ nullptr };
 		};
 		void Recreate(const RecreateInfo& resizeInfo);
@@ -89,15 +88,13 @@ namespace GAL
 		};
 		void Present(const PresentInfo& presentInfo);
 		
-		struct GetImagesInfo : VulkanRenderInfo
+		struct GetTextureViewsInfo : VulkanRenderInfo
 		{
-			GTSL::uint32 SwapchainImagesFormat{ 0 };
-			GTSL::Ranger<const GTSL::UTF8> ImageViewName;
-			GTSL::Ranger<const VulkanTextureView::CreateInfo> ImageViewCreateInfos;
+			GTSL::Ranger<const VulkanTextureView::CreateInfo> TextureViewCreateInfos;
 		};
-		GTSL::Array<VulkanTextureView, 5> GetImages(const GetImagesInfo& getImagesInfo);
+		GTSL::Array<VulkanTextureView, 5> GetTextureViews(const GetTextureViewsInfo& getTextureViewsInfo);
 		
 	private:
-		void* swapchain{ 0 };
+		void* swapchain;
 	};
 }
