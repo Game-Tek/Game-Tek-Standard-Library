@@ -92,6 +92,15 @@ namespace GAL
 		};
 		void UpdatePushConstant(const UpdatePushConstantsInfo& info);
 
+		struct DrawInfo final : VulkanRenderInfo
+		{
+			uint32_t VertexCount;
+			uint32_t InstanceCount;
+			uint32_t FirstVertex;
+			uint32_t FirstInstance;
+		};
+		void Draw(const DrawInfo& info) const;
+		
 		struct DrawIndexedInfo final : VulkanRenderInfo
 		{
 			GTSL::uint32 InstanceCount = 0, IndexCount = 0;

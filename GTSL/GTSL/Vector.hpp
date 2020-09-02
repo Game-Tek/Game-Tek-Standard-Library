@@ -66,6 +66,26 @@ namespace GTSL
 		 * \brief Constructs a Vector from a reference to another Vector.
 		 * \param other Reference to another Vector.
 		 */
+		Vector(const Vector& other) : allocator(other.allocator), capacity(other.capacity),
+		length(other.length), data(this->allocate(this->capacity, this->capacity))
+		{
+			for (auto& e : other) { ::new(this->data + GTSL::RangeForIndex(e, other)) T(e); }
+		}
+
+		/**
+		 * \brief Constructs a Vector from a reference to another Vector.
+		 * \param other Reference to another Vector.
+		 */
+		template<class ALLOC>
+		Vector(Vector<T, ALLOC>&& other, const ALLOCATOR& allocatorReference) : allocator(allocatorReference), capacity(other.capacity), length(other.length), data(other.data)
+		{
+			other.data = nullptr;
+		}
+
+		/**
+		 * \brief Constructs a Vector from a reference to another Vector.
+		 * \param other Reference to another Vector.
+		 */
 		template<class ALLOC>
 		Vector(const Vector<T, ALLOC>& other, const ALLOCATOR& allocatorReference) : allocator(allocatorReference), capacity(other.capacity),
 		length(other.length), data(this->allocate(this->capacity, this->capacity))

@@ -95,6 +95,11 @@ void GAL::VulkanCommandBuffer::UpdatePushConstant(const UpdatePushConstantsInfo&
 	vkCmdPushConstants(commandBuffer, info.PipelineLayout->GetVkPipelineLayout(), VK_SHADER_STAGE_ALL_GRAPHICS, info.Offset, info.Size, info.Data);
 }
 
+void GAL::VulkanCommandBuffer::Draw(const DrawInfo& info) const
+{
+	vkCmdDraw(commandBuffer, info.VertexCount, info.InstanceCount, info.FirstVertex, info.FirstInstance);
+}
+
 void GAL::VulkanCommandBuffer::DrawIndexed(const DrawIndexedInfo& drawIndexedInfo) const
 {
 	vkCmdDrawIndexed(commandBuffer, drawIndexedInfo.IndexCount, drawIndexedInfo.InstanceCount, 0, 0, 0);
