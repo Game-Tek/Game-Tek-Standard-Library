@@ -439,7 +439,6 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 					}
 						
 					if(tryAddExtension(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME)) {}
-					if(tryAddExtension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME)) {}
 					if(tryAddExtension(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME)) {}
 					if(tryAddExtension(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME)) {}
 

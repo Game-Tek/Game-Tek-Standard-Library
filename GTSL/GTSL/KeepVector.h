@@ -70,6 +70,19 @@ namespace GTSL
 		}
 
 		/**
+		 * \brief Emplaces an object into the vector At the first free slot available.
+		 * \param args Arguments for construction of object of type T.
+		 * \return Index At which it was emplaced.
+		 */
+		template <typename... ARGS>
+		void EmplaceAt(length_type index, ARGS&&... args)
+		{
+			if (index > this->capacity) [[unlikely]] { resize(); }
+			GTSL::ClearBit(index % 32, *(getIndices() + index / 32));
+			new(getObjects() + index) T(GTSL::ForwardRef<ARGS>(args)...);
+		}
+
+		/**
 		 * \brief Destroys the object At the specified index which makes space for another object to take it's Place.
 		 * \param index Index of the object to remove.
 		 */
