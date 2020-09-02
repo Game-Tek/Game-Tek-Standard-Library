@@ -56,6 +56,7 @@ namespace GAL
 			VulkanBindingType BindingType = VulkanBindingType::UNIFORM_BUFFER;
 			VulkanShaderStage::value_type ShaderStage = VulkanShaderStage::ALL;
 			GTSL::uint32 UniformCount = 0;
+			VulkanBindingFlags::value_type Flags;
 		};
 
 		struct ImageBindingDescriptor : BindingDescriptor
@@ -77,7 +78,6 @@ namespace GAL
 		struct CreateInfo : VulkanCreateInfo
 		{
 			GTSL::Ranger<const BindingDescriptor> BindingsDescriptors;
-			GTSL::Ranger<const GTSL::uint32> SpecialBindings;
 		};
 		VulkanBindingsSetLayout(const CreateInfo& createInfo);
 		void Destroy(const VulkanRenderDevice* renderDevice);

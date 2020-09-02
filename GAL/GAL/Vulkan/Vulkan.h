@@ -98,6 +98,11 @@ namespace GAL
 	{
 		GENERAL, TRIANGLES, PROCEDURAL
 	};
+
+	struct VulkanBindingFlags : GTSL::Flags<GTSL::uint32>
+	{
+		static constexpr value_type UPDATE_AFTER_BIND = 0x00000001, UPDATE_UNUSED_WHILE_PENDING = 0x00000002, PARTIALLY_BOUND = 0x00000004, VARIABLE_DESCRIPTOR_COUNT = 0x00000008;
+	};
 	
 	struct VulkanTextureType : GTSL::Flags<GTSL::uint32>
 	{		
@@ -297,8 +302,6 @@ namespace GAL
 
 		GAL_DEBUG_BREAK;
 	}
-
-	VkImageLayout;
 	
 	enum class VulkanTextureLayout
 	{
@@ -464,10 +467,11 @@ namespace GAL
 		*/
 		FIFO = 2,
 	};
-
+	
 	struct VulkanBufferType : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type	TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, UNIFORM = 16, INDEX = 64, VERTEX = 128;
+	{		
+		static constexpr value_type	TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, UNIFORM = 16, STORAGE = 0x00000020, INDEX = 64, VERTEX = 128, ADDRESS = 0x00020000;
+		static constexpr value_type	RAY_TRACING = 0x00000400, INDIRECT = 0x00000100;
 	};
 	
 	struct VulkanQueueCapabilities : GTSL::Flags<GTSL::uint32>

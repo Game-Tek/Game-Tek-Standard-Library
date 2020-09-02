@@ -62,7 +62,7 @@ GAL::VulkanBindingsSetLayout::VulkanBindingsSetLayout(const CreateInfo& createIn
 {
 	GTSL::Array<VkDescriptorBindingFlags, 16> vkDescriptorBindingFlags(createInfo.BindingsDescriptors.ElementCount());
 	VkDescriptorSetLayoutBindingFlagsCreateInfo vkDescriptorSetLayoutBindingFlagsCreateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO };
-	vkDescriptorSetLayoutBindingFlagsCreateInfo.bindingCount = static_cast<GTSL::uint32>(createInfo.SpecialBindings.ElementCount());
+	vkDescriptorSetLayoutBindingFlagsCreateInfo.bindingCount = static_cast<GTSL::uint32>(createInfo.BindingsDescriptors.ElementCount());
 	vkDescriptorSetLayoutBindingFlagsCreateInfo.pBindingFlags = vkDescriptorBindingFlags.begin();
 	
 	VkDescriptorSetLayoutCreateInfo vkDescriptorSetLayoutCreateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
@@ -80,10 +80,10 @@ GAL::VulkanBindingsSetLayout::VulkanBindingsSetLayout(const CreateInfo& createIn
 			binding.stageFlags = createInfo.BindingsDescriptors[i].ShaderStage;
 			binding.pImmutableSamplers = nullptr;
 
+			vkDescriptorBindingFlags[i] = createInfo.BindingsDescriptors[i].Flags;
 			++i;
 		}
 		
-		vkDescriptorBindingFlags[i - 1] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
 	}
 
 	vkDescriptorSetLayoutCreateInfo.bindingCount = vkDescriptorSetLayoutBindings.GetLength();
