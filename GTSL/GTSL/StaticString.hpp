@@ -182,6 +182,8 @@ namespace GTSL
 			return *this;
 		}
 
+		UTF8 operator[](const uint32 index) const { return array[index]; }
+		
 	private:
 		UTF8 array[N];
 		uint32 length = 0;
