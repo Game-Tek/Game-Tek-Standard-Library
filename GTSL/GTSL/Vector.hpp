@@ -409,7 +409,7 @@ namespace GTSL
 		 */
 		const_iterator Find(const T& obj) const noexcept
 		{
-			for (const auto& e : *this) { if (obj == e) { return this->begin(); } } return this->end();
+			for (const auto& e : *this) { if (obj == e) { return &e; } } return this->end();
 		}
 
 		/**
