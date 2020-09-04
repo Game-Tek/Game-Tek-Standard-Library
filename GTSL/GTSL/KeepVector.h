@@ -26,6 +26,12 @@ namespace GTSL
 			for (auto& e : getIndices()) { e = 0xFFFFFFFF; }
 		}
 
+		void Initialize(const length_type min, const ALLOCATOR& allocatorReference)
+		{
+			allocator = allocatorReference;
+			data = allocateAndSetCapacity(min); for (auto& e : getIndices()) { e = 0xFFFFFFFF; }
+		}
+
 		~KeepVector()
 		{			
 			if(data) [[likely]]
@@ -112,24 +118,24 @@ namespace GTSL
 		
 		T& operator[](const uint32 i)
 		{
-			const auto number = i / 32; const auto bit = i % 32;
 			if constexpr (_DEBUG)
 			{
+				const auto number = i / 32; const auto bit = i % 32;
 				auto c = getIndices()[number];
 				GTSL_ASSERT(!CheckBit(bit, getIndices()[number]), "No valid value in that slot!")
 			}
-			return getObjects()[number + bit];
+			return getObjects()[i];
 		}
 
 		const T& operator[](const uint32 i) const
 		{
-			const auto number = i / 32; const auto bit = i % 32;
 			if constexpr (_DEBUG)
 			{
+				const auto number = i / 32; const auto bit = i % 32;
 				auto c = getIndices()[number];
 				GTSL_ASSERT(!CheckBit(bit, getIndices()[number]), "No valid value in that slot!")
 			}
-			return getObjects()[number + bit];
+			return getObjects()[i];
 		}
 		
 	private:
@@ -201,6 +207,9 @@ namespace GTSL
 		friend void ForEach(KeepVector<TT, ALLOC>& keepVector, L&& lambda);
 
 		template<typename TT, class ALLOC, typename L>
+		friend void ForEachIndexed(KeepVector<TT, ALLOC>& keepVector, L&& lambda);
+
+		template<typename TT, class ALLOC, typename L>
 		friend void ReverseForEach(KeepVector<TT, ALLOC>& keepVector, L&& lambda);
 	};
 
@@ -213,6 +222,21 @@ namespace GTSL
 			for(uint32 i = 0; i < 32; ++i)
 			{
 				if (!GTSL::CheckBit(i, index)) { lambda(keepVector.getObjects()[num + i]); }
+			}
+
+			num += 32;
+		}
+	}
+
+	template<typename T, class ALLOCATOR, typename L>
+	void ForEachIndexed(KeepVector<T, ALLOCATOR>& keepVector, L&& lambda)
+	{
+		uint32 num = 0;
+		for(auto& index : keepVector.getIndices())
+		{
+			for(uint32 i = 0; i < 32; ++i)
+			{
+				if (!GTSL::CheckBit(i, index)) { lambda(num + i, keepVector.getObjects()[num + i]); }
 			}
 
 			num += 32;
