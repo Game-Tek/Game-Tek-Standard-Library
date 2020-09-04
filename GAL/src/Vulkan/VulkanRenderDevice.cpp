@@ -365,24 +365,24 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 			Array<byte, 12 * 256> featuresStructures;
 			Array<StaticString<32>, 32> deviceExtensions;
 
-			auto placePropertiesStructure = [&](const uint64 size, void* structure, void** structureNext)
+			auto placePropertiesStructure = [&]<typename T>(T structure)
 			{
 				auto& structure_array = propertiesStructures;
 
-				structure_array.Resize(structure_array.GetLength() + static_cast<uint32>(size));
-				MemCopy(size, structure, structure_array.end() - size);
-				*next_feature = structure_array.end() - size;
-				next_feature = structureNext;
+				structure_array.Resize(structure_array.GetLength() + static_cast<uint32>(sizeof(structure)));
+				MemCopy(sizeof(structure), &structure, structure_array.end() - sizeof(structure));
+				*next_property = structure_array.end() - sizeof(structure);
+				next_property = &static_cast<T*>(*next_property)->pNext;
 			};
 
-			auto placeFeaturesStructure = [&](const uint64 size, void* structure, void** structureNext)
+			auto placeFeaturesStructure = [&]<typename T>(T structure)
 			{
 				auto& structure_array = featuresStructures;
-
-				structure_array.Resize(structure_array.GetLength() + static_cast<uint32>(size));
-				MemCopy(size, structure, structure_array.end() - size);
-				*next_feature = structure_array.end() - size;
-				next_feature = structureNext;
+				
+				structure_array.Resize(structure_array.GetLength() + static_cast<uint32>(sizeof(structure)));
+				MemCopy(sizeof(structure), &structure, structure_array.end() - sizeof(structure));
+				*next_feature = structure_array.end() - sizeof(structure);
+				next_feature = &static_cast<T*>(*next_feature)->pNext;
 			};
 
 			[[no_discard]] auto tryAddExtension = [&](const char* extensionName)
@@ -401,7 +401,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 			{
 				VkPhysicalDeviceTimelineSemaphoreFeatures vkPhysicalDeviceTimelineSemaphoreFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES };
 				vkPhysicalDeviceTimelineSemaphoreFeatures.timelineSemaphore = true;
-				placeFeaturesStructure(sizeof(VkPhysicalDeviceTimelineSemaphoreFeatures), &vkPhysicalDeviceTimelineSemaphoreFeatures, &vkPhysicalDeviceTimelineSemaphoreFeatures.pNext);
+				placeFeaturesStructure(vkPhysicalDeviceTimelineSemaphoreFeatures);
 				tryAddExtension(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
 			}
 		
@@ -417,7 +417,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 				if (tryAddExtension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME))
 				{
-					placeFeaturesStructure(sizeof(vkPhysicalDeviceDescriptorIndexingFeatures), &vkPhysicalDeviceDescriptorIndexingFeatures, &vkPhysicalDeviceDescriptorIndexingFeatures.pNext);
+					placeFeaturesStructure(vkPhysicalDeviceDescriptorIndexingFeatures);
 				}
 			}
 
@@ -432,10 +432,8 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 						VkPhysicalDeviceRayTracingPropertiesKHR vkRayTracingProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_KHR };
 						VkPhysicalDeviceRayTracingFeaturesKHR vkRayTracingFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_FEATURES_KHR };
 
-						//const auto* ray_tracing_properties = static_cast<const RayTracingProperties*>(createInfo.ExtensionProperties[extension]);
-
-						placePropertiesStructure(sizeof(VkPhysicalDeviceRayTracingPropertiesKHR), &vkRayTracingProperties, &vkRayTracingProperties.pNext);
-						placeFeaturesStructure(sizeof(VkPhysicalDeviceRayTracingFeaturesKHR), &vkRayTracingFeatures, &vkRayTracingFeatures.pNext);
+						placePropertiesStructure(vkRayTracingProperties);
+						placeFeaturesStructure(vkRayTracingFeatures);
 					}
 						
 					if(tryAddExtension(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME)) {}
@@ -447,18 +445,14 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 				case Extension::PIPELINE_CACHE_EXTERNAL_SYNC:
 				{
 					VkPhysicalDevicePipelineCreationCacheControlFeaturesEXT pipelineCacheSyncControl{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT };
-					placeFeaturesStructure(sizeof(pipelineCacheSyncControl), &pipelineCacheSyncControl, &pipelineCacheSyncControl.pNext);
+					pipelineCacheSyncControl.pipelineCreationCacheControl = true;
+					placeFeaturesStructure(pipelineCacheSyncControl);
 					
 					break;
 				}
 				default: __debugbreak();
 				}
 			}
-
-			vkGetPhysicalDeviceProperties2(physicalDevice, &properties2);
-			vkGetPhysicalDeviceFeatures2(physicalDevice, &features2);
-
-			deviceProperties = properties2.properties;
 
 			VkDeviceCreateInfo vkDeviceCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
 			vkDeviceCreateInfo.pNext = &features2; //extended features
@@ -475,6 +469,11 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 			vkDeviceCreateInfo.ppEnabledExtensionNames = strings.begin();
 
 			VK_CHECK(vkCreateDevice(physicalDevice, &vkDeviceCreateInfo, GetVkAllocationCallbacks(), &device));
+
+			vkGetPhysicalDeviceProperties2(physicalDevice, &properties2);
+			vkGetPhysicalDeviceFeatures2(physicalDevice, &features2);
+
+			deviceProperties = properties2.properties;
 		}
 
 		for (uint8 FAMILY = 0; FAMILY < familiesIndices.GetLength(); ++FAMILY)
