@@ -34,14 +34,14 @@ namespace GTSL
 		{
 			auto bucketIndex = modulo(key); auto index = findElementIndex(keys[bucketIndex], key);
 			GTSL_ASSERT(index, "No entry by that name!");
-			return values[bucketIndex][index];
+			return values[bucketIndex][index.Get()];
 		}
 
 		const T& At(const uint64 key) const
 		{
 			auto bucketIndex = modulo(key); auto index = findElementIndex(keys[bucketIndex], key);
 			GTSL_ASSERT(index, "No entry by that name!");
-			return values[bucketIndex][index];
+			return values[bucketIndex][index.Get()];
 		}
 
 		[[nodiscard]] bool Find(const uint64 key) const { return findElementIndex(keys[modulo(key)], key); }

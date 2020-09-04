@@ -68,7 +68,10 @@ namespace GAL
 		bool BlendEnable = false;
 		BlendOperation ColorBlendOperation = BlendOperation::ADD;
 		SampleCount RasterizationSamples = SampleCount::SAMPLE_COUNT_1;
+		bool DepthTest = false;
+		bool DepthWrite = false;
 		CompareOperation DepthCompareOperation = CompareOperation::NEVER;
+		bool StencilTest = false;
 		StencilOperations StencilOperations;
 	};
 

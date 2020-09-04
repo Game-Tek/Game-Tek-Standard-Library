@@ -218,13 +218,13 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 
 	//  DEPTH STENCIL STATE
 	VkPipelineDepthStencilStateCreateInfo vkPipelineDepthStencilStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-	vkPipelineDepthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-	vkPipelineDepthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+	vkPipelineDepthStencilStateCreateInfo.depthTestEnable = createInfo.PipelineDescriptor.DepthTest;
+	vkPipelineDepthStencilStateCreateInfo.depthWriteEnable = createInfo.PipelineDescriptor.DepthWrite;
 	vkPipelineDepthStencilStateCreateInfo.depthCompareOp = CompareOperationToVkCompareOp(createInfo.PipelineDescriptor.DepthCompareOperation);
 	vkPipelineDepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
 	vkPipelineDepthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
 	vkPipelineDepthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
-	vkPipelineDepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+	vkPipelineDepthStencilStateCreateInfo.stencilTestEnable = createInfo.PipelineDescriptor.StencilTest;
 	vkPipelineDepthStencilStateCreateInfo.front = {}; // Optional
 	vkPipelineDepthStencilStateCreateInfo.back = {}; // Optional
 
