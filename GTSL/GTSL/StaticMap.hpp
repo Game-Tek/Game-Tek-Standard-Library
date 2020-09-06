@@ -59,5 +59,17 @@ namespace GTSL
 		}
 
 		static uint32 modulo(const uint64 key) { return key & (X - 1); }
+
+		template<typename T, uint32 X, uint32 Y, typename L>
+		friend void ForEach(StaticMap<T, X, Y>& staticMap, L&& lambda);
 	};
+
+	template<typename T, uint32 X, uint32 Y, typename L>
+	void ForEach(StaticMap<T, X, Y>& staticMap, L&& lambda)
+	{
+		for (uint32 x = 0; x < X; ++x)
+		{
+			for (uint32 y = 0; y < staticMap.keys[x].GetLength(); ++y) { lambda(staticMap.values[x][y]); }
+		}
+	}
 }
