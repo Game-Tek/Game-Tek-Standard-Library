@@ -19,7 +19,7 @@ namespace GAL
 			GTSL::Extent2D Extent = { 1280, 720 };
 			GTSL::Ranger<const class VulkanTextureView> TextureViews;
 		};
-		explicit VulkanFramebuffer(const CreateInfo& createInfo);
+		VulkanFramebuffer(const CreateInfo& info);
 		
 		~VulkanFramebuffer() = default;
 

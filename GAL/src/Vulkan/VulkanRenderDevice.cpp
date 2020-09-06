@@ -406,6 +406,12 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 			}
 		
 			tryAddExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+			
+			{
+				VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures vkPhysicalDeviceSeparateDepthStencilLayoutsFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SEPARATE_DEPTH_STENCIL_LAYOUTS_FEATURES };
+				vkPhysicalDeviceSeparateDepthStencilLayoutsFeatures.separateDepthStencilLayouts = true;
+				placeFeaturesStructure(vkPhysicalDeviceSeparateDepthStencilLayoutsFeatures);
+			}
 
 			{
 				VkPhysicalDeviceDescriptorIndexingFeatures vkPhysicalDeviceDescriptorIndexingFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES };

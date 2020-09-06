@@ -126,6 +126,7 @@ namespace GAL
 			const VulkanPipelineLayout* PipelineLayout = nullptr;
 			const VulkanRasterizationPipeline* ParentPipeline = nullptr;
 			const VulkanPipelineCache* PipelineCache = nullptr;
+			uint32_t SubPass;
 		};
 		
 		VulkanRasterizationPipeline(const CreateInfo& createInfo);

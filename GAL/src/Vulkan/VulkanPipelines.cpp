@@ -318,7 +318,7 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkGraphicsPipelineCreateInfo.pDynamicState = &vkPipelineDynamicStateCreateInfo;
 	vkGraphicsPipelineCreateInfo.layout = createInfo.PipelineLayout->GetVkPipelineLayout();
 	vkGraphicsPipelineCreateInfo.renderPass = createInfo.RenderPass->GetVkRenderPass();
-	vkGraphicsPipelineCreateInfo.subpass = 0;
+	vkGraphicsPipelineCreateInfo.subpass = createInfo.SubPass;
 	vkGraphicsPipelineCreateInfo.basePipelineHandle = createInfo.ParentPipeline ? createInfo.ParentPipeline->pipeline : nullptr; // Optional
 	vkGraphicsPipelineCreateInfo.basePipelineIndex = createInfo.ParentPipeline ? 0 : -1;
 
