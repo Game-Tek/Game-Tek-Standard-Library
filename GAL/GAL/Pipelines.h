@@ -12,6 +12,9 @@ namespace GAL
 		StencilCompareOperation PassOperation = StencilCompareOperation::ZERO;
 		StencilCompareOperation DepthFailOperation = StencilCompareOperation::ZERO;
 		CompareOperation CompareOperation = CompareOperation::NEVER;
+		uint32_t CompareMask;
+		uint32_t WriteMask;
+		uint32_t Reference;
 	};
 
 	struct StencilOperations

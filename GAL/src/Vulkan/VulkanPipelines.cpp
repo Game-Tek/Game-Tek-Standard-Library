@@ -142,6 +142,22 @@ void GAL::VulkanPipelineLayout::Destroy(const VulkanRenderDevice* renderDevice)
 	debugClear(pipelineLayout);
 }
 
+VkStencilOp StencilCompareOperationToVkStencilCompareOp(const GAL::StencilCompareOperation stencilCompareOperation)
+{
+	switch (stencilCompareOperation)
+	{
+	case GAL::StencilCompareOperation::KEEP: return VK_STENCIL_OP_KEEP;
+	case GAL::StencilCompareOperation::ZERO: return VK_STENCIL_OP_ZERO;
+	case GAL::StencilCompareOperation::REPLACE: return VK_STENCIL_OP_REPLACE;
+	case GAL::StencilCompareOperation::INCREMENT_AND_CLAMP: return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+	case GAL::StencilCompareOperation::DECREMENT_AND_CLAMP: return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+	case GAL::StencilCompareOperation::INVERT: return VK_STENCIL_OP_INVERT;
+	case GAL::StencilCompareOperation::INCREMENT_AND_WRAP: return VK_STENCIL_OP_INCREMENT_AND_WRAP;
+	case GAL::StencilCompareOperation::DECREMENT_AND_WRAP: return VK_STENCIL_OP_DECREMENT_AND_WRAP;
+	default: return VK_STENCIL_OP_MAX_ENUM;
+	}
+}
+
 GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& createInfo)
 {
 	//  VERTEX INPUT STATE
@@ -225,8 +241,24 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkPipelineDepthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
 	vkPipelineDepthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
 	vkPipelineDepthStencilStateCreateInfo.stencilTestEnable = createInfo.PipelineDescriptor.StencilTest;
-	vkPipelineDepthStencilStateCreateInfo.front = {}; // Optional
-	vkPipelineDepthStencilStateCreateInfo.back = {}; // Optional
+	{
+		vkPipelineDepthStencilStateCreateInfo.front.failOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Front.FailOperation);
+		vkPipelineDepthStencilStateCreateInfo.front.passOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Front.PassOperation);
+		vkPipelineDepthStencilStateCreateInfo.front.depthFailOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Front.DepthFailOperation);
+		vkPipelineDepthStencilStateCreateInfo.front.compareOp = CompareOperationToVkCompareOp(createInfo.PipelineDescriptor.StencilOperations.Front.CompareOperation);
+		vkPipelineDepthStencilStateCreateInfo.front.compareMask = createInfo.PipelineDescriptor.StencilOperations.Front.CompareMask;
+		vkPipelineDepthStencilStateCreateInfo.front.writeMask = createInfo.PipelineDescriptor.StencilOperations.Front.WriteMask;
+		vkPipelineDepthStencilStateCreateInfo.front.reference = createInfo.PipelineDescriptor.StencilOperations.Front.Reference;
+	}
+	{
+		vkPipelineDepthStencilStateCreateInfo.back.failOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Back.FailOperation);
+		vkPipelineDepthStencilStateCreateInfo.back.passOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Back.PassOperation);
+		vkPipelineDepthStencilStateCreateInfo.back.depthFailOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Back.DepthFailOperation);
+		vkPipelineDepthStencilStateCreateInfo.back.compareOp = CompareOperationToVkCompareOp(createInfo.PipelineDescriptor.StencilOperations.Back.CompareOperation);
+		vkPipelineDepthStencilStateCreateInfo.back.compareMask = createInfo.PipelineDescriptor.StencilOperations.Back.CompareMask;
+		vkPipelineDepthStencilStateCreateInfo.back.writeMask = createInfo.PipelineDescriptor.StencilOperations.Back.WriteMask;
+		vkPipelineDepthStencilStateCreateInfo.back.reference = createInfo.PipelineDescriptor.StencilOperations.Back.Reference;
+	}
 
 	//  COLOR BLEND STATE
 	VkPipelineColorBlendAttachmentState vkPipelineColorblendAttachmentState;
