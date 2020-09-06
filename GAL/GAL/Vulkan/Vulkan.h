@@ -105,7 +105,7 @@ namespace GAL
 	};
 	
 	struct VulkanTextureType : GTSL::Flags<GTSL::uint32>
-	{		
+	{
 		static constexpr value_type COLOR = 1, DEPTH = 2, STENCIL = 4;
 	};
 	
@@ -411,7 +411,7 @@ namespace GAL
 	enum class VulkanTextureFormat : GTSL::uint32
 	{
 		UNDEFINED = 0,
-		
+
 		//INTEGER
 
 		//R
@@ -441,6 +441,8 @@ namespace GAL
 
 		//  DEPTH STENCIL
 
+		STENCIL_8 = 127,
+		
 		//A depth-only format with a 16 bit (2 byte) size.
 		DEPTH16 = 124,
 		//A depth-only format with a 32 (4 byte) bit size.
@@ -469,7 +471,7 @@ namespace GAL
 	};
 	
 	struct VulkanBufferType : GTSL::Flags<GTSL::uint32>
-	{		
+	{
 		static constexpr value_type	TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, UNIFORM = 16, STORAGE = 0x00000020, INDEX = 64, VERTEX = 128, ADDRESS = 0x00020000;
 		static constexpr value_type	RAY_TRACING = 0x00000400, INDIRECT = 0x00000100;
 	};

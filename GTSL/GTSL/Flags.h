@@ -18,7 +18,7 @@ namespace GTSL
 
 		using value_type = T;
 		using type = Flags;
-
+		
 		Flags operator| (const Flags flag) { return value | flag; }
 	private:
 		friend Flags;

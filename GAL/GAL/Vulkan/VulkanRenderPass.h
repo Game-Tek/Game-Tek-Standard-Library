@@ -45,17 +45,14 @@ namespace GAL
 			//Array of indices identifying attachments that are not used by this subpass, but whose contents MUST be preserved throughout the subpass.
 			GTSL::Ranger<const GTSL::uint8> PreserveAttachments;
 
-			AttachmentReference* DepthAttachmentReference = nullptr;
+			AttachmentReference DepthAttachmentReference;
 		};
 
 		//Describes a render pass.
 		struct RenderPassDescriptor
 		{
 			//Array of pointer to images that will be used as attachments in the render pass.
-			GTSL::Ranger<const AttachmentDescriptor> RenderPassColorAttachments;
-			//Pointer to an image that will be used as the depth stencil attachment in the render pass.
-			AttachmentDescriptor DepthStencilAttachment;
-			bool DepthStencilAttachmentAvailable = false;
+			GTSL::Ranger<const AttachmentDescriptor> RenderPassAttachments;
 
 			//Array of SubpassDescriptor used to describes the properties of every subpass in the renderpass.
 			GTSL::Ranger<const SubPassDescriptor> SubPasses;
