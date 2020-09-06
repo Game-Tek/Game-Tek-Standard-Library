@@ -98,7 +98,7 @@ void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)
 	VK_CHECK(vkQueuePresentKHR(static_cast<const VulkanQueue*>(presentInfo.Queue)->GetVkQueue(), &vkPresentInfoKhr));
 }
 
-GTSL::Array<GAL::VulkanTextureView, 5> GAL::VulkanRenderContext::GetTextureViews(const GetTextureViewsInfo& getTextureViewsInfo)
+GTSL::Array<GAL::VulkanTextureView, 5> GAL::VulkanRenderContext::GetTextureViews(const GetTextureViewsInfo& getTextureViewsInfo) const
 {
 	GTSL::Array<VulkanTextureView, 5> vulkanTextureViews;
 	
@@ -141,6 +141,17 @@ GTSL::Array<GAL::VulkanTextureView, 5> GAL::VulkanRenderContext::GetTextureViews
 	}
 	
 	return vulkanTextureViews;
+}
+
+GTSL::Array<GAL::VulkanTexture, 5> GAL::VulkanRenderContext::GetTextures(const GetTexturesInfo& info) const
+{
+	GTSL::uint32 swapchainImageCount = 0;
+	VK_CHECK(vkGetSwapchainImagesKHR(info.RenderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), &swapchainImageCount, nullptr))
+
+	GTSL::Array<VulkanTexture, 5> vkImages(swapchainImageCount);
+	VK_CHECK(vkGetSwapchainImagesKHR(info.RenderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), &swapchainImageCount, reinterpret_cast<VkImage*>(vkImages.begin())))
+
+	return vkImages;
 }
 
 GAL::VulkanSurface::VulkanSurface(const CreateInfo& createInfo)

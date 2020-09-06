@@ -2,9 +2,10 @@
 
 #include "GAL/RenderContext.h"
 
-#include "VulkanBindings.h"
 #include "VulkanTexture.h"
 #include <GTSL/Pair.h>
+
+#include "GTSL/Array.hpp"
 
 namespace GAL
 {
@@ -92,7 +93,12 @@ namespace GAL
 		{
 			GTSL::Ranger<const VulkanTextureView::CreateInfo> TextureViewCreateInfos;
 		};
-		GTSL::Array<VulkanTextureView, 5> GetTextureViews(const GetTextureViewsInfo& getTextureViewsInfo);
+		GTSL::Array<VulkanTextureView, 5> GetTextureViews(const GetTextureViewsInfo& getTextureViewsInfo) const;
+
+		struct GetTexturesInfo : VulkanRenderInfo
+		{
+		};
+		GTSL::Array<VulkanTexture, 5> GetTextures(const GetTexturesInfo& info) const;
 		
 	private:
 		void* swapchain;
