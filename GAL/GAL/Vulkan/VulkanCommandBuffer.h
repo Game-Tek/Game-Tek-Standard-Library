@@ -113,7 +113,7 @@ namespace GAL
 			{
 				VulkanBuffer* Buffer = nullptr;
 				GTSL::uint32 Size = 0, Offset = 0, Stride = 0;
-			} RaygenDescriptor, HitDescriptor, MissDescriptor;
+			} RayGenDescriptor, HitDescriptor, MissDescriptor;
 			
 			GTSL::Extent3D DispatchSize;
 		};
@@ -135,20 +135,25 @@ namespace GAL
 		};
 		void BindBindingsSets(const BindBindingsSetInfo& info);
 
-		struct CopyImageInfo final : VulkanRenderInfo
-		{};
-		void CopyImage(const CopyImageInfo& copyImageInfo);
+		struct CopyTextureToTextureInfo final : VulkanRenderInfo
+		{
+			VulkanTexture SourceTexture, DestinationTexture;
+			VulkanTextureLayout SourceLayout, DestinationLayout;
 
-		struct CopyBufferToImageInfo : VulkanRenderInfo
+			GTSL::Extent3D Extent;
+		};
+		void CopyTextureToTexture(const CopyTextureToTextureInfo& info);
+
+		struct CopyBufferToTextureInfo : VulkanRenderInfo
 		{
 			const VulkanBuffer* SourceBuffer{ nullptr };
 			VulkanTextureLayout TextureLayout;
-			const VulkanTexture* DestinationImage{ nullptr };
+			const VulkanTexture* DestinationTexture{ nullptr };
 
 			GTSL::Extent3D Extent;
 			GTSL::Extent3D Offset;
 		};
-		void CopyBufferToImage(const CopyBufferToImageInfo& copyBufferToImageInfo);
+		void CopyBufferToTexture(const CopyBufferToTextureInfo& copyBufferToImageInfo);
 
 		//struct TransitionImageInfo : VulkanRenderInfo
 		//{

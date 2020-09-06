@@ -13,27 +13,27 @@ using namespace GTSL;
 
 void GAL::VulkanCommandBuffer::BeginRecording(const BeginRecordingInfo& beginRecordingInfo)
 {
-	VkCommandBufferBeginInfo vk_command_buffer_begin_info{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+	VkCommandBufferBeginInfo vkCommandBufferBeginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 	//Hint to primary buffer if this is secondary.
 	//vk_command_buffer_begin_info.pInheritanceInfo = static_cast<VulkanCommandBuffer*>(beginRecordingInfo.PrimaryCommandBuffer)->GetVkCommandBuffer();
-	vk_command_buffer_begin_info.pInheritanceInfo = nullptr;
+	vkCommandBufferBeginInfo.pInheritanceInfo = nullptr;
 
-	VK_CHECK(vkBeginCommandBuffer(commandBuffer, &vk_command_buffer_begin_info));
+	VK_CHECK(vkBeginCommandBuffer(commandBuffer, &vkCommandBufferBeginInfo))
 }
 
 void GAL::VulkanCommandBuffer::EndRecording(const EndRecordingInfo& endRecordingInfo)
 {
-	VK_CHECK(vkEndCommandBuffer(commandBuffer));
+	VK_CHECK(vkEndCommandBuffer(commandBuffer))
 }
 
 void GAL::VulkanCommandBuffer::BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo)
 {
 	VkRenderPassBeginInfo vkRenderPassBeginInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 	vkRenderPassBeginInfo.renderPass = static_cast<const VulkanRenderPass*>(beginRenderPassInfo.RenderPass)->GetVkRenderPass();
+
+	Array<VkClearValue, 32> vkClearValues(static_cast<uint32>(beginRenderPassInfo.ClearValues.ElementCount()));
 	
-	GTSL::Array<VkClearValue, 32> vkClearValues(static_cast<uint32>(beginRenderPassInfo.ClearValues.ElementCount()));
-	
-	for(GTSL::uint8 i = 0; i < static_cast<uint8>(beginRenderPassInfo.ClearValues.ElementCount()); ++i)
+	for(uint8 i = 0; i < static_cast<uint8>(beginRenderPassInfo.ClearValues.ElementCount()); ++i)
 	{
 		const auto& color = beginRenderPassInfo.ClearValues[i];
 		vkClearValues[i] = VkClearValue{ color.R(), color.G(), color.B(), color.A() };
@@ -107,23 +107,23 @@ void GAL::VulkanCommandBuffer::DrawIndexed(const DrawIndexedInfo& drawIndexedInf
 
 void GAL::VulkanCommandBuffer::TraceRays(const TraceRaysInfo& traceRaysInfo)
 {
-	VkStridedBufferRegionKHR raygen_sbt, hit_sbt, miss_sbt;
-	raygen_sbt.size = traceRaysInfo.RaygenDescriptor.Size;
-	raygen_sbt.offset = traceRaysInfo.RaygenDescriptor.Offset;
-	raygen_sbt.buffer = traceRaysInfo.RaygenDescriptor.Buffer->GetVkBuffer();
-	raygen_sbt.stride = traceRaysInfo.RaygenDescriptor.Stride;
+	VkStridedBufferRegionKHR raygenSbt, hitSbt, missSbt;
+	raygenSbt.size = traceRaysInfo.RayGenDescriptor.Size;
+	raygenSbt.offset = traceRaysInfo.RayGenDescriptor.Offset;
+	raygenSbt.buffer = traceRaysInfo.RayGenDescriptor.Buffer->GetVkBuffer();
+	raygenSbt.stride = traceRaysInfo.RayGenDescriptor.Stride;
 
-	hit_sbt.size = traceRaysInfo.HitDescriptor.Size;
-	hit_sbt.offset = traceRaysInfo.HitDescriptor.Offset;
-	hit_sbt.buffer = traceRaysInfo.HitDescriptor.Buffer->GetVkBuffer();
-	hit_sbt.stride = traceRaysInfo.HitDescriptor.Stride;
+	hitSbt.size = traceRaysInfo.HitDescriptor.Size;
+	hitSbt.offset = traceRaysInfo.HitDescriptor.Offset;
+	hitSbt.buffer = traceRaysInfo.HitDescriptor.Buffer->GetVkBuffer();
+	hitSbt.stride = traceRaysInfo.HitDescriptor.Stride;
 
-	miss_sbt.size = traceRaysInfo.MissDescriptor.Size;
-	miss_sbt.offset = traceRaysInfo.MissDescriptor.Offset;
-	miss_sbt.buffer = traceRaysInfo.MissDescriptor.Buffer->GetVkBuffer();
-	miss_sbt.stride = traceRaysInfo.MissDescriptor.Stride;
+	missSbt.size = traceRaysInfo.MissDescriptor.Size;
+	missSbt.offset = traceRaysInfo.MissDescriptor.Offset;
+	missSbt.buffer = traceRaysInfo.MissDescriptor.Buffer->GetVkBuffer();
+	missSbt.stride = traceRaysInfo.MissDescriptor.Stride;
 	
-	traceRaysInfo.RenderDevice->vkCmdTraceRaysKHR(commandBuffer, &raygen_sbt, &miss_sbt, &hit_sbt, nullptr, traceRaysInfo.DispatchSize.Width, traceRaysInfo.DispatchSize.Height, traceRaysInfo.DispatchSize.Depth);
+	traceRaysInfo.RenderDevice->vkCmdTraceRaysKHR(commandBuffer, &raygenSbt, &missSbt, &hitSbt, nullptr, traceRaysInfo.DispatchSize.Width, traceRaysInfo.DispatchSize.Height, traceRaysInfo.DispatchSize.Depth);
 }
 
 void GAL::VulkanCommandBuffer::Dispatch(const DispatchInfo& dispatchInfo)
@@ -137,13 +137,27 @@ void GAL::VulkanCommandBuffer::BindBindingsSets(const BindBindingsSetInfo& info)
 	info.BoundSets, reinterpret_cast<const VkDescriptorSet*>(info.BindingsSets.begin()), info.Offsets.ElementCount(), info.Offsets.begin());
 }
 
-void GAL::VulkanCommandBuffer::CopyImage(const CopyImageInfo& copyImageInfo)
+void GAL::VulkanCommandBuffer::CopyTextureToTexture(const CopyTextureToTextureInfo& info)
 {
-	__debugbreak();
-	//vkCmdCopyImage(commandBuffer, static_cast<VulkanImage*>(copyImageInfo.SourceImage), , , , , );
+	VkImageCopy vkImageCopy;
+	vkImageCopy.extent = Extent3DToVkExtent3D(info.Extent);
+	vkImageCopy.srcOffset = {};
+	vkImageCopy.dstOffset = {};
+	vkImageCopy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	vkImageCopy.srcSubresource.baseArrayLayer = 0;
+	vkImageCopy.srcSubresource.layerCount = 1;
+	vkImageCopy.srcSubresource.mipLevel = 0;
+
+	vkImageCopy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	vkImageCopy.dstSubresource.baseArrayLayer = 0;
+	vkImageCopy.dstSubresource.layerCount = 1;
+	vkImageCopy.dstSubresource.mipLevel = 0;
+
+	vkCmdCopyImage(commandBuffer, info.SourceTexture.GetVkImage(), static_cast<VkImageLayout>(info.SourceLayout),
+		info.DestinationTexture.GetVkImage(), static_cast<VkImageLayout>(info.DestinationLayout), 1, &vkImageCopy);
 }
 
-void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& copyBufferToImageInfo)
+void GAL::VulkanCommandBuffer::CopyBufferToTexture(const CopyBufferToTextureInfo& copyBufferToImageInfo)
 {
 	VkBufferImageCopy region;
 	region.bufferOffset = 0;
@@ -155,17 +169,17 @@ void GAL::VulkanCommandBuffer::CopyBufferToImage(const CopyBufferToImageInfo& co
 	region.imageSubresource.layerCount = 1;
 	region.imageOffset = VkOffset3D{ copyBufferToImageInfo.Offset.Width, copyBufferToImageInfo.Offset.Depth, copyBufferToImageInfo.Offset.Height };
 	region.imageExtent = Extent3DToVkExtent3D(copyBufferToImageInfo.Extent);
-	vkCmdCopyBufferToImage(commandBuffer, copyBufferToImageInfo.SourceBuffer->GetVkBuffer(), copyBufferToImageInfo.DestinationImage->GetVkImage(),
+	vkCmdCopyBufferToImage(commandBuffer, copyBufferToImageInfo.SourceBuffer->GetVkBuffer(), copyBufferToImageInfo.DestinationTexture->GetVkImage(),
 		static_cast<VkImageLayout>(copyBufferToImageInfo.TextureLayout), 1, &region);
 }
 
 void GAL::VulkanCommandBuffer::AddPipelineBarrier(const AddPipelineBarrierInfo& pipelineBarrier)
 {
-	GTSL::Array<VkImageMemoryBarrier, 1024> imageMemoryBarriers(pipelineBarrier.TextureBarriers.ElementCount());
+	Array<VkImageMemoryBarrier, 128> imageMemoryBarriers(pipelineBarrier.TextureBarriers.ElementCount());
 	//GTSL::Array<VkBufferMemoryBarrier, 1024> bufferMemoryBarriers;
 	//GTSL::Array<VkMemoryBarrier, 1024> memoryBarriers;
 
-	for (GTSL::uint32 i = 0; i < pipelineBarrier.TextureBarriers.ElementCount(); ++i)
+	for (uint32 i = 0; i < pipelineBarrier.TextureBarriers.ElementCount(); ++i)
 	{
 		imageMemoryBarriers[i].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 		imageMemoryBarriers[i].pNext = nullptr;
