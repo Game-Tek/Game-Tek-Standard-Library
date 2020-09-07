@@ -48,19 +48,24 @@ namespace GAL
 			AttachmentReference DepthAttachmentReference;
 		};
 
-		//Describes a render pass.
-		struct RenderPassDescriptor
+		static constexpr uint8_t EXTERNAL = 255;
+		
+		struct SubPassDependency
+		{
+			uint8_t SourceSubPass, DestinationSubPass;
+			VulkanPipelineStage::value_type SourcePipelineStage, DestinationPipelineStage;
+			VulkanAccessFlags::value_type SourceAccessFlags = 0, DestinationAccessFlags;
+		};
+		
+		struct CreateInfo final : VulkanCreateInfo
 		{
 			//Array of pointer to images that will be used as attachments in the render pass.
 			GTSL::Ranger<const AttachmentDescriptor> RenderPassAttachments;
 
 			//Array of SubpassDescriptor used to describes the properties of every subpass in the renderpass.
 			GTSL::Ranger<const SubPassDescriptor> SubPasses;
-		};
-		
-		struct CreateInfo final : VulkanCreateInfo
-		{
-			RenderPassDescriptor Descriptor;
+			
+			GTSL::Ranger<const SubPassDependency> SubPassDependencies;
 		};
 		explicit VulkanRenderPass(const CreateInfo& createInfo);
 		~VulkanRenderPass() = default;
