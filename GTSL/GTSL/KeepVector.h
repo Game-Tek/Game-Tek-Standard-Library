@@ -6,8 +6,13 @@
 #include "Ranger.h"
 #include <new>
 
+#include "Result.h"
+
 namespace GTSL
 {
+	template<typename T>
+	struct KeepVectorIterator;
+	
 	/**
 	 * \brief A vector that maintains indices for placed objects during their lifetime.
 	 * \tparam T Type of the object this KeepVector will store.
@@ -50,6 +55,30 @@ namespace GTSL
 				free();
 			}
 		}
+
+		//KeepVectorIterator<T> begin() { return KeepVectorIterator<T>(this); }
+		//KeepVectorIterator<T> end()
+		//{
+		//	uint32 elementIndex = getIndices().; uint32 use;
+		//	for (auto* end  = getIndices().end() - 1; end != getIndices().begin() - 1; --end)
+		//	{
+		//		bool anySet;
+		//
+		//		for(uint8 i = 32; i > 0; --i)
+		//		{
+		//			if (!GTSL::CheckBit(i, *end)) { use = elementIndex + i; };
+		//		}
+		//
+		//		if (anySet)
+		//		{
+		//			GTSL::ClearBit(bit, e);
+		//			index = elementIndex + bit; return true;
+		//		}
+		//
+		//		elementIndex += 32;
+		//	}
+		//	return KeepVectorIterator<T>(this);
+		//}
 		
 		/**
 		 * \brief Emplaces an object into the vector At the first free slot available.
@@ -84,10 +113,32 @@ namespace GTSL
 		void EmplaceAt(length_type index, ARGS&&... args)
 		{
 			if (index > this->capacity) [[unlikely]] { resize(); }
+			if constexpr (_DEBUG)
+			{
+				const auto number = index / 32; const auto bit = index % 32;
+				auto c = getIndices()[number];
+				GTSL_ASSERT(CheckBit(bit, getIndices()[number]), "Slot is ocuppied!")
+			}
 			GTSL::ClearBit(index % 32, *(getIndices() + index / 32));
 			new(getObjects() + index) T(GTSL::ForwardRef<ARGS>(args)...);
 		}
 
+		[[nodiscard]] Result<uint32> GetFirstFreeIndex() const
+		{
+			uint32 elementIndex = 0;
+			for (auto& e : getIndices())
+			{
+				uint8 bit; bool anySet;
+				GTSL::FindFirstSetBit(e, bit, anySet);
+
+				if (anySet)	{ return Result<uint32>(elementIndex + bit, true); }
+
+				elementIndex += 32;
+			}
+
+			return Result<uint32>(MoveRef(elementIndex), false);
+		}
+		
 		/**
 		 * \brief Destroys the object At the specified index which makes space for another object to take it's Place.
 		 * \param index Index of the object to remove.
@@ -258,4 +309,13 @@ namespace GTSL
 			num -= 32;
 		}
 	}
+
+	template<typename T>
+	struct KeepVectorIterator
+	{
+
+	private:
+		uint32 pos = 0;
+
+	};
 }

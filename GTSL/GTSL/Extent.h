@@ -24,7 +24,7 @@ namespace GTSL
 	{
 		Extent3D() = default;
 
-		Extent3D(const Extent2D extent) noexcept : Width(extent.Width), Height(extent.Height) {}
+		Extent3D(const Extent2D extent) noexcept : Width(extent.Width), Height(extent.Height), Depth(1) {}
 		Extent3D(const uint16 width, const uint16 height, const uint16 depth) noexcept : Width(width), Height(height), Depth(depth) {}
 		
 		uint16 Width = 0, Height = 0, Depth = 0;
