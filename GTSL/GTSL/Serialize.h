@@ -6,6 +6,7 @@
 #include "Extent.h"
 #include "Vector.hpp"
 #include "Algorithm.h"
+#include "Id.h"
 
 namespace GTSL
 {
@@ -103,5 +104,15 @@ namespace GTSL
 	inline void Extract(Extent3D& extent, Buffer& buffer)
 	{
 		buffer.ReadBytes(sizeof(Extent3D), reinterpret_cast<byte*>(&extent));
+	}
+
+	inline void Insert(const Id64 id, Buffer& buffer)
+	{
+		buffer.WriteBytes(sizeof(Id64), reinterpret_cast<const byte*>(&id));
+	}
+	
+	inline void Extract(Id64& id, Buffer& buffer)
+	{
+		buffer.ReadBytes(sizeof(Id64), reinterpret_cast<byte*>(&id));
 	}
 }
