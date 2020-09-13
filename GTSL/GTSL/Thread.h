@@ -33,6 +33,8 @@ namespace GTSL
 		};
 		void SetPriority(Priority threadPriority) const noexcept;
 
+		void static SetThreadId(const uint8 id) { threadId = id; }
+		
 		template<class ALLOCATOR>
 		void Join(const ALLOCATOR& allocator) noexcept
 		{
@@ -45,7 +47,7 @@ namespace GTSL
 		[[nodiscard]] uint32 GetId() const noexcept;
 
 		[[nodiscard]] bool CanBeJoined() const noexcept;
-
+		
 		static uint8 ThreadCount();
 		
 	private:
