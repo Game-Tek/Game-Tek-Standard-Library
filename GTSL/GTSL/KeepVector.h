@@ -9,17 +9,14 @@
 #include "Result.h"
 
 namespace GTSL
-{
-	template<typename T>
-	struct KeepVectorIterator;
-	
+{	
 	/**
 	 * \brief A vector that maintains indices for placed objects during their lifetime.
 	 * \tparam T Type of the object this KeepVector will store.
 	 */
 	template<typename T, class ALLOCATOR>
 	class KeepVector
-	{
+	{		
 	public:
 		using length_type = uint32;
 
@@ -56,29 +53,38 @@ namespace GTSL
 			}
 		}
 
-		//KeepVectorIterator<T> begin() { return KeepVectorIterator<T>(this); }
-		//KeepVectorIterator<T> end()
-		//{
-		//	uint32 elementIndex = getIndices().; uint32 use;
-		//	for (auto* end  = getIndices().end() - 1; end != getIndices().begin() - 1; --end)
-		//	{
-		//		bool anySet;
-		//
-		//		for(uint8 i = 32; i > 0; --i)
-		//		{
-		//			if (!GTSL::CheckBit(i, *end)) { use = elementIndex + i; };
-		//		}
-		//
-		//		if (anySet)
-		//		{
-		//			GTSL::ClearBit(bit, e);
-		//			index = elementIndex + bit; return true;
-		//		}
-		//
-		//		elementIndex += 32;
-		//	}
-		//	return KeepVectorIterator<T>(this);
-		//}
+		struct KeepVectorIterator
+		{
+			KeepVectorIterator(const uint32 initPos, KeepVector* keepVector) : pos(initPos), keepVector(keepVector) {}
+
+			bool operator!=(const KeepVectorIterator& other) const { return pos != other.pos; }
+			
+			const T& operator++()
+			{
+				//while pos is occupied
+				while (GTSL::CheckBit(pos % 32, keepVector->getIndices()[pos / 32])) { ++pos; }
+
+				return keepVector[pos];
+			}
+
+			const T& operator--()
+			{
+				//while pos is occupied
+				while (GTSL::CheckBit(pos % 32, keepVector->getIndices()[pos / 32])) { --pos; }
+
+				return keepVector[pos];
+			}
+			
+		private:
+			uint32 pos = 0;
+			KeepVector* keepVector = nullptr;
+		};
+		
+		KeepVectorIterator begin() { return KeepVectorIterator(0, this); }
+		KeepVectorIterator end() { return KeepVectorIterator(capacity - 1, this); }
+
+		KeepVectorIterator begin() const { return KeepVectorIterator(0, this); }
+		KeepVectorIterator end() const { return KeepVectorIterator(capacity - 1, this); }
 		
 		/**
 		 * \brief Emplaces an object into the vector At the first free slot available.
@@ -190,6 +196,8 @@ namespace GTSL
 		}
 		
 	private:
+		friend struct KeepVectorIterator;
+		
 		ALLOCATOR allocator;
 		uint32 capacity;
 		byte* data;
@@ -309,13 +317,4 @@ namespace GTSL
 			num -= 32;
 		}
 	}
-
-	template<typename T>
-	struct KeepVectorIterator
-	{
-
-	private:
-		uint32 pos = 0;
-
-	};
 }
