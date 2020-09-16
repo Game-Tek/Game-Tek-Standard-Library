@@ -389,17 +389,14 @@ namespace GTSL
 		/**
 		 * \brief Removes all elements from index to index + length and moves the rest of the vector to fill the space.
 		 * \param index Index At which to start popping.
-		 * \param length Number of elements to Pop.
+		 * \param elemCount Number of elements to Pop.
 		 */
-		void Pop(const length_type index, const length_type length)
+		void Pop(const length_type index, const length_type elemCount)
 		{
-			for (auto& begin = this->data[index]; begin != this->data[index + length]; ++begin)
-			{
-				begin.~T();
-			}
+			for (auto* begin = getIterator(index); begin != getIterator(index + elemCount); ++begin) { begin->~T(); }
 
-			copyArray(getIterator(index + length), getIterator(index), this->length - index);
-			this->length -= length;
+			copyArray(getIterator(index + elemCount), getIterator(index), elemCount);
+			this->length -= elemCount;
 		}
 
 		/**

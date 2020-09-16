@@ -30,7 +30,7 @@ namespace GAL
 		struct AllocateBindingsSetsInfo : VulkanRenderInfo
 		{
 			GTSL::Ranger<const VulkanCreateInfo> BindingsSetCreateInfos;
-			GTSL::Ranger<class VulkanBindingsSet> BindingsSets;
+			GTSL::Ranger<class VulkanBindingsSet*> BindingsSets;
 			GTSL::Ranger<const class VulkanBindingsSetLayout> BindingsSetLayouts;
 			GTSL::Ranger<const GTSL::uint32> BindingsSetDynamicBindingsCounts;
 		};

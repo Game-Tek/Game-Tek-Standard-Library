@@ -35,19 +35,25 @@ void GAL::VulkanBindingsPool::AllocateBindingsSets(const AllocateBindingsSetsInf
 	VkDescriptorSetVariableDescriptorCountAllocateInfo vkDescriptorSetVariableDescriptorCountAllocateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO };
 	vkDescriptorSetVariableDescriptorCountAllocateInfo.descriptorSetCount = static_cast<GTSL::uint32>(allocateBindingsSetsInfo.BindingsSets.ElementCount());
 	vkDescriptorSetVariableDescriptorCountAllocateInfo.pDescriptorCounts = allocateBindingsSetsInfo.BindingsSetDynamicBindingsCounts.begin();
+
+	GTSL::Array<VkDescriptorSet, 32> descriptorSets(allocateBindingsSetsInfo.BindingsSets.ElementCount());
 	
 	VkDescriptorSetAllocateInfo vkDescriptorSetAllocateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
 	vkDescriptorSetAllocateInfo.pNext = &vkDescriptorSetVariableDescriptorCountAllocateInfo;
 	vkDescriptorSetAllocateInfo.descriptorPool = descriptorPool;
 	vkDescriptorSetAllocateInfo.descriptorSetCount = allocateBindingsSetsInfo.BindingsSets.ElementCount();
 	vkDescriptorSetAllocateInfo.pSetLayouts = reinterpret_cast<const VkDescriptorSetLayout*>(allocateBindingsSetsInfo.BindingsSetLayouts.begin());
-	VK_CHECK(vkAllocateDescriptorSets(allocateBindingsSetsInfo.RenderDevice->GetVkDevice(), &vkDescriptorSetAllocateInfo, reinterpret_cast<VkDescriptorSet*>(allocateBindingsSetsInfo.BindingsSets.begin())));
+	VK_CHECK(vkAllocateDescriptorSets(allocateBindingsSetsInfo.RenderDevice->GetVkDevice(), &vkDescriptorSetAllocateInfo, descriptorSets.begin()));
 
+	for(GTSL::uint32 i = 0; i < allocateBindingsSetsInfo.BindingsSets.ElementCount(); ++i) {
+		allocateBindingsSetsInfo.BindingsSets[i]->descriptorSet = descriptorSets[i];
+	}
+	
 	if constexpr (_DEBUG)
 	{
 		for(GTSL::uint32 i = 0; i < allocateBindingsSetsInfo.BindingsSetCreateInfos.ElementCount(); ++i)
 		{
-			SET_NAME(allocateBindingsSetsInfo.BindingsSets[i].GetVkDescriptorSet(), VK_OBJECT_TYPE_DESCRIPTOR_SET, allocateBindingsSetsInfo.BindingsSetCreateInfos[i]);
+			SET_NAME(allocateBindingsSetsInfo.BindingsSets[i]->GetVkDescriptorSet(), VK_OBJECT_TYPE_DESCRIPTOR_SET, allocateBindingsSetsInfo.BindingsSetCreateInfos[i]);
 		}
 	}
 }

@@ -144,6 +144,20 @@ namespace GTSL
 			return Iterator<T>(this, bucketIndex, index);
 		}
 
+		Iterator<const T> begin() const
+		{
+			uint32 bucketIndex{ 0 }, index{ 0 };
+			for (uint32 i = 0; i < this->capacity; ++i) { if (this->getBucketLength(i) != 0) { bucketIndex = i; break; } }
+			return Iterator<const T>(this, bucketIndex, index);
+		}
+
+		Iterator<const T> end() const
+		{
+			uint32 bucketIndex{ 0 }, index{ 0 };
+			for (uint32 i = this->capacity; i > 0; --i) { if ((index = this->getBucketLength(i - 1)) != 0) { bucketIndex = i - 1; break; } }
+			return Iterator<const T>(this, bucketIndex, index);
+		}
+
 		template<typename... ARGS>
 		T& Emplace(const key_type key, ARGS&&... args)
 		{
@@ -231,7 +245,7 @@ namespace GTSL
 
 		[[nodiscard]] Ranger<key_type> getKeysBucket(const uint32 bucketIndex) const { return Ranger<key_type>(getBucketLength(bucketIndex), getKeysBucketPointer(bucketIndex) + 1); }
 
-		[[nodiscard]] Ranger<T> getValuesBucket(const uint32 keys_bucket) const { return Ranger<T>(getBucketLength(keys_bucket), getValuesBucketPointer(keys_bucket)); }
+		[[nodiscard]] Ranger<T> getValuesBucket(const uint32 bucketIndex) const { return Ranger<T>(getBucketLength(bucketIndex), getValuesBucketPointer(bucketIndex)); }
 
 		static constexpr uint32 modulo(const key_type key, const uint32 size) { return key & (size - 1); }
 
@@ -306,10 +320,13 @@ namespace GTSL
 
 		[[nodiscard]] key_type* getKeysBucketPointer(const uint32 index) const { return reinterpret_cast<key_type*>(this->data) + index * (maxBucketLength + 1); }
 
-		T* getValuesBucketPointer(const uint32 keys_bucket) const { return reinterpret_cast<T*>(this->data + getKeysAllocationSize(this->capacity, maxBucketLength)) + keys_bucket * maxBucketLength; }
+		T* getValuesBucketPointer(const uint32 bucketIndex) const { return reinterpret_cast<T*>(this->data + getKeysAllocationSize(this->capacity, maxBucketLength)) + bucketIndex * maxBucketLength; }
 		
 		template<typename TT, class ALLOCATOR, typename L>
 		friend void ForEach(FlatHashMap<TT, ALLOCATOR>& collection, L&& lambda);
+
+		template<typename TT, class ALLOCATOR, typename L>
+		friend void ForEach(const FlatHashMap<TT, ALLOCATOR>& collection, L&& lambda);
 
 		template<typename TT, class ALLOCATOR, typename L>
 		friend void PairForEach(FlatHashMap<TT, ALLOCATOR>& collection, L&& lambda);
@@ -324,6 +341,12 @@ namespace GTSL
 	void ForEach(FlatHashMap<T, ALLOCATOR>& collection, L&& lambda)
 	{
 		for (uint32 bucketIndex = 0; bucketIndex < collection.capacity; ++bucketIndex) { for (auto& e : collection.getValuesBucket(bucketIndex)) { lambda(e); } }
+	}
+
+	template<typename T, class ALLOCATOR, typename L>
+	void ForEach(const FlatHashMap<T, ALLOCATOR>& collection, L&& lambda)
+	{
+		for (uint32 bucketIndex = 0; bucketIndex < collection.capacity; ++bucketIndex) { for (const auto& e : collection.getValuesBucket(bucketIndex)) { lambda(e); } }
 	}
 
 	template<typename T, class ALLOCATOR, typename L>

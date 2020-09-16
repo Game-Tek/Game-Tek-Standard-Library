@@ -9,7 +9,80 @@
 #include "Result.h"
 
 namespace GTSL
-{	
+{
+	template<typename I>
+	struct Range
+	{
+		Range(I b, I e) : beg(b), en(e) {}
+
+		I begin() { return beg; }
+		I end() { return en; }
+		
+	private:
+		I beg, en;
+	};
+	
+	template<typename T>
+	struct KeepVectorIterator
+	{
+		KeepVectorIterator(const uint32 capacity, byte* dt) : capacity(capacity), data(dt)
+		{
+			pos = capacity - 1;
+			while (GTSL::CheckBit(pos % 32, getIndices()[pos / 32])) { --pos; }
+			++pos;
+		}
+
+		KeepVectorIterator(const uint32 p, const uint32 capacity, byte* dt) : pos(p), capacity(capacity), data(dt)
+		{
+			lastPos = capacity - 1;
+			while (GTSL::CheckBit(lastPos % 32, getIndices()[lastPos / 32])) { --lastPos; }
+			++lastPos;
+		}
+
+		bool operator!=(const KeepVectorIterator& other) const { return pos != other.pos; }
+		bool operator==(const KeepVectorIterator& other) const { return pos == other.pos; }
+
+		KeepVectorIterator& operator++()
+		{
+			//while pos is not occupied
+			do
+			{
+				++pos;
+			} while (GTSL::CheckBit(pos % 32, getIndices()[pos / 32]) && pos < lastPos);
+
+			return *this;
+		}
+
+		KeepVectorIterator& operator--()
+		{
+			//while pos is not occupied
+			do
+			{
+				--pos;
+			} while (GTSL::CheckBit(pos % 32, getIndices()[pos / 32]));
+
+			return *this;
+		}
+
+		T& operator*() { return getObjects()[pos]; }
+		T* operator->() { return getObjects() + pos; }
+
+		T& operator[](const uint32 index) { return getObjects()[index]; }
+
+	private:
+		uint32 pos = 0, capacity = 0, lastPos = 0;
+		byte* data = nullptr;
+
+		[[nodiscard]] uint32 getDataSize(const uint32 newElementCount) const { return sizeof(T) * newElementCount; }
+		[[nodiscard]] uint32 getIndicesSize(const uint32 newElementCount) const { return ((newElementCount / 32) + 1) * sizeof(uint32); }
+
+		[[nodiscard]] Ranger<uint32> getIndices() { return GTSL::Ranger<uint32>((capacity / 32) + 1, reinterpret_cast<uint32*>(data + getDataSize(capacity))); }
+		[[nodiscard]] Ranger<const uint32> getIndices() const { return GTSL::Ranger<uint32>((capacity / 32) + 1, reinterpret_cast<uint32*>(data + getDataSize(capacity))); }
+
+		[[nodiscard]] Ranger<T> getObjects() { return GTSL::Ranger<T>(capacity, reinterpret_cast<T*>(data)); }
+		[[nodiscard]] Ranger<const T> getObjects() const { return GTSL::Ranger<T>(capacity, reinterpret_cast<T*>(data)); }
+	};
+	
 	/**
 	 * \brief A vector that maintains indices for placed objects during their lifetime.
 	 * \tparam T Type of the object this KeepVector will store.
@@ -52,39 +125,15 @@ namespace GTSL
 				free();
 			}
 		}
-
-		struct KeepVectorIterator
-		{
-			KeepVectorIterator(const uint32 initPos, KeepVector* keepVector) : pos(initPos), keepVector(keepVector) {}
-
-			bool operator!=(const KeepVectorIterator& other) const { return pos != other.pos; }
-			
-			const T& operator++()
-			{
-				//while pos is occupied
-				while (GTSL::CheckBit(pos % 32, keepVector->getIndices()[pos / 32])) { ++pos; }
-
-				return keepVector[pos];
-			}
-
-			const T& operator--()
-			{
-				//while pos is occupied
-				while (GTSL::CheckBit(pos % 32, keepVector->getIndices()[pos / 32])) { --pos; }
-
-				return keepVector[pos];
-			}
-			
-		private:
-			uint32 pos = 0;
-			KeepVector* keepVector = nullptr;
-		};
 		
-		KeepVectorIterator begin() { return KeepVectorIterator(0, this); }
-		KeepVectorIterator end() { return KeepVectorIterator(capacity - 1, this); }
+		KeepVectorIterator<T> begin() { return KeepVectorIterator<T>(0, capacity, data); }
+		KeepVectorIterator<T> end() { return KeepVectorIterator<T>(capacity, data); }
 
-		KeepVectorIterator begin() const { return KeepVectorIterator(0, this); }
-		KeepVectorIterator end() const { return KeepVectorIterator(capacity - 1, this); }
+		KeepVectorIterator<T> begin() const { return KeepVectorIterator<T>(0, capacity, data); }
+		KeepVectorIterator<T> end() const { return KeepVectorIterator<T>(capacity, data); }
+
+		Range<KeepVectorIterator<T>> GetRange() { return Range<KeepVectorIterator<T>>(begin(), end()); }
+		Range<KeepVectorIterator<T>> GetRange() const { return Range<KeepVectorIterator<T>>(begin(), end()); }
 		
 		/**
 		 * \brief Emplaces an object into the vector At the first free slot available.
@@ -196,7 +245,7 @@ namespace GTSL
 		}
 		
 	private:
-		friend struct KeepVectorIterator;
+		friend struct KeepVectorIterator<T>;
 		
 		ALLOCATOR allocator;
 		uint32 capacity;

@@ -9,7 +9,7 @@ namespace GTSL
 		Result(R&& result, E err) : result(result), error(err) {}
 		Result(E err) : result(), error(err) {}
 
-		operator bool() const { return error; }
+		E State() const { return error; }
 		const R& Get() const { return result; }
 	private:
 		R result;

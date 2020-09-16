@@ -26,21 +26,21 @@ namespace GTSL
 		void Remove(const uint64 key)
 		{
 			auto bucketIndex = modulo(key); auto index = findElementIndex(keys[bucketIndex], key);
-			popElement(Ranger<T>(keys[bucketIndex].GetLength(), values[bucketIndex]), index);
-			keys[bucketIndex].Pop(index);
+			popElement(Ranger<T>(keys[bucketIndex].GetLength(), values[bucketIndex]), index.Get());
+			keys[bucketIndex].Pop(index.Get());
 		}
 
 		T& At(const uint64 key)
 		{
 			auto bucketIndex = modulo(key); auto index = findElementIndex(keys[bucketIndex], key);
-			GTSL_ASSERT(index, "No entry by that name!");
+			GTSL_ASSERT(index.State(), "No entry by that name!");
 			return values[bucketIndex][index.Get()];
 		}
 
 		const T& At(const uint64 key) const
 		{
 			auto bucketIndex = modulo(key); auto index = findElementIndex(keys[bucketIndex], key);
-			GTSL_ASSERT(index, "No entry by that name!");
+			GTSL_ASSERT(index.State(), "No entry by that name!");
 			return values[bucketIndex][index.Get()];
 		}
 
