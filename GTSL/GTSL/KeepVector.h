@@ -9,19 +9,7 @@
 #include "Result.h"
 
 namespace GTSL
-{
-	template<typename I>
-	struct Range
-	{
-		Range(I b, I e) : beg(b), en(e) {}
-
-		I begin() { return beg; }
-		I end() { return en; }
-		
-	private:
-		I beg, en;
-	};
-	
+{	
 	template<typename T>
 	struct KeepVectorIterator
 	{
@@ -178,6 +166,24 @@ namespace GTSL
 			new(getObjects() + index) T(GTSL::ForwardRef<ARGS>(args)...);
 		}
 
+		template<class ALLOC>
+		void Copy(const KeepVector<T, ALLOC>& other)
+		{			
+			if (this->capacity < other.capacity) { resize(); }
+			
+			uint32 num = 0;
+			for (auto& index : other.getIndices())
+			{
+				for (uint32 i = 0; i < 32; ++i)
+				{
+					if (!GTSL::CheckBit(i, index)) { getObjects()[num + i] = other[num + i]; }
+				}
+
+				getIndices()[num / 32] = index;
+				num += 32;
+			}
+		}
+
 		[[nodiscard]] Result<uint32> GetFirstFreeIndex() const
 		{
 			uint32 elementIndex = 0;
@@ -243,9 +249,13 @@ namespace GTSL
 			}
 			return getObjects()[i];
 		}
+
+		using type = T;
 		
 	private:
 		friend struct KeepVectorIterator<T>;
+
+		friend class KeepVector;
 		
 		ALLOCATOR allocator;
 		uint32 capacity;

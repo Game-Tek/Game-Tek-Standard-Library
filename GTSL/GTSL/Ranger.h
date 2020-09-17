@@ -5,6 +5,18 @@
 
 namespace GTSL
 {
+	template<typename I>
+	struct Range
+	{
+		Range(I b, I e) : beg(b), en(e) {}
+
+		I begin() { return beg; }
+		I end() { return en; }
+
+	private:
+		I beg, en;
+	};
+	
 	template<typename T>
 	class Ranger
 	{
