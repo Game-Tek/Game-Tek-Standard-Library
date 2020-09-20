@@ -19,6 +19,7 @@
     <ClInclude Include="GTSL\Atomic.hpp" />
     <ClInclude Include="GTSL\Bitfield.h" />
     <ClInclude Include="GTSL\Bitman.h" />
+    <ClInclude Include="GTSL\BitTracker.h" />
     <ClInclude Include="GTSL\BlockingQueue.h" />
     <ClInclude Include="GTSL\Buffer.h" />
     <ClInclude Include="GTSL\ConditionVariable.h" />

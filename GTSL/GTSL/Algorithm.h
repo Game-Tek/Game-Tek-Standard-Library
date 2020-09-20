@@ -14,7 +14,22 @@ namespace GTSL
 	static auto Call(LAMBDA&& lambda, Tuple<ARGS...>& tup) { return Call(lambda, tup, BuildIndices<sizeof...(ARGS)>{}); }
 
 	template<typename T>
+	constexpr uint64 Bits() { return sizeof(T) * 8; }
+	
+	template<typename T>
 	bool IsPowerOfTwo(T number) { return (number & (number - 1)) == 0; }
+
+	template<typename T>
+	constexpr bool IsIntegral() { return false; };
+
+	template<>
+	constexpr bool IsIntegral<uint32>() { return true; }
+
+	template<>
+	constexpr bool IsIntegral<uint64>() { return true; }
+
+	template<typename T>
+	concept Integral = IsIntegral<T>();
 	
 	template<typename E>
 	inline constexpr bool IsEnum = __is_enum(E);
