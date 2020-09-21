@@ -170,6 +170,7 @@ namespace GAL
 		
 #if (_DEBUG)
 		PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
+		PFN_vkCmdInsertDebugUtilsLabelEXT vkCmdInsertDebugUtilsLabelEXT;
 #endif
 
 	private:

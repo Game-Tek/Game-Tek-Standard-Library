@@ -119,6 +119,12 @@ namespace GAL
 		};
 		void TraceRays(const TraceRaysInfo& traceRaysInfo);
 
+		struct AddLabelInfo : VulkanRenderInfo
+		{
+			GTSL::Ranger<const GTSL::UTF8> Name;
+		};
+		void AddLabel(const AddLabelInfo& info);
+		
 		struct DispatchInfo : VulkanRenderInfo
 		{
 			GTSL::Extent3D WorkGroups;

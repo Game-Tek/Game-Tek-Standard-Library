@@ -335,7 +335,7 @@ namespace GTSL
 		{
 			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
 			copyArray(getIterator(index), getIterator(index + 1), this->length - index);
-			::new(this->data + this->length) T(ForwardRef<ARGS>(args)...);
+			::new(getIterator(index)) T(ForwardRef<ARGS>(args)...);
 			return this->length += 1;
 		}
 

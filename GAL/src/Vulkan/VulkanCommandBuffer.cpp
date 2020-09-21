@@ -126,6 +126,14 @@ void GAL::VulkanCommandBuffer::TraceRays(const TraceRaysInfo& traceRaysInfo)
 	traceRaysInfo.RenderDevice->vkCmdTraceRaysKHR(commandBuffer, &raygenSbt, &missSbt, &hitSbt, nullptr, traceRaysInfo.DispatchSize.Width, traceRaysInfo.DispatchSize.Height, traceRaysInfo.DispatchSize.Depth);
 }
 
+void GAL::VulkanCommandBuffer::AddLabel(const AddLabelInfo& info)
+{
+	VkDebugUtilsLabelEXT vkLabelInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
+	vkLabelInfo.pLabelName = info.Name;
+	
+	info.RenderDevice->vkCmdInsertDebugUtilsLabelEXT(commandBuffer, &vkLabelInfo);
+}
+
 void GAL::VulkanCommandBuffer::Dispatch(const DispatchInfo& dispatchInfo)
 {
 	vkCmdDispatch(commandBuffer, dispatchInfo.WorkGroups.Width, dispatchInfo.WorkGroups.Height, dispatchInfo.WorkGroups.Depth);

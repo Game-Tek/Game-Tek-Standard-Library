@@ -101,6 +101,6 @@ namespace GAL
 		GTSL::Array<VulkanTexture, 5> GetTextures(const GetTexturesInfo& info) const;
 		
 	private:
-		void* swapchain;
+		void* swapchain = nullptr;
 	};
 }
