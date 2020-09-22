@@ -211,6 +211,12 @@ namespace GTSL
 			(getObjects() + index)->~T();
 		}
 
+		[[nodiscard]] bool IsSlotOccupied(const uint32 index) const
+		{
+			const auto number = index / 32; const auto bit = index % 32;
+			return !CheckBit(bit, number);
+		}
+		
 		void Clear()
 		{
 			uint32 num = 0;

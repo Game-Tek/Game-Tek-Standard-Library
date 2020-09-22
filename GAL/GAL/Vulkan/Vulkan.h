@@ -108,6 +108,11 @@ namespace GAL
 	{
 		static constexpr value_type COLOR = 1, DEPTH = 2, STENCIL = 4;
 	};
+
+	struct VulkanAccelerationStructureFlags : GTSL::Flags<GTSL::uint32>
+	{
+		static constexpr value_type ALLOW_UPDATE = 0x00000001, ALLOW_COMPACTION = 0x00000002, PREFER_FAST_TRACE = 0x00000004, PREFER_FAST_BUILD_BIT_KHR = 0x00000008, LOW_MEMORY_BIT = 0x00000010;
+	};
 	
 	struct VulkanPipelineStage : GTSL::Flags<GTSL::uint32>
 	{

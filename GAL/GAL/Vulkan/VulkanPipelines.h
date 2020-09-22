@@ -164,7 +164,7 @@ namespace GAL
 		VkPipeline pipeline = nullptr;
 	};
 
-	class VulkanRaytracingPipeline final : public VulkanPipeline
+	class VulkanRayTracingPipeline final : public VulkanPipeline
 	{
 	public:
 		struct Group
@@ -172,6 +172,8 @@ namespace GAL
 		private:
 			uint32_t type; void* next;
 		public:
+			static constexpr uint32_t SHADER_UNUSED = (~0U);
+			
 			VulkanShaderGroupType ShaderGroup;
 			uint32_t GeneralShader;
 			uint32_t ClosestHitShader;
@@ -184,7 +186,7 @@ namespace GAL
 		struct CreateInfo : VulkanCreateInfo
 		{
 			bool IsInheritable = false;
-			const VulkanRaytracingPipeline* ParentPipeline = nullptr;
+			const VulkanRayTracingPipeline* ParentPipeline = nullptr;
 
 			const VulkanPipelineLayout* PipelineLayout = nullptr;
 			
@@ -195,7 +197,7 @@ namespace GAL
 			GTSL::Ranger<Group> Groups;
 		};
 
-		VulkanRaytracingPipeline(const CreateInfo& createInfo);
+		explicit VulkanRayTracingPipeline(const CreateInfo& createInfo);
 		void Destroy(const VulkanRenderDevice* renderDevice);
 	};
 }

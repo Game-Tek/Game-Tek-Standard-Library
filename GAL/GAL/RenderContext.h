@@ -2,9 +2,6 @@
 
 #include "RenderCore.h"
 
-#include <GTSL/Extent.h>
-#include <GTSL/Ranger.h>
-
 namespace GAL
 {
 	class Window;

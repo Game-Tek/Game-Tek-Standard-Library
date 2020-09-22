@@ -4,6 +4,9 @@
 #include "GAL/Vulkan/VulkanRenderPass.h"
 #include <GAL/ext/shaderc/shaderc.hpp>
 
+//#include <GAL/ext/glslang/public/ShaderLang.h>
+//#include <GAL/ext/glslang/SPIRV/GlslangToSpv.h>
+
 #include "GTSL/Bitman.h"
 #include "GTSL/Buffer.h"
 #include "GTSL/String.hpp"
@@ -68,6 +71,91 @@ bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL:
 	
 	return true;
 }
+
+//static bool glslLangInitialized = false;
+
+//bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringError)
+//{
+//	EShLanguage shaderc_stage;
+//	
+//	switch (ShaderTypeToVkShaderStageFlagBits(shaderType))
+//	{
+//	case VK_SHADER_STAGE_VERTEX_BIT: shaderc_stage = EShLangVertex;	break;
+//	case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT: shaderc_stage = EShLangTessControl;	break;
+//	case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT: shaderc_stage = EShLangTessEvaluation; break;
+//	case VK_SHADER_STAGE_GEOMETRY_BIT: shaderc_stage = EShLangGeometry;	break;
+//	case VK_SHADER_STAGE_FRAGMENT_BIT: shaderc_stage = EShLangFragment;	break;
+//	case VK_SHADER_STAGE_COMPUTE_BIT: shaderc_stage = EShLangCompute; break;
+//	case VK_SHADER_STAGE_RAYGEN_BIT_KHR: shaderc_stage = EShLangRayGen; break;
+//	case VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR: shaderc_stage = EShLangClosestHit; break;
+//	case VK_SHADER_STAGE_ANY_HIT_BIT_KHR: shaderc_stage = EShLangAnyHit; break;
+//	case VK_SHADER_STAGE_MISS_BIT_KHR: shaderc_stage = EShLangMiss; break;
+//	case VK_SHADER_STAGE_INTERSECTION_BIT_KHR: shaderc_stage = EShLangIntersect; break;
+//	case VK_SHADER_STAGE_CALLABLE_BIT_KHR: shaderc_stage = EShLangCallable; break;
+//	default: GAL_DEBUG_BREAK;
+//	}
+//
+//	const TBuiltInResource DefaultTBuiltInResource{};
+//
+//	if(glslLangInitialized)
+//	{
+//		glslang::InitializeProcess();
+//		glslLangInitialized = true;
+//	}
+//
+//	glslang::TShader shader(shaderc_stage);
+//	GTSL::int32 length = code.ElementCount();
+//	auto* string = code.begin();
+//	shader.setStringsWithLengths(&string, &length, 1);
+//
+//	int ClientInputSemanticsVersion = 460; // maps to, say, #define VULKAN 100
+//	glslang::EShTargetClientVersion VulkanClientVersion = glslang::EShTargetVulkan_1_2;
+//	glslang::EShTargetLanguageVersion TargetVersion = glslang::EShTargetSpv_1_5;
+//
+//	shader.setEnvInput(glslang::EShSourceGlsl, shaderc_stage, glslang::EShClientVulkan, ClientInputSemanticsVersion);
+//	shader.setEnvClient(glslang::EShClientVulkan, VulkanClientVersion);
+//	shader.setEnvTarget(glslang::EShTargetSpv, TargetVersion);
+//
+//	TBuiltInResource resources;
+//	resources = DefaultTBuiltInResource;
+//	EShMessages messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
+//
+//	const GTSL::uint32 defaultVersion = 460;
+//
+//	if (!shader.parse(&resources, defaultVersion, false, messages))
+//	{
+//		const char* textBegin = "GLSL Parsing Failed for: ";
+//		stringError.WriteBytes(26, reinterpret_cast<const GTSL::byte*>(textBegin));
+//		stringError.WriteBytes(shaderName.ElementCount(), reinterpret_cast<const GTSL::byte*>(shaderName.begin()));
+//		stringError.WriteBytes(GTSL::StringLength(shader.getInfoLog()), reinterpret_cast<const GTSL::byte*>(shader.getInfoLog()));
+//		stringError.WriteBytes(GTSL::StringLength(shader.getInfoDebugLog()), reinterpret_cast<const GTSL::byte*>(shader.getInfoDebugLog()));
+//
+//		return false;
+//	}
+//
+//	glslang::TProgram Program;
+//	Program.addShader(&shader);
+//
+//	if (!Program.link(messages))
+//	{
+//		const char* textBegin = "GLSL Linking Failed for: ";
+//		stringError.WriteBytes(26, reinterpret_cast<const GTSL::byte*>(textBegin));
+//		stringError.WriteBytes(shaderName.ElementCount(), reinterpret_cast<const GTSL::byte*>(shaderName.begin()));
+//		stringError.WriteBytes(GTSL::StringLength(shader.getInfoLog()), reinterpret_cast<const GTSL::byte*>(shader.getInfoLog()));
+//		stringError.WriteBytes(GTSL::StringLength(shader.getInfoDebugLog()), reinterpret_cast<const GTSL::byte*>(shader.getInfoDebugLog()));
+//
+//		return false;
+//	}
+//
+//	std::vector<GTSL::uint32> spirv;
+//	spv::SpvBuildLogger logger;
+//	glslang::SpvOptions spvOptions;
+//	glslang::GlslangToSpv(*Program.getIntermediate(shaderc_stage), spirv, &logger, &spvOptions);
+//
+//	result.WriteBytes(spirv.size() * sizeof(GTSL::uint32), reinterpret_cast<const GTSL::byte*>(spirv.data()));
+//
+//	return true;
+//}
 
 GAL::VulkanPipelineCache::VulkanPipelineCache(const CreateInfo& createInfo)
 {
@@ -346,14 +434,14 @@ void GAL::VulkanComputePipeline::Destroy(const VulkanRenderDevice* renderDevice)
 	debugClear(pipeline);
 }
 
-static_assert(sizeof(GAL::VulkanRaytracingPipeline::Group) == sizeof(VkRayTracingShaderGroupCreateInfoKHR), "Size doesn't match!");
+static_assert(sizeof(GAL::VulkanRayTracingPipeline::Group) == sizeof(VkRayTracingShaderGroupCreateInfoKHR), "Size doesn't match!");
 
-GAL::VulkanRaytracingPipeline::VulkanRaytracingPipeline(const CreateInfo& createInfo)
+GAL::VulkanRayTracingPipeline::VulkanRayTracingPipeline(const CreateInfo& createInfo)
 {
 	VkRayTracingPipelineCreateInfoKHR vkRayTracingPipelineCreateInfo{VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
 	vkRayTracingPipelineCreateInfo.maxRecursionDepth = createInfo.MaxRecursionDepth;
 
-	GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vkPipelineShaderStageCreateInfos(static_cast<GTSL::uint32>(createInfo.Stages.ElementCount()));
+	GTSL::Array<VkPipelineShaderStageCreateInfo, 32> vkPipelineShaderStageCreateInfos(static_cast<GTSL::uint32>(createInfo.Stages.ElementCount()));
 
 	for (GTSL::uint32 i = 0; i < vkPipelineShaderStageCreateInfos.GetLength(); ++i)
 	{
@@ -381,7 +469,6 @@ GAL::VulkanRaytracingPipeline::VulkanRaytracingPipeline(const CreateInfo& create
 	vkRayTracingPipelineCreateInfo.groupCount = createInfo.Groups.ElementCount();
 	vkRayTracingPipelineCreateInfo.pGroups = reinterpret_cast<const VkRayTracingShaderGroupCreateInfoKHR*>(createInfo.Groups.begin());
 	vkRayTracingPipelineCreateInfo.libraries.sType = VK_STRUCTURE_TYPE_PIPELINE_LIBRARY_CREATE_INFO_KHR;
-	vkRayTracingPipelineCreateInfo.pLibraryInterface;
 	
 	if (createInfo.ParentPipeline)
 	{
@@ -395,10 +482,10 @@ GAL::VulkanRaytracingPipeline::VulkanRaytracingPipeline(const CreateInfo& create
 	}
 	
 	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vkRayTracingPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
-	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
+	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo)
 }
 
-void GAL::VulkanRaytracingPipeline::Destroy(const VulkanRenderDevice* renderDevice)
+void GAL::VulkanRayTracingPipeline::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroyPipeline(renderDevice->GetVkDevice(), pipeline, renderDevice->GetVkAllocationCallbacks());
 	debugClear(pipeline);

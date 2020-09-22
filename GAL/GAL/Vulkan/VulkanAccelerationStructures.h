@@ -68,9 +68,11 @@ namespace GAL
 			GTSL::uint32 CompactedSize = 0;
 			VulkanDeviceAddress DeviceAddress;
 		};
+		VulkanAccelerationStructure(const TopLevelCreateInfo& info);
 
 		struct BottomLevelCreateInfo : VulkanCreateInfo
 		{
+			VulkanAccelerationStructureFlags::value_type Flags;
 			AccelerationStructureGeometryType GeometryType;
 			GTSL::uint32 MaxGeometryCount = 0;
 			GTSL::uint32 CompactedSize = 0;
