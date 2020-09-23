@@ -1,18 +1,11 @@
-	#include "GAL/Vulkan/VulkanRenderDevice.h"
-
-#if(_WIN64)
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <GAL/ext/vulkan/vulkan_win32.h>
-#endif
+#include "GAL/Vulkan/VulkanRenderDevice.h"
 
 #include "GAL/Vulkan/VulkanAccelerationStructures.h"
+#include "GAL/Vulkan/VulkanSynchronization.h"
+#include "GAL/Vulkan/VulkanCommandBuffer.h"
 #include "GAL/Vulkan/VulkanBindings.h"
 #include "GAL/Vulkan/VulkanBuffer.h"
 #include "GAL/Vulkan/VulkanTexture.h"
-#include "GAL/Vulkan/VulkanSynchronization.h"
-#include "GAL/Vulkan/VulkanCommandBuffer.h"
-#include "GTSL/Console.h"
 #include "GTSL/StaticString.hpp"
 
 using namespace GTSL;
@@ -205,7 +198,7 @@ void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 	vkSubmitInfo.waitSemaphoreCount = submitInfo.WaitSemaphores.ElementCount();
 	vkSubmitInfo.pWaitSemaphores = reinterpret_cast<const VkSemaphore*>(submitInfo.WaitSemaphores.begin());
 	
-	VK_CHECK(vkQueueSubmit(queue, 1, &vkSubmitInfo, submitInfo.Fence ? static_cast<const VulkanFence*>(submitInfo.Fence)->GetVkFence() : nullptr));
+	VK_CHECK(vkQueueSubmit(queue, 1, &vkSubmitInfo, submitInfo.Fence ? static_cast<const VulkanFence*>(submitInfo.Fence)->GetVkFence() : nullptr))
 }
 
 #define GET_DEVICE_PROC(device, var) var = reinterpret_cast<PFN_##var>(vkGetDeviceProcAddr(device, #var))
@@ -247,7 +240,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 			VK_KHR_SURFACE_EXTENSION_NAME,
 
 	#if (_WIN32)
-			VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+			"VK_KHR_win32_surface",
 	#endif
 		};
 
@@ -537,6 +530,8 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	{
 		vkSetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT"));
 		vkCmdInsertDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdInsertDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdInsertDebugUtilsLabelEXT"));
+		vkCmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT"));
+		vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT"));
 	}
 
 	//NVIDIA's driver have a bug when setting the name for this 3 object types, TODO. fix in the future

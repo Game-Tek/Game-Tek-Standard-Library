@@ -2,20 +2,17 @@
 
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
-GAL::VulkanAccelerationStructure::VulkanAccelerationStructure(const TopLevelCreateInfo& info)
+void GAL::VulkanAccelerationStructure::Initialize(const TopLevelCreateInfo& info)
 {
-	VkAccelerationStructureCreateGeometryTypeInfoKHR acceleration_structure_create_geometry_type{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_GEOMETRY_TYPE_INFO_KHR };
-	acceleration_structure_create_geometry_type.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
-	acceleration_structure_create_geometry_type.indexType = static_cast<VkIndexType>(info.GeometryType.IndexType);
-	acceleration_structure_create_geometry_type.allowsTransforms = info.GeometryType.AllowTransforms;
-	acceleration_structure_create_geometry_type.maxPrimitiveCount = info.GeometryType.MaxPrimitiveCount;
-	acceleration_structure_create_geometry_type.maxVertexCount = info.GeometryType.MaxVertexCount;
-	acceleration_structure_create_geometry_type.vertexFormat = static_cast<VkFormat>(info.GeometryType.VertexType);
-	
+	for (auto& e : info.Geometries)
+	{
+		e.stype = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_GEOMETRY_TYPE_INFO_KHR;
+	}
+
 	VkAccelerationStructureCreateInfoKHR vkAccelerationStructureCreateInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
 	vkAccelerationStructureCreateInfoKhr.flags = info.Flags;
 	vkAccelerationStructureCreateInfoKhr.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
-	vkAccelerationStructureCreateInfoKhr.pGeometryInfos = &acceleration_structure_create_geometry_type;
+	vkAccelerationStructureCreateInfoKhr.pGeometryInfos = reinterpret_cast<const VkAccelerationStructureCreateGeometryTypeInfoKHR*>(info.Geometries.begin());
 	vkAccelerationStructureCreateInfoKhr.maxGeometryCount = info.MaxGeometryCount;
 	vkAccelerationStructureCreateInfoKhr.compactedSize = info.CompactedSize;
 	vkAccelerationStructureCreateInfoKhr.deviceAddress = info.DeviceAddress;
@@ -26,18 +23,15 @@ GAL::VulkanAccelerationStructure::VulkanAccelerationStructure(const TopLevelCrea
 
 GAL::VulkanAccelerationStructure::VulkanAccelerationStructure(const BottomLevelCreateInfo& info)
 {
-	VkAccelerationStructureCreateGeometryTypeInfoKHR acceleration_structure_create_geometry_type{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_GEOMETRY_TYPE_INFO_KHR };
-	acceleration_structure_create_geometry_type.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
-	acceleration_structure_create_geometry_type.indexType = static_cast<VkIndexType>(info.GeometryType.IndexType);
-	acceleration_structure_create_geometry_type.allowsTransforms = info.GeometryType.AllowTransforms;
-	acceleration_structure_create_geometry_type.maxPrimitiveCount = info.GeometryType.MaxPrimitiveCount;
-	acceleration_structure_create_geometry_type.maxVertexCount = info.GeometryType.MaxVertexCount;
-	acceleration_structure_create_geometry_type.vertexFormat = static_cast<VkFormat>(info.GeometryType.VertexType);
+	for (auto& e : info.Geometries)
+	{
+		e.stype = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_GEOMETRY_TYPE_INFO_KHR;
+	}
 
 	VkAccelerationStructureCreateInfoKHR vkAccelerationStructureCreateInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
 	vkAccelerationStructureCreateInfoKhr.flags = info.Flags;
 	vkAccelerationStructureCreateInfoKhr.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-	vkAccelerationStructureCreateInfoKhr.pGeometryInfos = &acceleration_structure_create_geometry_type;
+	vkAccelerationStructureCreateInfoKhr.pGeometryInfos = reinterpret_cast<const VkAccelerationStructureCreateGeometryTypeInfoKHR*>(info.Geometries.begin());
 	vkAccelerationStructureCreateInfoKhr.maxGeometryCount = info.MaxGeometryCount;
 	vkAccelerationStructureCreateInfoKhr.compactedSize = info.CompactedSize;
 	vkAccelerationStructureCreateInfoKhr.deviceAddress = info.DeviceAddress;
@@ -49,6 +43,26 @@ GAL::VulkanAccelerationStructure::VulkanAccelerationStructure(const BottomLevelC
 void GAL::VulkanAccelerationStructure::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	renderDevice->vkDestroyAccelerationStructureKHR(renderDevice->GetVkDevice(), accelerationStructure, renderDevice->GetVkAllocationCallbacks());
+	debugClear(accelerationStructure);
+}
+
+void GAL::VulkanAccelerationStructure::BindToMemory(const BindToMemoryInfo& info)
+{
+	VkBindAccelerationStructureMemoryInfoKHR bind{ VK_STRUCTURE_TYPE_BIND_ACCELERATION_STRUCTURE_MEMORY_INFO_KHR };
+	bind.accelerationStructure = accelerationStructure;
+	bind.deviceIndexCount = 0;
+	bind.pDeviceIndices = nullptr;
+	bind.memory = static_cast<VkDeviceMemory>(info.Memory.GetVkDeviceMemory());
+	bind.memoryOffset = info.Offset;
+
+	info.RenderDevice->vkBindAccelerationStructureMemoryKHR(info.RenderDevice->GetVkDevice(), 1, &bind);
+}
+
+GAL::VulkanDeviceAddress GAL::VulkanAccelerationStructure::GetAddress(const VulkanRenderDevice* renderDevice) const
+{
+	VkAccelerationStructureDeviceAddressInfoKHR deviceAddress{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR };
+	deviceAddress.accelerationStructure = accelerationStructure;
+	return renderDevice->vkGetAccelerationStructureDeviceAddressKHR(renderDevice->GetVkDevice(), &deviceAddress);
 }
 
 void GAL::VulkanAccelerationStructure::BuildAccelerationStructure(const BuildAccelerationStructuresInfo& info)

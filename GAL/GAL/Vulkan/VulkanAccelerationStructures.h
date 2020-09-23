@@ -2,6 +2,7 @@
 
 #define VK_ENABLE_BETA_EXTENSIONS
 #include "Vulkan.h"
+#include "VulkanMemory.h"
 #include "GTSL/Ranger.h"
 
 namespace GAL
@@ -28,14 +29,30 @@ namespace GAL
 
 		struct AccelerationStructureGeometryType : VulkanRenderInfo
 		{
+		private:
+			GTSL::uint32 stype; void* next = nullptr;
+		public:
 			VulkanGeometryType GeometryType;
-			VulkanIndexType IndexType;
-			VulkanShaderDataType VertexType;
 			GTSL::uint32 MaxPrimitiveCount = 0;
+			VulkanIndexType IndexType;
 			GTSL::uint32 MaxVertexCount = 0;
-			bool AllowTransforms = false;
+			VulkanShaderDataType VertexType;
+			GTSL::uint32 AllowTransforms = false;
+
+		private:
+			friend VulkanAccelerationStructure;
 		};
 
+		struct Instance
+		{
+			GTSL::float32 Transform[3][4];
+			uint32_t InstanceCustomIndex : 24;
+			uint32_t Mask : 8;
+			uint32_t InstanceShaderBindingTableRecordOffset : 24;
+			VkGeometryInstanceFlagsKHR Flags : 8;
+			uint64_t AccelerationStructureReference;
+		};
+		
 		struct AccelerationStructureGeometryTriangleData : VulkanRenderInfo
 		{
 			VulkanShaderDataType VertexType;
@@ -48,7 +65,7 @@ namespace GAL
 		struct AccelerationStructureGeometry : VulkanRenderInfo
 		{
 			VulkanGeometryType GeometryType;
-			VulkanGeometryFlags GeometryFlags;
+			VulkanGeometryFlags::value_type GeometryFlags;
 			AccelerationStructureGeometryTriangleData* GeometryTriangleData;
 		};
 
@@ -60,33 +77,45 @@ namespace GAL
 			GTSL::uint32 TransformOffset;
 		};
 
+		VulkanAccelerationStructure() = default;
+		
 		struct TopLevelCreateInfo : VulkanCreateInfo
 		{
 			VulkanAccelerationStructureFlags::value_type Flags;
-			AccelerationStructureGeometryType GeometryType;
 			GTSL::uint32 MaxGeometryCount = 0;
 			GTSL::uint32 CompactedSize = 0;
 			VulkanDeviceAddress DeviceAddress;
+			GTSL::Ranger<AccelerationStructureGeometryType> Geometries;
 		};
-		VulkanAccelerationStructure(const TopLevelCreateInfo& info);
+		//VulkanAccelerationStructure(const TopLevelCreateInfo& info);
 
+		void Initialize(const TopLevelCreateInfo& info);
+		
 		struct BottomLevelCreateInfo : VulkanCreateInfo
 		{
 			VulkanAccelerationStructureFlags::value_type Flags;
-			AccelerationStructureGeometryType GeometryType;
 			GTSL::uint32 MaxGeometryCount = 0;
 			GTSL::uint32 CompactedSize = 0;
 			VulkanDeviceAddress DeviceAddress;
+			GTSL::Ranger<AccelerationStructureGeometryType> Geometries;
 		};
 		VulkanAccelerationStructure(const BottomLevelCreateInfo& info);
 
 
 		void Destroy(const VulkanRenderDevice* renderDevice);
 
+		struct BindToMemoryInfo : VulkanRenderInfo
+		{
+			VulkanDeviceMemory Memory;
+			uint32_t Offset = 0;
+		};
+		void BindToMemory(const BindToMemoryInfo& info);
+
+		VulkanDeviceAddress GetAddress(const VulkanRenderDevice* renderDevice) const;
 		//UTILITY
 		static void BuildAccelerationStructure(const struct BuildAccelerationStructuresInfo& info);
 	protected:
-		VkAccelerationStructureKHR accelerationStructure;
+		VkAccelerationStructureKHR accelerationStructure{};
 	};
 
 	struct BuildAccelerationStructureInfo : VulkanRenderInfo

@@ -124,6 +124,17 @@ namespace GAL
 			GTSL::Ranger<const GTSL::UTF8> Name;
 		};
 		void AddLabel(const AddLabelInfo& info);
+
+		struct BeginRegionInfo : VulkanRenderInfo
+		{
+			GTSL::Ranger<const GTSL::UTF8> Name;
+		};
+		void BeginRegion(const BeginRegionInfo& info) const;
+
+		struct EndRegionInfo : VulkanRenderInfo
+		{
+		};
+		void EndRegion(const EndRegionInfo& info) const;
 		
 		struct DispatchInfo : VulkanRenderInfo
 		{
@@ -161,15 +172,9 @@ namespace GAL
 		};
 		void CopyBufferToTexture(const CopyBufferToTextureInfo& copyBufferToImageInfo);
 
-		//struct TransitionImageInfo : VulkanRenderInfo
-		//{
-		//	const VulkanTexture* Texture{ nullptr };
-		//	VulkanTextureLayout SourceLayout, DestinationLayout;
-		//	GTSL::uint32 SourceStage, DestinationStage;
-		//	AccessFlags SourceAccessFlags, DestinationAccessFlags;
-		//};
 		struct MemoryBarrier
 		{
+			VulkanAccessFlags::value_type SourceAccessFlags, DestinationAccessFlags;
 		};
 
 		struct BufferBarrier
@@ -191,7 +196,7 @@ namespace GAL
 			GTSL::Ranger<const TextureBarrier> TextureBarriers;
 			VulkanPipelineStage::value_type InitialStage, FinalStage;
 		};
-		void AddPipelineBarrier(const AddPipelineBarrierInfo& pipelineBarrier);
+		void AddPipelineBarrier(const AddPipelineBarrierInfo& pipelineBarrier) const;
 
 		struct CopyBuffersInfo : VulkanRenderInfo
 		{
