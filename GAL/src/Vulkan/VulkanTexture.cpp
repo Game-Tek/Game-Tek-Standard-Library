@@ -18,8 +18,8 @@ GAL::VulkanTexture::VulkanTexture(const CreateInfo& createInfo)
 	vkImageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 	vkImageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	
-	VK_CHECK(vkCreateImage(createInfo.RenderDevice->GetVkDevice(), &vkImageCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &image));
-	SET_NAME(image, VK_OBJECT_TYPE_IMAGE, createInfo);
+	VK_CHECK(vkCreateImage(createInfo.RenderDevice->GetVkDevice(), &vkImageCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &image))
+	SET_NAME(image, VK_OBJECT_TYPE_IMAGE, createInfo)
 }
 
 void GAL::VulkanTexture::Destroy(const VulkanRenderDevice* renderDevice)
@@ -30,7 +30,7 @@ void GAL::VulkanTexture::Destroy(const VulkanRenderDevice* renderDevice)
 
 void GAL::VulkanTexture::BindToMemory(const BindMemoryInfo& bindMemoryInfo) const
 {
-	VK_CHECK(vkBindImageMemory(bindMemoryInfo.RenderDevice->GetVkDevice(), image, static_cast<VkDeviceMemory>(bindMemoryInfo.Memory->GetVkDeviceMemory()), bindMemoryInfo.Offset));
+	VK_CHECK(vkBindImageMemory(bindMemoryInfo.RenderDevice->GetVkDevice(), image, static_cast<VkDeviceMemory>(bindMemoryInfo.Memory->GetVkDeviceMemory()), bindMemoryInfo.Offset))
 }
 
 GAL::VulkanTextureView::VulkanTextureView(const CreateInfo& createInfo)
@@ -49,8 +49,8 @@ GAL::VulkanTextureView::VulkanTextureView(const CreateInfo& createInfo)
 	vkImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
 	vkImageViewCreateInfo.subresourceRange.layerCount = 1;
 	
-	VK_CHECK(vkCreateImageView(createInfo.RenderDevice->GetVkDevice(), &vkImageViewCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &imageView));
-	SET_NAME(imageView, VK_OBJECT_TYPE_IMAGE_VIEW, createInfo);
+	VK_CHECK(vkCreateImageView(createInfo.RenderDevice->GetVkDevice(), &vkImageViewCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &imageView))
+	SET_NAME(imageView, VK_OBJECT_TYPE_IMAGE_VIEW, createInfo)
 }
 
 void GAL::VulkanTextureView::Destroy(const VulkanRenderDevice* renderDevice)
@@ -61,27 +61,27 @@ void GAL::VulkanTextureView::Destroy(const VulkanRenderDevice* renderDevice)
 
 GAL::VulkanSampler::VulkanSampler(const CreateInfo& createInfo)
 {
-	VkSamplerCreateInfo vk_sampler_create_info{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
-	vk_sampler_create_info.magFilter = VK_FILTER_LINEAR;
-	vk_sampler_create_info.minFilter = VK_FILTER_LINEAR;
-	vk_sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	vk_sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	vk_sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	VkSamplerCreateInfo vkSamplerCreateInfo{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+	vkSamplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	vkSamplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	vkSamplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	vkSamplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+	vkSamplerCreateInfo.minFilter = VK_FILTER_LINEAR;
 
-	vk_sampler_create_info.anisotropyEnable = static_cast<VkBool32>(createInfo.Anisotropy);
-	vk_sampler_create_info.maxAnisotropy = static_cast<float>(createInfo.Anisotropy == 0 ? 1 : createInfo.Anisotropy);
+	vkSamplerCreateInfo.maxAnisotropy = static_cast<float>(createInfo.Anisotropy == 0 ? 1 : createInfo.Anisotropy);
+	vkSamplerCreateInfo.anisotropyEnable = static_cast<VkBool32>(createInfo.Anisotropy);
 
-	vk_sampler_create_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-	vk_sampler_create_info.unnormalizedCoordinates = VK_FALSE;
-	vk_sampler_create_info.compareEnable = VK_FALSE;
-	vk_sampler_create_info.compareOp = VK_COMPARE_OP_ALWAYS;
-	vk_sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-	vk_sampler_create_info.mipLodBias = 0.0f;
-	vk_sampler_create_info.minLod = 0.0f;
-	vk_sampler_create_info.maxLod = 0.0f;
+	vkSamplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+	vkSamplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	vkSamplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
+	vkSamplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+	vkSamplerCreateInfo.compareEnable = VK_FALSE;
+	vkSamplerCreateInfo.mipLodBias = 0.0f;
+	vkSamplerCreateInfo.minLod = 0.0f;
+	vkSamplerCreateInfo.maxLod = 0.0f;
 
-	VK_CHECK(vkCreateSampler(createInfo.RenderDevice->GetVkDevice(), &vk_sampler_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &sampler));
-	SET_NAME(sampler, VK_OBJECT_TYPE_SAMPLER, createInfo);
+	VK_CHECK(vkCreateSampler(createInfo.RenderDevice->GetVkDevice(), &vkSamplerCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &sampler))
+	SET_NAME(sampler, VK_OBJECT_TYPE_SAMPLER, createInfo)
 }
 
 void GAL::VulkanSampler::Destroy(const VulkanRenderDevice* renderDevice)

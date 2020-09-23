@@ -7,8 +7,8 @@ GAL::VulkanFence::VulkanFence(const CreateInfo& createInfo)
 	VkFenceCreateInfo vk_fence_create_info{ VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
 	vk_fence_create_info.flags = createInfo.IsSignaled;
 
-	VK_CHECK(vkCreateFence(createInfo.RenderDevice->GetVkDevice(), &vk_fence_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &fence));
-	SET_NAME(fence, VK_OBJECT_TYPE_FENCE, createInfo);
+	VK_CHECK(vkCreateFence(createInfo.RenderDevice->GetVkDevice(), &vk_fence_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &fence))
+	SET_NAME(fence, VK_OBJECT_TYPE_FENCE, createInfo)
 }
 
 void GAL::VulkanFence::Destroy(const VulkanRenderDevice* renderDevice)
@@ -29,7 +29,7 @@ void GAL::VulkanFence::WaitForFences(const WaitForFencesInfo& waitForFencesInfo)
 
 void GAL::VulkanFence::ResetFences(const ResetFencesInfo& resetFencesInfo)
 {
-	VK_CHECK(vkResetFences(resetFencesInfo.RenderDevice->GetVkDevice(), resetFencesInfo.Fences.ElementCount(), reinterpret_cast<const VkFence*>(resetFencesInfo.Fences.begin())));
+	VK_CHECK(vkResetFences(resetFencesInfo.RenderDevice->GetVkDevice(), resetFencesInfo.Fences.ElementCount(), reinterpret_cast<const VkFence*>(resetFencesInfo.Fences.begin())))
 }
 
 GAL::VulkanSemaphore::VulkanSemaphore(const CreateInfo& createInfo)
@@ -43,8 +43,8 @@ GAL::VulkanSemaphore::VulkanSemaphore(const CreateInfo& createInfo)
 	VkSemaphoreCreateInfo vk_semaphore_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 	//VkSemaphoreTypeCreateInfo vk_semaphore_type_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO };
 
-	VK_CHECK(vkCreateSemaphore(createInfo.RenderDevice->GetVkDevice(), &vk_semaphore_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &semaphore));
-	SET_NAME(semaphore, VK_OBJECT_TYPE_SEMAPHORE, createInfo);
+	VK_CHECK(vkCreateSemaphore(createInfo.RenderDevice->GetVkDevice(), &vk_semaphore_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &semaphore))
+	SET_NAME(semaphore, VK_OBJECT_TYPE_SEMAPHORE, createInfo)
 }
 
 void GAL::VulkanSemaphore::Destroy(const VulkanRenderDevice* renderDevice)

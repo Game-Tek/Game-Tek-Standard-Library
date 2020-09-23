@@ -16,7 +16,7 @@ namespace GAL
 		Texture() = default;
 		~Texture() = default;
 
-		static GTSL::uint64 GetImageSize(const GTSL::uint8 textureFormatSize, const GTSL::Extent2D extent)
+		static GTSL::uint32 GetImageSize(const GTSL::uint8 textureFormatSize, const GTSL::Extent2D extent)
 		{
 			return static_cast<GTSL::uint32>(textureFormatSize) * extent.Width * extent.Height;
 		}
@@ -30,11 +30,10 @@ namespace GAL
 		 */
 		static void ConvertImageToFormat(const TextureFormat sourceImageFormat, const TextureFormat targetImageFormat, const GTSL::Extent2D imageExtent, GTSL::AlignedPointer<GTSL::byte, 16> buffer, GTSL::uint8 alphaValue)
 		{
-			const auto sourceFormatSize{ ImageFormatSize(sourceImageFormat) }; const auto targetFormatSize{ ImageFormatSize(targetImageFormat) };
-			const GTSL::uint64 targetTextureSize = GetImageSize(targetFormatSize, imageExtent);
-			const GTSL::uint64 sourceTextureSize = GetImageSize(sourceFormatSize, imageExtent);
+			const GTSL::uint8 sourceFormatSize = ImageFormatSize(sourceImageFormat), targetFormatSize = ImageFormatSize(targetImageFormat);
+			const GTSL::uint32 targetTextureSize = GetImageSize(targetFormatSize, imageExtent), sourceTextureSize = GetImageSize(sourceFormatSize, imageExtent);
 
-			auto byte3_channel_swap = [&]()
+			auto rgb_i8_to_rgba_i8 = [&]()
 			{
 				//GTSL::uint32 quot, rem;
 				//GTSL::Math::RoundDown(GetImageSize(sourceFormatSize, imageExtent), 16, quot, rem);
@@ -70,10 +69,29 @@ namespace GAL
 				}
 			};
 			
-			switch (ImageFormatChannelCount(sourceImageFormat))
+			switch (sourceImageFormat)
 			{
-			case 3: byte3_channel_swap(); break;
-			default: __debugbreak();
+				case TextureFormat::RGB_I8:
+				{
+					switch (targetImageFormat)
+					{
+						case TextureFormat::RGBA_I8: rgb_i8_to_rgba_i8(); return;
+						
+						default: break;
+					}
+				}
+
+				case TextureFormat::RGBA_I8:
+				{
+					switch (targetImageFormat)
+					{
+						case TextureFormat::RGBA_I8: return;
+
+						default: break;
+					}
+				}
+				
+				default: __debugbreak();
 			}
 		}
 	};

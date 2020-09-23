@@ -1,12 +1,10 @@
 #pragma once
 
-#include "GAL/Texture.h"
-
 #include "Vulkan.h"
 
 namespace GAL
 {
-	class VulkanTexture final : public Texture
+	class VulkanTexture final
 	{
 	public:
 		VulkanTexture() = default;
@@ -40,7 +38,7 @@ namespace GAL
 		friend class VulkanRenderContext;
 	};
 
-	class VulkanTextureView final : public ImageView
+	class VulkanTextureView final
 	{
 	public:
 		VulkanTextureView() = default;
@@ -65,7 +63,7 @@ namespace GAL
 		friend class VulkanRenderContext;
 	};
 
-	class VulkanSampler final : public Sampler
+	class VulkanSampler final
 	{
 	public:
 		VulkanSampler() = default;

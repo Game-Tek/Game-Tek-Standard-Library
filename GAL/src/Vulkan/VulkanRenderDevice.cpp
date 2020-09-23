@@ -215,13 +215,12 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	allocationInfo = createInfo.AllocationInfo;
 	
 	{
-		VkApplicationInfo vk_application_info{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
-		vk_application_info.pNext = nullptr;
-		vkEnumerateInstanceVersion(&vk_application_info.apiVersion);
-		vk_application_info.applicationVersion = VK_MAKE_VERSION(createInfo.ApplicationVersion[0], createInfo.ApplicationVersion[1], createInfo.ApplicationVersion[2]);
-		vk_application_info.engineVersion = VK_MAKE_VERSION(0, 0, 1);
-		vk_application_info.pApplicationName = createInfo.ApplicationName.begin();
-		vk_application_info.pEngineName = "Game-Tek | GAL";
+		VkApplicationInfo vkApplicationInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
+		vkEnumerateInstanceVersion(&vkApplicationInfo.apiVersion);
+		vkApplicationInfo.applicationVersion = VK_MAKE_VERSION(createInfo.ApplicationVersion[0], createInfo.ApplicationVersion[1], createInfo.ApplicationVersion[2]);
+		vkApplicationInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
+		vkApplicationInfo.pApplicationName = createInfo.ApplicationName.begin();
+		vkApplicationInfo.pEngineName = "Game-Tek | GAL";
 
 		Array<const char*, 32> instanceLayers{
 	#if(_DEBUG)
@@ -254,7 +253,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 		VkInstanceCreateInfo vkInstanceCreateInfo{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
 		vkInstanceCreateInfo.pNext = &vkDebugUtilsMessengerCreateInfoExt;
-		vkInstanceCreateInfo.pApplicationInfo = &vk_application_info;
+		vkInstanceCreateInfo.pApplicationInfo = &vkApplicationInfo;
 		vkInstanceCreateInfo.enabledLayerCount = instanceLayers.GetLength();
 		vkInstanceCreateInfo.ppEnabledLayerNames = instanceLayers.begin();
 		vkInstanceCreateInfo.enabledExtensionCount = instanceExtensions.GetLength();

@@ -111,7 +111,7 @@ namespace GAL
 
 	struct VulkanAccelerationStructureFlags : GTSL::Flags<GTSL::uint32>
 	{
-		static constexpr value_type ALLOW_UPDATE = 0x00000001, ALLOW_COMPACTION = 0x00000002, PREFER_FAST_TRACE = 0x00000004, PREFER_FAST_BUILD = 0x00000008, LOW_MEMORY_BIT = 0x00000010;
+		static constexpr value_type ALLOW_UPDATE = 0x00000001, ALLOW_COMPACTION = 0x00000002, PREFER_FAST_TRACE = 0x00000004, PREFER_FAST_BUILD = 0x00000008, LOW_MEMORY = 0x00000010;
 	};
 	
 	struct VulkanPipelineStage : GTSL::Flags<GTSL::uint32>
@@ -133,15 +133,15 @@ namespace GAL
 		static constexpr value_type HOST_BIT = 16384;
 		static constexpr value_type ALL_GRAPHICS = 32768;
 		static constexpr value_type ALL_COMMANDS = 65536;
-		static constexpr value_type TRANSFORM_FEEDBACK_BIT = 131072;
-		static constexpr value_type CONDITIONAL_RENDERING_BIT = 262144;
+		static constexpr value_type TRANSFORM_FEEDBACK = 131072;
+		static constexpr value_type CONDITIONAL_RENDERING = 262144;
 		static constexpr value_type RAY_TRACING_SHADER = 524288;
 		static constexpr value_type ACCELERATION_STRUCTURE_BUILD = 1048576;
-		static constexpr value_type SHADING_RATE_IMAGE_BIT = 2097152;
+		static constexpr value_type SHADING_RATE_IMAGE = 2097152;
 		static constexpr value_type TASK_SHADER = 4194304;
 		static constexpr value_type MESH_SHADER = 8388608;
 		static constexpr value_type FRAGMENT_DENSITY_PROCESS = 16777216;
-		static constexpr value_type COMMAND_PREPROCESS_BIT = 33554432;
+		static constexpr value_type COMMAND_PREPROCESS = 33554432;
 	};
 
 	struct VulkanAccessFlags : GTSL::Flags<GTSL::uint32>
@@ -171,7 +171,7 @@ namespace GAL
 		static constexpr value_type ACCELERATION_STRUCTURE_READ = 0x00200000;
 		static constexpr value_type ACCELERATION_STRUCTURE_WRITE = 0x00400000;
 		static constexpr value_type SHADING_RATE_IMAGE_READ = 0x00800000;
-		static constexpr value_type FRAGMENT_DENSITY_MAP_READ_EXT = 0x01000000;
+		static constexpr value_type FRAGMENT_DENSITY_MAP_READ = 0x01000000;
 		static constexpr value_type COMMAND_PREPROCESS_READ = 0x00020000;
 		static constexpr value_type COMMAND_PREPROCESS_WRITE = 0x00040000;
 	};
@@ -318,7 +318,7 @@ namespace GAL
 		SHADER_READ_ONLY = 5,
 		TRANSFER_SRC = 6,
 		TRANSFER_DST = 7,
-		PREINITIALIZED = 8,
+		PRE_INITIALIZED = 8,
 		DEPTH_READ_ONLY_STENCIL_ATTACHMENT = 1000117000,
 		DEPTH_ATTACHMENT_STENCIL_READ_ONLY = 1000117001,
 		DEPTH_ATTACHMENT = 1000241000,
