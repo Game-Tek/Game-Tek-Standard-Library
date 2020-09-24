@@ -192,6 +192,7 @@ namespace GTSL
 		SIMD128 operator^(const SIMD128& other) const { return _mm_xor_si128(vector, other); }
 		SIMD128& operator~() { vector = _mm_xor_si128(vector, _mm_cmpeq_epi8(vector, vector)); return *this; }
 
+		static constexpr uint8 Bytes = 16;
 	private:
 		__m128i vector;
 

@@ -4,6 +4,7 @@
 
 #include "Vulkan.h"
 #include "VulkanTexture.h"
+#include "VulkanAccelerationStructures.h"
 
 namespace GAL
 {
@@ -17,7 +18,7 @@ namespace GAL
 	class VulkanRenderDevice;
 	class VulkanBuffer;
 
-	class VulkanCommandBuffer final : public CommandBuffer
+	class VulkanCommandBuffer final
 	{
 	public:
 		VulkanCommandBuffer() = default;
@@ -208,6 +209,8 @@ namespace GAL
 			GTSL::uint32 Size{ 0 };
 		};
 		void CopyBuffers(const CopyBuffersInfo& copyBuffersInfo);
+
+		void BuildAccelerationStructure(const BuildAccelerationStructuresInfo& info) const;
 		
 		[[nodiscard]] VkCommandBuffer GetVkCommandBuffer() const { return commandBuffer; }
 
@@ -235,7 +238,7 @@ namespace GAL
 			GTSL::Ranger<const VulkanCommandBuffer::CreateInfo> CommandBufferCreateInfos;
 			GTSL::Ranger<VulkanCommandBuffer> CommandBuffers;
 		};
-		void AllocateCommandBuffer(const AllocateCommandBuffersInfo& allocateCommandBuffersInfo);
+		void AllocateCommandBuffer(const AllocateCommandBuffersInfo& allocateCommandBuffersInfo) const;
 		
 		struct FreeCommandBuffersInfo final : VulkanRenderInfo
 		{

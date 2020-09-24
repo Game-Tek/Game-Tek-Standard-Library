@@ -239,37 +239,50 @@ void GAL::VulkanCommandBuffer::CopyBuffers(const CopyBuffersInfo& copyBuffersInf
 	vkCmdCopyBuffer(commandBuffer, copyBuffersInfo.Source->GetVkBuffer(), copyBuffersInfo.Destination->GetVkBuffer(), 1, &vk_buffer_copy);
 }
 
+void GAL::VulkanCommandBuffer::BuildAccelerationStructure(const BuildAccelerationStructuresInfo& info) const
+{
+	for (auto& e : info.BuildAccelerationStructureInfos)
+	{
+		e.stype = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+		e.next = nullptr;
+	}
+	
+	info.RenderDevice->vkCmdBuildAccelerationStructureKHR(commandBuffer, info.BuildAccelerationStructureInfos.ElementCount(),
+		reinterpret_cast<const VkAccelerationStructureBuildGeometryInfoKHR*>(info.BuildAccelerationStructureInfos.begin()),
+		reinterpret_cast<const VkAccelerationStructureBuildOffsetInfoKHR* const*>(info.BuildOffsets));
+}
+
 GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)
 {
-	VkCommandPoolCreateInfo vk_command_pool_create_info{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
-	vk_command_pool_create_info.queueFamilyIndex = createInfo.Queue->GetFamilyIndex();
-	VK_CHECK(vkCreateCommandPool(createInfo.RenderDevice->GetVkDevice(), &vk_command_pool_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &commandPool));
+	VkCommandPoolCreateInfo vkCommandPoolCreateInfo{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+	vkCommandPoolCreateInfo.queueFamilyIndex = createInfo.Queue->GetFamilyIndex();
+	VK_CHECK(vkCreateCommandPool(createInfo.RenderDevice->GetVkDevice(), &vkCommandPoolCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &commandPool))
 
-	SET_NAME(commandPool, VK_OBJECT_TYPE_COMMAND_POOL, createInfo);
+	SET_NAME(commandPool, VK_OBJECT_TYPE_COMMAND_POOL, createInfo)
 }
 
 void GAL::VulkanCommandPool::ResetPool(RenderDevice* renderDevice) const
 {
-	VK_CHECK(vkResetCommandPool(static_cast<const VulkanRenderDevice*>(renderDevice)->GetVkDevice(), commandPool, 0));
+	VK_CHECK(vkResetCommandPool(static_cast<const VulkanRenderDevice*>(renderDevice)->GetVkDevice(), commandPool, 0))
 }
 
-void GAL::VulkanCommandPool::AllocateCommandBuffer(const AllocateCommandBuffersInfo& allocateCommandBuffersInfo)
+void GAL::VulkanCommandPool::AllocateCommandBuffer(const AllocateCommandBuffersInfo& allocateCommandBuffersInfo) const
 {
-	VkCommandBufferAllocateInfo vk_command_buffer_allocate_info{ vk_command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-	vk_command_buffer_allocate_info.commandPool = commandPool;
-	vk_command_buffer_allocate_info.level = allocateCommandBuffersInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-	vk_command_buffer_allocate_info.commandBufferCount = allocateCommandBuffersInfo.CommandBuffers.ElementCount();
+	VkCommandBufferAllocateInfo vkCommandBufferAllocateInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+	vkCommandBufferAllocateInfo.commandPool = commandPool;
+	vkCommandBufferAllocateInfo.level = allocateCommandBuffersInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+	vkCommandBufferAllocateInfo.commandBufferCount = allocateCommandBuffersInfo.CommandBuffers.ElementCount();
 
-	GTSL::Array<VkCommandBuffer, 16> command_buffers(allocateCommandBuffersInfo.CommandBuffers.ElementCount());
+	Array<VkCommandBuffer, 16> command_buffers(allocateCommandBuffersInfo.CommandBuffers.ElementCount());
 
-	VK_CHECK(vkAllocateCommandBuffers(allocateCommandBuffersInfo.RenderDevice->GetVkDevice(), &vk_command_buffer_allocate_info, command_buffers.begin()));
+	VK_CHECK(vkAllocateCommandBuffers(allocateCommandBuffersInfo.RenderDevice->GetVkDevice(), &vkCommandBufferAllocateInfo, command_buffers.begin()));
 
 	if constexpr (_DEBUG)
 	{
-		for (GTSL::uint32 i = 0; i < allocateCommandBuffersInfo.CommandBuffers.ElementCount(); ++i)
+		for (uint32 i = 0; i < allocateCommandBuffersInfo.CommandBuffers.ElementCount(); ++i)
 		{
 			allocateCommandBuffersInfo.CommandBuffers[i].commandBuffer = command_buffers[i];
-			SET_NAME(command_buffers[i], VK_OBJECT_TYPE_COMMAND_BUFFER, allocateCommandBuffersInfo.CommandBufferCreateInfos[i]);
+			SET_NAME(command_buffers[i], VK_OBJECT_TYPE_COMMAND_BUFFER, allocateCommandBuffersInfo.CommandBufferCreateInfos[i])
 		}
 	}
 }

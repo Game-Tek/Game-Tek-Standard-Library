@@ -28,42 +28,64 @@ namespace GAL
 		 * \param imageExtent 
 		 * \param buffer 
 		 */
-		static void ConvertImageToFormat(const TextureFormat sourceImageFormat, const TextureFormat targetImageFormat, const GTSL::Extent2D imageExtent, GTSL::AlignedPointer<GTSL::byte, 16> buffer, GTSL::uint8 alphaValue)
+		static void ConvertTextureFormat(const TextureFormat sourceImageFormat, const TextureFormat targetImageFormat, const GTSL::Extent2D imageExtent, GTSL::AlignedPointer<GTSL::byte, 16> buffer, GTSL::uint8 alphaValue)
 		{
 			const GTSL::uint8 sourceFormatSize = ImageFormatSize(sourceImageFormat), targetFormatSize = ImageFormatSize(targetImageFormat);
 			const GTSL::uint32 targetTextureSize = GetImageSize(targetFormatSize, imageExtent), sourceTextureSize = GetImageSize(sourceFormatSize, imageExtent);
 
 			auto rgb_i8_to_rgba_i8 = [&]()
 			{
-				//GTSL::uint32 quot, rem;
-				//GTSL::Math::RoundDown(GetImageSize(sourceFormatSize, imageExtent), 16, quot, rem);
-				//
-				//GTSL::byte* begin = buffer;
-				//
-				//for (; begin < buffer + quot - 1; begin += GTSL::SIMD128<GTSL::uint8>::TypeElementsCount - 1)
-				//{
-				//	GTSL::SIMD128<GTSL::uint8> ints{ GTSL::AlignedPointer<GTSL::uint8, 16>(begin) };
-				//	ints = GTSL::SIMD128<GTSL::uint8>::Shuffle<2, 1, 0, 5, 4, 3, 8, 7, 6, 11, 10, 9, 14, 13, 12, 15>(ints);
-				//	ints.CopyTo(GTSL::AlignedPointer<GTSL::uint8, 16>(begin));
-				//}
-				//
-				//for(; begin < static_cast<GTSL::byte*>(buffer) + quot + rem; begin += 3)
-				//{
-				//	const auto orig = *begin; *begin = *(begin + 2); *(begin + 2) = orig;
-				//}
-				//
-				//for (GTSL::byte* target = static_cast<GTSL::byte*>(buffer) + targetTextureSize, *source = static_cast<GTSL::byte*>(buffer); target > 0; target -= textureFormatSize, source += sourceFormatSize)
-				//{
-				//	GTSL::MemCopy(sourceFormatSize, source, target); *(target + 3) = alphaValue;
-				//}
+				using Vector = GTSL::SIMD128<GTSL::uint8>;
+				
+				GTSL::uint32 bytesToProcessWithScalar = sourceTextureSize % Vector::Bytes;
+				GTSL::uint32 bytesToProcessWithVector = sourceTextureSize - bytesToProcessWithScalar;
+				
+				GTSL::uint32 pixelsToProcessWithScalar = bytesToProcessWithScalar / sourceFormatSize;
+				GTSL::uint32 pixelsToProcessWithVector = bytesToProcessWithVector / sourceFormatSize;
+				
+				GTSL::uint32 srcPixelsPerVector = Vector::Bytes / sourceFormatSize;
+				GTSL::uint32 dstPixelsPerVector = Vector::Bytes / targetFormatSize;
+				
+				GTSL::uint32 vectorsInSrc = sourceTextureSize / Vector::Bytes; //TODO pixels per vector = 10,6... ??
 
+				GTSL::uint32 pixels = imageExtent.Width * imageExtent.Height;
+				
 				GTSL::byte* source = buffer.Get() + sourceTextureSize - sourceFormatSize,* target = buffer.Get() + targetTextureSize - targetFormatSize;
 				
-				for(GTSL::uint32 i = 0; i < imageExtent.Width * imageExtent.Height; ++i)
+				//for(GTSL::uint32 i = 0; i < pixelsToProcessWithScalar; ++i) //loop for each pixel
+				//{
+				//	GTSL::MemCopy(sourceFormatSize, source, target);
+				//	*(target + 3) = alphaValue;
+				//
+				//	source -= sourceFormatSize;
+				//	target -= targetFormatSize;
+				//}
+				//
+				//source = buffer.Get() + sourceTextureSize - Vector::Bytes; target = buffer.Get() + targetTextureSize - Vector::Bytes;
+				//
+				//while(source != buffer.Get() - Vector::Bytes) //loop for each group of bytes that fit in a vector
+				//{
+				//	GTSL::SIMD128<GTSL::uint8> data{ GTSL::AlignedPointer<GTSL::uint8, 16>(source) };
+				//
+				//	//data = Vector::Shuffle<0, 1, 2, 0, 3, 4, 5, 0, 6, 7, 8, 0, 9, 10, 11, 0>(data);
+				//	
+				//	data.CopyTo(GTSL::AlignedPointer<GTSL::uint8, 16>(target));
+				//
+				//	for (GTSL::uint32 j = 0; j < dstPixelsPerVector; ++j)
+				//	{
+				//		GTSL::MemCopy(sourceFormatSize, source, target);
+				//		(*(target + ((j * 4) - 1))) = alphaValue;
+				//	}
+				//
+				//	source -= Vector::Bytes;
+				//	target -= Vector::Bytes;
+				//}
+
+				for(GTSL::uint32 i = 0; i < pixels; ++i) //loop for each pixel
 				{
 					GTSL::MemCopy(sourceFormatSize, source, target);
 					*(target + 3) = alphaValue;
-
+				
 					source -= sourceFormatSize;
 					target -= targetFormatSize;
 				}
