@@ -7,6 +7,7 @@ void GAL::VulkanAccelerationStructure::Initialize(const TopLevelCreateInfo& info
 	for (auto& e : info.GeometryInfos)
 	{
 		e.stype = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_GEOMETRY_TYPE_INFO_KHR;
+		e.next = nullptr;
 	}
 
 	VkAccelerationStructureCreateInfoKHR vkAccelerationStructureCreateInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
@@ -21,11 +22,12 @@ void GAL::VulkanAccelerationStructure::Initialize(const TopLevelCreateInfo& info
 	SET_NAME(accelerationStructure, VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR, info)
 }
 
-GAL::VulkanAccelerationStructure::VulkanAccelerationStructure(const BottomLevelCreateInfo& info)
+void GAL::VulkanAccelerationStructure::Initialize(const BottomLevelCreateInfo& info)
 {
 	for (auto& e : info.GeometryInfos)
 	{
 		e.stype = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_GEOMETRY_TYPE_INFO_KHR;
+		e.next = nullptr;
 	}
 
 	VkAccelerationStructureCreateInfoKHR vkAccelerationStructureCreateInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };

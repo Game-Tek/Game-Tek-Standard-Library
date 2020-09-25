@@ -103,6 +103,7 @@ namespace GAL
 			GTSL::Ranger<GeometryType> GeometryInfos;
 		};
 		VulkanAccelerationStructure(const BottomLevelCreateInfo& info);
+		void Initialize(const BottomLevelCreateInfo& info);
 
 
 		void Destroy(const VulkanRenderDevice* renderDevice);

@@ -98,7 +98,7 @@ namespace GAL
 			GTSL::Ranger<const GTSL::UTF8> ApplicationName;
 			GTSL::uint16 ApplicationVersion[3];
 			GTSL::Ranger<const Queue::CreateInfo> QueueCreateInfos;
-			GTSL::Ranger<VulkanQueue> Queues;
+			GTSL::Ranger<VulkanQueue*> Queues;
 			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
 			GTSL::Ranger<const Extension> Extensions;
 			//GTSL::Ranger<const void*> ExtensionFeatures;
@@ -141,7 +141,7 @@ namespace GAL
 		
 		[[nodiscard]] const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const { return deviceProperties; }
 
-		[[nodiscard]] VkAllocationCallbacks* GetVkAllocationCallbacks() const { return nullptr; }
+		[[nodiscard]] const VkAllocationCallbacks* GetVkAllocationCallbacks() const { return nullptr; }
 
 		PFN_vkCreateAccelerationStructureKHR vkCreateAccelerationStructureKHR;
 		PFN_vkDestroyAccelerationStructureKHR vkDestroyAccelerationStructureKHR;

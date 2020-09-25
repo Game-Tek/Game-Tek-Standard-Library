@@ -479,9 +479,9 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		{
 			for (uint8 QUEUE = 0; QUEUE < familiesIndices[FAMILY].GetLength(); ++QUEUE)
 			{
-				createInfo.Queues[familiesIndices[FAMILY][QUEUE]].familyIndex = FAMILY;
-				createInfo.Queues[familiesIndices[FAMILY][QUEUE]].queueIndex = QUEUE;
-				vkGetDeviceQueue(device, FAMILY, QUEUE, &createInfo.Queues[familiesIndices[FAMILY][QUEUE]].queue);
+				createInfo.Queues[familiesIndices[FAMILY][QUEUE]]->familyIndex = FAMILY;
+				createInfo.Queues[familiesIndices[FAMILY][QUEUE]]->queueIndex = QUEUE;
+				vkGetDeviceQueue(device, FAMILY, QUEUE, &createInfo.Queues[familiesIndices[FAMILY][QUEUE]]->queue);
 			}
 		}
 	}
