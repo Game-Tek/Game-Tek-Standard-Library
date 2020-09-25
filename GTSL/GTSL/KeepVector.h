@@ -64,11 +64,11 @@ namespace GTSL
 		[[nodiscard]] uint32 getDataSize(const uint32 newElementCount) const { return sizeof(T) * newElementCount; }
 		[[nodiscard]] uint32 getIndicesSize(const uint32 newElementCount) const { return ((newElementCount / 32) + 1) * sizeof(uint32); }
 
-		[[nodiscard]] Ranger<uint32> getIndices() { return GTSL::Ranger<uint32>((capacity / 32) + 1, reinterpret_cast<uint32*>(data + getDataSize(capacity))); }
-		[[nodiscard]] Ranger<const uint32> getIndices() const { return GTSL::Ranger<uint32>((capacity / 32) + 1, reinterpret_cast<uint32*>(data + getDataSize(capacity))); }
+		[[nodiscard]] Range<uint32*> getIndices() { return GTSL::Range<uint32*>((capacity / 32) + 1, reinterpret_cast<uint32*>(data + getDataSize(capacity))); }
+		[[nodiscard]] Range<const uint32*> getIndices() const { return GTSL::Range<uint32*>((capacity / 32) + 1, reinterpret_cast<uint32*>(data + getDataSize(capacity))); }
 
-		[[nodiscard]] Ranger<T> getObjects() { return GTSL::Ranger<T>(capacity, reinterpret_cast<T*>(data)); }
-		[[nodiscard]] Ranger<const T> getObjects() const { return GTSL::Ranger<T>(capacity, reinterpret_cast<T*>(data)); }
+		[[nodiscard]] Range<T*> getObjects() { return GTSL::Range<T*>(capacity, reinterpret_cast<T*>(data)); }
+		[[nodiscard]] Range<const T*> getObjects() const { return GTSL::Range<T*>(capacity, reinterpret_cast<T*>(data)); }
 	};
 	
 	/**
@@ -104,7 +104,7 @@ namespace GTSL
 				{
 					for (uint32 i = 0; i < 32; ++i)
 					{
-						if (!GTSL::CheckBit(i, index)) { (getObjects() + num + i)->~T(); }
+						if (!GTSL::CheckBit(i, index)) { (getObjects().begin() + num + i)->~T(); }
 					}
 
 					num += 32;
@@ -135,14 +135,14 @@ namespace GTSL
 
 			if (findFreeIndexAndTryFlag(index)) //If there is a free index insert there,
 			{
-				new(getObjects() + index) T(GTSL::ForwardRef<ARGS>(args)...);
+				new(getObjects().begin() + index) T(GTSL::ForwardRef<ARGS>(args)...);
 				return index;
 			}
 
 			const auto oldCapacity = resize();
 
-			GTSL::ClearBit(0, *(getIndices() + oldCapacity));
-			new(getObjects() + index) T(GTSL::ForwardRef<ARGS>(args)...);
+			GTSL::ClearBit(0, *(getIndices().begin() + oldCapacity));
+			new(getObjects().begin() + index) T(GTSL::ForwardRef<ARGS>(args)...);
 			
 			return oldCapacity;
 		}
@@ -162,8 +162,8 @@ namespace GTSL
 				auto c = getIndices()[number];
 				GTSL_ASSERT(CheckBit(bit, getIndices()[number]), "Slot is ocuppied!")
 			}
-			GTSL::ClearBit(index % 32, *(getIndices() + index / 32));
-			new(getObjects() + index) T(GTSL::ForwardRef<ARGS>(args)...);
+			GTSL::ClearBit(index % 32, *(getIndices().begin() + index / 32));
+			new(getObjects().begin() + index) T(GTSL::ForwardRef<ARGS>(args)...);
 		}
 
 		template<class ALLOC>
@@ -207,8 +207,8 @@ namespace GTSL
 		void Pop(const length_type index)
 		{
 			const auto number = index / 32; const auto bit = index % 32;
-			GTSL::SetBit(bit, *(getIndices() + number));
-			(getObjects() + index)->~T();
+			GTSL::SetBit(bit, *(getIndices().begin() + number));
+			(getObjects().begin() + index)->~T();
 		}
 
 		[[nodiscard]] bool IsSlotOccupied(const uint32 index) const
@@ -224,7 +224,7 @@ namespace GTSL
 			{
 				for (uint32 i = 0; i < 32; ++i)
 				{
-					if (!GTSL::CheckBit(i, index)) { (getObjects() + num + i)->~T(); }
+					if (!GTSL::CheckBit(i, index)) { (getObjects().begin() + num + i)->~T(); }
 				}
 
 				num += 32;
@@ -283,7 +283,7 @@ namespace GTSL
 			GTSL::MemCopy(getDataSize(oldCapacity) + getIndicesSize(oldCapacity), data, newAlloc);
 			free();
 			data = newAlloc;
-			for(auto* begin = getIndices() + oldCapacity; begin != getIndices() + capacity; ++begin) { *begin = 0xFFFFFFFF; }
+			for(auto* begin = getIndices().begin() + oldCapacity; begin != getIndices().begin() + capacity; ++begin) { *begin = 0xFFFFFFFF; }
 			return oldCapacity;
 		}
 		
@@ -296,11 +296,11 @@ namespace GTSL
 		[[nodiscard]] uint32 getDataSize(const uint32 newElementCount) const { return sizeof(T) * newElementCount; }
 		[[nodiscard]] uint32 getIndicesSize(const uint32 newElementCount) const { return ((newElementCount / 32) + 1) * sizeof(uint32); }
 
-		[[nodiscard]] Ranger<uint32> getIndices() { return GTSL::Ranger<uint32>((capacity / 32) + 1, reinterpret_cast<uint32*>(data + getDataSize(capacity))); }
-		[[nodiscard]] Ranger<const uint32> getIndices() const { return GTSL::Ranger<uint32>((capacity / 32) + 1, reinterpret_cast<uint32*>(data + getDataSize(capacity))); }
+		[[nodiscard]] Range<uint32*> getIndices() { return GTSL::Range<uint32*>((capacity / 32) + 1, reinterpret_cast<uint32*>(data + getDataSize(capacity))); }
+		[[nodiscard]] Range<const uint32*> getIndices() const { return GTSL::Range<uint32*>((capacity / 32) + 1, reinterpret_cast<uint32*>(data + getDataSize(capacity))); }
 
-		[[nodiscard]] Ranger<T> getObjects() { return GTSL::Ranger<T>(capacity, reinterpret_cast<T*>(data)); }
-		[[nodiscard]] Ranger<const T> getObjects() const { return GTSL::Ranger<T>(capacity, reinterpret_cast<T*>(data)); }
+		[[nodiscard]] Range<T*> getObjects() { return GTSL::Range<T*>(capacity, reinterpret_cast<T*>(data)); }
+		[[nodiscard]] Range<const T*> getObjects() const { return GTSL::Range<T*>(capacity, reinterpret_cast<T*>(data)); }
 		
 		/**
 		 * \brief Tries to Find a free index.

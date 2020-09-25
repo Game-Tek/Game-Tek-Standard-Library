@@ -179,7 +179,7 @@ namespace GTSL
 			}
 
 			getKeysBucket(bucketIndex)[placeIndex] = key;
-			return *new(getValuesBucket(bucketIndex) + placeIndex) T(ForwardRef<ARGS>(args)...);
+			return *new(getValuesBucket(bucketIndex).begin() + placeIndex) T(ForwardRef<ARGS>(args)...);
 		}
 
 		[[nodiscard]] bool Find(const key_type key) const { return findKeyInBucket(modulo(key, this->capacity), key); }
@@ -247,11 +247,11 @@ namespace GTSL
 			for (auto& e : getKeysBucket(keys_bucket)) { if (e == key) { return static_cast<uint32>(&e - getKeysBucket(keys_bucket).begin()); } } return 0xFFFFFFFF;
 		}
 
-		[[nodiscard]] Ranger<key_type> getKeysBucket(const uint32 bucketIndex) const { return Ranger<key_type>(getBucketLength(bucketIndex), getKeysBucketPointer(bucketIndex) + 1); }
-		[[nodiscard]] Ranger<key_type> getKeysBucket(const uint32 bucketIndex, const uint32 length) const { return Ranger<key_type>(getBucketLength(bucketIndex, length), getKeysBucketPointer(bucketIndex, length) + 1); }
+		[[nodiscard]] Range<key_type*> getKeysBucket(const uint32 bucketIndex) const { return Range<key_type*>(getBucketLength(bucketIndex), getKeysBucketPointer(bucketIndex) + 1); }
+		[[nodiscard]] Range<key_type*> getKeysBucket(const uint32 bucketIndex, const uint32 length) const { return Range<key_type*>(getBucketLength(bucketIndex, length), getKeysBucketPointer(bucketIndex, length) + 1); }
 
-		[[nodiscard]] Ranger<T> getValuesBucket(const uint32 bucketIndex) const { return Ranger<T>(getBucketLength(bucketIndex), getValuesBucketPointer(bucketIndex)); }
-		[[nodiscard]] Ranger<T> getValuesBucket(const uint32 bucketIndex, const uint32 length) const { return Ranger<T>(getBucketLength(bucketIndex, length), getValuesBucketPointer(bucketIndex, length)); }
+		[[nodiscard]] Range<T*> getValuesBucket(const uint32 bucketIndex) const { return Range<T*>(getBucketLength(bucketIndex), getValuesBucketPointer(bucketIndex)); }
+		[[nodiscard]] Range<T*> getValuesBucket(const uint32 bucketIndex, const uint32 length) const { return Range<T*>(getBucketLength(bucketIndex, length), getValuesBucketPointer(bucketIndex, length)); }
 
 		static constexpr uint32 modulo(const key_type key, const uint32 size) { return key & (size - 1); }
 
@@ -285,7 +285,7 @@ namespace GTSL
 						*(getKeysBucket(newBucketIndex).begin() + static_cast<key_type>(newBucketLength)) = *key; //move key
 						popElement(getKeysBucket(currentBucketIndex), elementIndex); //pop key
 
-						copyElementToBack(getValuesBucket(newBucketIndex), getValuesBucket(currentBucketIndex) + elementIndex); //move object
+						copyElementToBack(getValuesBucket(newBucketIndex), getValuesBucket(currentBucketIndex).begin() + elementIndex); //move object
 						popElement(getValuesBucket(currentBucketIndex), elementIndex); //pop object
 
 						//MemCopy((currentBucketLength - elementIndex) * sizeof(key_type), getKeysBucket(currentBucketIndex) + elementIndex + 1, getKeysBucket(currentBucketIndex) + elementIndex); //

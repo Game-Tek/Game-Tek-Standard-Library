@@ -27,7 +27,7 @@ namespace GAL
 
 		GTSL::uint32 GetSupportedRenderContextFormat(const class VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::Pair<VulkanColorSpace, VulkanTextureFormat>*> formats) const;
 
-		GTSL::uint32 GetSupportedPresentMode(class VulkanRenderDevice* renderDevice, GTSL::Range<const VulkanPresentMode> presentModes);
+		GTSL::uint32 GetSupportedPresentMode(class VulkanRenderDevice* renderDevice, GTSL::Range<const VulkanPresentMode*> presentModes);
 
 		bool IsSupported(class VulkanRenderDevice* renderDevice);
 

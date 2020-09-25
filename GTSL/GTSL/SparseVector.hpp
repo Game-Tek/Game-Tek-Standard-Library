@@ -1,11 +1,10 @@
 #pragma once
+
 #include "Core.h"
 
 #include "Pair.h"
-
 #include "Memory.h"
-
-import ArrayCommon;
+#include "ArrayCommon.hpp"
 
 namespace GTSL
 {
@@ -19,7 +18,7 @@ namespace GTSL
 
 		Pair<uint32, T&> At(const uint32 i) { return Pair<uint32, T&>(First + i, Elements[i]); }
 		
-		Ranger<T> GetElements() const { return Ranger<T>(ElementCount, Elements); }
+		Range<T*> GetElements() const { return Range<T*>(ElementCount, Elements); }
 	};
 
 	template<typename T>

@@ -6,7 +6,7 @@
 namespace GTSL
 {
 	template<typename T>
-	concept Allocator = requires (T t) { t.Allocate(); t.Deallocate(); };
+	concept Allocator = requires (T t, uint64 size, uint64 alignment, void** data, uint64 * aS, void* d) { t.Allocate(size, alignment, data, aS); t.Deallocate(size, alignment, d); };
 
 	void Allocate(uint64 size, void** data);
 	void Deallocate(uint64 size, void* data);

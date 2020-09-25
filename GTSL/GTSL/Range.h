@@ -24,32 +24,34 @@ namespace GTSL
 	template<typename I>
 	struct Range<I*>
 	{
-		Range(I* b, I* e) : from(b), to(e) {}
+		Range() = default;
+		
+		constexpr Range(I* b, I* e) : from(b), to(e) {}
 
-		Range(const uint64 length, I* b) : from(b), to(b + length) {}
+		constexpr Range(const uint64 length, I* b) : from(b), to(b + length) {}
 
-		[[nodiscard]] I* begin() { return from; }
-		[[nodiscard]] I* end() { return to; }
+		[[nodiscard]] constexpr I* begin() { return from; }
+		[[nodiscard]] constexpr I* end() { return to; }
 		
 		//[[nodiscard]] I* begin() const { return from; }
 		//[[nodiscard]] I* end() const { return to; }
 
-		[[nodiscard]] I* begin() const { return from; }
-		[[nodiscard]] I* end() const { return to; }
+		[[nodiscard]] constexpr I* begin() const { return from; }
+		[[nodiscard]] constexpr I* end() const { return to; }
 
 		using type = I;
 
-		[[nodiscard]] uint64 Bytes() const { return (to - from) * sizeof(I); }
+		[[nodiscard]] constexpr uint64 Bytes() const { return (to - from) * sizeof(I); }
 
-		[[nodiscard]] uint64 ElementCount() const noexcept { return to - from; }
+		[[nodiscard]] constexpr uint64 ElementCount() const noexcept { return to - from; }
 
-		I& operator[](const uint64 i)
+		constexpr I& operator[](const uint64 i)
 		{
 			GTSL_ASSERT((this->from + i) < to, "Unbounded access!")
 			return this->from[i];
 		}
 
-		I& operator[](const uint64 i) const
+		constexpr I& operator[](const uint64 i) const
 		{
 			GTSL_ASSERT((this->from + i) < to, "Unbounded access!")
 			return this->from[i];
@@ -58,7 +60,7 @@ namespace GTSL
 		operator Range<const I*>() const { return Range<const I*>(static_cast<const I*>(this->from), static_cast<const I*>(this->to)); }
 		
 	private:
-		I* from,* to;
+		I* from = nullptr,* to = nullptr;
 
 		friend struct Range;
 	};

@@ -177,7 +177,7 @@ GTSL::uint32 GAL::VulkanSurface::GetSupportedRenderContextFormat(const VulkanRen
 	return 0xFFFFFFFF;
 }
 
-GTSL::uint32 GAL::VulkanSurface::GetSupportedPresentMode(VulkanRenderDevice* renderDevice, GTSL::Range<const VulkanPresentMode> presentModes)
+GTSL::uint32 GAL::VulkanSurface::GetSupportedPresentMode(VulkanRenderDevice* renderDevice, GTSL::Range<const VulkanPresentMode*> presentModes)
 {
 	GTSL::uint32 presentModesCount = 0;
 	vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &presentModesCount, nullptr);
