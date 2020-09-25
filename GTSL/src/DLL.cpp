@@ -6,7 +6,7 @@
 
 using namespace GTSL;
 
-void DLL::LoadLibrary(const Ranger<char>& ranger)
+void DLL::LoadLibrary(const Range<const char*> ranger)
 {
 	handle = LoadLibraryA(ranger.begin());
 }
@@ -17,7 +17,7 @@ void DLL::UnloadLibrary()
 	handle = nullptr;
 }
 
-DLL::DynamicFunction DLL::LoadDynamicFunction(const Ranger<char>& ranger) const
+DLL::DynamicFunction DLL::LoadDynamicFunction(const Range<const char*> ranger) const
 {
 	return DynamicFunction(GetProcAddress(static_cast<HMODULE>(handle), ranger.begin()));
 }

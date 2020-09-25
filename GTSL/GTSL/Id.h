@@ -2,7 +2,7 @@
 
 #include "Core.h"
 
-#include "Ranger.h"
+#include "Range.h"
 #include "StringCommon.h"
 
 namespace GTSL
@@ -13,7 +13,7 @@ namespace GTSL
 		using HashType = uint64;
 
 	protected:
-		static constexpr HashType hashString(const Ranger<const UTF8>& ranger) noexcept
+		static constexpr HashType hashString(const Range<const UTF8*>& ranger) noexcept
 		{
 			HashType primary_hash(525201411107845655ull);
 			HashType secondary_hash(0xAAAAAAAAAAAAAAAAull);
@@ -32,10 +32,10 @@ namespace GTSL
 		constexpr Id64() = default;
 
 		template<uint64 N>
-		constexpr Id64(const char(&string)[N]) noexcept : hashValue(hashString(GTSL::Ranger<const UTF8>(N, string))) {}
+		constexpr Id64(const char(&string)[N]) noexcept : hashValue(hashString(GTSL::Range<const UTF8*>(N, string))) {}
 		
-		constexpr Id64(const Ranger<const UTF8>& ranger) noexcept : hashValue(hashString(ranger)) {}
-		constexpr Id64(const char* text) noexcept : hashValue(hashString(GTSL::Ranger<const UTF8>(StringLength(text), text))) {}
+		constexpr Id64(const Range<const UTF8*>& ranger) noexcept : hashValue(hashString(ranger)) {}
+		constexpr Id64(const char* text) noexcept : hashValue(hashString(GTSL::Range<const UTF8*>(StringLength(text), text))) {}
 		constexpr Id64(const Id64& other) noexcept = default;
 		constexpr Id64(Id64&& other) noexcept : hashValue(other.hashValue) { other.hashValue = 0; }
 

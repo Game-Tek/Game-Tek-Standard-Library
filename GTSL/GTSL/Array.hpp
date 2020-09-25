@@ -5,7 +5,7 @@
 #include <initializer_list>
 #include "Memory.h"
 #include "Assert.h"
-#include "Ranger.h"
+#include "Range.h"
 #include <new>
 
 namespace GTSL
@@ -33,8 +33,8 @@ namespace GTSL
 
 		[[nodiscard]] constexpr const T& back() const noexcept { return this->data[this->length - 1]; }
 
-		operator GTSL::Ranger<T>() { return Ranger<T>(this->length, this->begin()); }
-		operator GTSL::Ranger<const T>() const { return Ranger<const T>(this->length, this->begin()); }
+		operator GTSL::Range<T*>() { return Range<T*>(this->length, this->begin()); }
+		operator GTSL::Range<const T*>() const { return Range<const T*>(this->length, this->begin()); }
 
 		constexpr Array() noexcept = default;
 
@@ -49,7 +49,7 @@ namespace GTSL
 			GTSL_ASSERT(length <= CAPACITY, "Array is not big enough to insert the elements requested!")
 		}
 
-		constexpr Array(const Ranger<const T> ranger) noexcept : length(static_cast<uint32>(ranger.ElementCount()))
+		constexpr Array(const Range<const T*> ranger) noexcept : length(static_cast<uint32>(ranger.ElementCount()))
 		{
 			GTSL_ASSERT(ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!");
 			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { this->data[i] = ranger[i]; }
@@ -105,7 +105,7 @@ namespace GTSL
 			return *this;
 		}
 
-		constexpr Array& operator=(const Ranger<const T> ranger) noexcept
+		constexpr Array& operator=(const Range<const T*> ranger) noexcept
 		{
 			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { this->data[i] = ranger[i]; }
 			length = ranger.ElementCount();
@@ -152,7 +152,7 @@ namespace GTSL
 			return this->length++;
 		}
 
-		constexpr uint32 PushBack(const Ranger<const T> ranger) noexcept
+		constexpr uint32 PushBack(const Range<const T*> ranger) noexcept
 		{
 			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
 			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { this->data[i] = ranger[i]; }
@@ -161,7 +161,7 @@ namespace GTSL
 			return ret;
 		}
 
-		constexpr uint32 Insert(const uint32 index, const Ranger<const T>& ranger) noexcept
+		constexpr uint32 Insert(const uint32 index, const Range<const T*> ranger) noexcept
 		{
 			copy(ranger.ElementCount(), ranger.begin(), this->data + index);
 			auto ret = this->length;
@@ -202,7 +202,7 @@ namespace GTSL
 
 	private:
 		uint32 length = 0;
-		T data[CAPACITY]{};
+		T data[CAPACITY];
 
 		constexpr void copyToData(const void* from, const uint64 length) noexcept
 		{

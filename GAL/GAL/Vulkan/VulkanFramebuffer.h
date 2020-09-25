@@ -17,7 +17,7 @@ namespace GAL
 		{
 			VulkanRenderPass* RenderPass = nullptr;
 			GTSL::Extent2D Extent = { 1280, 720 };
-			GTSL::Ranger<const class VulkanTextureView> TextureViews;
+			GTSL::Range<const class VulkanTextureView*> TextureViews;
 		};
 		VulkanFramebuffer(const CreateInfo& info);
 		

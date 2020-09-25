@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IPEndpoints.h"
-#include "GTSL/Ranger.h"
+#include "GTSL/Range.h"
 
 namespace GTSL
 {
@@ -23,7 +23,7 @@ namespace GTSL
 		struct SendInfo
 		{
 			IPv4Endpoint Endpoint;
-			Ranger<const byte> Buffer;
+			Range<const byte*> Buffer;
 		};
 		[[nodiscard]] bool Send(const SendInfo& sendInfo) const;
 
@@ -31,7 +31,7 @@ namespace GTSL
 		struct ReceiveInfo
 		{
 			IPv4Endpoint* Sender = nullptr;
-			Ranger<byte> Buffer;
+			Range<byte*> Buffer;
 		};
 		[[nodiscard]] bool Receive(const ReceiveInfo& receiveInfo) const;
 	};
@@ -51,7 +51,7 @@ namespace GTSL
 		struct SendInfo
 		{
 			IPv4Endpoint Endpoint;
-			Ranger<const byte> Buffer;
+			Range<const byte*> Buffer;
 		};
 		[[nodiscard]] bool Send(const SendInfo& sendInfo) const;
 
@@ -59,7 +59,7 @@ namespace GTSL
 		struct ReceiveInfo
 		{
 			IPv4Endpoint* Sender = nullptr;
-			Ranger<byte> Buffer;
+			Range<byte*> Buffer;
 		};
 		[[nodiscard]] bool Receive(const ReceiveInfo& receiveInfo) const;
 	};

@@ -1,10 +1,8 @@
 #pragma once
 
-#include "RenderCore.h"
-
 namespace GAL
 {
-	class DeviceMemory : public GALObject
+	class DeviceMemory
 	{
 	public:
 		DeviceMemory() = default;

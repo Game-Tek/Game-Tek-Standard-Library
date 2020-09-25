@@ -9,7 +9,6 @@
 
 #include "GTSL/Bitman.h"
 #include "GTSL/Buffer.h"
-#include "GTSL/String.hpp"
 
 GAL::VulkanShader::VulkanShader(const CreateInfo& createInfo)
 {
@@ -26,7 +25,7 @@ void GAL::VulkanShader::Destroy(const VulkanRenderDevice* renderDevice)
 	debugClear(shaderModule);
 }
 
-bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringResult)
+bool GAL::VulkanShader::CompileShader(GTSL::Range<const GTSL::UTF8*> code, GTSL::Range<const GTSL::UTF8*> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringResult)
 {
 	shaderc_shader_kind shaderc_stage;
 
@@ -74,7 +73,7 @@ bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL:
 
 //static bool glslLangInitialized = false;
 
-//bool GAL::VulkanShader::CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringError)
+//bool GAL::VulkanShader::CompileShader(GTSL::Range<const GTSL::UTF8> code, GTSL::Range<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringError)
 //{
 //	EShLanguage shaderc_stage;
 //	

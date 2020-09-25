@@ -25,7 +25,7 @@ namespace GTSL
 			copy(len, string); this->length = len - 1;
 		}
 
-		constexpr StaticString(const Ranger<const UTF8>& ranger)
+		constexpr StaticString(const Range<const UTF8*> ranger)
 		{
 			GTSL_ASSERT(ranger.ElementCount() <= N, "String larger than buffer capacity")
 			copy(ranger.ElementCount(), ranger.begin()); this->length = ranger.ElementCount() - 1;
@@ -55,7 +55,7 @@ namespace GTSL
 			this->length = newLength;
 		}
 
-		operator GTSL::Ranger<const UTF8>() const { return Ranger<const UTF8>(this->length + 1, this->array); }
+		operator GTSL::Range<const UTF8*>() const { return Range<const UTF8*>(this->length + 1, this->array); }
 
 		void Drop(const uint32 from)
 		{
@@ -92,11 +92,11 @@ namespace GTSL
 			return *this;
 		}
 
-		constexpr StaticString& operator+=(const Ranger<const UTF8>& ranger)
+		constexpr StaticString& operator+=(const Range<const UTF8*> range)
 		{
-			GTSL_ASSERT(ranger.ElementCount() <= N, "String larger than buffer capacity")
-			const auto len = ranger.ElementCount();
-			copy(len, ranger.begin());
+			GTSL_ASSERT(range.ElementCount() <= N, "String larger than buffer capacity")
+			const auto len = range.ElementCount();
+			copy(len, range.begin());
 			this->length += len - 1;
 			return *this;
 		}
@@ -112,7 +112,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const uint8 num)
 		{
-			Ranger<UTF8> range(this->begin() + this->length, this->begin() + this->GetCapacity());
+			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
 			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
@@ -120,7 +120,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const int16 num)
 		{
-			Ranger<UTF8> range(this->begin() + this->length, this->begin() + this->GetCapacity());
+			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
 			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
@@ -128,7 +128,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const uint16 num)
 		{
-			Ranger<UTF8> range(this->begin() + this->length, this->begin() + this->GetCapacity());
+			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
 			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
@@ -136,7 +136,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const int32 num)
 		{
-			Ranger<UTF8> range(this->begin() + this->length, this->begin() + this->GetCapacity());
+			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
 			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
@@ -144,7 +144,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const uint32 num)
 		{
-			Ranger<UTF8> range(this->begin() + this->length, this->begin() + this->GetCapacity());
+			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
 			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
@@ -152,7 +152,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const int64 num)
 		{
-			Ranger<UTF8> range(this->begin() + this->length, this->begin() + this->GetCapacity());
+			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
 			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
@@ -160,7 +160,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const uint64 num)
 		{
-			Ranger<UTF8> range(this->begin() + this->length, this->begin() + this->GetCapacity());
+			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
 			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
@@ -168,7 +168,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const float32 num)
 		{
-			Ranger<UTF8> range(this->begin() + this->length, this->begin() + this->GetCapacity());
+			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
 			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
@@ -176,7 +176,7 @@ namespace GTSL
 
 		constexpr StaticString& operator+=(const float64 num)
 		{
-			Ranger<UTF8> range(this->begin() + this->length, this->begin() + this->GetCapacity());
+			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
 			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;

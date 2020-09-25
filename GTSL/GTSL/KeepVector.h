@@ -3,7 +3,7 @@
 #include "Core.h"
 #include "Bitman.h"
 #include "Memory.h"
-#include "Ranger.h"
+#include "Range.h"
 #include <new>
 
 #include "Result.h"

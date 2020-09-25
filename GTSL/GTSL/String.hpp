@@ -17,7 +17,7 @@ namespace GTSL
 		
 		String() = default;
 
-		String(const char* cstring, const ALLOCATOR& allocatorReference) : data(GTSL::Ranger<const UTF8>(StringLength(cstring) + 1, cstring), allocatorReference) {}
+		String(const char* cstring, const ALLOCATOR& allocatorReference) : data(Range<const UTF8*>(StringLength(cstring) + 1, cstring), allocatorReference) {}
 
 		/**
 		 * \brief Creates an String with enough space allocated for length elements.
@@ -67,8 +67,8 @@ namespace GTSL
 		//Returns the contents of this String as a C-String.
 		char* c_str() { return data.GetData(); }
 
-		operator Ranger<UTF8>() const { return Ranger<UTF8>(data); }
-		operator Ranger<const UTF8>() const { return Ranger<const UTF8>(data); }
+		operator Range<UTF8*>() const { return Range<UTF8*>(data); }
+		operator Range<const UTF8*>() const { return Range<const UTF8*>(data); }
 
 		[[nodiscard]] const char* c_str() const { return data.GetData(); }
 
@@ -81,8 +81,8 @@ namespace GTSL
 		void Append(const char* cstring)
 		{
 			data.Place(data.GetLength(), ' '); //Push space.
-			data.PushBack(Ranger<const UTF8>(StringLength(cstring), cstring));
-			data.PushBack(Ranger<const UTF8>(StringLength(cstring), cstring));
+			data.PushBack(Range<const UTF8*>(StringLength(cstring), cstring));
+			data.PushBack(Range<const UTF8*>(StringLength(cstring), cstring));
 		}
 		
 		//Places the String after this String with a space in the middle.
@@ -92,68 +92,68 @@ namespace GTSL
 			data.PushBack(string.data); //Push new string.
 		}
 
-		void Append(const Ranger<const UTF8>& ranger)
+		void Append(const Range<const UTF8*> ranger)
 		{
 			data.PushBack(ranger);
 		}
 
 		void Append(const uint8 number)
 		{
-			Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
+			Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 			ToString(number, range);
 			data.PushBack(range);
 		}
 		void Append(const int8 number)
 		{
-			Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
+			Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 			ToString(number, range);
 			data.PushBack(range);
 		}
 		void Append(const uint16 number)
 		{
-			Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
+			Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 			ToString(number, range);
 			data.PushBack(range);
 		}
 		void Append(const int16 number)
 		{
-			Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
+			Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 			ToString(number, range);
 			data.PushBack(range);
 		}
 		void Append(const uint32 number)
 		{
-			Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
+			Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 			ToString(number, range);
 			data.PushBack(range);
 		}
 		void Append(const int32 number)
 		{
-			Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
+			Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 			ToString(number, range);
 			data.PushBack(range);
 		}
 		void Append(const uint64 number)
 		{
-			Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
+			Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 			ToString(number, range);
 			data.PushBack(range);
 		}
 		void Append(const int64 number)
 		{
-			Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
+			Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 			ToString(number, range);
 			data.PushBack(range);
 		}
 		void Append(const float32 number)
 		{
-			Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
+			Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 			ToString(number, range);
 			data.PushBack(range);
 		}
 		void Append(const float64 number)
 		{
-			Ranger<string_type> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
+			Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
 			ToString(number, range);
 			data.PushBack(range);
 		}
@@ -244,7 +244,7 @@ namespace GTSL
 
 				for (auto& e : ocurrences)
 				{
-					data.Insert(e, GTSL::Ranger<const UTF8>(with_length, with));
+					data.Insert(e, Range<const UTF8*>(with_length, with));
 				}
 
 				if (i == data.GetLength() - 1) //if current index is last index in whole string break out of the loop

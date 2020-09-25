@@ -1,15 +1,15 @@
 #pragma once
 
 #include "Core.h"
-#include "Ranger.h"
+#include "Range.h"
 
 namespace GTSL
 {
 	class Console
 	{
 	public:
-		static void Print(const Ranger<const UTF8>& text);
-		static void Read(Ranger<UTF8>& buffer);
+		static void Print(const Range<const UTF8*> text);
+		static void Read(Range<UTF8*> buffer);
 
 		enum class ConsoleTextColor : uint8
 		{

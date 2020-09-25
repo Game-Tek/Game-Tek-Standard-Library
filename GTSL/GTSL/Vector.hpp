@@ -7,7 +7,7 @@
 #include "Allocator.h"
 #include <initializer_list>
 #include <new>
-#include "Ranger.h"
+#include "Range.h"
 
 namespace GTSL
 {
@@ -47,7 +47,7 @@ namespace GTSL
 		/**
 		 * \brief Constructs a Vector with enough space to accomodate capacity T elements, and considers length elements already occupied.
 		 */
-		explicit Vector(const GTSL::Ranger<const T>& ranger, const ALLOCATOR& allocatorReference) : allocator(allocatorReference),
+		explicit Vector(const Range<const T*> ranger, const ALLOCATOR& allocatorReference) : allocator(allocatorReference),
 		capacity(static_cast<uint32>(ranger.ElementCount())), length(static_cast<uint32>(ranger.ElementCount())), data(this->allocate(this->capacity, this->capacity))
 		{
 		}
@@ -227,12 +227,12 @@ namespace GTSL
 		/**
 		* \brief Initializes the Vector with space for count elements and copies data to it's array. Useful for when Vector was initialized with no allocation. Calling this function when the array is not Empty will lead to a memory leak.
 		*/
-		void Initialize(const GTSL::Ranger<const T>& ranger, const ALLOCATOR& allocatorReference)
+		void Initialize(const Range<const T*> range, const ALLOCATOR& allocatorReference)
 		{
 			this->allocator = allocatorReference;
-			this->data = allocate(ranger.ElementCount(), this->capacity);
-			copyArray(ranger.begin(), this->data, ranger.ElementCount());
-			this->length = ranger.ElementCount();
+			this->data = allocate(range.ElementCount(), this->capacity);
+			copyArray(range.begin(), this->data, range.ElementCount());
+			this->length = range.ElementCount();
 		}
 
 		/**
@@ -273,14 +273,14 @@ namespace GTSL
 			return this->length++;
 		}
 
-		length_type PushBack(const Ranger<T>& ranger)
+		length_type PushBack(const Range<T*> ranger)
 		{
 			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(); }
 			for (auto& e : ranger) { this->data[GTSL::RangeForIndex(e, ranger)] = e; }
 			return static_cast<uint32>((this->length += static_cast<uint32>(ranger.ElementCount())) - ranger.ElementCount());
 		}
 
-		length_type PushBack(const Ranger<const T>& ranger)
+		length_type PushBack(const Range<const T*> ranger)
 		{
 			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(); }
 			for (auto& e : ranger) { this->data[GTSL::RangeForIndex(e, ranger)] = e; }
@@ -354,7 +354,7 @@ namespace GTSL
 		 * \brief Copies obj to index.
 		 * \param index Index At which to Place the object.
 		 */
-		void Insert(const length_type index, const GTSL::Ranger<const T> ranger)
+		void Insert(const length_type index, const Range<const T*> ranger)
 		{
 			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(); }
 			MemCopy(sizeof(T) * ranger.ElementCount(), getIterator(index), getIterator(static_cast<uint32>(index + ranger.ElementCount())));
@@ -486,9 +486,9 @@ namespace GTSL
 		 */
 		[[nodiscard]] size_t GetRemainingLengthSize() const noexcept { return this->GetRemainingLength() * sizeof(T); }
 
-		[[nodiscard]] operator Ranger<T>() noexcept { return Ranger<T>(this->data, this->data + this->length); }
-		[[nodiscard]] operator Ranger<T>() const noexcept { return Ranger<T>(this->data, this->data + this->length); }
-		[[nodiscard]] operator Ranger<const T>() const noexcept { return Ranger<const T>(this->data, this->data + this->length); }
+		[[nodiscard]] operator Range<T*>() noexcept { return Range<T*>(this->data, this->data + this->length); }
+		[[nodiscard]] operator Range<T*>() const noexcept { return Range<T*>(this->data, this->data + this->length); }
+		[[nodiscard]] operator Range<const T*>() const noexcept { return Range<const T*>(this->data, this->data + this->length); }
 
 	private:
 #pragma warning(disable : 4648)

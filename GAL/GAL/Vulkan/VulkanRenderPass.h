@@ -3,7 +3,7 @@
 #include "GAL/RenderPass.h"
 
 #include "GAL/Vulkan/Vulkan.h"
-#include <GTSL/Ranger.h>
+#include <GTSL/Range.h>
 
 namespace GAL
 {
@@ -37,13 +37,13 @@ namespace GAL
 		struct SubPassDescriptor
 		{
 			//Array of AttachmentsReferences for attachments which the subpass reads from.
-			GTSL::Ranger<const AttachmentReference> ReadColorAttachments;
+			GTSL::Range<const AttachmentReference*> ReadColorAttachments;
 
 			//Array of AttachmentsReferences for attachments which the subpass writes to.
-			GTSL::Ranger<const AttachmentReference> WriteColorAttachments;
+			GTSL::Range<const AttachmentReference*> WriteColorAttachments;
 
 			//Array of indices identifying attachments that are not used by this subpass, but whose contents MUST be preserved throughout the subpass.
-			GTSL::Ranger<const GTSL::uint8> PreserveAttachments;
+			GTSL::Range<const GTSL::uint8*> PreserveAttachments;
 
 			AttachmentReference DepthAttachmentReference;
 		};
@@ -60,12 +60,12 @@ namespace GAL
 		struct CreateInfo final : VulkanCreateInfo
 		{
 			//Array of pointer to images that will be used as attachments in the render pass.
-			GTSL::Ranger<const AttachmentDescriptor> RenderPassAttachments;
+			GTSL::Range<const AttachmentDescriptor*> RenderPassAttachments;
 
 			//Array of SubpassDescriptor used to describes the properties of every subpass in the renderpass.
-			GTSL::Ranger<const SubPassDescriptor> SubPasses;
+			GTSL::Range<const SubPassDescriptor*> SubPasses;
 			
-			GTSL::Ranger<const SubPassDependency> SubPassDependencies;
+			GTSL::Range<const SubPassDependency*> SubPassDependencies;
 		};
 		explicit VulkanRenderPass(const CreateInfo& createInfo);
 		~VulkanRenderPass() = default;

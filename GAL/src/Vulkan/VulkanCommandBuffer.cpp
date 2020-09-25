@@ -129,7 +129,7 @@ void GAL::VulkanCommandBuffer::TraceRays(const TraceRaysInfo& traceRaysInfo)
 void GAL::VulkanCommandBuffer::AddLabel(const AddLabelInfo& info)
 {
 	VkDebugUtilsLabelEXT vkLabelInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
-	vkLabelInfo.pLabelName = info.Name;
+	vkLabelInfo.pLabelName = info.Name.begin();
 	
 	info.RenderDevice->vkCmdInsertDebugUtilsLabelEXT(commandBuffer, &vkLabelInfo);
 }
@@ -137,7 +137,7 @@ void GAL::VulkanCommandBuffer::AddLabel(const AddLabelInfo& info)
 void GAL::VulkanCommandBuffer::BeginRegion(const BeginRegionInfo& info) const
 {
 	VkDebugUtilsLabelEXT vkLabelInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
-	vkLabelInfo.pLabelName = info.Name;
+	vkLabelInfo.pLabelName = info.Name.begin();
 	
 	info.RenderDevice->vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &vkLabelInfo);
 }
@@ -198,7 +198,7 @@ void GAL::VulkanCommandBuffer::AddPipelineBarrier(const AddPipelineBarrierInfo& 
 {
 	Array<VkImageMemoryBarrier, 128> imageMemoryBarriers(pipelineBarrier.TextureBarriers.ElementCount());
 	//GTSL::Array<VkBufferMemoryBarrier, 1024> bufferMemoryBarriers;
-	GTSL::Array<VkMemoryBarrier, 128> memoryBarriers(pipelineBarrier.MemoryBarriers.ElementCount());
+	Array<VkMemoryBarrier, 128> memoryBarriers(pipelineBarrier.MemoryBarriers.ElementCount());
 
 	for (uint32 i = 0; i < pipelineBarrier.TextureBarriers.ElementCount(); ++i)
 	{

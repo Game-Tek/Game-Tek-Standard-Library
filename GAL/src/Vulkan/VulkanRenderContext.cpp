@@ -76,19 +76,11 @@ GTSL::uint8 GAL::VulkanRenderContext::AcquireNextImage(const AcquireNextImageInf
 }
 
 void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)
-{
-	auto vulkan_semaphores = GTSL::Ranger<const VulkanSemaphore>(presentInfo.WaitSemaphores);
-	
-	GTSL::Array<VkSemaphore, 16> vkWaitSemaphores(vulkan_semaphores.ElementCount());
-	for (const auto& e : vulkan_semaphores)
-	{
-		vkWaitSemaphores[static_cast<GTSL::uint32>(RangeForIndex(e, vulkan_semaphores))] = e.GetVkSemaphore();
-	}
-	
+{	
 	VkPresentInfoKHR vkPresentInfoKhr{ VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 	{
-		vkPresentInfoKhr.waitSemaphoreCount = vkWaitSemaphores.GetLength();
-		vkPresentInfoKhr.pWaitSemaphores = vkWaitSemaphores.begin();	
+		vkPresentInfoKhr.waitSemaphoreCount = presentInfo.WaitSemaphores.ElementCount();
+		vkPresentInfoKhr.pWaitSemaphores = reinterpret_cast<const VkSemaphore*>(presentInfo.WaitSemaphores.begin());
 		vkPresentInfoKhr.swapchainCount = 1;
 		vkPresentInfoKhr.pSwapchains = reinterpret_cast<VkSwapchainKHR*>(&swapchain);
 		vkPresentInfoKhr.pImageIndices = &presentInfo.ImageIndex;
@@ -169,7 +161,7 @@ void GAL::VulkanSurface::Destroy(VulkanRenderDevice* renderDevice)
 	debugClear(surface);
 }
 
-GTSL::uint32 GAL::VulkanSurface::GetSupportedRenderContextFormat(const VulkanRenderDevice* renderDevice, GTSL::Ranger<const GTSL::Pair<VulkanColorSpace, VulkanTextureFormat>> formats)
+GTSL::uint32 GAL::VulkanSurface::GetSupportedRenderContextFormat(const VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::Pair<VulkanColorSpace, VulkanTextureFormat>*> formats) const
 {
 	GTSL::uint32 surfaceFormatsCount = 0;
 	vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &surfaceFormatsCount, nullptr);
@@ -185,7 +177,7 @@ GTSL::uint32 GAL::VulkanSurface::GetSupportedRenderContextFormat(const VulkanRen
 	return 0xFFFFFFFF;
 }
 
-GTSL::uint32 GAL::VulkanSurface::GetSupportedPresentMode(VulkanRenderDevice* renderDevice, GTSL::Ranger<const VulkanPresentMode> presentModes)
+GTSL::uint32 GAL::VulkanSurface::GetSupportedPresentMode(VulkanRenderDevice* renderDevice, GTSL::Range<const VulkanPresentMode> presentModes)
 {
 	GTSL::uint32 presentModesCount = 0;
 	vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &presentModesCount, nullptr);

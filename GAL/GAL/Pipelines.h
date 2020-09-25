@@ -2,7 +2,7 @@
 
 #include "RenderCore.h"
 #include <GTSL/Extent.h>
-#include <GTSL/Ranger.h>
+#include <GTSL/Range.h>
 
 namespace GAL
 {
@@ -57,7 +57,7 @@ namespace GAL
 
 	//struct PipelineDescriptor
 	//{
-	//	GTSL::Ranger<const Pipeline::ShaderInfo> Stages;
+	//	GTSL::Range<const Pipeline::ShaderInfo> Stages;
 	//	CullMode CullMode = CullMode::CULL_NONE;
 	//	bool DepthClampEnable = false;
 	//	bool BlendEnable = false;
@@ -74,19 +74,19 @@ namespace GAL
 		//{
 		//	const RenderPass* RenderPass = nullptr;
 		//	GTSL::Extent2D SurfaceExtent;
-		//	GTSL::Ranger<const ShaderDataTypes> VertexDescriptor;
+		//	GTSL::Range<const ShaderDataTypes> VertexDescriptor;
 		//	PipelineDescriptor PipelineDescriptor;
 		//	bool IsInheritable = false;
 		//	const GraphicsPipeline* ParentPipeline = nullptr;
 		//
 		//	const PushConstant* PushConstant = nullptr;
-		//	GTSL::Ranger<const class BindingsPool> BindingsPools;
+		//	GTSL::Range<const class BindingsPool> BindingsPools;
 		//	const PipelineCache* PipelineCache = nullptr;
 		//};
 		
 		GraphicsPipeline() = default;
 
-		//static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Ranger<const ShaderDataTypes> vertex, GTSL::Ranger<GTSL::uint8> offsets)
+		//static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Range<const ShaderDataTypes> vertex, GTSL::Range<GTSL::uint8> offsets)
 		//{
 		//	GTSL::uint32 size = 0;
 		//	for (const auto& e : vertex)
@@ -97,12 +97,12 @@ namespace GAL
 		//	return size;
 		//}
 		
-		static GTSL::uint32 GetVertexSize(GTSL::Ranger<const ShaderDataType> vertex)
+		static GTSL::uint32 GetVertexSize(GTSL::Range<const ShaderDataType*> vertex)
 		{
 			GTSL::uint32 size{ 0 };	for (const auto& e : vertex) { size += ShaderDataTypesSize(e); } return size;
 		}
 
-		static GTSL::uint32 GetByteOffsetToMember(const GTSL::uint8 member, GTSL::Ranger<const ShaderDataType> vertex)
+		static GTSL::uint32 GetByteOffsetToMember(const GTSL::uint8 member, GTSL::Range<const ShaderDataType*> vertex)
 		{
 			GTSL::uint32 offset{ 0 };
 			for(auto* begin = vertex.begin(); begin != vertex.begin() + member; ++begin) { offset += ShaderDataTypesSize(*begin); }

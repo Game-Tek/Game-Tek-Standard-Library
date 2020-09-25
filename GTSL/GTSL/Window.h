@@ -3,7 +3,7 @@
 #include "Extent.h"
 
 #include "Delegate.hpp"
-#include "Ranger.h"
+#include "Range.h"
 #include "Math/Vector2.h"
 
 namespace GTSL
@@ -77,7 +77,7 @@ namespace GTSL
 		Window() = default;
 		struct WindowCreateInfo
 		{
-			Ranger<const UTF8> Name;
+			Range<const UTF8*> Name;
 			Extent2D Extent;
 			Window* ParentWindow = nullptr;
 			class Application* Application = nullptr;

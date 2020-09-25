@@ -3,7 +3,7 @@
 #define VK_ENABLE_BETA_EXTENSIONS
 #include "Vulkan.h"
 #include "VulkanMemory.h"
-#include "GTSL/Ranger.h"
+#include "GTSL/Range.h"
 #include "GTSL/Math/Matrix4.h"
 
 namespace GAL
@@ -88,7 +88,7 @@ namespace GAL
 			GTSL::uint32 MaxGeometryCount = 0;
 			GTSL::uint32 CompactedSize = 0;
 			VulkanDeviceAddress DeviceAddress;
-			GTSL::Ranger<GeometryType> GeometryInfos;
+			GTSL::Range<GeometryType*> GeometryInfos;
 		};
 		//VulkanAccelerationStructure(const TopLevelCreateInfo& info);
 
@@ -100,7 +100,7 @@ namespace GAL
 			GTSL::uint32 MaxGeometryCount = 0;
 			GTSL::uint32 CompactedSize = 0;
 			VulkanDeviceAddress DeviceAddress;
-			GTSL::Ranger<GeometryType> GeometryInfos;
+			GTSL::Range<GeometryType*> GeometryInfos;
 		};
 		VulkanAccelerationStructure(const BottomLevelCreateInfo& info);
 		void Initialize(const BottomLevelCreateInfo& info);
@@ -146,7 +146,7 @@ namespace GAL
 	
 	struct BuildAccelerationStructuresInfo : VulkanRenderInfo
 	{
-		GTSL::Ranger<BuildAccelerationStructureInfo> BuildAccelerationStructureInfos;
+		GTSL::Range<BuildAccelerationStructureInfo*> BuildAccelerationStructureInfos;
 		const BuildOffset* const* BuildOffsets;
 	};
 }

@@ -21,15 +21,15 @@ namespace GAL
 
 		struct SubmitInfo final : VulkanRenderInfo
 		{
-			GTSL::Ranger<const VulkanCommandBuffer> CommandBuffers;
-			GTSL::Ranger<const VulkanSemaphore> SignalSemaphores;
-			GTSL::Ranger<const VulkanSemaphore> WaitSemaphores;
-			GTSL::Ranger<const GTSL::uint64> SignalValues;
-			GTSL::Ranger<const GTSL::uint64> WaitValues;
+			GTSL::Range<const VulkanCommandBuffer*> CommandBuffers;
+			GTSL::Range<const VulkanSemaphore*> SignalSemaphores;
+			GTSL::Range<const VulkanSemaphore*> WaitSemaphores;
+			GTSL::Range<const GTSL::uint64*> SignalValues;
+			GTSL::Range<const GTSL::uint64*> WaitValues;
 			/**
 			 * \brief Pipeline stages at which each corresponding semaphore wait will occur.
 			 */
-			GTSL::Ranger<const GTSL::uint32> WaitPipelineStages;
+			GTSL::Range<const GTSL::uint32*> WaitPipelineStages;
 			const VulkanFence* Fence{ nullptr };
 		};
 		void Submit(const SubmitInfo& submitInfo);
@@ -95,14 +95,14 @@ namespace GAL
 		
 		struct CreateInfo
 		{
-			GTSL::Ranger<const GTSL::UTF8> ApplicationName;
+			GTSL::Range<const GTSL::UTF8*> ApplicationName;
 			GTSL::uint16 ApplicationVersion[3];
-			GTSL::Ranger<const Queue::CreateInfo> QueueCreateInfos;
-			GTSL::Ranger<VulkanQueue*> Queues;
+			GTSL::Range<const Queue::CreateInfo*> QueueCreateInfos;
+			GTSL::Range<VulkanQueue**> Queues;
 			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
-			GTSL::Ranger<const Extension> Extensions;
-			//GTSL::Ranger<const void*> ExtensionFeatures;
-			//GTSL::Ranger<const void*> ExtensionCapabilities;
+			GTSL::Range<const Extension*> Extensions;
+			//GTSL::Range<const void*> ExtensionFeatures;
+			//GTSL::Range<const void*> ExtensionCapabilities;
 			AllocationInfo AllocationInfo;
 		};
 		explicit VulkanRenderDevice(const CreateInfo& createInfo);
@@ -113,7 +113,7 @@ namespace GAL
 
 		struct FindSupportedImageFormat
 		{
-			GTSL::Ranger<VulkanTextureFormat> Candidates;
+			GTSL::Range<VulkanTextureFormat*> Candidates;
 			VulkanTextureUses::value_type TextureUses;
 			VulkanTextureTiling TextureTiling;
 		};

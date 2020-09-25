@@ -1,27 +1,9 @@
 #pragma once
 
-#include "RenderCore.h"
-
-#include <GTSL/Extent.h>
-#include <GTSL/Ranger.h>
-#include <GTSL/RGB.h>
-
 namespace GAL
 {
-	class BindingsSet;
-	class RenderPass;
-	class Framebuffer;
-	struct RenderPassBeginInfo;
-	struct DrawInfo;
-	class Pipeline;
-	class GraphicsPipeline;
-	class ComputePipeline;
-	struct PushConstantsInfo;
-	struct BindBindingsSet;
-	class RenderMesh;
-	class Queue;
 	
-	class CommandBuffer : public GALObject
+	class CommandBuffer
 	{
 	public:
 		CommandBuffer() = default;
@@ -60,7 +42,7 @@ namespace GAL
 		//Adds a AdvanceSubPass command to the command buffer.
 	};
 
-	class CommandPool : public GALObject
+	class CommandPool
 	{
 	public:
 	};

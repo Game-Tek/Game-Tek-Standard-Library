@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core.h"
-#include "Ranger.h"
+#include "Range.h"
 
 namespace GTSL
 {
@@ -34,9 +34,9 @@ namespace GTSL
 		DLL() = default;
 		~DLL() = default;
 		
-		void LoadLibrary(const Ranger<char>& ranger);
+		void LoadLibrary(const Range<const char*> ranger);
 		void UnloadLibrary();
 		
-		[[nodiscard]] DynamicFunction LoadDynamicFunction(const Ranger<char>& ranger) const;
+		[[nodiscard]] DynamicFunction LoadDynamicFunction(const Range<const char*> ranger) const;
 	};
 }

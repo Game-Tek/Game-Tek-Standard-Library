@@ -5,6 +5,7 @@
 #include "Vulkan.h"
 #include "VulkanTexture.h"
 #include "VulkanAccelerationStructures.h"
+#include <GTSL/RGB.h>
 
 namespace GAL
 {
@@ -48,7 +49,7 @@ namespace GAL
 			const VulkanRenderPass* RenderPass = nullptr;
 			const VulkanFramebuffer* Framebuffer = nullptr;
 			GTSL::Extent2D RenderArea;
-			GTSL::Ranger<const GTSL::RGBA> ClearValues;
+			GTSL::Range<const GTSL::RGBA*> ClearValues;
 		};
 		void BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo);
 
@@ -122,13 +123,13 @@ namespace GAL
 
 		struct AddLabelInfo : VulkanRenderInfo
 		{
-			GTSL::Ranger<const GTSL::UTF8> Name;
+			GTSL::Range<const GTSL::UTF8*> Name;
 		};
 		void AddLabel(const AddLabelInfo& info);
 
 		struct BeginRegionInfo : VulkanRenderInfo
 		{
-			GTSL::Ranger<const GTSL::UTF8> Name;
+			GTSL::Range<const GTSL::UTF8*> Name;
 		};
 		void BeginRegion(const BeginRegionInfo& info) const;
 
@@ -146,8 +147,8 @@ namespace GAL
 		struct BindBindingsSetInfo : VulkanRenderInfo
 		{
 			VulkanPipelineType PipelineType;
-			GTSL::Ranger<const VulkanBindingsSet> BindingsSets;
-			GTSL::Ranger<const GTSL::uint32> Offsets;
+			GTSL::Range<const VulkanBindingsSet*> BindingsSets;
+			GTSL::Range<const GTSL::uint32*> Offsets;
 			const VulkanPipelineLayout* PipelineLayout = nullptr;
 			GTSL::uint32 FirstSet = 0, BoundSets = 0;
 		};
@@ -192,9 +193,9 @@ namespace GAL
 
 		struct AddPipelineBarrierInfo : VulkanRenderInfo
 		{
-			GTSL::Ranger<const MemoryBarrier> MemoryBarriers;
-			GTSL::Ranger<const BufferBarrier> BufferBarriers;
-			GTSL::Ranger<const TextureBarrier> TextureBarriers;
+			GTSL::Range<const MemoryBarrier*> MemoryBarriers;
+			GTSL::Range<const BufferBarrier*> BufferBarriers;
+			GTSL::Range<const TextureBarrier*> TextureBarriers;
 			VulkanPipelineStage::value_type InitialStage, FinalStage;
 		};
 		void AddPipelineBarrier(const AddPipelineBarrierInfo& pipelineBarrier) const;
@@ -235,14 +236,14 @@ namespace GAL
 		struct AllocateCommandBuffersInfo final : VulkanRenderInfo
 		{
 			bool IsPrimary = true;
-			GTSL::Ranger<const VulkanCommandBuffer::CreateInfo> CommandBufferCreateInfos;
-			GTSL::Ranger<VulkanCommandBuffer> CommandBuffers;
+			GTSL::Range<const VulkanCommandBuffer::CreateInfo*> CommandBufferCreateInfos;
+			GTSL::Range<VulkanCommandBuffer*> CommandBuffers;
 		};
 		void AllocateCommandBuffer(const AllocateCommandBuffersInfo& allocateCommandBuffersInfo) const;
 		
 		struct FreeCommandBuffersInfo final : VulkanRenderInfo
 		{
-			GTSL::Ranger<VulkanCommandBuffer> CommandBuffers;
+			GTSL::Range<VulkanCommandBuffer*> CommandBuffers;
 		};
 		void FreeCommandBuffers(const FreeCommandBuffersInfo& freeCommandBuffers) const;
 		

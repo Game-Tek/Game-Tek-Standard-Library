@@ -2,7 +2,7 @@
 
 #include "GAL/Synchronization.h"
 #include "Vulkan.h"
-#include "GTSL/Ranger.h"
+#include "GTSL/Range.h"
 
 namespace GAL
 {
@@ -24,7 +24,7 @@ namespace GAL
 		
 		struct WaitForFencesInfo final : VulkanRenderInfo
 		{
-			GTSL::Ranger<const VulkanFence> Fences;
+			GTSL::Range<const VulkanFence*> Fences;
 			GTSL::uint64 Timeout;
 			bool WaitForAll{ true };
 		};
@@ -32,7 +32,7 @@ namespace GAL
 
 		struct ResetFencesInfo final : VulkanRenderInfo
 		{
-			GTSL::Ranger<const VulkanFence> Fences;
+			GTSL::Range<const VulkanFence*> Fences;
 		};
 		static void ResetFences(const ResetFencesInfo& resetFencesInfo);
 	private:

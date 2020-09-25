@@ -49,10 +49,10 @@ namespace GAL
 		
 		//struct CreateInfo
 		//{
-		//	GTSL::Ranger<const GTSL::UTF8> ApplicationName;
+		//	GTSL::Range<const GTSL::UTF8> ApplicationName;
 		//	GTSL::uint16 ApplicationVersion[3];
-		//	GTSL::Ranger<const Queue::CreateInfo> QueueCreateInfos;
-		//	GTSL::Ranger<Queue*> Queues;
+		//	GTSL::Range<const Queue::CreateInfo> QueueCreateInfos;
+		//	GTSL::Range<Queue*> Queues;
 		//	GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
 		//};
 		RenderDevice(GTSL::Delegate<void(const char*, MessageSeverity)> pDelegate) : debugPrintFunction(pDelegate)

@@ -2,9 +2,7 @@
 
 #include "RenderCore.h"
 
-#include <GTSL/Extent.h>
 #include <GTSL/Array.hpp>
-#include <GTSL/RGB.h>
 
 namespace GAL
 {
@@ -18,7 +16,7 @@ namespace GAL
 		class Texture* Images = nullptr;
 	};
 
-	class Framebuffer : public GALObject
+	class Framebuffer
 	{
 	public:
 		Framebuffer() = default;

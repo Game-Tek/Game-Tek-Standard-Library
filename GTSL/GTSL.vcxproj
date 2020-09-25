@@ -68,7 +68,7 @@
     <ClInclude Include="GTSL\Network\Sockets.h" />
     <ClInclude Include="GTSL\Network\IPEndpoints.h" />
     <ClInclude Include="GTSL\Pair.h" />
-    <ClInclude Include="GTSL\Ranger.h" />
+    <ClInclude Include="GTSL\Range.h" />
     <ClInclude Include="GTSL\RGB.h" />
     <ClInclude Include="GTSL\Semaphore.h" />
     <ClInclude Include="GTSL\Serialize.h" />

@@ -45,9 +45,6 @@
     <ClInclude Include="GTSL\Pair.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\Ranger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\RGB.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -253,6 +250,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\BitTracker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTSL\Range.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

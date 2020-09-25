@@ -6,7 +6,7 @@
 namespace GTSL
 {
 	template<typename T>
-	void popElement(const Ranger<T> range, uint32 index)
+	void popElement(const Range<T*> range, uint32 index)
 	{
 		++index;
 		auto elementCount = (range.end() - range.begin()) - index;
@@ -14,13 +14,13 @@ namespace GTSL
 	}
 
 	template<typename T>
-	void insertElement(const Ranger<T> range, uint32 index)
+	void insertElement(const Range<T*> range, uint32 index)
 	{
 		MemCopy(sizeof(T) * (range.end() - (range.begin() + index)), range.begin() + index, range.begin() + index + 1);
 	}
 
 	template<typename  T>
-	void copyElementToBack(const Ranger<T> range, T* object)
+	void copyElementToBack(const Range<T*> range, T* object)
 	{
 		MemCopy(sizeof(T), object, range.end());
 	}

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "RenderCore.h"
-
 namespace GAL
 {
 	class Window;
@@ -23,7 +21,7 @@ namespace GAL
 		Surface() = default;
 	};
 
-	class RenderContext : public GALObject
+	class RenderContext
 	{
 	public:
 		RenderContext() = default;

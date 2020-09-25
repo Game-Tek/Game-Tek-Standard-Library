@@ -3,9 +3,8 @@
 #include "Core.h"
 
 #include "Memory.h"
-#include "Ranger.h"
+#include "Range.h"
 #include <new>
-
 #include "ArrayCommon.hpp"
 
 #if (_DEBUG)
@@ -14,7 +13,7 @@
 
 namespace GTSL
 {
-	template<typename T, class ALLOCATOR>
+	template<typename T, Allocator ALLOCATOR>
 	class FlatHashMap
 	{
 	public:

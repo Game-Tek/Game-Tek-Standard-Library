@@ -7,7 +7,7 @@
 #include "Memory.h"
 #include <new>
 
-#include "Ranger.h"
+#include "Range.h"
 
 namespace GTSL
 {

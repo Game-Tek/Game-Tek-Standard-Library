@@ -12,7 +12,7 @@ namespace GAL
 	
 	//struct BindingLayoutCreateInfo
 	//{
-	//	GTSL::Ranger<BindingDescriptor> BindingsSetLayout;
+	//	GTSL::Range<BindingDescriptor> BindingsSetLayout;
 	//	GTSL::uint32 DescriptorCount = 0;
 	//};
 
@@ -21,8 +21,8 @@ namespace GAL
 	public:
 		//struct CreateInfo : RenderInfo
 		//{
-		//	GTSL::Ranger<BindingDescriptor> BindingsDescriptors;
-		//	GTSL::Ranger<class BindingsSet> BindingsSets;
+		//	GTSL::Range<BindingDescriptor> BindingsDescriptors;
+		//	GTSL::Range<class BindingsSet> BindingsSets;
 		//};
 		
 		~BindingsPool() = default;
@@ -36,25 +36,25 @@ namespace GAL
 		//
 		//struct ImageBindingDescriptor : BindingDescriptor
 		//{
-		//	GTSL::Ranger<const class ImageView> ImageViews;
-		//	GTSL::Ranger<const class Sampler> Samplers;
-		//	GTSL::Ranger<ImageLayout> Layouts;
+		//	GTSL::Range<const class ImageView> ImageViews;
+		//	GTSL::Range<const class Sampler> Samplers;
+		//	GTSL::Range<ImageLayout> Layouts;
 		//};
 		//
 		//struct BufferBindingDescriptor : BindingDescriptor
 		//{
-		//	GTSL::Ranger<const class Buffer> Buffers;
-		//	GTSL::Ranger<GTSL::uint32> Offsets;
-		//	GTSL::Ranger<GTSL::uint32> Sizes;
+		//	GTSL::Range<const class Buffer> Buffers;
+		//	GTSL::Range<GTSL::uint32> Offsets;
+		//	GTSL::Range<GTSL::uint32> Sizes;
 		//};
 		
 		//struct FreeBindingsSetInfo : RenderInfo
 		//{
-		//	GTSL::Ranger<class BindingsSet> BindingsSet;
+		//	GTSL::Range<class BindingsSet> BindingsSet;
 		//};
 	};
 
-	class BindingsSet : public GALObject
+	class BindingsSet
 	{
 	public:
 

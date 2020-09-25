@@ -20,7 +20,7 @@ namespace GAL
 		
 		struct CreateInfo : VulkanCreateInfo
 		{
-			GTSL::Ranger<const DescriptorPoolSize> DescriptorPoolSizes;
+			GTSL::Range<const DescriptorPoolSize*> DescriptorPoolSizes;
 			GTSL::uint32 MaxSets = 0;
 		};
 		VulkanBindingsPool(const CreateInfo& createInfo);
@@ -29,16 +29,16 @@ namespace GAL
 
 		struct AllocateBindingsSetsInfo : VulkanRenderInfo
 		{
-			GTSL::Ranger<const VulkanCreateInfo> BindingsSetCreateInfos;
-			GTSL::Ranger<class VulkanBindingsSet*> BindingsSets;
-			GTSL::Ranger<const class VulkanBindingsSetLayout> BindingsSetLayouts;
-			GTSL::Ranger<const GTSL::uint32> BindingsSetDynamicBindingsCounts;
+			GTSL::Range<const VulkanCreateInfo*> BindingsSetCreateInfos;
+			GTSL::Range<class VulkanBindingsSet**> BindingsSets;
+			GTSL::Range<const class VulkanBindingsSetLayout*> BindingsSetLayouts;
+			GTSL::Range<const GTSL::uint32*> BindingsSetDynamicBindingsCounts;
 		};
 		void AllocateBindingsSets(const AllocateBindingsSetsInfo& allocateBindingsSetsInfo);
 		
 		struct FreeBindingsSetInfo : VulkanRenderInfo
 		{
-			GTSL::Ranger<class VulkanBindingsSet> BindingsSet;
+			GTSL::Range<class VulkanBindingsSet*> BindingsSet;
 		};
 		void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo);
 
@@ -61,23 +61,23 @@ namespace GAL
 
 		struct ImageBindingDescriptor : BindingDescriptor
 		{
-			GTSL::Ranger<const class VulkanTextureView> ImageViews;
-			GTSL::Ranger<const class VulkanSampler> Samplers;
-			GTSL::Ranger<const VulkanTextureLayout> Layouts;
+			GTSL::Range<const class VulkanTextureView*> ImageViews;
+			GTSL::Range<const class VulkanSampler*> Samplers;
+			GTSL::Range<const VulkanTextureLayout*> Layouts;
 		};
 
 		struct BufferBindingDescriptor : BindingDescriptor
 		{
-			GTSL::Ranger<const class VulkanBuffer> Buffers;
-			GTSL::Ranger<const GTSL::uint32> Offsets;
-			GTSL::Ranger<const GTSL::uint32> Sizes;
+			GTSL::Range<const class VulkanBuffer*> Buffers;
+			GTSL::Range<const GTSL::uint32*> Offsets;
+			GTSL::Range<const GTSL::uint32*> Sizes;
 		};
 
 		VulkanBindingsSetLayout() = default;
 		
 		struct CreateInfo : VulkanCreateInfo
 		{
-			GTSL::Ranger<const BindingDescriptor> BindingsDescriptors;
+			GTSL::Range<const BindingDescriptor*> BindingsDescriptors;
 		};
 		VulkanBindingsSetLayout(const CreateInfo& createInfo);
 		void Destroy(const VulkanRenderDevice* renderDevice);
@@ -118,7 +118,7 @@ namespace GAL
 		
 		struct BindingsSetUpdateInfo final : VulkanRenderInfo
 		{
-			GTSL::Ranger<const BindingUpdateInfo> BindingUpdateInfos;
+			GTSL::Range<const BindingUpdateInfo*> BindingUpdateInfos;
 		};
 		void Update(const BindingsSetUpdateInfo& bindingsUpdateInfo);
 

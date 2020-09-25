@@ -1,8 +1,11 @@
 #pragma once
 #include "Core.h"
 
-#include "ArrayCommon.hpp"
 #include "Pair.h"
+
+#include "Memory.h"
+
+import ArrayCommon;
 
 namespace GTSL
 {
@@ -115,7 +118,7 @@ namespace GTSL
 		uint32 currentGroup = 0;
 	};
 	
-	template<typename T, class ALLOCATOR>
+	template<typename T, Allocator ALLOCATOR>
 	class SparseVector
 	{
 		static constexpr uint8 IS_PRE_CONTIGUOUS = 1;

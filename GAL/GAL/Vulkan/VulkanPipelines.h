@@ -19,13 +19,13 @@ namespace GAL
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			GTSL::Ranger<const GTSL::byte> ShaderData;
+			GTSL::Range<const GTSL::byte*> ShaderData;
 		};
 		explicit VulkanShader(const CreateInfo& createInfo);
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
-		[[nodiscard]] static bool CompileShader(GTSL::Ranger<const GTSL::UTF8> code, GTSL::Ranger<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringError);
+		[[nodiscard]] static bool CompileShader(GTSL::Range<const GTSL::UTF8*> code, GTSL::Range<const GTSL::UTF8*> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringError);
 
 		[[nodiscard]] VkShaderModule GetVkShaderModule() const { return shaderModule; }
 	protected:
@@ -40,13 +40,13 @@ namespace GAL
 		struct CreateInfo final : VulkanCreateInfo
 		{
 			bool ExternallySync = false;
-			GTSL::Ranger<const GTSL::byte> Data;
+			GTSL::Range<const GTSL::byte*> Data;
 		};
 		VulkanPipelineCache(const CreateInfo& createInfo);
 
 		struct CreateFromMultipleInfo final : VulkanCreateInfo
 		{
-			GTSL::Ranger<const VulkanPipelineCache> Caches;
+			GTSL::Range<const VulkanPipelineCache*> Caches;
 		};
 		VulkanPipelineCache(const CreateFromMultipleInfo& createInfo);
 
@@ -98,7 +98,7 @@ namespace GAL
 		struct CreateInfo final : VulkanCreateInfo
 		{
 			const struct PushConstant* PushConstant = nullptr;
-			GTSL::Ranger<const class VulkanBindingsSetLayout> BindingsSetLayouts;
+			GTSL::Range<const class VulkanBindingsSetLayout*> BindingsSetLayouts;
 		};
 		VulkanPipelineLayout(const CreateInfo& createInfo);
 
@@ -119,9 +119,9 @@ namespace GAL
 		{
 			const class VulkanRenderPass* RenderPass = nullptr;
 			GTSL::Extent2D SurfaceExtent;
-			GTSL::Ranger<const VulkanShaderDataType> VertexDescriptor;
+			GTSL::Range<const VulkanShaderDataType*> VertexDescriptor;
 			VulkanPipelineDescriptor PipelineDescriptor;
-			GTSL::Ranger<const ShaderInfo> Stages;
+			GTSL::Range<const ShaderInfo*> Stages;
 			bool IsInheritable = false;
 			const VulkanPipelineLayout* PipelineLayout = nullptr;
 			const VulkanRasterizationPipeline* ParentPipeline = nullptr;
@@ -135,7 +135,7 @@ namespace GAL
 		void Destroy(const VulkanRenderDevice* renderDevice);
 
 	private:
-		static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Ranger<const VulkanShaderDataType> vertex, GTSL::Array<GTSL::uint8, 20>& offsets)
+		static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Range<const VulkanShaderDataType*> vertex, GTSL::Array<GTSL::uint8, 20>& offsets)
 		{
 			GTSL::uint32 size = 0;
 			for (const auto& e : vertex)
@@ -191,10 +191,10 @@ namespace GAL
 			const VulkanPipelineLayout* PipelineLayout = nullptr;
 			
 			GTSL::uint32 MaxRecursionDepth = 0;
-			GTSL::Ranger<const ShaderInfo> Stages;
-			GTSL::Ranger<const VulkanBindingsSetLayout> BindingsSetLayouts;
+			GTSL::Range<const ShaderInfo*> Stages;
+			GTSL::Range<const VulkanBindingsSetLayout*> BindingsSetLayouts;
 
-			GTSL::Ranger<Group> Groups;
+			GTSL::Range<Group*> Groups;
 		};
 
 		explicit VulkanRayTracingPipeline(const CreateInfo& createInfo);

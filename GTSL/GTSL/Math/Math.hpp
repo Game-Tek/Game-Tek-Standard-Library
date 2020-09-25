@@ -14,7 +14,7 @@
 #include "Plane.h"
 #include "Rotator.h"
 #include "GTSL/Assert.h"
-#include "GTSL/Ranger.h"
+#include "GTSL/Range.h"
 
 namespace GTSL
 {
@@ -863,7 +863,7 @@ namespace GTSL
 		}
 
 		template<typename T1, typename T2, typename MF, typename SF>
-		static void MultiplesFor(const Ranger<T1>& range1, const Ranger<T2>& range2, const uint64 multiple, const MF& multiplesFunction, const SF& singlesFunction)
+		static void MultiplesFor(const Range<T1*> range1, const Range<T2*> range2, const uint64 multiple, const MF& multiplesFunction, const SF& singlesFunction)
 		{
 			GTSL_ASSERT(range1.ElementCount() == range2.ElementCount(), "Element count is not equal!")
 			

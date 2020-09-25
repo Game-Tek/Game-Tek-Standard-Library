@@ -12,7 +12,7 @@ File::~File()
 	GTSL_ASSERT(fileHandle == nullptr, "File was not closed!")
 }
 
-void File::OpenFile(const Ranger<const UTF8>& path, const uint8 accessMode, const OpenMode openMode)
+void File::OpenFile(const Range<const UTF8*> path, const uint8 accessMode, const OpenMode openMode)
 {
 	DWORD access_mode{ 0 };
 
@@ -44,7 +44,7 @@ void File::CloseFile()
 #endif
 }
 
-uint32 File::WriteToFile(const Ranger<const byte>& buffer) const
+uint32 File::WriteToFile(const Range<const byte*> buffer) const
 {
 	DWORD bytes{ 0 };
 	WriteFile(static_cast<HANDLE>(fileHandle), buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
@@ -61,7 +61,7 @@ uint32 File::WriteToFile(Buffer& buffer) const
 	return bytes;
 }
 
-uint32 File::ReadFromFile(const Ranger<byte>& buffer) const
+uint32 File::ReadFromFile(Range<byte*> buffer) const
 {
 	DWORD bytes{ 0 };
 	[[maybe_unused]] auto res = ::ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);

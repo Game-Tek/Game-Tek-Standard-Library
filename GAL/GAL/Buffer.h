@@ -1,11 +1,8 @@
 #pragma once
 
-#include "GTSL/Core.h"
-#include "RenderCore.h"
-
 namespace GAL
 {
-	class Buffer : public GALObject
+	class Buffer
 	{
 	public:
 		Buffer() = default;

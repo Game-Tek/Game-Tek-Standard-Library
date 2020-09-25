@@ -2,7 +2,7 @@
 
 #include "Core.h"
 
-#include "Ranger.h"
+#include "Range.h"
 
 namespace GTSL
 {
@@ -17,11 +17,11 @@ namespace GTSL
 		enum class AccessMode : uint8 { READ = 1, WRITE = 2 };
 
 		enum class OpenMode : uint8 { LEAVE_CONTENTS, CLEAR };
-		void OpenFile(const Ranger<const UTF8>& path, uint8 accessMode, OpenMode openMode);
+		void OpenFile(const Range<const UTF8*> path, uint8 accessMode, OpenMode openMode);
 		void CloseFile();
 
-		uint32 WriteToFile(const Ranger<const byte>& buffer) const;
-		uint32 ReadFromFile(const Ranger<byte>& buffer) const;
+		[[nodiscard]] uint32 WriteToFile(const Range<const byte*> buffer) const;
+		[[nodiscard]] uint32 ReadFromFile(const Range<byte*> buffer) const;
 		uint32 WriteToFile(Buffer& buffer) const;
 		uint32 ReadFile(Buffer& buffer) const;
 

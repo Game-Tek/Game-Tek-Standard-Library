@@ -20,9 +20,9 @@ void GTSL::MemCopy(const uint64 size, const void* from, void* to)
 	std::memcpy(to, from, size);
 }
 
-void GTSL::MemCopy(Ranger<byte> range, void* to)
+void GTSL::MemCopy(Range<byte*> range, void* to)
 {
-	std::memcpy(range, to, range.Bytes());
+	std::memcpy(to, range.begin(), range.Bytes());
 }
 
 void GTSL::SetMemory(const uint64 size, void* data, const int64 value)
@@ -30,7 +30,7 @@ void GTSL::SetMemory(const uint64 size, void* data, const int64 value)
 	std::memset(data, value, size);
 }
 
-void GTSL::SetMemory(Ranger<byte> range, const int64 value)
+void GTSL::SetMemory(Range<byte*> range, const int64 value)
 {
-	std::memset(range, value, range.Bytes());
+	std::memset(range.begin(), value, range.Bytes());
 }

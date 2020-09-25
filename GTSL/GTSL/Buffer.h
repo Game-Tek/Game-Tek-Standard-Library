@@ -58,8 +58,8 @@ namespace GTSL
 		[[nodiscard]] uint64 GetReadPosition() const { return readPos; }
 		[[nodiscard]] byte* GetData() const { return data; }
 
-		operator Ranger<byte>() const { return Ranger<byte>(length, data); }
-		operator Ranger<const byte>() const { return Ranger<const byte>(length, data); }
+		operator Range<byte*>() const { return Range<byte*>(length, data); }
+		operator Range<const byte*>() const { return Range<const byte*>(length, data); }
 		
 	private:
 		byte* data{ nullptr };

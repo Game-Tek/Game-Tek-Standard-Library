@@ -25,9 +25,9 @@ namespace GAL
 
 		void Destroy(class VulkanRenderDevice* renderDevice);
 
-		GTSL::uint32 GetSupportedRenderContextFormat(const class VulkanRenderDevice* renderDevice, GTSL::Ranger<const GTSL::Pair<VulkanColorSpace, VulkanTextureFormat>> formats);
+		GTSL::uint32 GetSupportedRenderContextFormat(const class VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::Pair<VulkanColorSpace, VulkanTextureFormat>*> formats) const;
 
-		GTSL::uint32 GetSupportedPresentMode(class VulkanRenderDevice* renderDevice, GTSL::Ranger<const VulkanPresentMode> presentModes);
+		GTSL::uint32 GetSupportedPresentMode(class VulkanRenderDevice* renderDevice, GTSL::Range<const VulkanPresentMode> presentModes);
 
 		bool IsSupported(class VulkanRenderDevice* renderDevice);
 
@@ -83,7 +83,7 @@ namespace GAL
 
 		struct PresentInfo final : VulkanRenderInfo
 		{
-			GTSL::Ranger<const VulkanSemaphore> WaitSemaphores;
+			GTSL::Range<const VulkanSemaphore*> WaitSemaphores;
 			GTSL::uint32 ImageIndex = 0;
 			const VulkanQueue* Queue = nullptr;
 		};
@@ -91,7 +91,7 @@ namespace GAL
 		
 		struct GetTextureViewsInfo : VulkanRenderInfo
 		{
-			GTSL::Ranger<const VulkanTextureView::CreateInfo> TextureViewCreateInfos;
+			GTSL::Range<const VulkanTextureView::CreateInfo*> TextureViewCreateInfos;
 		};
 		GTSL::Array<VulkanTextureView, 5> GetTextureViews(const GetTextureViewsInfo& getTextureViewsInfo) const;
 
