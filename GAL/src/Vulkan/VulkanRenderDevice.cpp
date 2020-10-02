@@ -45,33 +45,33 @@ void vkFree(void* data, void* alloc)
 
 void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(const VulkanBuffer* buffer, MemoryRequirements& bufferMemoryRequirements) const
 {
-	VkMemoryRequirements vk_memory_requirements;
-	vkGetBufferMemoryRequirements(device, static_cast<const VulkanBuffer*>(buffer)->GetVkBuffer(), &vk_memory_requirements);
-	bufferMemoryRequirements.Alignment = vk_memory_requirements.alignment;
-	bufferMemoryRequirements.MemoryTypes = vk_memory_requirements.memoryTypeBits;
-	bufferMemoryRequirements.Size = vk_memory_requirements.size;
+	VkMemoryRequirements vkMemoryRequirements;
+	vkGetBufferMemoryRequirements(device, static_cast<const VulkanBuffer*>(buffer)->GetVkBuffer(), &vkMemoryRequirements);
+	bufferMemoryRequirements.Alignment = vkMemoryRequirements.alignment;
+	bufferMemoryRequirements.MemoryTypes = vkMemoryRequirements.memoryTypeBits;
+	bufferMemoryRequirements.Size = vkMemoryRequirements.size;
 }
 
 void GAL::VulkanRenderDevice::GetImageMemoryRequirements(const VulkanTexture* image,	MemoryRequirements& imageMemoryRequirements) const
 {
-	VkMemoryRequirements vk_memory_requirements;
-	vkGetImageMemoryRequirements(device, image->GetVkImage(), &vk_memory_requirements);
-	imageMemoryRequirements.Alignment = vk_memory_requirements.alignment;
-	imageMemoryRequirements.MemoryTypes = vk_memory_requirements.memoryTypeBits;
-	imageMemoryRequirements.Size = vk_memory_requirements.size;
+	VkMemoryRequirements vkMemoryRequirements;
+	vkGetImageMemoryRequirements(device, image->GetVkImage(), &vkMemoryRequirements);
+	imageMemoryRequirements.Alignment = vkMemoryRequirements.alignment;
+	imageMemoryRequirements.MemoryTypes = vkMemoryRequirements.memoryTypeBits;
+	imageMemoryRequirements.Size = vkMemoryRequirements.size;
 }
 
 void GAL::VulkanRenderDevice::GetAccelerationStructureMemoryRequirements(const GetAccelerationStructureMemoryRequirementsInfo& accelerationStructureMemoryRequirementsInfo) const
 {
-	VkAccelerationStructureMemoryRequirementsInfoKHR acceleration_structure_memory_requirements_info{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_KHR };
-	acceleration_structure_memory_requirements_info.accelerationStructure = accelerationStructureMemoryRequirementsInfo.AccelerationStructure->GetVkAccelerationStructure();
-	acceleration_structure_memory_requirements_info.buildType = static_cast<VkAccelerationStructureBuildTypeKHR>(accelerationStructureMemoryRequirementsInfo.AccelerationStructureBuildType);
-	acceleration_structure_memory_requirements_info.type = static_cast<VkAccelerationStructureMemoryRequirementsTypeKHR>(accelerationStructureMemoryRequirementsInfo.AccelerationStructureMemoryRequirementsType);
-	VkMemoryRequirements2 memory_requirements2;
-	vkGetAccelerationStructureMemoryRequirementsKHR(device, &acceleration_structure_memory_requirements_info, &memory_requirements2);
-	accelerationStructureMemoryRequirementsInfo.MemoryRequirements->Size = memory_requirements2.memoryRequirements.size;
-	accelerationStructureMemoryRequirementsInfo.MemoryRequirements->Alignment = memory_requirements2.memoryRequirements.alignment;
-	accelerationStructureMemoryRequirementsInfo.MemoryRequirements->MemoryTypes = memory_requirements2.memoryRequirements.memoryTypeBits;
+	VkAccelerationStructureMemoryRequirementsInfoKHR vkAccelerationStructureMemoryRequirementsInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_KHR };
+	vkAccelerationStructureMemoryRequirementsInfoKhr.accelerationStructure = accelerationStructureMemoryRequirementsInfo.AccelerationStructure->GetVkAccelerationStructure();
+	vkAccelerationStructureMemoryRequirementsInfoKhr.buildType = static_cast<VkAccelerationStructureBuildTypeKHR>(accelerationStructureMemoryRequirementsInfo.AccelerationStructureBuildType);
+	vkAccelerationStructureMemoryRequirementsInfoKhr.type = static_cast<VkAccelerationStructureMemoryRequirementsTypeKHR>(accelerationStructureMemoryRequirementsInfo.AccelerationStructureMemoryRequirementsType);
+	VkMemoryRequirements2 vkMemoryRequirements2{ VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2 };
+	vkGetAccelerationStructureMemoryRequirementsKHR(device, &vkAccelerationStructureMemoryRequirementsInfoKhr, &vkMemoryRequirements2);
+	accelerationStructureMemoryRequirementsInfo.MemoryRequirements->Size = vkMemoryRequirements2.memoryRequirements.size;
+	accelerationStructureMemoryRequirementsInfo.MemoryRequirements->Alignment = vkMemoryRequirements2.memoryRequirements.alignment;
+	accelerationStructureMemoryRequirementsInfo.MemoryRequirements->MemoryTypes = vkMemoryRequirements2.memoryRequirements.memoryTypeBits;
 }
 
 uint32 GAL::VulkanRenderDevice::FindMemoryType(const uint32 typeFilter, const uint32 memoryType) const
@@ -95,7 +95,7 @@ inline VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSev
 	{
 	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
 	{
-		device->GetDebugPrintFunction()(pCallbackData->pMessage, GAL::RenderDevice::MessageSeverity::MESSAGE);
+		//device->GetDebugPrintFunction()(pCallbackData->pMessage, GAL::RenderDevice::MessageSeverity::MESSAGE);
 		break;
 	}
 	case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
@@ -377,6 +377,20 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 				next_feature = &static_cast<T*>(*next_feature)->pNext;
 			};
 
+			auto getProperties = [&](void* prop)
+			{
+				VkPhysicalDeviceProperties2 props{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+				props.pNext = prop;
+				vkGetPhysicalDeviceProperties2(physicalDevice, &props);
+			};
+
+			auto getFeatures = [&](void* feature)
+			{
+				VkPhysicalDeviceFeatures2 feats{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+				feats.pNext = feature;
+				vkGetPhysicalDeviceFeatures2(physicalDevice, &feats);
+			};
+
 			[[no_discard]] auto tryAddExtension = [&](const char* extensionName)
 			{
 				StaticString<32> name(extensionName);
@@ -431,12 +445,29 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 						VkPhysicalDeviceRayTracingPropertiesKHR vkRayTracingProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_KHR };
 						VkPhysicalDeviceRayTracingFeaturesKHR vkRayTracingFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_FEATURES_KHR };
 
+						vkRayTracingFeatures.rayTracing = true;
+						vkRayTracingFeatures.rayQuery = true;
+						
 						placePropertiesStructure(vkRayTracingProperties);
 						placeFeaturesStructure(vkRayTracingFeatures);
+
+						getProperties(&vkRayTracingProperties);
+						getFeatures(&vkRayTracingFeatures);
+
+						auto* capabilities = static_cast<RayTracingCapabilities*>(createInfo.ExtensionCapabilities[extension]);
+						capabilities->CanBuildOnHost = vkRayTracingFeatures.rayTracingHostAccelerationStructureCommands;
+						capabilities->RecursionDepth = vkRayTracingProperties.maxRecursionDepth;
 					}
 						
 					if(tryAddExtension(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME)) {}
-					if(tryAddExtension(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME)) {}
+						
+					if(tryAddExtension(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME))
+					{
+						VkPhysicalDeviceBufferDeviceAddressFeatures vkBufferAddressFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES };
+						vkBufferAddressFeatures.bufferDeviceAddress = true;
+						placeFeaturesStructure(vkBufferAddressFeatures);
+					}
+						
 					if(tryAddExtension(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME)) {}
 
 					break;

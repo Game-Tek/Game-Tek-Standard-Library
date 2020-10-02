@@ -15,6 +15,12 @@ namespace GTSL
 	void SetMemory(uint64 size, void* data, int64 value = 0);
 	void SetMemory(Range<byte*> range, int64 value = 0);
 
+	void Copy_M_32(uint64 size, const void* from, void* to);
+	void Copy_M_64(uint64 size, const void* from, void* to);
+	void Copy_M_128(uint64 size, const void* from, void* to);
+
+	void ExpCopy(const uint64 size, const void* from, void* to);
+	
 	inline void* AlignPointer(const uint64 alignment, void* data)
 	{
 		return reinterpret_cast<void*>(reinterpret_cast<uint64>(static_cast<byte*>(data) + (alignment - 1)) & ~(alignment - 1));

@@ -18,6 +18,8 @@ namespace GAL
 		};
 		VulkanBuffer(const CreateInfo& createInfo);
 
+		void Initialize(const CreateInfo& info);
+		
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
 		struct BindMemoryInfo : VulkanRenderInfo

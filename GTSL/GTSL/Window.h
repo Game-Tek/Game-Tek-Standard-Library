@@ -3,8 +3,11 @@
 #include "Extent.h"
 
 #include "Delegate.hpp"
+#include "Flags.h"
 #include "Range.h"
 #include "Math/Vector2.h"
+
+#undef ERROR
 
 namespace GTSL
 {
@@ -64,9 +67,9 @@ namespace GTSL
 			F12
 		};
 
-		enum class WindowStyle
+		struct WindowElements : Flags<uint32>
 		{
-			TITLE_BAR = 0,
+			static constexpr value_type TITLE_BAR = 0;
 		};
 
 		enum class WindowSizeState : uint8
@@ -81,6 +84,7 @@ namespace GTSL
 			Extent2D Extent;
 			Window* ParentWindow = nullptr;
 			class Application* Application = nullptr;
+			WindowElements::value_type Elements;
 		};
 		explicit Window(const WindowCreateInfo & windowCreateInfo);
 		~Window();
@@ -122,7 +126,17 @@ namespace GTSL
 
 		void ShowWindow();
 		void HideWindow();
-		
+
+		enum class ProgressState
+		{
+			NONE,
+			INDETERMINATE,
+			NORMAL,
+			PAUSED,
+			ERROR
+		};
+		void SetProgressState(ProgressState progressState) const;
+		void SetProgressValue(float32 value) const;
 	protected:
 		Extent2D windowSize;
 		Extent2D clientSize;
@@ -130,6 +144,8 @@ namespace GTSL
 
 		void* windowHandle = nullptr;
 		uint32 defaultWindowStyle{ 0 };
+
+		void* iTaskbarList;
 
 #if (_WIN32)
 		static uint64 __stdcall Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam);

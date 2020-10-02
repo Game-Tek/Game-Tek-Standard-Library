@@ -5,6 +5,8 @@
 #include "GTSL/Assert.h"
 #include "GTSL/StaticString.hpp"
 
+#include "shobjidl_core.h"
+
 #if (_WIN32)
 GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam)
 {
@@ -203,9 +205,7 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 	wndclass.lpszMenuName = nullptr;
 	wndclass.style = 0;
 	wndclass.cbWndExtra = 0;
-	StaticString<1024> name(windowCreateInfo.Name);
-	name += '\0';
-	wndclass.lpszClassName = name.begin();
+	wndclass.lpszClassName = windowCreateInfo.Name.begin();
 
 	Application::Win32NativeHandles win32_native_handles;
 	windowCreateInfo.Application->GetNativeHandles(&win32_native_handles);
@@ -213,13 +213,15 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 	wndclass.hInstance = static_cast<HINSTANCE>(win32_native_handles.HINSTANCE);
 	RegisterClassA(&wndclass);
 	
-	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, name.begin(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32_native_handles.HINSTANCE), nullptr);
+	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32_native_handles.HINSTANCE), nullptr);
 
 	GTSL_ASSERT(windowHandle, "Window failed to create!");
 	
 	SetWindowLongPtrA(static_cast<HWND>(windowHandle), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
-	defaultWindowStyle = ::GetWindowLong(static_cast<HWND>(windowHandle), GWL_STYLE);
+	defaultWindowStyle = GetWindowLongA(static_cast<HWND>(windowHandle), GWL_STYLE);
+
+	CoCreateInstance(IID_ITaskbarList3, nullptr, CLSCTX::CLSCTX_INPROC_SERVER, IID_ITaskbarList, &iTaskbarList);
 #endif
 }
 
@@ -326,4 +328,28 @@ void GTSL::Window::ShowWindow()
 void GTSL::Window::HideWindow()
 {
 	::ShowWindow(static_cast<HWND>(windowHandle), SW_HIDE);
+}
+
+void GTSL::Window::SetProgressState(ProgressState progressState) const
+{
+	TBPFLAG flags = TBPF_NOPROGRESS;
+
+#undef ERROR
+	
+	switch (progressState)
+	{
+	case ProgressState::NONE: break;
+	case ProgressState::INDETERMINATE: flags = TBPF_INDETERMINATE; break;
+	case ProgressState::NORMAL: flags = TBPF_NORMAL; break;
+	case ProgressState::PAUSED: flags = TBPF_PAUSED; break;
+	case ProgressState::ERROR: flags = TBPF_ERROR; break;
+	default: flags = TBPF_NOPROGRESS;
+	}
+
+	static_cast<ITaskbarList3*>(iTaskbarList)->SetProgressState(static_cast<HWND>(windowHandle), flags);
+}
+
+void GTSL::Window::SetProgressValue(const float32 value) const
+{
+	static_cast<ITaskbarList3*>(iTaskbarList)->SetProgressValue(static_cast<HWND>(windowHandle), value * 1000u, 1000u);
 }

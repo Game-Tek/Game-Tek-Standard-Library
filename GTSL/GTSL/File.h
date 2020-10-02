@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "Flags.h"
 
 #include "Range.h"
 
@@ -14,10 +15,11 @@ namespace GTSL
 		File() = default;
 		~File();
 
-		enum class AccessMode : uint8 { READ = 1, WRITE = 2 };
+		struct AccessMode : Flags<uint8> { static constexpr value_type READ = 1, WRITE = 2; };
 
 		enum class OpenMode : uint8 { LEAVE_CONTENTS, CLEAR };
-		void OpenFile(const Range<const UTF8*> path, uint8 accessMode, OpenMode openMode);
+		
+		void OpenFile(Range<const UTF8*> path, AccessMode::value_type accessMode, OpenMode openMode = OpenMode::LEAVE_CONTENTS);
 		void CloseFile();
 
 		[[nodiscard]] uint32 WriteToFile(const Range<const byte*> buffer) const;

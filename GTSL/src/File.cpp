@@ -12,7 +12,7 @@ File::~File()
 	GTSL_ASSERT(fileHandle == nullptr, "File was not closed!")
 }
 
-void File::OpenFile(const Range<const UTF8*> path, const uint8 accessMode, const OpenMode openMode)
+void File::OpenFile(const Range<const UTF8*> path, const AccessMode::value_type accessMode, const OpenMode openMode)
 {
 	DWORD access_mode{ 0 };
 

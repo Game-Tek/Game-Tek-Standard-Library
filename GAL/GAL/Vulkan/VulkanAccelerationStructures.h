@@ -8,16 +8,6 @@
 
 namespace GAL
 {
-	struct AccelerationStructureGeometry
-	{
-		VulkanGeometryFlags::value_type Flags;
-		VulkanGeometryType Type;
-		VulkanShaderDataType VertexFormat;
-		GTSL::uint32 VertexStride;
-		VulkanIndexType IndexType;
-		VulkanDeviceAddress VertexData, IndexData;
-	};
-
 	struct BuildOffset
 	{
 		GTSL::uint32 PrimitiveCount = 0, PrimitiveOffset = 0, FirstVertex = 0, TransformOffset = 0;
@@ -28,7 +18,7 @@ namespace GAL
 	public:
 		[[nodiscard]] VkAccelerationStructureKHR GetVkAccelerationStructure() const { return accelerationStructure; }
 
-		struct GeometryType
+		struct GeometryDescriptor
 		{
 		private:
 			GTSL::uint32 stype; void* next = nullptr;
@@ -44,6 +34,16 @@ namespace GAL
 			friend VulkanAccelerationStructure;
 		};
 
+		struct Geometry
+		{
+			VulkanGeometryFlags::value_type Flags;
+			VulkanGeometryType Type;
+			VulkanShaderDataType VertexFormat;
+			GTSL::uint32 VertexStride;
+			VulkanIndexType IndexType;
+			VulkanDeviceAddress VertexData, IndexData;
+		};
+		
 		struct Instance
 		{
 			GTSL::Matrix3x4 Transform;
@@ -65,13 +65,6 @@ namespace GAL
 			VulkanDeviceAddress IndexBufferAddress;
 		};
 
-		struct Geometry
-		{
-			VulkanGeometryType GeometryType;
-			VulkanGeometryFlags::value_type GeometryFlags;
-			GeometryTriangleData* GeometryTriangleData;
-		};
-
 		struct AccelerationStructureBuildOffsetInfo
 		{
 			GTSL::uint32 FirstVertex;
@@ -85,10 +78,12 @@ namespace GAL
 		struct TopLevelCreateInfo : VulkanCreateInfo
 		{
 			VulkanAccelerationStructureFlags::value_type Flags;
-			GTSL::uint32 MaxGeometryCount = 0;
 			GTSL::uint32 CompactedSize = 0;
-			VulkanDeviceAddress DeviceAddress;
-			GTSL::Range<GeometryType*> GeometryInfos;
+			VulkanDeviceAddress DeviceAddress = 0;
+			/**
+			 * \brief These describe the maximum size and format of the data that will be built into the acceleration structure.
+			 */
+			GTSL::Range<GeometryDescriptor*> GeometryDescriptors;
 		};
 		//VulkanAccelerationStructure(const TopLevelCreateInfo& info);
 
@@ -97,10 +92,9 @@ namespace GAL
 		struct BottomLevelCreateInfo : VulkanCreateInfo
 		{
 			VulkanAccelerationStructureFlags::value_type Flags;
-			GTSL::uint32 MaxGeometryCount = 0;
 			GTSL::uint32 CompactedSize = 0;
 			VulkanDeviceAddress DeviceAddress;
-			GTSL::Range<GeometryType*> GeometryInfos;
+			GTSL::Range<GeometryDescriptor*> GeometryDescriptors;
 		};
 		VulkanAccelerationStructure(const BottomLevelCreateInfo& info);
 		void Initialize(const BottomLevelCreateInfo& info);
@@ -140,7 +134,7 @@ namespace GAL
 		VulkanAccelerationStructure DestinationAccelerationStructure;
 		GTSL::uint32 IsArrayOfPointers = false;
 		GTSL::uint32 Count = 0;
-		const AccelerationStructureGeometry* Geometries;
+		const VulkanAccelerationStructure::Geometry* Geometries;
 		VulkanDeviceAddress ScratchBufferAddress;
 	};
 	

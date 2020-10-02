@@ -83,14 +83,10 @@ namespace GAL
 			void* UserData;
 		};
 
-		struct RayTracingFeatures
-		{
-			GTSL::uint32 RecursionDepth = 0;
-		};
-
 		struct RayTracingCapabilities
 		{
 			GTSL::uint32 RecursionDepth = 0;
+			bool CanBuildOnHost = false;
 		};
 		
 		struct CreateInfo
@@ -99,10 +95,11 @@ namespace GAL
 			GTSL::uint16 ApplicationVersion[3];
 			GTSL::Range<const Queue::CreateInfo*> QueueCreateInfos;
 			GTSL::Range<VulkanQueue**> Queues;
+#if (_DEBUG)
 			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
+#endif
 			GTSL::Range<const Extension*> Extensions;
-			//GTSL::Range<const void*> ExtensionFeatures;
-			//GTSL::Range<const void*> ExtensionCapabilities;
+			GTSL::Range<void**> ExtensionCapabilities;
 			AllocationInfo AllocationInfo;
 		};
 		explicit VulkanRenderDevice(const CreateInfo& createInfo);

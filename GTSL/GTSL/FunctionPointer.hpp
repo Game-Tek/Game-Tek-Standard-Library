@@ -30,11 +30,11 @@ namespace GTSL
 		template <RET(*FUNCTION)(ARGS...)>
 		static constexpr FunctionPointer Create() { return FunctionPointer(functionCaller<FUNCTION>); }
 		
-		//template <class T, RET(T::* METHOD)(ARGS...)>
-		//static constexpr FunctionPointer Create() { return FunctionPointer(methodCaller<T, METHOD>); }
+		template <class T, RET(T::* METHOD)(ARGS...)>
+		static constexpr FunctionPointer Create() { return FunctionPointer(methodCaller<T, METHOD>); }
 
-		template <class T, RET(T::* CONST_METHOD)(ARGS...) const>
-		static constexpr FunctionPointer Create() { return FunctionPointer(constMethodCaller<T, CONST_METHOD>); }
+		//template <class T, RET(T::* CONST_METHOD)(ARGS...) const>
+		//static constexpr FunctionPointer Create() { return FunctionPointer(constMethodCaller<T, CONST_METHOD>); }
 
 		template<typename T>
 		constexpr RET operator()(T* callee, ARGS... args) const { return callerFunction(static_cast<void*>(callee), GTSL::ForwardRef<ARGS>(args)...); }

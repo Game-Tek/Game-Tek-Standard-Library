@@ -369,7 +369,7 @@ namespace GAL
 
 	enum class VulkanGeometryType
 	{
-		TRIANGLES = 0, AABB = 1
+		TRIANGLES = 0, AABB = 1, INSTANCES = 1000150000
 	};
 
 	struct VulkanGeometryFlags : GTSL::Flags<GTSL::uint32>

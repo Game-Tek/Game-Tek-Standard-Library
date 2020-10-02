@@ -7,6 +7,8 @@
 #include "VulkanAccelerationStructures.h"
 #include <GTSL/RGB.h>
 
+#undef MemoryBarrier
+
 namespace GAL
 {
 	class VulkanFramebuffer;

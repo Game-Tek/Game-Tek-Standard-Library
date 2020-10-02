@@ -6,12 +6,22 @@
 
 GAL::VulkanBuffer::VulkanBuffer(const CreateInfo& createInfo)
 {
-	VkBufferCreateInfo vk_buffer_create_info{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-	vk_buffer_create_info.size = createInfo.Size;
-	vk_buffer_create_info.usage = createInfo.BufferType;
+	VkBufferCreateInfo vkBufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+	vkBufferCreateInfo.size = createInfo.Size;
+	vkBufferCreateInfo.usage = createInfo.BufferType;
 
-	VK_CHECK(vkCreateBuffer(createInfo.RenderDevice->GetVkDevice(), &vk_buffer_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &buffer));
-	SET_NAME(buffer, VK_OBJECT_TYPE_BUFFER, createInfo);
+	VK_CHECK(vkCreateBuffer(createInfo.RenderDevice->GetVkDevice(), &vkBufferCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &buffer))
+	SET_NAME(buffer, VK_OBJECT_TYPE_BUFFER, createInfo)
+}
+
+void GAL::VulkanBuffer::Initialize(const CreateInfo& info)
+{
+	VkBufferCreateInfo vkBufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+	vkBufferCreateInfo.size = info.Size;
+	vkBufferCreateInfo.usage = info.BufferType;
+
+	VK_CHECK(vkCreateBuffer(info.RenderDevice->GetVkDevice(), &vkBufferCreateInfo, info.RenderDevice->GetVkAllocationCallbacks(), &buffer))
+	SET_NAME(buffer, VK_OBJECT_TYPE_BUFFER, info)
 }
 
 void GAL::VulkanBuffer::Destroy(const VulkanRenderDevice* renderDevice)

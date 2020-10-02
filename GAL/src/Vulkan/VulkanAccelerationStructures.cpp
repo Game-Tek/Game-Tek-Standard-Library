@@ -4,7 +4,7 @@
 
 void GAL::VulkanAccelerationStructure::Initialize(const TopLevelCreateInfo& info)
 {
-	for (auto& e : info.GeometryInfos)
+	for (auto& e : info.GeometryDescriptors)
 	{
 		e.stype = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_GEOMETRY_TYPE_INFO_KHR;
 		e.next = nullptr;
@@ -13,8 +13,8 @@ void GAL::VulkanAccelerationStructure::Initialize(const TopLevelCreateInfo& info
 	VkAccelerationStructureCreateInfoKHR vkAccelerationStructureCreateInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
 	vkAccelerationStructureCreateInfoKhr.flags = info.Flags;
 	vkAccelerationStructureCreateInfoKhr.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
-	vkAccelerationStructureCreateInfoKhr.pGeometryInfos = reinterpret_cast<const VkAccelerationStructureCreateGeometryTypeInfoKHR*>(info.GeometryInfos.begin());
-	vkAccelerationStructureCreateInfoKhr.maxGeometryCount = info.MaxGeometryCount;
+	vkAccelerationStructureCreateInfoKhr.pGeometryInfos = reinterpret_cast<const VkAccelerationStructureCreateGeometryTypeInfoKHR*>(info.GeometryDescriptors.begin());
+	vkAccelerationStructureCreateInfoKhr.maxGeometryCount = info.GeometryDescriptors.ElementCount();
 	vkAccelerationStructureCreateInfoKhr.compactedSize = info.CompactedSize;
 	vkAccelerationStructureCreateInfoKhr.deviceAddress = info.DeviceAddress;
 
@@ -24,7 +24,7 @@ void GAL::VulkanAccelerationStructure::Initialize(const TopLevelCreateInfo& info
 
 void GAL::VulkanAccelerationStructure::Initialize(const BottomLevelCreateInfo& info)
 {
-	for (auto& e : info.GeometryInfos)
+	for (auto& e : info.GeometryDescriptors)
 	{
 		e.stype = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_GEOMETRY_TYPE_INFO_KHR;
 		e.next = nullptr;
@@ -33,8 +33,8 @@ void GAL::VulkanAccelerationStructure::Initialize(const BottomLevelCreateInfo& i
 	VkAccelerationStructureCreateInfoKHR vkAccelerationStructureCreateInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
 	vkAccelerationStructureCreateInfoKhr.flags = info.Flags;
 	vkAccelerationStructureCreateInfoKhr.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-	vkAccelerationStructureCreateInfoKhr.pGeometryInfos = reinterpret_cast<const VkAccelerationStructureCreateGeometryTypeInfoKHR*>(info.GeometryInfos.begin());
-	vkAccelerationStructureCreateInfoKhr.maxGeometryCount = info.MaxGeometryCount;
+	vkAccelerationStructureCreateInfoKhr.pGeometryInfos = reinterpret_cast<const VkAccelerationStructureCreateGeometryTypeInfoKHR*>(info.GeometryDescriptors.begin());
+	vkAccelerationStructureCreateInfoKhr.maxGeometryCount = info.GeometryDescriptors.ElementCount();
 	vkAccelerationStructureCreateInfoKhr.compactedSize = info.CompactedSize;
 	vkAccelerationStructureCreateInfoKhr.deviceAddress = info.DeviceAddress;
 
