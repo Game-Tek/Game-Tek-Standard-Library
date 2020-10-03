@@ -11,6 +11,12 @@ namespace GAL
 	
 	constexpr GTSL::uint8 MAX_SHADER_STAGES = 8;
 
+	enum class RenderAPI : GTSL::uint8
+	{
+		VULKAN,
+		DIRECTX12
+	};
+	
 	class RenderDevice;
 	
 	struct ShaderStage : GTSL::Flags<GTSL::uint32>

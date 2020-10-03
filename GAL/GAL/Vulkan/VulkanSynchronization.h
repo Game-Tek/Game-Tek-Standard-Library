@@ -20,6 +20,9 @@ namespace GAL
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		[[nodiscard]] VkFence GetVkFence() const { return fence; }
 
+		void Wait(const VulkanRenderDevice* renderDevice) const;
+		void Reset(const VulkanRenderDevice* renderDevice) const;
+		
 		[[nodiscard]] bool GetStatus(const VulkanRenderDevice* renderDevice) const;
 		
 		struct WaitForFencesInfo final : VulkanRenderInfo

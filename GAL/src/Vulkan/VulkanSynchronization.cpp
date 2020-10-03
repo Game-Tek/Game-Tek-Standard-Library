@@ -17,6 +17,16 @@ void GAL::VulkanFence::Destroy(const VulkanRenderDevice* renderDevice)
 	debugClear(fence);
 }
 
+void GAL::VulkanFence::Wait(const VulkanRenderDevice* renderDevice) const
+{
+	VK_CHECK(vkWaitForFences(renderDevice->GetVkDevice(), 1u, &fence, true, 0xFFFFFFFFFFFFFFFF))
+}
+
+void GAL::VulkanFence::Reset(const VulkanRenderDevice* renderDevice) const
+{
+	VK_CHECK(vkResetFences(renderDevice->GetVkDevice(), 1u, &fence))
+}
+
 bool GAL::VulkanFence::GetStatus(const VulkanRenderDevice* renderDevice) const
 {
 	return vkGetFenceStatus(renderDevice->GetVkDevice(), fence) == VK_SUCCESS;

@@ -2,9 +2,6 @@
 
 #include <GTSL/Core.h>
 
-#include "RenderCore.h"
-
-#include "CommandBuffer.h"
 #include "GTSL/Allocator.h"
 #include "GTSL/Delegate.hpp"
 
@@ -14,12 +11,6 @@
 
 namespace GAL
 {
-	enum class RenderAPI : GTSL::uint8
-	{
-		VULKAN,
-		DIRECTX12
-	};
-
 	struct GPUInfo
 	{
 		GTSL::StaticString<512> GPUName;
@@ -37,9 +28,6 @@ namespace GAL
 			GTSL::float32 QueuePriority = 1.0f;
 		};
 		//void Submit(const SubmitInfo& dispatchInfo);
-
-	private:
-		friend RenderDevice;
 	};
 
 	class RenderDevice

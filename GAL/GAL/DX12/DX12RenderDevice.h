@@ -16,6 +16,12 @@ namespace GAL
 	public:
 		DX12Queue() = default;
 
+		struct CreateInfo
+		{
+			DX12QueueType Capabilities;
+			GTSL::float32 QueuePriority = 1.0f;
+		};
+
 		struct SubmitInfo final : DX12RenderInfo
 		{
 			GTSL::Range<const class DX12CommandBuffer*> CommandBuffers;
@@ -51,7 +57,7 @@ namespace GAL
 		{
 			GTSL::Range<const GTSL::UTF8*> ApplicationName;
 			GTSL::uint16 ApplicationVersion[3];
-			GTSL::Range<const Queue::CreateInfo*> QueueCreateInfos;
+			GTSL::Range<const DX12Queue::CreateInfo*> QueueCreateInfos;
 			GTSL::Range<void**> Queues;
 #if (_DEBUG)
 			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;

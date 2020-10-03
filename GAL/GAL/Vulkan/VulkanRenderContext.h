@@ -49,7 +49,8 @@ namespace GAL
 			VulkanTextureFormat Format;
 			VulkanColorSpace ColorSpace;
 			VulkanTextureUses::value_type TextureUses;
-			const Surface* Surface{ nullptr };
+			const Surface* Surface = nullptr;
+			const VulkanQueue* Queue = nullptr;
 		};
 		VulkanRenderContext(const CreateInfo& createInfo);
 		~VulkanRenderContext() = default;
@@ -63,9 +64,10 @@ namespace GAL
 			GTSL::uint8 DesiredFramesInFlight = 0;
 			VulkanPresentMode PresentMode;
 			VulkanTextureFormat Format;
-			VulkanColorSpace ColorSpace{ 0 };
+			VulkanColorSpace ColorSpace;
 			VulkanTextureUses::value_type TextureUses;
-			const VulkanSurface* Surface{ nullptr };
+			const VulkanSurface* Surface = nullptr;
+			const VulkanQueue* Queue = nullptr;
 		};
 		void Recreate(const RecreateInfo& resizeInfo);
 

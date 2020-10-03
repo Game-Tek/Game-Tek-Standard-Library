@@ -55,7 +55,7 @@ void GAL::DX12RenderDevice::Initialize(const CreateInfo& info)
 	if constexpr (_DEBUG)
 	{
 		ID3D12InfoQueue* infoQueue;
-		DX_CHECK(device->QueryInterface(IID_ID3D12InfoQueue, reinterpret_cast<void**>(&infoQueue)));
+		DX_CHECK(device->QueryInterface(IID_ID3D12InfoQueue, reinterpret_cast<void**>(&infoQueue)))
 
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
@@ -91,7 +91,7 @@ void GAL::DX12RenderDevice::Initialize(const CreateInfo& info)
 	for(GTSL::uint32 i = 0; i < info.QueueCreateInfos.ElementCount(); ++i)
 	{
 		D3D12_COMMAND_QUEUE_DESC desc = {};
-		desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+		desc.Type = static_cast<D3D12_COMMAND_LIST_TYPE>(info.QueueCreateInfos[i].Capabilities);
 		desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH;
 		desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		desc.NodeMask = 0;
