@@ -34,10 +34,7 @@ createInfo.RenderDevice->vkSetDebugUtilsObjectNameEXT(createInfo.RenderDevice->G
 #endif
 
 namespace GAL
-{
-	template<typename T>
-	constexpr void debugClear(T& handle) { if constexpr (_DEBUG) { handle = reinterpret_cast<T>(0x000000CACA000000); } }
-	
+{	
 	using VulkanDeviceAddress = GTSL::uint64;
 	using VulkanHandle = void*;
 	
@@ -99,6 +96,16 @@ namespace GAL
 		GENERAL, TRIANGLES, PROCEDURAL
 	};
 
+	struct VulkanAllocateFlags : GTSL::Flags<GTSL::uint32>
+	{
+		static constexpr value_type DEVICE_MASK = 0x00000001, DEVICE_ADDRESS = 0x00000002, DEVICE_ADDRESS_CAPTURE_REPLAY = 0x00000004;
+	};
+	
+	struct VulkanGeometryInstanceFlags : GTSL::Flags<GTSL::uint32>
+	{
+		static constexpr value_type DISABLE_CULLING = 0x00000001, FRONT_COUNTERCLOCKWISE = 0x00000002, OPAQUE = 0x00000004, NOT_OPAQUE = 0x00000008;
+	};
+	
 	struct VulkanBindingFlags : GTSL::Flags<GTSL::uint32>
 	{
 		static constexpr value_type UPDATE_AFTER_BIND = 0x00000001, UPDATE_UNUSED_WHILE_PENDING = 0x00000002, PARTIALLY_BOUND = 0x00000004, VARIABLE_DESCRIPTOR_COUNT = 0x00000008;

@@ -96,6 +96,15 @@
     <ClInclude Include="GAL\Vulkan\VulkanAsyncHostOperation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GAL\DX12\DX12RenderDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GAL\DX12\DX12.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GAL\DX12\DX12CommandBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Vulkan\VulkanBindings.cpp">
@@ -138,6 +147,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Vulkan\VulkanAsyncHostOperation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DX12\DX12RenderDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

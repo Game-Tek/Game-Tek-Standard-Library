@@ -6,6 +6,9 @@
 
 namespace GAL
 {
+	template<typename T>
+	constexpr void debugClear(T& handle) { if constexpr (_DEBUG) { handle = reinterpret_cast<T>(0x000000CACA000000); } }
+	
 	constexpr GTSL::uint8 MAX_SHADER_STAGES = 8;
 
 	class RenderDevice;

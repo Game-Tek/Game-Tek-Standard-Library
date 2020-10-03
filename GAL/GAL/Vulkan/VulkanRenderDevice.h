@@ -17,7 +17,7 @@ namespace GAL
 		VulkanQueue() = default;
 		~VulkanQueue() = default;
 
-		void Wait() const;
+		void Wait(const class VulkanRenderDevice* renderDevice) const;
 
 		struct SubmitInfo final : VulkanRenderInfo
 		{
@@ -50,38 +50,6 @@ namespace GAL
 	{
 	public:
 		VulkanRenderDevice() = default;
-
-		enum class Extension
-		{
-			RAY_TRACING, PIPELINE_CACHE_EXTERNAL_SYNC
-		};
-		
-		struct AllocationInfo
-		{
-			/**
-			 * \brief void* UserData. uint64 Size. uint64 Alignment.
-			 */
-			GTSL::Delegate<void*(void*, GTSL::uint64, GTSL::uint64)> Allocate;
-			/**
-			 * \brief void* UserData. void* Original Allocation. uint64 Size. uint64 Alignment.
-			 */
-			GTSL::Delegate<void*(void*, void*, GTSL::uint64, GTSL::uint64)> Reallocate;
-			/**
-			 * \brief void* UserData. void* Allocation.
-			 */
-			GTSL::Delegate<void(void*, void*)> Deallocate;
-
-			/**
-			 * \brief void* UserData. uint64 Size. uint64 Alignment.
-			 */
-			GTSL::Delegate<void(void*, GTSL::uint64, GTSL::uint64)> InternalAllocate;
-			/**
-			* \brief void* UserData. void* Allocation.
-			*/
-			GTSL::Delegate<void(void*, void*)> InternalDeallocate;
-
-			void* UserData;
-		};
 
 		struct RayTracingCapabilities
 		{

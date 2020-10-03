@@ -174,7 +174,7 @@ GAL::VulkanTextureFormat GAL::VulkanRenderDevice::FindNearestSupportedImageForma
 	return VulkanTextureFormat::UNDEFINED;
 }
 
-void GAL::VulkanQueue::Wait() const { vkQueueWaitIdle(queue); }
+void GAL::VulkanQueue::Wait(const class VulkanRenderDevice* renderDevice) const { vkQueueWaitIdle(queue); }
 
 void GAL::VulkanQueue::Submit(const SubmitInfo& submitInfo)
 {
