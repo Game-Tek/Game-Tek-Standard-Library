@@ -14,9 +14,9 @@
 
 #include <GTSL/Extent.h>
 
-
 #include "GTSL/Bitman.h"
 #include "GTSL/Flags.h"
+#include "GTSL/Range.h"
 
 #define MAKE_VK_HANDLE(object) typedef struct object##_T* (object);
 #undef OPAQUE
@@ -26,7 +26,7 @@
 #define SET_NAME(handle, type, createInfo) VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };\
 debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(handle);\
 debug_utils_object_name_info_ext.objectType = type;\
-debug_utils_object_name_info_ext.pObjectName = createInfo.Name;\
+debug_utils_object_name_info_ext.pObjectName = createInfo.Name.begin();\
 createInfo.RenderDevice->vkSetDebugUtilsObjectNameEXT(createInfo.RenderDevice->GetVkDevice(), &debug_utils_object_name_info_ext);
 
 #else
@@ -47,7 +47,7 @@ namespace GAL
 
 	struct VulkanCreateInfo : VulkanRenderInfo
 	{
-		const char* Name = nullptr;
+		GTSL::Range<const GTSL::UTF8*> Name;
 
 		VulkanCreateInfo() = default;
 	};
@@ -90,6 +90,11 @@ namespace GAL
 	//	default: return VK_IMAGE_LAYOUT_MAX_ENUM;
 	//	}
 	//}
+
+	enum class VKAccelerationStructureType : GTSL::uint8
+	{
+		TOP_LEVEL = 0, BOTTOM_LEVEL = 1
+	};
 	
 	enum class VulkanShaderGroupType
 	{
@@ -139,16 +144,16 @@ namespace GAL
 		static constexpr value_type BOTTOM_OF_PIPE = 8192;
 		static constexpr value_type HOST_BIT = 16384;
 		static constexpr value_type ALL_GRAPHICS = 32768;
-		static constexpr value_type ALL_COMMANDS = 65536;
-		static constexpr value_type TRANSFORM_FEEDBACK = 131072;
-		static constexpr value_type CONDITIONAL_RENDERING = 262144;
-		static constexpr value_type RAY_TRACING_SHADER = 524288;
-		static constexpr value_type ACCELERATION_STRUCTURE_BUILD = 1048576;
-		static constexpr value_type SHADING_RATE_IMAGE = 2097152;
-		static constexpr value_type TASK_SHADER = 4194304;
-		static constexpr value_type MESH_SHADER = 8388608;
-		static constexpr value_type FRAGMENT_DENSITY_PROCESS = 16777216;
-		static constexpr value_type COMMAND_PREPROCESS = 33554432;
+		static constexpr value_type ALL_COMMANDS = 0x00010000;
+		static constexpr value_type TRANSFORM_FEEDBACK = 0x01000000;
+		static constexpr value_type CONDITIONAL_RENDERING = 0x00040000;
+		static constexpr value_type RAY_TRACING_SHADER = 0x00200000;
+		static constexpr value_type ACCELERATION_STRUCTURE_BUILD = 0x02000000;
+		static constexpr value_type SHADING_RATE_IMAGE = 0x00400000;
+		static constexpr value_type TASK_SHADER = 0x00080000;
+		static constexpr value_type MESH_SHADER = 0x00100000;
+		static constexpr value_type FRAGMENT_DENSITY_PROCESS = 0x00800000;
+		static constexpr value_type COMMAND_PREPROCESS = 0x00020000;
 	};
 
 	struct VulkanAccessFlags : GTSL::Flags<GTSL::uint32>

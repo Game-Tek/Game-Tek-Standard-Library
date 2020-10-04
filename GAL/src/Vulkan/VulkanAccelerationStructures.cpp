@@ -1,6 +1,7 @@
 #include "GAL/Vulkan/VulkanAccelerationStructures.h"
 
 #include "GAL/Vulkan/VulkanRenderDevice.h"
+#include "GTSL/Array.hpp"
 
 void GAL::VulkanAccelerationStructure::Initialize(const TopLevelCreateInfo& info)
 {
@@ -69,11 +70,24 @@ GAL::VulkanDeviceAddress GAL::VulkanAccelerationStructure::GetAddress(const Vulk
 
 void GAL::VulkanAccelerationStructure::BuildAccelerationStructure(const BuildAccelerationStructuresInfo& info)
 {
-	for(auto& e : info.BuildAccelerationStructureInfos)
+	GTSL::Array<VkAccelerationStructureBuildGeometryInfoKHR, 8> buildGeometryInfo(info.BuildAccelerationStructureInfos.ElementCount());
+
+	for (GTSL::uint32 i = 0; i < info.BuildAccelerationStructureInfos.ElementCount(); ++i)
 	{
-		e.stype = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-		e.next = nullptr;
+		auto& source = info.BuildAccelerationStructureInfos[i];
+		auto& target = buildGeometryInfo[i];
+
+		target.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+		target.pNext = nullptr;
+		target.flags = source.Flags;
+		target.dstAccelerationStructure = source.DestinationAccelerationStructure.GetVkAccelerationStructure();
+		target.srcAccelerationStructure = source.SourceAccelerationStructure.GetVkAccelerationStructure();
+		target.type = static_cast<VkAccelerationStructureTypeKHR>(source.Type);
+		target.geometryArrayOfPointers = source.IsArrayOfPointers;
+		target.geometryCount = static_cast<GTSL::uint32>(source.Geometries.ElementCount());
+		target.scratchData.deviceAddress = source.ScratchBufferAddress;
+		target.update = source.Update;
 	}
 	
-	info.RenderDevice->vkBuildAccelerationStructureKHR(info.RenderDevice->GetVkDevice(), info.BuildAccelerationStructureInfos.ElementCount(), reinterpret_cast<const VkAccelerationStructureBuildGeometryInfoKHR*>(info.BuildAccelerationStructureInfos.begin()), reinterpret_cast<const VkAccelerationStructureBuildOffsetInfoKHR* const*>(info.BuildOffsets));
+	info.RenderDevice->vkBuildAccelerationStructureKHR(info.RenderDevice->GetVkDevice(), info.BuildAccelerationStructureInfos.ElementCount(), buildGeometryInfo.begin(), reinterpret_cast<const VkAccelerationStructureBuildOffsetInfoKHR* const*>(info.BuildOffsets));
 }

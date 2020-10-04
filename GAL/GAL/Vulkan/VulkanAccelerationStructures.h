@@ -121,21 +121,15 @@ namespace GAL
 
 	struct BuildAccelerationStructureInfo
 	{
-	private:
-		GTSL::uint32 stype; void* next;
-
-		friend VulkanAccelerationStructure;
-		friend class VulkanCommandBuffer;
-	public:
-		GTSL::uint32 IsTopLevel = false;
-		GTSL::uint32 Flags = false;
-		GTSL::uint32 Update = false;
 		VulkanAccelerationStructure SourceAccelerationStructure;
 		VulkanAccelerationStructure DestinationAccelerationStructure;
-		GTSL::uint32 IsArrayOfPointers = false;
-		GTSL::uint32 Count = 0;
-		const VulkanAccelerationStructure::Geometry* Geometries;
+		GTSL::Range<const VulkanAccelerationStructure::Geometry*> Geometries;
 		VulkanDeviceAddress ScratchBufferAddress;
+		GTSL::uint32 Flags = false;
+		GTSL::uint32 Count = 0;
+		VKAccelerationStructureType Type;
+		bool Update = false;
+		bool IsArrayOfPointers = false;
 	};
 	
 	struct BuildAccelerationStructuresInfo : VulkanRenderInfo

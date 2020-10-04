@@ -241,14 +241,54 @@ void GAL::VulkanCommandBuffer::CopyBuffers(const CopyBuffersInfo& copyBuffersInf
 
 void GAL::VulkanCommandBuffer::BuildAccelerationStructure(const BuildAccelerationStructuresInfo& info) const
 {
-	for (auto& e : info.BuildAccelerationStructureInfos)
+	GTSL::Array<GTSL::Array<VkAccelerationStructureGeometryKHR, 8>, 8> geometries(info.BuildAccelerationStructureInfos.ElementCount());
+	GTSL::Array<VkAccelerationStructureBuildGeometryInfoKHR, 8> buildGeometryInfo(info.BuildAccelerationStructureInfos.ElementCount());
+
+	GTSL::Array<VkAccelerationStructureGeometryKHR*, 8> geometryPointers(info.BuildAccelerationStructureInfos.ElementCount());
+	
+	for(uint32 i = 0; i < info.BuildAccelerationStructureInfos.ElementCount(); ++i)
 	{
-		e.stype = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-		e.next = nullptr;
+		auto& source = info.BuildAccelerationStructureInfos[i];
+		auto& target = buildGeometryInfo[i];
+
+		geometries[i].Resize(static_cast<uint32>(source.Geometries.ElementCount()));
+
+		for(uint32 g = 0; g < static_cast<uint32>(source.Geometries.ElementCount()); ++g)
+		{
+			auto& targetGeo = geometries[i][g];
+			const auto& sourceGeo = source.Geometries[g];
+
+			targetGeo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
+			targetGeo.pNext = nullptr;
+			targetGeo.flags = sourceGeo.Flags;
+			targetGeo.geometryType = static_cast<VkGeometryTypeKHR>(sourceGeo.Type);
+			targetGeo.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
+			targetGeo.geometry.triangles.pNext = nullptr;
+			targetGeo.geometry.triangles.vertexData.deviceAddress = sourceGeo.VertexData;
+			targetGeo.geometry.triangles.vertexFormat = static_cast<VkFormat>(sourceGeo.VertexFormat);
+			targetGeo.geometry.triangles.vertexStride = sourceGeo.VertexStride;
+			targetGeo.geometry.triangles.indexData.deviceAddress = sourceGeo.IndexData;
+			targetGeo.geometry.triangles.indexType = static_cast<VkIndexType>(sourceGeo.IndexType);
+			
+		}
+
+		geometryPointers[i] = geometries[i].begin();
+		
+		target.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+		target.pNext = nullptr;
+		target.flags = source.Flags;
+		target.dstAccelerationStructure = source.DestinationAccelerationStructure.GetVkAccelerationStructure();
+		target.srcAccelerationStructure = source.SourceAccelerationStructure.GetVkAccelerationStructure();
+		target.type = static_cast<VkAccelerationStructureTypeKHR>(source.Type);
+		target.geometryArrayOfPointers = source.IsArrayOfPointers;
+		target.geometryCount = static_cast<uint32>(source.Geometries.ElementCount());
+		target.scratchData.deviceAddress = source.ScratchBufferAddress;
+		target.update = source.Update;
+		target.ppGeometries = geometryPointers.begin();
 	}
 	
 	info.RenderDevice->vkCmdBuildAccelerationStructureKHR(commandBuffer, info.BuildAccelerationStructureInfos.ElementCount(),
-		reinterpret_cast<const VkAccelerationStructureBuildGeometryInfoKHR*>(info.BuildAccelerationStructureInfos.begin()),
+		buildGeometryInfo.begin(),
 		reinterpret_cast<const VkAccelerationStructureBuildOffsetInfoKHR* const*>(info.BuildOffsets));
 }
 
