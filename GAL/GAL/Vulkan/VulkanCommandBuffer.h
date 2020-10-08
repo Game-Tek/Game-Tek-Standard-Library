@@ -229,7 +229,8 @@ namespace GAL
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			const VulkanQueue* Queue{ nullptr };
+			const VulkanQueue* Queue = nullptr;
+			bool IsPrimary = true;
 		};
 		VulkanCommandPool(const CreateInfo& createInfo);
 

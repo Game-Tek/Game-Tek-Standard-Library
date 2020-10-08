@@ -55,15 +55,6 @@ namespace GAL
 		};
 
 		static_assert(sizeof(Instance) == 64, "Size must be 64 bytes");
-		
-		struct GeometryTriangleData
-		{
-			VulkanShaderDataType VertexType;
-			VulkanIndexType IndexType;
-			GTSL::uint16 VertexStride = 0;
-			VulkanDeviceAddress VertexBufferAddress;
-			VulkanDeviceAddress IndexBufferAddress;
-		};
 
 		struct AccelerationStructureBuildOffsetInfo
 		{

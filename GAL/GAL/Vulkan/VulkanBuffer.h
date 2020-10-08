@@ -13,8 +13,8 @@ namespace GAL
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			GTSL::uint32 Size{ 0 };
-			GTSL::uint32 BufferType{ 0 };
+			GTSL::uint32 Size = 0;
+			VulkanBufferType::value_type BufferType = 0;
 		};
 		VulkanBuffer(const CreateInfo& createInfo);
 
@@ -25,7 +25,7 @@ namespace GAL
 		struct BindMemoryInfo : VulkanRenderInfo
 		{
 			class VulkanDeviceMemory* Memory{ nullptr };
-			GTSL::uint32 Offset{ 0 };
+			GTSL::uint32 Offset = 0;
 		};
 		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;
 
@@ -34,6 +34,6 @@ namespace GAL
 		[[nodiscard]] VkBuffer GetVkBuffer() const { return buffer; }
 		
 	private:
-		VkBuffer buffer{ 0 };
+		VkBuffer buffer = nullptr;
 	};
 }

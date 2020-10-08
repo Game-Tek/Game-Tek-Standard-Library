@@ -32,6 +32,11 @@ namespace GAL
 		static constexpr value_type RAY_GEN = 256, ANY_HIT = 512, CLOSEST_HIT = 1024, MISS = 2048, INTERSECTION = 4096, CALLABLE = 8192;
 	};
 
+	struct TextureUses : GTSL::Flags<GTSL::uint32>
+	{
+		static constexpr value_type TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, SAMPLE = 4, STORAGE = 8, COLOR_ATTACHMENT = 16, DEPTH_STENCIL_ATTACHMENT = 32, TRANSIENT_ATTACHMENT = 64, INPUT_ATTACHMENT = 128;
+	};
+	
 	enum class AccessFlags : GTSL::uint32
 	{
 		INDIRECT_COMMAND_READ = 0x00000001,

@@ -111,6 +111,12 @@
     <ClInclude Include="GAL\DX12\DX12RenderContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GAL\DX12\DX12Buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GAL\DX12\DX12Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Vulkan\VulkanBindings.cpp">
@@ -162,6 +168,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\DX12\DX12RenderContext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DX12\DX12CommandBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DX12\DX12Buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DX12\DX12Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -17,7 +17,7 @@ namespace GAL
 			GTSL::Extent3D Extent{ 1280, 720, 1 };
 			VulkanTextureTiling Tiling;
 			VulkanDimensions Dimensions;
-			GTSL::uint8 MipLevels{ 1 };
+			GTSL::uint8 MipLevels = 1;
 		};
 		explicit VulkanTexture(const CreateInfo& createInfo);
 

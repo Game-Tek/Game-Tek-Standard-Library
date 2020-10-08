@@ -50,18 +50,20 @@ namespace GTSL
 			build();
 		}
 
+		void Free()
+		{
+			for (uint32 i = 0; i < this->capacity; ++i)
+			{
+				for (auto& e : this->getValuesBucket(i)) { e.~T(); }
+			}
+
+			deallocate();
+			this->data = nullptr;
+		}
+		
 		~FlatHashMap()
 		{
-			if (this->data)
-			{
-				for (uint32 i = 0; i < this->capacity; ++i)
-				{
-					for (auto& e : this->getValuesBucket(i)) { e.~T(); }
-				}
-
-				deallocate();
-				this->data = nullptr;
-			}
+			if (this->data) { Free(); }
 		}
 
 		template<typename TT>

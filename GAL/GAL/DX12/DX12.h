@@ -5,6 +5,8 @@
 
 #include <d3d12.h>
 
+#include "GTSL/Flags.h"
+
 #if (_DEBUG)
 #define DX_CHECK(func) if (func < 0) { __debugbreak(); }
 #else
@@ -28,10 +30,20 @@ namespace GAL
 	{
 		if constexpr (_DEBUG)
 		{
-			handle->SetPrivateData(WKPDID_D3DDebugObjectName, createInfo.Name.ElementCount() - 1, createInfo.Name.begin());
+			if (createInfo.Name.ElementCount() != 0)
+			{
+				handle->SetPrivateData(WKPDID_D3DDebugObjectName, createInfo.Name.ElementCount() - 1, createInfo.Name.begin());
+			}
 		}
 	}
 
+	struct DX12BufferType : GTSL::Flags<GTSL::uint32>
+	{
+		static constexpr value_type	TRANSFER_SOURCE = 0x800, TRANSFER_DESTINATION = 0x400, UNIFORM = 16;
+		static constexpr value_type STORAGE = 0x8, INDEX = 0x2, VERTEX = 0x1, ADDRESS = 0/*DX12 has no equivalent, so we set it to 0 so it doesn't affect flags*/;
+		static constexpr value_type	RAY_TRACING = 0x400000, INDIRECT = 0x200;
+	};
+	
 	enum class DX12QueueType
 	{
 		GRAPHICS = 0,
@@ -39,6 +51,11 @@ namespace GAL
 		TRANSFER = 3,
 	};
 
+	enum class DX12Dimension
+	{
+		LINEAR = 2, SQUARE = 3, CUBE = 4
+	};
+	
 	enum class DX12PresentMode
 	{
 		/**
@@ -50,7 +67,7 @@ namespace GAL
 		*/
 		FIFO = 2048,
 	};
-
+	
 	enum class DX12TextureFormat
 	{
 		UNDEFINED = 0,
@@ -91,13 +108,13 @@ namespace GAL
 		//STENCIL_8 = ,
 		//
 		////A depth-only format with a 16 bit (2 byte) size.
-		//DEPTH16 = ,
+		DEPTH16 = 54,
 		////A depth-only format with a 32 (4 byte) bit size.
-		//DEPTH32 = ,
+		DEPTH32 = 40,
 		////A depth/stencil format with a 16 bit (2 byte) size depth part and an 8 bit (1 byte) size stencil part.
 		//DEPTH16_STENCIL8 = ,
 		////A depth/stencil format with a 24 bit (3 byte) size depth part and an 8 bit (1 byte) size stencil part.
-		//DEPTH24_STENCIL8 = ,
+		DEPTH24_STENCIL8 = 45,
 		////A depth/stencil format with a 32 bit (4 byte) size depth part and an 8 bit (1 byte) size stencil part.
 		//DEPTH32_STENCIL8 = 
 	};
