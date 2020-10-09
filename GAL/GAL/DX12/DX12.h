@@ -43,6 +43,11 @@ namespace GAL
 		static constexpr value_type STORAGE = 0x8, INDEX = 0x2, VERTEX = 0x1, ADDRESS = 0/*DX12 has no equivalent, so we set it to 0 so it doesn't affect flags*/;
 		static constexpr value_type	RAY_TRACING = 0x400000, INDIRECT = 0x200;
 	};
+
+	struct DX12AllocateFlags : GTSL::Flags<GTSL::uint32>
+	{
+		static constexpr value_type DEVICE_MASK = 0, DEVICE_ADDRESS = 0, DEVICE_ADDRESS_CAPTURE_REPLAY = 0;
+	};
 	
 	enum class DX12QueueType
 	{
@@ -54,6 +59,19 @@ namespace GAL
 	enum class DX12Dimension
 	{
 		LINEAR = 2, SQUARE = 3, CUBE = 4
+	};
+
+	enum class DX12ShaderDataType
+	{
+		FLOAT = 41,
+		FLOAT2 = 16,
+		FLOAT3 = 6,
+		FLOAT4 = 2,
+		INT = 39,
+		INT2 = 48,
+		INT3 = 5,
+		INT4 = 1,
+		BOOL = 60
 	};
 	
 	enum class DX12PresentMode

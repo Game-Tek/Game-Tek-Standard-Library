@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DX12.h"
+#include "DX12Memory.h"
 
 namespace GAL
 {
@@ -11,8 +12,9 @@ namespace GAL
 
 		struct CreateInfo final : DX12CreateInfo
 		{
-			GTSL::uint32 Size = 0;
+			GTSL::uint32 Size = 0, Offset = 0;
 			DX12BufferType::value_type BufferType = 0;
+			const DX12Memory Memory;
 		};
 		void Initialize(const CreateInfo& info);
 

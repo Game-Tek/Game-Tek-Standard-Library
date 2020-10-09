@@ -3,6 +3,7 @@
 #include "GAL/Buffer.h"
 
 #include "Vulkan.h"
+#include "VulkanMemory.h"
 
 namespace GAL
 {
@@ -13,8 +14,9 @@ namespace GAL
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			GTSL::uint32 Size = 0;
+			GTSL::uint32 Size = 0, Offset = 0;
 			VulkanBufferType::value_type BufferType = 0;
+			VulkanDeviceMemory Memory;
 		};
 		VulkanBuffer(const CreateInfo& createInfo);
 

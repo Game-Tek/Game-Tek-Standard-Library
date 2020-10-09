@@ -34,6 +34,14 @@ void GAL::DX12Texture::Initialize(const CreateInfo& info)
 	GTSL::SetBitAs(GTSL::FindFirstSetBit(D3D12_RESOURCE_STATE_DEPTH_READ), info.Uses & TextureUses::DEPTH_STENCIL_ATTACHMENT, states);
 	GTSL::SetBitAs(GTSL::FindFirstSetBit(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE), info.Uses & TextureUses::SAMPLE, states);
 	
-	resourceDesc.SampleDesc;
-	DX_CHECK(info.RenderDevice->GetID3D12Device2()->CreatePlacedResource(heap, 0, &resourceDesc, static_cast<D3D12_RESOURCE_STATES>(states), nullptr, __uuidof(ID3D12Resource), reinterpret_cast<void**>(&resource)))
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.SampleDesc.Quality = 0;
+	DX_CHECK(info.RenderDevice->GetID3D12Device2()->CreatePlacedResource(info.Memory.GetID3D12Heap(), info.Offset, &resourceDesc, static_cast<D3D12_RESOURCE_STATES>(states), nullptr, __uuidof(ID3D12Resource), reinterpret_cast<void**>(&resource)))
+	setName(resource, info);
+}
+
+void GAL::DX12Texture::Destroy(const DX12RenderDevice* renderDevice)
+{
+	resource->Release();
+	debugClear(resource);
 }

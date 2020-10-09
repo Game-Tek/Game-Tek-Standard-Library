@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vulkan.h"
+#include "VulkanMemory.h"
 
 namespace GAL
 {
@@ -18,6 +19,8 @@ namespace GAL
 			VulkanTextureTiling Tiling;
 			VulkanDimensions Dimensions;
 			GTSL::uint8 MipLevels = 1;
+			GTSL::uint32 Offset = 0;
+			VulkanDeviceMemory Memory;
 		};
 		explicit VulkanTexture(const CreateInfo& createInfo);
 

@@ -11,6 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GAL\DX12\DX12Memory.h" />
+    <ClInclude Include="GAL\DX12\DX12Pipeline.h" />
     <ClInclude Include="GAL\Bindings.h" />
     <ClInclude Include="GAL\Buffer.h" />
     <ClInclude Include="GAL\CommandBuffer.h" />
@@ -47,8 +49,10 @@
     <ClInclude Include="GAL\Vulkan\VulkanTexture.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\DX12\DX12Pipeline.cpp" />
     <ClCompile Include="src\DX12\DX12Buffer.cpp" />
     <ClCompile Include="src\DX12\DX12CommandBuffer.cpp" />
+    <ClCompile Include="src\DX12\DX12Memory.cpp" />
     <ClCompile Include="src\DX12\DX12RenderContext.cpp" />
     <ClCompile Include="src\DX12\DX12RenderDevice.cpp" />
     <ClCompile Include="src\DX12\DX12Synchronization.cpp" />

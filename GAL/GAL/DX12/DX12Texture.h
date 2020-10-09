@@ -3,6 +3,8 @@
 #include "DX12.h"
 #include <GTSL/Extent.h>
 
+
+#include "DX12Memory.h"
 #include "GAL/RenderCore.h"
 
 namespace GAL
@@ -21,6 +23,8 @@ namespace GAL
 			GTSL::uint32 Tiling;
 			DX12Dimension Dimensions;
 			GTSL::uint8 MipLevels = 1;
+			GTSL::uint32 Offset = 0;
+			DX12Memory Memory;
 		};
 		void Initialize(const CreateInfo& info);
 		

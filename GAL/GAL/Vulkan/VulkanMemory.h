@@ -16,8 +16,8 @@ namespace GAL
 		struct CreateInfo final : VulkanCreateInfo
 		{
 			VulkanAllocateFlags::value_type Flags;
-			GTSL::uint32 Size{ 0 };
-			GTSL::uint32 MemoryType{ 0 };
+			GTSL::uint32 Size = 0;
+			GTSL::uint32 MemoryType = 0;
 		};
 		VulkanDeviceMemory(const CreateInfo& createInfo);
 

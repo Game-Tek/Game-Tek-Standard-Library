@@ -124,4 +124,31 @@ namespace GTSL
 		[[no_unique_address]] ALLOCATOR allocator;
 #pragma warning(default : 4648)
 	};
+
+	template<uint16 BYTES>
+	struct StackAllocator : AllocatorReference
+	{
+		StackAllocator() = default;
+		
+		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size)
+		{
+			GTSL_ASSERT(usedBytes <= BYTES, "Allocated more than available")
+			
+			*data = buffer;
+			*allocated_size = BYTES;
+
+			usedBytes += BYTES;
+		}
+		
+		void Deallocate(const uint64 size, uint64 alignment, void* data)
+		{
+			GTSL_ASSERT(size <= BYTES, "Freed more bytes than could be given")
+			GTSL_ASSERT(size + usedBytes <= BYTES, "Freed more bytes than could be given")
+			usedBytes -= size;
+		}
+		
+	private:
+		byte buffer[BYTES];
+		uint16 usedBytes = 0;
+	};
 }
