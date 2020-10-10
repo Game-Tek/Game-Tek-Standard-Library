@@ -6,6 +6,7 @@
 #include "GTSL/StaticString.hpp"
 
 #include "shobjidl_core.h"
+#include "GTSL/Bitman.h"
 
 #if (_WIN32)
 GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam)
@@ -207,13 +208,16 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 	wndclass.cbWndExtra = 0;
 	wndclass.lpszClassName = windowCreateInfo.Name.begin();
 
-	Application::Win32NativeHandles win32_native_handles;
-	windowCreateInfo.Application->GetNativeHandles(&win32_native_handles);
+	Application::Win32NativeHandles win32NativeHandles;
+	windowCreateInfo.Application->GetNativeHandles(&win32NativeHandles);
 	
-	wndclass.hInstance = static_cast<HINSTANCE>(win32_native_handles.HINSTANCE);
+	wndclass.hInstance = static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE);
 	RegisterClassA(&wndclass);
+
+	uint32 style = 0;
+	SetBitAs(FindFirstSetBit(WS_CAPTION), windowCreateInfo.Elements & WindowElements::TITLE_BAR, style);
 	
-	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32_native_handles.HINSTANCE), nullptr);
+	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), style, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), nullptr);
 
 	GTSL_ASSERT(windowHandle, "Window failed to create!");
 	

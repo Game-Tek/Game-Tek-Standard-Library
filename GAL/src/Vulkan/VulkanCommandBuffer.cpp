@@ -73,6 +73,14 @@ void GAL::VulkanCommandBuffer::EndRenderPass(const EndRenderPassInfo& endRenderP
 	vkCmdEndRenderPass(commandBuffer);
 }
 
+void GAL::VulkanCommandBuffer::SetScissor(const SetScissorInfo& info)
+{
+	VkRect2D scissor;
+	scissor.extent = { info.Area.Width, info.Area.Height };
+	scissor.offset = { info.Offset.Width, info.Offset.Height };
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+}
+
 void GAL::VulkanCommandBuffer::BindPipeline(const BindPipelineInfo& bindPipelineInfo)
 {
 	vkCmdBindPipeline(commandBuffer, static_cast<VkPipelineBindPoint>(bindPipelineInfo.PipelineType), bindPipelineInfo.Pipeline->GetVkPipeline());
@@ -85,9 +93,9 @@ void GAL::VulkanCommandBuffer::BindIndexBuffer(const BindIndexBufferInfo& buffer
 
 void GAL::VulkanCommandBuffer::BindVertexBuffer(const BindVertexBufferInfo& buffer) const
 {
-	auto* vk_buffer = static_cast<const VulkanBuffer*>(buffer.Buffer)->GetVkBuffer();
+	auto* vkBuffer = static_cast<const VulkanBuffer*>(buffer.Buffer)->GetVkBuffer();
 	GTSL::uint64 offset = buffer.Offset;
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vk_buffer, &offset);
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vkBuffer, &offset);
 }
 
 void GAL::VulkanCommandBuffer::UpdatePushConstant(const UpdatePushConstantsInfo& info)

@@ -65,7 +65,14 @@ namespace GAL
 		};
 		void EndRenderPass(const EndRenderPassInfo& endRenderPassInfo);
 
-		struct BindPipelineInfo : VulkanRenderInfo
+		struct SetScissorInfo final : VulkanRenderInfo
+		{
+			GTSL::Extent2D Area;
+			GTSL::Extent2D Offset;
+		};
+		void SetScissor(const SetScissorInfo& info);
+		
+		struct BindPipelineInfo final : VulkanRenderInfo
 		{
 			const VulkanPipeline* Pipeline = nullptr;
 			VulkanPipelineType PipelineType;

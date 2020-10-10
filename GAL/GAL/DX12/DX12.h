@@ -48,6 +48,26 @@ namespace GAL
 	{
 		static constexpr value_type DEVICE_MASK = 0, DEVICE_ADDRESS = 0, DEVICE_ADDRESS_CAPTURE_REPLAY = 0;
 	};
+
+	struct DX12ShaderStage : GTSL::Flags<GTSL::uint32>
+	{
+		
+	};
+
+	struct DX12BindingFlags : GTSL::Flags<GTSL::uint32>
+	{
+		
+	};
+	
+	enum class DX12TextureLayout
+	{
+		
+	};
+
+	enum class DX12BindingType
+	{
+		
+	};
 	
 	enum class DX12QueueType
 	{

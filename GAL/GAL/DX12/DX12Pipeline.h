@@ -24,7 +24,7 @@ namespace GAL
 	struct DX12ShaderInfo
 	{
 		ShaderType Type;
-		const DX12Shader* Shader = nullptr;
+		const class DX12Shader* Shader = nullptr;
 		GTSL::Range<const GTSL::byte*> ShaderData;
 	};
 
@@ -33,8 +33,31 @@ namespace GAL
 	public:
 		DX12PipelineLayout() = default;
 
+		struct BindingDescriptor
+		{
+			DX12BindingType BindingType;
+			DX12ShaderStage::value_type ShaderStage;
+			GTSL::uint32 UniformCount = 0;
+			DX12BindingFlags::value_type Flags;
+		};
+
+		struct ImageBindingDescriptor : BindingDescriptor
+		{
+			GTSL::Range<const class VulkanTextureView*> ImageViews;
+			GTSL::Range<const class VulkanSampler*> Samplers;
+			GTSL::Range<const DX12TextureLayout*> Layouts;
+		};
+
+		struct BufferBindingDescriptor : BindingDescriptor
+		{
+			GTSL::Range<const class VulkanBuffer*> Buffers;
+			GTSL::Range<const GTSL::uint32*> Offsets;
+			GTSL::Range<const GTSL::uint32*> Sizes;
+		};
+		
 		struct CreateInfo final : DX12CreateInfo
 		{
+			GTSL::Range<const BindingDescriptor*> BindingsDescriptors;
 		};
 		void Initialize(const CreateInfo& info);
 
@@ -61,7 +84,7 @@ namespace GAL
 			bool IsInheritable = false;
 			const DX12PipelineLayout* PipelineLayout = nullptr;
 			const DX12RasterPipeline* ParentPipeline = nullptr;
-			const DX12PipelineCache* PipelineCache = nullptr;
+			const class DX12PipelineCache* PipelineCache = nullptr;
 			GTSL::uint32 SubPass = 0;
 		};
 		void Initialize(const CreateInfo& info);
