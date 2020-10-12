@@ -32,6 +32,14 @@ namespace GAL
 			GTSL::uint32 Offset = 0;
 		};
 		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;
+
+		struct GetMemoryRequirementsInfo final : VulkanRenderInfo
+		{
+			CreateInfo CreateInfo;
+			VulkanTexture* Texture;
+			MemoryRequirements* MemoryRequirements;
+		};
+		static void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
 		
 		[[nodiscard]] VkImage GetVkImage() const { return image; }
 		

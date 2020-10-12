@@ -19,6 +19,7 @@ void GAL::VulkanBuffer::Initialize(const CreateInfo& info)
 	VkBufferCreateInfo vkBufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	vkBufferCreateInfo.size = info.Size;
 	vkBufferCreateInfo.usage = info.BufferType;
+	vkBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	VK_CHECK(vkCreateBuffer(info.RenderDevice->GetVkDevice(), &vkBufferCreateInfo, info.RenderDevice->GetVkAllocationCallbacks(), &buffer))
 	SET_NAME(buffer, VK_OBJECT_TYPE_BUFFER, info)
@@ -33,6 +34,26 @@ void GAL::VulkanBuffer::Destroy(const VulkanRenderDevice* renderDevice)
 void GAL::VulkanBuffer::BindToMemory(const BindMemoryInfo& bindMemoryInfo) const
 {
 	VK_CHECK(vkBindBufferMemory(bindMemoryInfo.RenderDevice->GetVkDevice(), buffer, static_cast<VkDeviceMemory>(bindMemoryInfo.Memory->GetVkDeviceMemory()), bindMemoryInfo.Offset));
+}
+
+void GAL::VulkanBuffer::GetMemoryRequirements(const GetMemoryRequirementsInfo& info)
+{
+	VkBuffer buffer;
+
+	VkBufferCreateInfo vkBufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+	vkBufferCreateInfo.size = info.CreateInfo.Size;
+	vkBufferCreateInfo.usage = info.CreateInfo.BufferType;
+	vkBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	VK_CHECK(vkCreateBuffer(info.RenderDevice->GetVkDevice(), &vkBufferCreateInfo, info.RenderDevice->GetVkAllocationCallbacks(), &buffer))
+	
+	VkMemoryRequirements vkMemoryRequirements;
+	vkGetBufferMemoryRequirements(info.RenderDevice->GetVkDevice(), buffer, &vkMemoryRequirements);
+	info.MemoryRequirements->Size = static_cast<GTSL::uint32>(vkMemoryRequirements.size);
+	info.MemoryRequirements->Alignment = static_cast<GTSL::uint32>(vkMemoryRequirements.alignment);
+	info.MemoryRequirements->MemoryTypes = vkMemoryRequirements.memoryTypeBits;
+	
+	vkDestroyBuffer(info.RenderDevice->GetVkDevice(), buffer, info.RenderDevice->GetVkAllocationCallbacks());
 }
 
 GAL::VulkanDeviceAddress GAL::VulkanBuffer::GetAddress(const VulkanRenderDevice* renderDevice) const

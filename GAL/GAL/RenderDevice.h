@@ -78,13 +78,6 @@ namespace GAL
 		RenderDevice(GTSL::Delegate<void(const char*, MessageSeverity)> pDelegate) : debugPrintFunction(pDelegate)
 		{
 		}
-
-		struct MemoryRequirements
-		{
-			GTSL::uint32 Size{ 0 };
-			GTSL::uint32 Alignment{ 0 };
-			GTSL::uint32 MemoryTypes{ 0 };
-		};
 		
 		[[nodiscard]] GTSL::AllocatorReference* GetPersistentAllocationsAllocatorReference() const { return persistentAllocatorReference; }
 		[[nodiscard]] GTSL::AllocatorReference* GetTransientAllocationsAllocatorReference() const { return transientAllocatorReference; }

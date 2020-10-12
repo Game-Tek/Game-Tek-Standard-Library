@@ -5,6 +5,8 @@
 
 namespace GAL
 {
+	struct MemoryRequirements;
+
 	class DX12Buffer final
 	{
 	public:
@@ -20,6 +22,14 @@ namespace GAL
 
 		void Destroy(const DX12RenderDevice* renderDevice);
 
+		struct GetMemoryRequirementsInfo final : DX12RenderInfo
+		{
+			CreateInfo CreateInfo;
+			DX12Buffer* Buffer;
+			MemoryRequirements* MemoryRequirements;
+		};
+		static void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
+		
 		~DX12Buffer() = default;
 		
 	private:

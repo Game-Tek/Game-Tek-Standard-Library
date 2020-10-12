@@ -45,3 +45,20 @@ void GAL::DX12Texture::Destroy(const DX12RenderDevice* renderDevice)
 	resource->Release();
 	debugClear(resource);
 }
+
+void GAL::DX12Texture::GetMemoryRequirements(const GetMemoryRequirementsInfo& info)
+{
+	D3D12_RESOURCE_DESC resourceDesc;
+	resourceDesc.Width = info.CreateInfo.Extent.Width;
+	resourceDesc.Height = info.CreateInfo.Extent.Height;
+	resourceDesc.DepthOrArraySize = info.CreateInfo.Extent.Depth;
+	resourceDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(info.CreateInfo.Dimensions);
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	resourceDesc.Format = static_cast<DXGI_FORMAT>(info.CreateInfo.Format);
+
+	const auto allocInfo = info.RenderDevice->GetID3D12Device2()->GetResourceAllocationInfo(0, 1, &resourceDesc);
+
+	info.MemoryRequirements->Alignment = static_cast<GTSL::uint32>(allocInfo.Alignment);
+	info.MemoryRequirements->Size = static_cast<GTSL::uint32>(allocInfo.SizeInBytes);
+	info.MemoryRequirements->MemoryTypes = 0;
+}

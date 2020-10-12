@@ -59,6 +59,7 @@
     <ClInclude Include="GTSL\String.hpp" />
     <ClInclude Include="GTSL\GamepadQuery.h" />
     <ClInclude Include="GTSL\StringCommon.h" />
+    <ClInclude Include="GTSL\Tree.hpp" />
     <ClInclude Include="GTSL\Tuple.h" />
     <ClInclude Include="GTSL\Vector.hpp" />
     <ClInclude Include="GTSL\Id.h" />

@@ -4,6 +4,8 @@
 
 #include <dxgi1_6.h>
 
+
+#include "GAL/DX12/DX12Buffer.h"
 #include "GAL/DX12/DX12CommandBuffer.h"
 
 void GAL::DX12Queue::Submit(const SubmitInfo& submitInfo) const

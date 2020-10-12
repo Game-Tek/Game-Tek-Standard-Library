@@ -31,6 +31,14 @@ namespace GAL
 		};
 		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;
 
+		struct GetMemoryRequirementsInfo final : VulkanRenderInfo
+		{
+			CreateInfo CreateInfo;
+			VulkanBuffer* Texture;
+			MemoryRequirements* MemoryRequirements;
+		};
+		static void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
+		
 		[[nodiscard]] VulkanDeviceAddress GetAddress(const VulkanRenderDevice* renderDevice) const;
 		
 		[[nodiscard]] VkBuffer GetVkBuffer() const { return buffer; }

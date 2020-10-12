@@ -3,6 +3,7 @@
 #include "GAL/RenderDevice.h"
 
 #include "DX12.h"
+#include "DX12Buffer.h"
 
 #include "GTSL/Delegate.hpp"
 #include "GTSL/Range.h"
@@ -69,7 +70,7 @@ namespace GAL
 		void Initialize(const CreateInfo& info);
 
 		~DX12RenderDevice();
-
+		
 		[[nodiscard]] GTSL::uint64 GetHandle() const { return reinterpret_cast<GTSL::uint64>(device); }
 		[[nodiscard]] ID3D12Device2* GetID3D12Device2() const { return device; }
 

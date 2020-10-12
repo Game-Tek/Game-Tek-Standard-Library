@@ -16,6 +16,13 @@ namespace GAL
 		VULKAN,
 		DIRECTX12
 	};
+
+	struct MemoryRequirements
+	{
+		GTSL::uint32 Size{ 0 };
+		GTSL::uint32 Alignment{ 0 };
+		GTSL::uint32 MemoryTypes{ 0 };
+	};
 	
 	class RenderDevice;
 	

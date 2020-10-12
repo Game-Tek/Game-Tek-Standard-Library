@@ -188,6 +188,9 @@ namespace GTSL
 		 * \return Const reference to the last element.
 		 */
 		[[nodiscard]] const T& back() const noexcept { return this->data[this->length - 1]; }
+
+		Range<T*> GetRange() noexcept { return Range<T*>(length, data); }
+		Range<const T*> GetRange() const noexcept { return Range<const T*>(length, data); }
 		
 		/**
 		 * \brief Resizes the array(if necessary, does not reallocate for downsize) to accomodate count T elements.
