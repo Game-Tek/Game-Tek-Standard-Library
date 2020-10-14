@@ -18,26 +18,18 @@ namespace GAL
 			VulkanBufferType::value_type BufferType = 0;
 			VulkanDeviceMemory Memory;
 		};
-		VulkanBuffer(const CreateInfo& createInfo);
-
-		void Initialize(const CreateInfo& info);
-		
-		void Destroy(const class VulkanRenderDevice* renderDevice);
-		
-		struct BindMemoryInfo : VulkanRenderInfo
-		{
-			class VulkanDeviceMemory* Memory{ nullptr };
-			GTSL::uint32 Offset = 0;
-		};
-		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;
+		//VulkanBuffer(const CreateInfo& createInfo);
 
 		struct GetMemoryRequirementsInfo final : VulkanRenderInfo
 		{
 			CreateInfo CreateInfo;
-			VulkanBuffer* Texture;
 			MemoryRequirements* MemoryRequirements;
 		};
-		static void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
+		void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
+		
+		void Initialize(const CreateInfo& info);
+		
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
 		[[nodiscard]] VulkanDeviceAddress GetAddress(const VulkanRenderDevice* renderDevice) const;
 		

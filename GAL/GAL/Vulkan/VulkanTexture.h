@@ -22,24 +22,18 @@ namespace GAL
 			GTSL::uint32 Offset = 0;
 			VulkanDeviceMemory Memory;
 		};
-		explicit VulkanTexture(const CreateInfo& createInfo);
-
-		void Destroy(const class VulkanRenderDevice* renderDevice);
-
-		struct BindMemoryInfo : VulkanRenderInfo
-		{
-			class VulkanDeviceMemory* Memory{ nullptr };
-			GTSL::uint32 Offset = 0;
-		};
-		void BindToMemory(const BindMemoryInfo& bindMemoryInfo) const;
+		//explicit VulkanTexture(const CreateInfo& createInfo);
 
 		struct GetMemoryRequirementsInfo final : VulkanRenderInfo
 		{
 			CreateInfo CreateInfo;
-			VulkanTexture* Texture;
 			MemoryRequirements* MemoryRequirements;
 		};
-		static void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
+		void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
+		
+		void Initialize(const CreateInfo& createInfo);
+		
+		void Destroy(const class VulkanRenderDevice* renderDevice);
 		
 		[[nodiscard]] VkImage GetVkImage() const { return image; }
 		

@@ -4,39 +4,8 @@
 
 #include "GAL/Vulkan/VulkanMemory.h"
 
-GAL::VulkanTexture::VulkanTexture(const CreateInfo& createInfo)
-{
-	VkImageCreateInfo vkImageCreateInfo{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	vkImageCreateInfo.imageType = static_cast<VkImageType>(createInfo.Dimensions);
-	vkImageCreateInfo.extent = Extent3DToVkExtent3D(createInfo.Extent);
-	vkImageCreateInfo.mipLevels = createInfo.MipLevels;
-	vkImageCreateInfo.arrayLayers = 1;
-	vkImageCreateInfo.format = static_cast<VkFormat>(createInfo.Format);
-	vkImageCreateInfo.tiling = static_cast<VkImageTiling>(createInfo.Tiling);
-	vkImageCreateInfo.initialLayout = static_cast<VkImageLayout>(createInfo.InitialLayout);
-	vkImageCreateInfo.usage = createInfo.Uses;
-	vkImageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-	vkImageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	
-	VK_CHECK(vkCreateImage(createInfo.RenderDevice->GetVkDevice(), &vkImageCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &image))
-	SET_NAME(image, VK_OBJECT_TYPE_IMAGE, createInfo)
-}
-
-void GAL::VulkanTexture::Destroy(const VulkanRenderDevice* renderDevice)
-{
-	vkDestroyImage(renderDevice->GetVkDevice(), image, renderDevice->GetVkAllocationCallbacks());
-	debugClear(image);
-}
-
-void GAL::VulkanTexture::BindToMemory(const BindMemoryInfo& bindMemoryInfo) const
-{
-	VK_CHECK(vkBindImageMemory(bindMemoryInfo.RenderDevice->GetVkDevice(), image, static_cast<VkDeviceMemory>(bindMemoryInfo.Memory->GetVkDeviceMemory()), bindMemoryInfo.Offset))
-}
-
 void GAL::VulkanTexture::GetMemoryRequirements(const GetMemoryRequirementsInfo& info)
-{
-	VkImage image;
-	
+{	
 	VkImageCreateInfo vkImageCreateInfo{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 	vkImageCreateInfo.imageType = static_cast<VkImageType>(info.CreateInfo.Dimensions);
 	vkImageCreateInfo.extent = Extent3DToVkExtent3D(info.CreateInfo.Extent);
@@ -56,8 +25,18 @@ void GAL::VulkanTexture::GetMemoryRequirements(const GetMemoryRequirementsInfo& 
 	info.MemoryRequirements->Size = static_cast<GTSL::uint32>(vkMemoryRequirements.size);
 	info.MemoryRequirements->Alignment = static_cast<GTSL::uint32>(vkMemoryRequirements.alignment);
 	info.MemoryRequirements->MemoryTypes = vkMemoryRequirements.memoryTypeBits;
+}
 
-	vkDestroyImage(info.RenderDevice->GetVkDevice(), image, info.RenderDevice->GetVkAllocationCallbacks());
+void GAL::VulkanTexture::Initialize(const CreateInfo& createInfo)
+{
+	SET_NAME(image, VK_OBJECT_TYPE_IMAGE, createInfo)
+	VK_CHECK(vkBindImageMemory(createInfo.RenderDevice->GetVkDevice(), image, static_cast<VkDeviceMemory>(createInfo.Memory.GetVkDeviceMemory()), createInfo.Offset))
+}
+
+void GAL::VulkanTexture::Destroy(const VulkanRenderDevice* renderDevice)
+{
+	vkDestroyImage(renderDevice->GetVkDevice(), image, renderDevice->GetVkAllocationCallbacks());
+	debugClear(image);
 }
 
 GAL::VulkanTextureView::VulkanTextureView(const CreateInfo& createInfo)

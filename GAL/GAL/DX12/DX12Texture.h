@@ -33,10 +33,9 @@ namespace GAL
 		struct GetMemoryRequirementsInfo final : DX12RenderInfo
 		{
 			CreateInfo CreateInfo;
-			DX12Texture* Texture;
 			MemoryRequirements* MemoryRequirements;
 		};
-		static void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
+		void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
 		
 		~DX12Texture() = default;
 		

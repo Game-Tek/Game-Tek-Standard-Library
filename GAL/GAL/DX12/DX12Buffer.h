@@ -18,17 +18,17 @@ namespace GAL
 			DX12BufferType::value_type BufferType = 0;
 			const DX12Memory Memory;
 		};
-		void Initialize(const CreateInfo& info);
-
-		void Destroy(const DX12RenderDevice* renderDevice);
 
 		struct GetMemoryRequirementsInfo final : DX12RenderInfo
 		{
 			CreateInfo CreateInfo;
-			DX12Buffer* Buffer;
 			MemoryRequirements* MemoryRequirements;
 		};
-		static void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
+		void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
+		
+		void Initialize(const CreateInfo& info);
+		
+		void Destroy(const DX12RenderDevice* renderDevice);
 		
 		~DX12Buffer() = default;
 		
