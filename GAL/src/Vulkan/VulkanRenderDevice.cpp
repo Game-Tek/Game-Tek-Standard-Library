@@ -43,24 +43,6 @@ void vkFree(void* data, void* alloc)
 	}
 }
 
-void GAL::VulkanRenderDevice::GetBufferMemoryRequirements(const VulkanBuffer* buffer, MemoryRequirements& bufferMemoryRequirements) const
-{
-	VkMemoryRequirements vkMemoryRequirements;
-	vkGetBufferMemoryRequirements(device, static_cast<const VulkanBuffer*>(buffer)->GetVkBuffer(), &vkMemoryRequirements);
-	bufferMemoryRequirements.Alignment = vkMemoryRequirements.alignment;
-	bufferMemoryRequirements.MemoryTypes = vkMemoryRequirements.memoryTypeBits;
-	bufferMemoryRequirements.Size = vkMemoryRequirements.size;
-}
-
-void GAL::VulkanRenderDevice::GetImageMemoryRequirements(const VulkanTexture* image,	MemoryRequirements& imageMemoryRequirements) const
-{
-	VkMemoryRequirements vkMemoryRequirements;
-	vkGetImageMemoryRequirements(device, image->GetVkImage(), &vkMemoryRequirements);
-	imageMemoryRequirements.Alignment = vkMemoryRequirements.alignment;
-	imageMemoryRequirements.MemoryTypes = vkMemoryRequirements.memoryTypeBits;
-	imageMemoryRequirements.Size = vkMemoryRequirements.size;
-}
-
 void GAL::VulkanRenderDevice::GetAccelerationStructureMemoryRequirements(const GetAccelerationStructureMemoryRequirementsInfo& accelerationStructureMemoryRequirementsInfo) const
 {
 	VkAccelerationStructureMemoryRequirementsInfoKHR vkAccelerationStructureMemoryRequirementsInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_KHR };

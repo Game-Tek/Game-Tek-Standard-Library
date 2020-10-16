@@ -31,7 +31,13 @@ namespace GTSL
 		String& operator=(String&& other) noexcept = default;
 		~String() = default;
 
-		string_type operator[](const length_type i) noexcept { return data[i]; }
+		String& operator=(const Range<const UTF8*> range)
+		{
+			data.ResizeDown(0);
+			data.PushBack(range);
+			return *this;
+		}
+
 		string_type operator[](const length_type i) const noexcept { return data[i]; }
 
 		auto begin() noexcept { return data.begin(); }
@@ -59,7 +65,7 @@ namespace GTSL
 			if (data.GetLength() != other.data.GetLength()) return false;
 
 			length_type i = 0;
-			for (const auto& c : data) { if (c != (toLowerCase(other.data[i]) || toUpperCase(other.data[i]))) { return false; } ++i; }
+			for (const auto& c : data) { if (c != (ToLowerCase(other.data[i]) || ToUpperCase(other.data[i]))) { return false; } ++i; }
 
 			return true;
 		}

@@ -16,6 +16,11 @@ namespace GTSL
 	void ToString(float32 num, Range<UTF8*>& buffer);
 	void ToString(float64 num, Range<UTF8*>& buffer);
 
+	/**
+	 * \brief Computes the length of a c string.
+	 * \param text Pointer to a c string containing the string to be measured.
+	 * \return The string length including the null terminator.
+	 */
 	constexpr uint32 StringLength(const char* text) noexcept { uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i + 1; }
 
 	inline char ToLowerCase(char c)

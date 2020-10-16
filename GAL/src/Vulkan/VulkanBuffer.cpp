@@ -16,20 +16,20 @@ void GAL::VulkanBuffer::Destroy(const VulkanRenderDevice* renderDevice)
 	debugClear(buffer);
 }
 
-void GAL::VulkanBuffer::GetMemoryRequirements(const GetMemoryRequirementsInfo& info)
+void GAL::VulkanBuffer::GetMemoryRequirements(GetMemoryRequirementsInfo* info)
 {
 	VkBufferCreateInfo vkBufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-	vkBufferCreateInfo.size = info.CreateInfo.Size;
-	vkBufferCreateInfo.usage = info.CreateInfo.BufferType;
+	vkBufferCreateInfo.size = info->CreateInfo->Size;
+	vkBufferCreateInfo.usage = info->CreateInfo->BufferType;
 	vkBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	VK_CHECK(vkCreateBuffer(info.RenderDevice->GetVkDevice(), &vkBufferCreateInfo, info.RenderDevice->GetVkAllocationCallbacks(), &buffer))
+	VK_CHECK(vkCreateBuffer(info->RenderDevice->GetVkDevice(), &vkBufferCreateInfo, info->RenderDevice->GetVkAllocationCallbacks(), &buffer))
 	
 	VkMemoryRequirements vkMemoryRequirements;
-	vkGetBufferMemoryRequirements(info.RenderDevice->GetVkDevice(), buffer, &vkMemoryRequirements);
-	info.MemoryRequirements->Size = static_cast<GTSL::uint32>(vkMemoryRequirements.size);
-	info.MemoryRequirements->Alignment = static_cast<GTSL::uint32>(vkMemoryRequirements.alignment);
-	info.MemoryRequirements->MemoryTypes = vkMemoryRequirements.memoryTypeBits;
+	vkGetBufferMemoryRequirements(info->RenderDevice->GetVkDevice(), buffer, &vkMemoryRequirements);
+	info->MemoryRequirements.Size = static_cast<GTSL::uint32>(vkMemoryRequirements.size);
+	info->MemoryRequirements.Alignment = static_cast<GTSL::uint32>(vkMemoryRequirements.alignment);
+	info->MemoryRequirements.MemoryTypes = vkMemoryRequirements.memoryTypeBits;
 }
 
 GAL::VulkanDeviceAddress GAL::VulkanBuffer::GetAddress(const VulkanRenderDevice* renderDevice) const

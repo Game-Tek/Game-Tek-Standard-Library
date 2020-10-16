@@ -25,14 +25,14 @@ namespace GTSL
 		{
 			Node* newNode;
 			uint64 allocatedSize;
-			allocator.Allocate(sizeof(Node), alignof(Node), static_cast<void**>(newNode), &allocatedSize);
+			allocator.Allocate(sizeof(Node), alignof(Node), reinterpret_cast<void**>(&newNode), &allocatedSize);
 			parent->Nodes.EmplaceBack(newNode);
 			return newNode;
 		}
 
 		~Tree()
 		{
-			auto freeNode = [&](Node* node, auto&& self)
+			auto freeNode = [&](Node* node, auto&& self) -> void
 			{
 				for (uint32 i = 0; i < node->Nodes.GetLength(); ++i) { self(node->Nodes[i], self); }
 

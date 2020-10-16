@@ -201,6 +201,13 @@ namespace GTSL
 			return getValuesBucket(bucketIndex)[elementIndex];
 		}
 
+		const T& At(const key_type key) const
+		{
+			const auto bucketIndex = modulo(key, capacity); const auto elementIndex = getIndexForKeyInBucket(bucketIndex, key);
+			GTSL_ASSERT(elementIndex != 0xFFFFFFFF, "No element with that key!");
+			return getValuesBucket(bucketIndex)[elementIndex];
+		}
+
 		void Remove(const key_type key)
 		{
 			auto bucketIndex = modulo(key, this->capacity); auto elementIndex = getIndexForKeyInBucket(bucketIndex, key);

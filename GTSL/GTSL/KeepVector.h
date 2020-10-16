@@ -53,7 +53,7 @@ namespace GTSL
 		}
 
 		T& operator*() { return getObjects()[pos]; }
-		T* operator->() { return getObjects() + pos; }
+		T* operator->() { return getObjects().begin() + pos; }
 
 		T& operator[](const uint32 index) { return getObjects()[index]; }
 
