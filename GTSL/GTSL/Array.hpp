@@ -155,19 +155,19 @@ namespace GTSL
 		constexpr uint32 PushBack(const Range<const T*> ranger) noexcept
 		{
 			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
-			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { this->data[i] = ranger[i]; }
+			for (uint32 i = 0, p = length; i < ranger.ElementCount(); ++i, ++p) { this->data[p] = ranger[i]; }
 			auto ret = this->length;
 			this->length += static_cast<uint32>(ranger.ElementCount());
 			return ret;
 		}
 
-		constexpr uint32 Insert(const uint32 index, const Range<const T*> ranger) noexcept
-		{
-			copy(ranger.ElementCount(), ranger.begin(), this->data + index);
-			auto ret = this->length;
-			this->length += static_cast<uint32>(ranger.ElementCount());
-			return ret;
-		}
+		//constexpr uint32 Insert(const uint32 index, const Range<const T*> ranger) noexcept
+		//{
+		//	copy(ranger.ElementCount(), ranger.begin(), this->data + index);
+		//	auto ret = this->length;
+		//	this->length += static_cast<uint32>(ranger.ElementCount());
+		//	return ret;
+		//}
 
 		void Remove(const uint32 from, const uint32 to) noexcept
 		{

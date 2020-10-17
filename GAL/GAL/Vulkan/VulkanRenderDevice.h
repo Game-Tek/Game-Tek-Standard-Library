@@ -87,15 +87,6 @@ namespace GAL
 		[[nodiscard]] VkInstance GetVkInstance() const { return instance; }
 		[[nodiscard]] VkPhysicalDevice GetVkPhysicalDevice() const { return physicalDevice; }
 		[[nodiscard]] VkDevice GetVkDevice() const { return device; }
-
-		struct GetAccelerationStructureMemoryRequirementsInfo
-		{
-			VulkanAccelerationStructureBuildType AccelerationStructureBuildType;
-			VulkanAccelerationStructureMemoryRequirementsType AccelerationStructureMemoryRequirementsType;
-			const class VulkanAccelerationStructure* AccelerationStructure;
-			MemoryRequirements* MemoryRequirements;
-		};
-		void GetAccelerationStructureMemoryRequirements(const GetAccelerationStructureMemoryRequirementsInfo& accelerationStructureMemoryRequirementsInfo) const;
 		
 		[[nodiscard]] GTSL::uint32 FindMemoryType(GTSL::uint32 typeFilter, GTSL::uint32 memoryType) const;
 

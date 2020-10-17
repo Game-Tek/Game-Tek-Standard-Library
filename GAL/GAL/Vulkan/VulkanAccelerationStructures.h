@@ -66,8 +66,9 @@ namespace GAL
 
 		VulkanAccelerationStructure() = default;
 		
-		struct TopLevelCreateInfo : VulkanCreateInfo
+		struct CreateInfo : VulkanCreateInfo
 		{
+			bool IsTopLevel = false;
 			VulkanAccelerationStructureFlags::value_type Flags;
 			GTSL::uint32 CompactedSize = 0;
 			VulkanDeviceAddress DeviceAddress = 0;
@@ -75,30 +76,24 @@ namespace GAL
 			 * \brief These describe the maximum size and format of the data that will be built into the acceleration structure.
 			 */
 			GTSL::Range<GeometryDescriptor*> GeometryDescriptors;
-		};
-		//VulkanAccelerationStructure(const TopLevelCreateInfo& info);
-
-		void Initialize(const TopLevelCreateInfo& info);
-		
-		struct BottomLevelCreateInfo : VulkanCreateInfo
-		{
-			VulkanAccelerationStructureFlags::value_type Flags;
-			GTSL::uint32 CompactedSize = 0;
-			VulkanDeviceAddress DeviceAddress;
-			GTSL::Range<GeometryDescriptor*> GeometryDescriptors;
-		};
-		VulkanAccelerationStructure(const BottomLevelCreateInfo& info);
-		void Initialize(const BottomLevelCreateInfo& info);
-
-
-		void Destroy(const VulkanRenderDevice* renderDevice);
-
-		struct BindToMemoryInfo : VulkanRenderInfo
-		{
 			VulkanDeviceMemory Memory;
 			uint32_t Offset = 0;
 		};
-		void BindToMemory(const BindToMemoryInfo& info) const;
+		//VulkanAccelerationStructure(const TopLevelCreateInfo& info);
+
+		struct GetMemoryRequirementsInfo final : VulkanRenderInfo
+		{
+			CreateInfo* CreateInfo;
+			MemoryRequirements MemoryRequirements;
+
+			VulkanAccelerationStructureBuildType BuildType;
+			VulkanAccelerationStructureMemoryRequirementsType MemoryRequirementsType;
+		};
+		void GetMemoryRequirements(GetMemoryRequirementsInfo* memoryRequirements);
+		
+		void Initialize(const CreateInfo& info);
+
+		void Destroy(const VulkanRenderDevice* renderDevice);
 
 		VulkanDeviceAddress GetAddress(const VulkanRenderDevice* renderDevice) const;
 		

@@ -43,19 +43,6 @@ void vkFree(void* data, void* alloc)
 	}
 }
 
-void GAL::VulkanRenderDevice::GetAccelerationStructureMemoryRequirements(const GetAccelerationStructureMemoryRequirementsInfo& accelerationStructureMemoryRequirementsInfo) const
-{
-	VkAccelerationStructureMemoryRequirementsInfoKHR vkAccelerationStructureMemoryRequirementsInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_KHR };
-	vkAccelerationStructureMemoryRequirementsInfoKhr.accelerationStructure = accelerationStructureMemoryRequirementsInfo.AccelerationStructure->GetVkAccelerationStructure();
-	vkAccelerationStructureMemoryRequirementsInfoKhr.buildType = static_cast<VkAccelerationStructureBuildTypeKHR>(accelerationStructureMemoryRequirementsInfo.AccelerationStructureBuildType);
-	vkAccelerationStructureMemoryRequirementsInfoKhr.type = static_cast<VkAccelerationStructureMemoryRequirementsTypeKHR>(accelerationStructureMemoryRequirementsInfo.AccelerationStructureMemoryRequirementsType);
-	VkMemoryRequirements2 vkMemoryRequirements2{ VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2 };
-	vkGetAccelerationStructureMemoryRequirementsKHR(device, &vkAccelerationStructureMemoryRequirementsInfoKhr, &vkMemoryRequirements2);
-	accelerationStructureMemoryRequirementsInfo.MemoryRequirements->Size = vkMemoryRequirements2.memoryRequirements.size;
-	accelerationStructureMemoryRequirementsInfo.MemoryRequirements->Alignment = vkMemoryRequirements2.memoryRequirements.alignment;
-	accelerationStructureMemoryRequirementsInfo.MemoryRequirements->MemoryTypes = vkMemoryRequirements2.memoryRequirements.memoryTypeBits;
-}
-
 uint32 GAL::VulkanRenderDevice::FindMemoryType(const uint32 typeFilter, const uint32 memoryType) const
 {
 	for (uint32 i = 0; i < memoryProperties.memoryTypeCount; ++i)
