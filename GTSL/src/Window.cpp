@@ -217,7 +217,7 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 	uint32 style = 0;
 	SetBitAs(FindFirstSetBit(WS_CAPTION), windowCreateInfo.Elements & WindowElements::TITLE_BAR, style);
 	
-	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), style, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), nullptr);
+	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), nullptr);
 
 	GTSL_ASSERT(windowHandle, "Window failed to create!");
 	

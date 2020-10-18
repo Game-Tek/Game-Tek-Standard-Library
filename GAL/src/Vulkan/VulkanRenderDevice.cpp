@@ -4,8 +4,6 @@
 #include "GAL/Vulkan/VulkanSynchronization.h"
 #include "GAL/Vulkan/VulkanCommandBuffer.h"
 #include "GAL/Vulkan/VulkanBindings.h"
-#include "GAL/Vulkan/VulkanBuffer.h"
-#include "GAL/Vulkan/VulkanTexture.h"
 #include "GTSL/StaticString.hpp"
 
 using namespace GTSL;
@@ -403,6 +401,13 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 				}
 			}
 
+			if (tryAddExtension(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME))
+			{
+				VkPhysicalDeviceBufferDeviceAddressFeatures vkBufferAddressFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES };
+				vkBufferAddressFeatures.bufferDeviceAddress = true;
+				placeFeaturesStructure(vkBufferAddressFeatures);
+			}
+			
 			for (uint32 extension = 0; extension < createInfo.Extensions.ElementCount(); ++extension)
 			{
 				switch (createInfo.Extensions[extension])
@@ -429,13 +434,6 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 					}
 						
 					if(tryAddExtension(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME)) {}
-						
-					if(tryAddExtension(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME))
-					{
-						VkPhysicalDeviceBufferDeviceAddressFeatures vkBufferAddressFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES };
-						vkBufferAddressFeatures.bufferDeviceAddress = true;
-						placeFeaturesStructure(vkBufferAddressFeatures);
-					}
 						
 					if(tryAddExtension(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME)) {}
 

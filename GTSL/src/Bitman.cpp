@@ -17,6 +17,16 @@ void GTSL::FindFirstSetBit(const uint64 number, uint8& bit) { unsigned long set_
 
 void GTSL::FindFirstSetBit(const uint64 number, uint8& bit, bool& anySetBit) { unsigned long set_bit{ 0 }; anySetBit = _BitScanForward64(&set_bit, number); bit = static_cast<uint8>(set_bit); }
 
+void GTSL::FindLastSetBit(const uint32 number, uint8& bit, bool& anySetBit)
+{
+	unsigned long set_bit{ 0 }; anySetBit = _BitScanReverse(&set_bit, number); bit = static_cast<uint8>(set_bit);
+}
+
+void GTSL::FindLastSetBit(const uint64 number, uint8& bit, bool& anySetBit)
+{
+	unsigned long set_bit{ 0 }; anySetBit = _BitScanReverse64(&set_bit, number); bit = static_cast<uint8>(set_bit);
+}
+
 void GTSL::NumberOfSetBits(const uint16 number, uint8& count) { count = static_cast<uint8>(__popcnt16(number)); }
 
 void GTSL::NumberOfSetBits(const uint32 number, uint8& count) { count = static_cast<uint8>(__popcnt(number)); }

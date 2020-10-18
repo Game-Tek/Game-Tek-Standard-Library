@@ -7,6 +7,8 @@ namespace GTSL
 	void FindFirstSetBit(uint64 number, uint8& bit);
 	void FindFirstSetBit(uint32 number, uint8& bit, bool& anySetBit);
 	void FindFirstSetBit(uint64 number, uint8& bit, bool& anySetBit);
+	void FindLastSetBit(uint32 number, uint8& bit, bool& anySetBit);
+	void FindLastSetBit(uint64 number, uint8& bit, bool& anySetBit);
 	void NumberOfSetBits(uint16 number, uint8& count);
 	void NumberOfSetBits(uint32 number, uint8& count);
 	void NumberOfSetBits(uint64 number, uint8& count);

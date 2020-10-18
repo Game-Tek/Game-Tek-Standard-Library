@@ -13,21 +13,16 @@ namespace GTSL
 	template<typename T>
 	struct KeepVectorIterator
 	{
-		KeepVectorIterator(const uint32 capacity, byte* dt) : capacity(capacity), data(dt)
+		//begin
+		KeepVectorIterator(const uint32 pos, const uint32 capacity, byte* dt) : capacity(capacity), data(dt), pos(pos)
 		{
-			pos = capacity - 1;
-			while (CheckBit(modulo(pos), getIndices()[pos / 32])) { --pos; }
-			++pos;
 		}
 
-		KeepVectorIterator(const uint32 p, const uint32 capacity, byte* dt) : pos(p), capacity(capacity), data(dt)
+		bool operator!=(const KeepVectorIterator& other)
 		{
-			lastPos = capacity - 1;
-			while (CheckBit(modulo(lastPos), getIndices()[lastPos / 32])) { --lastPos; }
-			++lastPos;
+			lastPos = other.pos;
+			return pos != other.pos;
 		}
-
-		bool operator!=(const KeepVectorIterator& other) const { return pos != other.pos; }
 		bool operator==(const KeepVectorIterator& other) const { return pos == other.pos; }
 
 		KeepVectorIterator& operator++()
@@ -116,14 +111,36 @@ namespace GTSL
 			}
 		}
 
-		KeepVectorIterator<T> begin() { return KeepVectorIterator<T>(0, capacity, data); }
-		KeepVectorIterator<T> end() { return KeepVectorIterator<T>(capacity, data); }
+		KeepVectorIterator<T> begin()
+		{
+			uint32 start = 0, end = 0;
+			getStartEnd(start, end);
+			return KeepVectorIterator<T>(start, capacity, data);
+		}
+		
+		KeepVectorIterator<T> end()
+		{
+			uint32 start = 0, end = 0;
+			getStartEnd(start, end);
+			return KeepVectorIterator<T>(end, capacity, data);
+		}
 
-		KeepVectorIterator<T> begin() const { return KeepVectorIterator<T>(0, capacity, data); }
-		KeepVectorIterator<T> end() const { return KeepVectorIterator<T>(capacity, data); }
+		KeepVectorIterator<const T> begin() const
+		{
+			uint32 start = 0, end = 0;
+			getStartEnd(start, end);
+			return KeepVectorIterator<const T>(start, capacity, data);
+		}
+
+		KeepVectorIterator<const T> end() const
+		{
+			uint32 start = 0, end = 0;
+			getStartEnd(start, end);
+			return KeepVectorIterator<const T>(end, capacity, data);
+		}
 
 		Range<KeepVectorIterator<T>> GetRange() { return Range<KeepVectorIterator<T>>(begin(), end()); }
-		Range<KeepVectorIterator<T>> GetRange() const { return Range<KeepVectorIterator<T>>(begin(), end()); }
+		Range<KeepVectorIterator<const T>> GetRange() const { return Range<KeepVectorIterator<const T>>(begin(), end()); }
 
 		/**
 		 * \brief Emplaces an object into the vector At the first free slot available.
@@ -307,6 +324,36 @@ namespace GTSL
 			allocator.Deallocate(totalSize, alignof(T), data);
 		}
 
+		void getStartEnd(uint32& start, uint32& end) const
+		{
+			uint8 bit = 0;
+
+			for (uint32 i = 0; i < getIndices().ElementCount(); ++i)
+			{
+				bool anySet;
+				FindFirstSetBit(~getIndices()[i], bit, anySet); //look for first occupied slot
+				if (anySet)
+				{
+					start = i * BITS;
+					start += bit;
+					break;
+				}
+			}
+			
+			for (uint32 i = 0, r = getIndices().ElementCount() - 1; i < getIndices().ElementCount(); ++i, --r)
+			{
+				bool anySet;
+				FindLastSetBit(~getIndices()[r], bit, anySet); //look for last occupied slot
+				if (anySet)
+				{
+					end = r * BITS;
+					end += bit;
+					end += 1;
+					break;
+				}
+			}
+		}
+		
 		[[nodiscard]] uint32 getDataSize(const uint32 newElementCount) const { return sizeof(T) * newElementCount; }
 		[[nodiscard]] uint32 getIndicesSize(const uint32 newElementCount) const { return ((newElementCount / BITS) + 1) * sizeof(uint32); }
 

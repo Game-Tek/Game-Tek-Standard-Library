@@ -13,6 +13,8 @@ namespace GTSL
 		I begin() { return from; }
 		I end() { return to; }
 
+		Range Reverse() const { return Range(end(), begin()); }
+		
 		using type = I;
 		
 	private:
@@ -36,6 +38,8 @@ namespace GTSL
 		//[[nodiscard]] I* begin() const { return from; }
 		//[[nodiscard]] I* end() const { return to; }
 
+		[[nodiscard]] Range Reverse() const { return Range(end() - 1, begin() - 1); }	
+		
 		[[nodiscard]] constexpr I* begin() const { return from; }
 		[[nodiscard]] constexpr I* end() const { return to; }
 
