@@ -261,6 +261,9 @@
     <ClInclude Include="GTSL\Tree.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GTSL\DeferrableContainer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\System.cpp">

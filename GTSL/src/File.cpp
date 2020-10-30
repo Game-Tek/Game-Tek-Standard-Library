@@ -9,7 +9,8 @@ using namespace GTSL;
 
 File::~File()
 {
-	GTSL_ASSERT(fileHandle == nullptr, "File was not closed!")
+	//GTSL_ASSERT(fileHandle == nullptr, "File was not closed!")
+	if (fileHandle) { CloseHandle(static_cast<HANDLE>(fileHandle)); }
 }
 
 void File::OpenFile(const Range<const UTF8*> path, const AccessMode::value_type accessMode, const OpenMode openMode)
@@ -25,7 +26,7 @@ void File::OpenFile(const Range<const UTF8*> path, const AccessMode::value_type 
 	{
 		case OpenMode::LEAVE_CONTENTS: open_mode = OPEN_ALWAYS; break;
 		case OpenMode::CLEAR: open_mode = CREATE_ALWAYS; break;
-	default: ;
+		default: GTSL_ASSERT(false, "");
 	}
 
 	StaticString<MAX_PATH> win32_path(path);
@@ -39,9 +40,7 @@ void File::CloseFile()
 {
 	CloseHandle(static_cast<HANDLE>(fileHandle));
 	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
-#if (_DEBUG)
 	fileHandle = nullptr;
-#endif
 }
 
 uint32 File::WriteToFile(const Range<const byte*> buffer) const

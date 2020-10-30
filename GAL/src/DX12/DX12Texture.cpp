@@ -62,3 +62,23 @@ void GAL::DX12Texture::GetMemoryRequirements(const GetMemoryRequirementsInfo& in
 	info.MemoryRequirements->Size = static_cast<GTSL::uint32>(allocInfo.SizeInBytes);
 	info.MemoryRequirements->MemoryTypes = 0;
 }
+
+void GAL::DX12Sampler::Initialize(const CreateInfo& info)
+{
+	D3D12_SAMPLER_DESC samplerDesc;
+	samplerDesc.MaxAnisotropy = info.Anisotropy;
+	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDesc.BorderColor[0] = 0.0f;
+	samplerDesc.BorderColor[1] = 0.0f;
+	samplerDesc.BorderColor[2] = 0.0f;
+	samplerDesc.BorderColor[3] = 0.0f;
+	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	samplerDesc.Filter = D3D12_FILTER_ANISOTROPIC;
+	samplerDesc.MaxLOD = 0.0f;
+	samplerDesc.MinLOD = 0.0f;
+	samplerDesc.MipLODBias = 0.0f;
+	
+	info.RenderDevice->GetID3D12Device2()->CreateSampler(&samplerDesc, sampler);
+}

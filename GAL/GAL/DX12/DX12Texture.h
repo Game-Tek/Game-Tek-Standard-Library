@@ -36,10 +36,35 @@ namespace GAL
 			MemoryRequirements* MemoryRequirements;
 		};
 		void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
+
+		ID3D12Resource* GetID3D12Resource() const { return resource; }
 		
 		~DX12Texture() = default;
 		
 	private:
 		ID3D12Resource* resource = nullptr;
+	};
+
+	class DX12TextureView final
+	{
+	public:
+		DX12TextureView() = default;
+
+	private:
+	};
+
+	class DX12Sampler final
+	{
+	public:
+		DX12Sampler() = default;
+
+		struct CreateInfo final : DX12CreateInfo
+		{
+			GTSL::uint8 Anisotropy = 0;
+		};
+		void Initialize(const CreateInfo& info);
+		
+	private:
+		D3D12_CPU_DESCRIPTOR_HANDLE sampler;
 	};
 }

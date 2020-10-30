@@ -9,7 +9,7 @@ namespace GTSL
 	class StaticString
 	{
 	public:
-		constexpr StaticString() noexcept = default;
+		constexpr StaticString() noexcept : length(0) { array[0] = '\0'; }
 
 		template<uint32 NN>
 		constexpr StaticString(const StaticString<NN>& other) noexcept
@@ -36,6 +36,8 @@ namespace GTSL
 		[[nodiscard]] const UTF8* begin() const { return this->array; }
 		[[nodiscard]] const UTF8* end() const { return this->array + this->length + 1; }
 
+		[[nodiscard]] bool IsEmpty() const { return length == 0; }
+		
 		[[nodiscard]] constexpr uint32 GetLength() const { return this->length + 1; }
 		[[nodiscard]] constexpr uint32 GetCapacity() const { return N; }
 

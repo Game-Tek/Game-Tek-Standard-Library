@@ -89,6 +89,12 @@ namespace GTSL
 			}
 		}
 
+		void Clear()
+		{
+			destroyAllChildren();
+			length = 0;
+		}
+		
 		template<typename... ARGS>
 		void EmplaceBack(ARGS&&... args)
 		{
@@ -113,23 +119,8 @@ namespace GTSL
 		{
 			GTSL_ASSERT(allocatedPages != 0 || PAGE_LENGTH != 0, "Cant clear non initialized vector")
 
-			const uint32 fullyUsedPagesCount = length / PAGE_LENGTH;
+			destroyAllChildren();
 			
-			//for all full pages, run destructor on every item
-			for(uint32 i = 0; i < fullyUsedPagesCount; ++i)
-			{
-				for(uint32 j = 0; j < PAGE_LENGTH; ++j)
-				{
-					pages[i][j].~T();
-				}
-			}
-
-			//run destructor on every item of the potentially partially filled last page
-			for(uint32 j = 0; j < length - (fullyUsedPagesCount * PAGE_LENGTH); ++j) //CHECK
-			{
-				pages[fullyUsedPagesCount][j].~T();
-			}
-
 			for(uint32 p = 0; p < allocatedPages; ++p)
 			{
 				dataAllocator.Deallocate(sizeof(T) * PAGE_LENGTH, alignof(T), pages[p]);
@@ -201,6 +192,26 @@ namespace GTSL
 			else
 			{
 				return pages[length / PAGE_LENGTH] + length % PAGE_LENGTH;
+			}
+		}
+
+		void destroyAllChildren()
+		{
+			const uint32 fullyUsedPagesCount = length / PAGE_LENGTH;
+
+			//for all full pages, run destructor on every item
+			for (uint32 i = 0; i < fullyUsedPagesCount; ++i)
+			{
+				for (uint32 j = 0; j < PAGE_LENGTH; ++j)
+				{
+					pages[i][j].~T();
+				}
+			}
+
+			//run destructor on every item of the potentially partially filled last page
+			for (uint32 j = 0; j < length - (fullyUsedPagesCount * PAGE_LENGTH); ++j) //CHECK
+			{
+				pages[fullyUsedPagesCount][j].~T();
 			}
 		}
 	};

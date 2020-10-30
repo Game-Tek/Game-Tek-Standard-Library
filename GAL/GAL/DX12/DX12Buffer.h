@@ -27,6 +27,9 @@ namespace GAL
 		void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
 		
 		void Initialize(const CreateInfo& info);
+
+		[[nodiscard]] ID3D12Resource* GetID3D12Resource() const { return resource; }
+		GTSL::uint64 GetHandle() const { return reinterpret_cast<GTSL::uint64>(resource); }
 		
 		void Destroy(const DX12RenderDevice* renderDevice);
 		

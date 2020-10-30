@@ -46,7 +46,7 @@ void GAL::DX12RenderDevice::Initialize(const CreateInfo& info)
 			if ((dxgiAdapterDesc1.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) == 0 && SUCCEEDED(D3D12CreateDevice(adapter1,	D3D_FEATURE_LEVEL_12_1, IID_ID3D12Device2, nullptr)) && dxgiAdapterDesc1.DedicatedVideoMemory > maxDedicatedVideoMemory)
 			{
 				maxDedicatedVideoMemory = dxgiAdapterDesc1.DedicatedVideoMemory;
-				DX_CHECK(adapter1->QueryInterface(IID_IDXGIAdapter4, reinterpret_cast<void**>(&adapter4)))
+				DX_CHECK(adapter1->QueryInterface(IID_IDXGIAdapter4, reinterpret_cast<void**>(&adapter4))) //BUG: CHECK QUERY INTERFACE
 			}
 		}
 
@@ -88,6 +88,8 @@ void GAL::DX12RenderDevice::Initialize(const CreateInfo& info)
 		infoQueueFilter.DenyList.pIDList = denyIds;
 
 		DX_CHECK(infoQueue->PushStorageFilter(&infoQueueFilter))
+
+		device->Release();
 	}
 
 	for(GTSL::uint32 i = 0; i < info.QueueCreateInfos.ElementCount(); ++i)

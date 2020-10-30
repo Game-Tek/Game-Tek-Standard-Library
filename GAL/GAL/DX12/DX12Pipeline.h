@@ -7,6 +7,10 @@
 
 namespace GAL
 {
+	class DX12Buffer;
+	class DX12Sampler;
+	class DX12TextureView;
+	
 	struct DX12PipelineDescriptor
 	{
 		CullMode CullMode = CullMode::CULL_NONE;
@@ -43,14 +47,14 @@ namespace GAL
 
 		struct ImageBindingDescriptor : BindingDescriptor
 		{
-			GTSL::Range<const class VulkanTextureView*> ImageViews;
-			GTSL::Range<const class VulkanSampler*> Samplers;
+			GTSL::Range<const DX12TextureView*> ImageViews;
+			GTSL::Range<const DX12Sampler*> Samplers;
 			GTSL::Range<const DX12TextureLayout*> Layouts;
 		};
 
 		struct BufferBindingDescriptor : BindingDescriptor
 		{
-			GTSL::Range<const class VulkanBuffer*> Buffers;
+			GTSL::Range<const DX12Buffer*> Buffers;
 			GTSL::Range<const GTSL::uint32*> Offsets;
 			GTSL::Range<const GTSL::uint32*> Sizes;
 		};
@@ -68,8 +72,11 @@ namespace GAL
 	private:
 		ID3D12RootSignature* rootSignature = nullptr;
 	};
+
+	class DX12Pipeline
+	{};
 	
-	class DX12RasterPipeline final
+	class DX12RasterPipeline final : public DX12Pipeline
 	{
 	public:
 		DX12RasterPipeline() = default;
@@ -91,6 +98,8 @@ namespace GAL
 
 		void Destroy(const DX12RenderDevice* renderDevice);
 
+		[[nodiscard]] ID3D12PipelineState* GetID3D12PipelineState() const { return pipelineState; }
+		
 		~DX12RasterPipeline() = default;
 		
 	private:

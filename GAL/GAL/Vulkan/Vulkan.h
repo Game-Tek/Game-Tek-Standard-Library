@@ -376,7 +376,7 @@ namespace GAL
 	
 	enum class VulkanIndexType
 	{
-		UINT16 = 0, UINT32 = 1
+		UINT8 = 1000265000, UINT16 = 0, UINT32 = 1
 	};
 
 	enum class VulkanGeometryType

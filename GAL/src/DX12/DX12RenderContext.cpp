@@ -16,7 +16,7 @@ void GAL::DX12RenderContext::Initialize(const CreateInfo& info)
 		factoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 	}
 
-	DX_CHECK(CreateDXGIFactory2(factoryFlags, IID_IDXGIFactory4, reinterpret_cast<void**>(&factory4)))
+	DX_CHECK(CreateDXGIFactory2(factoryFlags, __uuidof(IDXGIFactory4), reinterpret_cast<void**>(&factory4)))
 
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
 	swapChainDesc.Width = info.SurfaceArea.Width;
@@ -41,6 +41,8 @@ void GAL::DX12RenderContext::Initialize(const CreateInfo& info)
 	DX_CHECK(swapChain1->QueryInterface(IID_IDXGISwapChain4, reinterpret_cast<void**>(&swapChain4)))
 
 	swapChain1->Release();
+
+	factory4->Release();
 }
 
 void GAL::DX12RenderContext::Recreate(const RecreateInfo& info)
@@ -52,7 +54,7 @@ void GAL::DX12RenderContext::Recreate(const RecreateInfo& info)
 		factoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 	}
 
-	DX_CHECK(CreateDXGIFactory2(factoryFlags, IID_IDXGIFactory4, reinterpret_cast<void**>(&factory4)))
+	DX_CHECK(CreateDXGIFactory2(factoryFlags, __uuidof(IDXGIFactory4), reinterpret_cast<void**>(&factory4)))
 
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
 	swapChainDesc.Width = info.SurfaceArea.Width;
@@ -77,6 +79,8 @@ void GAL::DX12RenderContext::Recreate(const RecreateInfo& info)
 	DX_CHECK(swapChain1->QueryInterface(IID_IDXGISwapChain4, reinterpret_cast<void**>(&swapChain4)))
 
 	swapChain1->Release();
+
+	factory4->Release();
 }
 
 GAL::DX12RenderContext::~DX12RenderContext()

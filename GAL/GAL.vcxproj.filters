@@ -123,6 +123,9 @@
     <ClInclude Include="GAL\DX12\DX12Memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GAL\DX12\DX12Bindings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Vulkan\VulkanBindings.cpp">

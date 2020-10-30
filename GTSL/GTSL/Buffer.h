@@ -82,6 +82,33 @@ namespace GTSL
 		friend void Extract(float32& n, Buffer& buffer);
 	};
 
+	template<class ALLOC>
+	class SmartBuffer
+	{
+	public:
+		SmartBuffer() = default;
+
+		SmartBuffer(const uint64 size, const uint32 alignment, const ALLOC& allocator) : allocator(allocator), alignment(alignment)
+		{
+			buffer.Allocate(size, alignment, allocator);
+		}
+
+		~SmartBuffer()
+		{
+			buffer.Free(alignment, allocator);
+		}
+
+		Buffer& operator*() { return buffer; }
+		Buffer* operator->() { return &buffer; }
+
+		operator Buffer& () { return buffer; }
+		
+	private:
+		ALLOC allocator;
+		Buffer buffer;
+		uint32 alignment = 0;
+	};
+	
 	inline void Insert(bool n, Buffer& buffer) { buffer.WriteBytes(sizeof(bool), reinterpret_cast<const byte*>(&n)); }
 	inline void Insert(uint8 n, Buffer& buffer) { buffer.WriteBytes(sizeof(uint8), reinterpret_cast<byte*>(&n)); }
 	inline void Insert(uint16 n, Buffer& buffer) { buffer.WriteBytes(sizeof(uint16), reinterpret_cast<byte*>(&n)); }

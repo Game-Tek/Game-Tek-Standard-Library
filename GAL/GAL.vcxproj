@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GAL\DX12\DX12Bindings.h" />
     <ClInclude Include="GAL\DX12\DX12Memory.h" />
     <ClInclude Include="GAL\DX12\DX12Pipeline.h" />
     <ClInclude Include="GAL\Bindings.h" />

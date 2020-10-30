@@ -27,7 +27,7 @@ void GAL::DX12PipelineLayout::Initialize(const CreateInfo& info)
 	rootSignatureDesc.NumStaticSamplers = 0;
 	rootSignatureDesc.pStaticSamplers = nullptr;
 	DX_CHECK(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, nullptr, nullptr))
-	DX_CHECK(info.RenderDevice->GetID3D12Device2()->CreateRootSignature(0, nullptr, 0, IID(), nullptr))
+	DX_CHECK(info.RenderDevice->GetID3D12Device2()->CreateRootSignature(0, nullptr, 0, __uuidof(ID3D12RootSignature), nullptr))
 	setName(rootSignature, info);
 }
 
