@@ -11,8 +11,20 @@ namespace GTSL
 	template<typename T>
 	struct Group
 	{
-		T* Elements;
-		uint32 First, ElementCount;
+		/**
+		 * \brief Group elements array.
+		 */
+		T* Elements = nullptr;
+
+		/**
+		 * \brief Index of the first element of the group. Since the vector is sparse we don't know where it is and we need to keep track of it.
+		 */
+		uint32 First = 0;
+		
+		/**
+		 * \brief Number of elements in this group.
+		 */
+		uint32 ElementCount = 0;
 
 		T& operator[](const uint32 i) { return Elements[i]; }
 
@@ -127,6 +139,15 @@ namespace GTSL
 	public:
 		SparseVector() = default;
 
+		SparseVector(const uint32 maxElements, const ALLOCATOR& allo) : allocator(allo)
+		{
+			uint64 allocatedSize;
+
+			allocator.Allocate(sizeof(Group<T>) * maxElements, alignof(Group), reinterpret_cast<void**>(&groups), &allocatedSize);
+
+			capacity = maxElements;
+		}
+		
 		~SparseVector()
 		{
 			Clear();
@@ -238,7 +259,19 @@ namespace GTSL
 
 		[[nodiscard]] uint32 GetGroupCount() const { return groupCount; }
 
-		Group<T>& operator[](const uint32 group) { return groups[group]; }
+		T& operator[](const uint32 element)
+		{
+			for(uint32 g = 0; g < groupCount; ++g)
+			{
+				if(groups[g].First >= element && element < groups[g].First + groups[g].ElementCount) //TODO: CAN REMOVE FIRST CONDITION IF WE CAN GUARANTEE AN ORDERED ARRAY
+				{
+					return groups[g].Elements[element - groups[g].First];
+				}
+			}
+			
+			GTSL_ASSERT(false, "No such element")
+			return groups[0].Elements[0];
+		}
 		
 	private:
 		Group<T>* groups;
