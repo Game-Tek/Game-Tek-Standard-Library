@@ -30,7 +30,8 @@ namespace GTSL
 
 		Pair<uint32, T&> At(const uint32 i) { return Pair<uint32, T&>(First + i, Elements[i]); }
 		
-		Range<T*> GetElements() const { return Range<T*>(ElementCount, Elements); }
+		auto GetElements()  { return Range<T*>(ElementCount, Elements); }
+		auto GetElements() const { return Range<const T*>(ElementCount, Elements); }
 	};
 
 	template<typename T>
@@ -259,6 +260,8 @@ namespace GTSL
 
 		[[nodiscard]] uint32 GetGroupCount() const { return groupCount; }
 
+		auto GetGroups() const { return GTSL::Range<const Group<T>*>(groupCount, groups); }
+		
 		T& operator[](const uint32 element)
 		{
 			for(uint32 g = 0; g < groupCount; ++g)

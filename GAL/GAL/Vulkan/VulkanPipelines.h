@@ -93,11 +93,17 @@ namespace GAL
 	class VulkanPipelineLayout final
 	{
 	public:
+		struct PushConstant
+		{
+			GTSL::uint32 Size = 0, Offset = 0;
+			VulkanShaderStage::value_type ShaderStages;
+		};
+		
 		VulkanPipelineLayout() = default;
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			const struct PushConstant* PushConstant = nullptr;
+			const PushConstant* PushConstant = nullptr;
 			GTSL::Range<const class VulkanBindingsSetLayout*> BindingsSetLayouts;
 		};
 		VulkanPipelineLayout(const CreateInfo& createInfo);

@@ -19,13 +19,14 @@ namespace GTSL
 		void Initialize(const ALLOCATOR& allocator)
 		{
 			this->allocator = allocator;
+			root = New<Node>(allocator);
+			root->Nodes.Initialize(4, allocator);
 		}
 
 		Node* AddChild(Node* parent)
 		{
-			Node* newNode;
-			uint64 allocatedSize;
-			allocator.Allocate(sizeof(Node), alignof(Node), reinterpret_cast<void**>(&newNode), &allocatedSize);
+			Node* newNode = New<Node>(allocator);
+			newNode->Nodes.Initialize(4, allocator);
 			parent->Nodes.EmplaceBack(newNode);
 			return newNode;
 		}
@@ -36,22 +37,18 @@ namespace GTSL
 			{
 				for (uint32 i = 0; i < node->Nodes.GetLength(); ++i) { self(node->Nodes[i], self); }
 
-				node->Data.~T();
-				allocator.Deallocate(sizeof(Node), alignof(Node), node);
+				Delete(node, allocator);
 			};
 
-			for(uint32 i = 0; i < root.Nodes.GetLength(); ++i)
-			{
-				freeNode(root.Nodes[i], freeNode);
-			}
+			freeNode(root, freeNode);
 		}
 		
-		Node* GetRootNode() { return &root; }
+		Node* GetRootNode() { return root; }
 
-		const Node* GetRootNode() const { return &root; }
+		const Node* GetRootNode() const { return root; }
 		
 	private:
-		Node root;
+		Node* root;
 
 		ALLOCATOR allocator;
 	};

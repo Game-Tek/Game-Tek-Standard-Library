@@ -73,18 +73,18 @@ namespace GTSL
 
 		void Initialize(const uint32 minPages, const uint32 minPageLength, const ALLOCATOR& allocator)
 		{
-			GTSL_ASSERT(pages != nullptr, "")
+			GTSL_ASSERT(pages == nullptr, "")
 			dataAllocator = allocator;
 
 			uint64 allocatedSize = 0;
 			PAGE_LENGTH = 0xFFFFFFFF;
 			
-			dataAllocator.Allocate(sizeof(T*) * minPages, alignof(T*), static_cast<void**>(&pages), &allocatedSize);
+			dataAllocator.Allocate(sizeof(T*) * minPages, alignof(T*), reinterpret_cast<void**>(&pages), &allocatedSize);
 			allocatedPages = allocatedSize / sizeof(T*);
 
 			for (uint32 p = 0; p < allocatedPages; ++p)
 			{
-				dataAllocator.Allocate(sizeof(T) * minPageLength, alignof(T), static_cast<void**>(&pages[p]), &allocatedSize);
+				dataAllocator.Allocate(sizeof(T) * minPageLength, alignof(T), reinterpret_cast<void**>(&pages[p]), &allocatedSize);
 				PAGE_LENGTH = (allocatedSize / sizeof(T)) < PAGE_LENGTH ? (allocatedSize / sizeof(T)) : PAGE_LENGTH;
 			}
 		}
@@ -168,14 +168,14 @@ namespace GTSL
 		{
 			uint64 allocatedSize;
 			T** newPages;
-			dataAllocator.Allocate(sizeof(T*) * (allocatedPages + count), alignof(T*), static_cast<void**>(&newPages), &allocatedSize);
+			dataAllocator.Allocate(sizeof(T*) * (allocatedPages + count), alignof(T*), reinterpret_cast<void**>(&newPages), &allocatedSize);
 			MemCopy(sizeof(T*) * allocatedPages, pages, newPages);
 			dataAllocator.Deallocate(sizeof(T*) * allocatedPages, alignof(T*), pages);
 			pages = newPages;
 
 			for(uint32 i = 0, p = allocatedPages; i < count; ++i, ++p)
 			{
-				dataAllocator.Allocate(sizeof(T) * PAGE_LENGTH, alignof(T), static_cast<void**>(&pages[p]), &allocatedSize);
+				dataAllocator.Allocate(sizeof(T) * PAGE_LENGTH, alignof(T), reinterpret_cast<void**>(&pages[p]), &allocatedSize);
 			}
 
 			allocatedPages += count;
@@ -202,10 +202,7 @@ namespace GTSL
 			//for all full pages, run destructor on every item
 			for (uint32 i = 0; i < fullyUsedPagesCount; ++i)
 			{
-				for (uint32 j = 0; j < PAGE_LENGTH; ++j)
-				{
-					pages[i][j].~T();
-				}
+				for (uint32 j = 0; j < PAGE_LENGTH; ++j) { pages[i][j].~T(); }
 			}
 
 			//run destructor on every item of the potentially partially filled last page

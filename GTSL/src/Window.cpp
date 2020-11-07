@@ -206,7 +206,7 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 	wndclass.lpszMenuName = nullptr;
 	wndclass.style = 0;
 	wndclass.cbWndExtra = 0;
-	wndclass.lpszClassName = windowCreateInfo.Name.begin();
+	wndclass.lpszClassName = "badonk";
 
 	Application::Win32NativeHandles win32NativeHandles;
 	windowCreateInfo.Application->GetNativeHandles(&win32NativeHandles);
@@ -217,7 +217,7 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 	uint32 style = 0;
 	SetBitAs(FindFirstSetBit(WS_CAPTION), windowCreateInfo.Elements & WindowElements::TITLE_BAR, style);
 	
-	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), nullptr);
+	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, "badonk", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), nullptr);
 
 	GTSL_ASSERT(windowHandle, "Window failed to create!");
 	
@@ -225,7 +225,7 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 
 	defaultWindowStyle = GetWindowLongA(static_cast<HWND>(windowHandle), GWL_STYLE);
 
-	CoCreateInstance(IID_ITaskbarList3, nullptr, CLSCTX::CLSCTX_INPROC_SERVER, IID_ITaskbarList, &iTaskbarList);
+	//CoCreateInstance(IID_ITaskbarList3, nullptr, CLSCTX::CLSCTX_INPROC_SERVER, IID_ITaskbarList, &iTaskbarList);
 #endif
 }
 
@@ -350,10 +350,10 @@ void GTSL::Window::SetProgressState(ProgressState progressState) const
 	default: flags = TBPF_NOPROGRESS;
 	}
 
-	static_cast<ITaskbarList3*>(iTaskbarList)->SetProgressState(static_cast<HWND>(windowHandle), flags);
+	//static_cast<ITaskbarList3*>(iTaskbarList)->SetProgressState(static_cast<HWND>(windowHandle), flags);
 }
 
 void GTSL::Window::SetProgressValue(const float32 value) const
 {
-	static_cast<ITaskbarList3*>(iTaskbarList)->SetProgressValue(static_cast<HWND>(windowHandle), value * 1000u, 1000u);
+	//static_cast<ITaskbarList3*>(iTaskbarList)->SetProgressValue(static_cast<HWND>(windowHandle), value * 1000u, 1000u);
 }

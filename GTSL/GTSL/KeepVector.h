@@ -283,8 +283,8 @@ namespace GTSL
 		static constexpr uint64 BITS = sizeof(length_type) * 8;
 
 		ALLOCATOR allocator;
-		uint32 capacity;
-		byte* data;
+		uint32 capacity = 0;
+		byte* data = nullptr;
 
 		static constexpr uint32 modulo(const length_type key) { return key & (BITS - 1); }
 

@@ -204,7 +204,7 @@ void GAL::VulkanPipelineLayout::Initialize(const CreateInfo& createInfo)
 	{
 		vkPushConstantRange.size = static_cast<GTSL::uint32>(createInfo.PushConstant->Size);
 		vkPushConstantRange.offset = 0;
-		vkPushConstantRange.stageFlags = ShaderTypeToVkShaderStageFlagBits(createInfo.PushConstant->Stage);
+		vkPushConstantRange.stageFlags = createInfo.PushConstant->ShaderStages;
 
 		vkPipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 		vkPipelineLayoutCreateInfo.pPushConstantRanges = &vkPushConstantRange;

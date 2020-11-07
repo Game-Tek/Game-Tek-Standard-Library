@@ -100,7 +100,7 @@ void GAL::VulkanCommandBuffer::BindVertexBuffer(const BindVertexBufferInfo& buff
 
 void GAL::VulkanCommandBuffer::UpdatePushConstant(const UpdatePushConstantsInfo& info)
 {
-	vkCmdPushConstants(commandBuffer, info.PipelineLayout->GetVkPipelineLayout(), VK_SHADER_STAGE_ALL_GRAPHICS, info.Offset, info.Size, info.Data);
+	vkCmdPushConstants(commandBuffer, info.PipelineLayout->GetVkPipelineLayout(), info.ShaderStages, info.Offset, info.Size, info.Data);
 }
 
 void GAL::VulkanCommandBuffer::Draw(const DrawInfo& info) const

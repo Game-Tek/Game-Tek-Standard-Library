@@ -145,7 +145,7 @@ namespace GTSL
 		void* windowHandle = nullptr;
 		uint32 defaultWindowStyle{ 0 };
 
-		void* iTaskbarList;
+		//void* iTaskbarList;
 
 #if (_WIN32)
 		static uint64 __stdcall Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam);

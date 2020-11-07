@@ -100,6 +100,7 @@ namespace GAL
 			size_t Offset = 0;
 			size_t Size = 0;
 			GTSL::byte* Data = nullptr;
+			VulkanShaderStage::value_type ShaderStages = 0;
 		};
 		void UpdatePushConstant(const UpdatePushConstantsInfo& info);
 
