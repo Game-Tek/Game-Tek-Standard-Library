@@ -63,9 +63,8 @@ namespace GAL
 			GTSL::uint16 ApplicationVersion[3];
 			GTSL::Range<const Queue::CreateInfo*> QueueCreateInfos;
 			GTSL::Range<VulkanQueue**> Queues;
-#if (_DEBUG)
 			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
-#endif
+			bool Debug = false;
 			GTSL::Range<const Extension*> Extensions;
 			GTSL::Range<void**> ExtensionCapabilities;
 			AllocationInfo AllocationInfo;

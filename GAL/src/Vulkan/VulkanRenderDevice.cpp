@@ -34,7 +34,7 @@ void* vkReallocate(void* data, void* originalAlloc, uint64 size, uint64 alignmen
 
 void vkFree(void* data, void* alloc)
 {
-	if (alloc)
+	if (data)
 	{
 		auto* allocation_info = static_cast<GAL::VulkanRenderDevice::AllocationInfo*>(data);
 		allocation_info->Deallocate(allocation_info->UserData, alloc);
@@ -189,15 +189,14 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		vkApplicationInfo.pApplicationName = createInfo.ApplicationName.begin();
 		vkApplicationInfo.pEngineName = "Game-Tek | GAL";
 
-		Array<const char*, 32> instanceLayers{
-	#if(_DEBUG)
-			"VK_LAYER_KHRONOS_validation"
-		};
-#else
-	};
-#endif
+		Array<const char*, 8> instanceLayers;
 
-		Array<const char*, 32> instanceExtensions{
+		if constexpr (_DEBUG)
+		{
+			if (createInfo.Debug) { instanceLayers.EmplaceBack("VK_LAYER_KHRONOS_validation"); }
+		}
+
+		Array<const char*, 16> instanceExtensions{
 	#if(_DEBUG)
 			VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 			VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
@@ -211,7 +210,14 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		};
 
 #if (_DEBUG)
+		Array<VkValidationFeatureEnableEXT, 8> enables{ VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT, VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT };
+		VkValidationFeaturesEXT features = {};
+		features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+		features.enabledValidationFeatureCount = enables.GetLength();
+		features.pEnabledValidationFeatures = enables.begin();
+		
 		VkDebugUtilsMessengerCreateInfoEXT vkDebugUtilsMessengerCreateInfoExt{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
+		vkDebugUtilsMessengerCreateInfoExt.pNext = &features;
 		vkDebugUtilsMessengerCreateInfoExt.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 		vkDebugUtilsMessengerCreateInfoExt.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 		vkDebugUtilsMessengerCreateInfoExt.pfnUserCallback = debugCallback;
