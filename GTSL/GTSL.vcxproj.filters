@@ -334,5 +334,6 @@
     </ClCompile>
     <ClCompile Include="GTSL\StaticMap.hpp" />
     <ClCompile Include="GTSL\ArrayCommon.hpp" />
+    <ClCompile Include="GTSL\ShortString.hpp" />
   </ItemGroup>
 </Project>

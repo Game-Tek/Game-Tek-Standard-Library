@@ -7,6 +7,7 @@
 #include "Vector.hpp"
 #include "Algorithm.h"
 #include "Id.h"
+#include "ShortString.hpp"
 
 namespace GTSL
 {
@@ -114,5 +115,17 @@ namespace GTSL
 	inline void Extract(Id64& id, Buffer& buffer)
 	{
 		buffer.ReadBytes(sizeof(Id64), reinterpret_cast<byte*>(&id));
+	}
+
+	template<uint8 SIZE>
+	inline void Insert(const ShortString<SIZE>& string, Buffer& buffer)
+	{
+		buffer.WriteBytes(SIZE, reinterpret_cast<const byte*>((Range<const UTF8*>(string).begin())));
+	}
+
+	template<uint8 SIZE>
+	inline void Extract(ShortString<SIZE>& string, Buffer& buffer)
+	{
+		buffer.ReadBytes(SIZE, reinterpret_cast<byte*>((Range<UTF8*>(string).begin())));
 	}
 }

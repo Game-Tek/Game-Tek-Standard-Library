@@ -204,9 +204,9 @@ void GAL::VulkanCommandBuffer::CopyBufferToTexture(const CopyBufferToTextureInfo
 
 void GAL::VulkanCommandBuffer::AddPipelineBarrier(const AddPipelineBarrierInfo& pipelineBarrier) const
 {
-	Array<VkImageMemoryBarrier, 128> imageMemoryBarriers(pipelineBarrier.TextureBarriers.ElementCount());
+	Array<VkImageMemoryBarrier, 32> imageMemoryBarriers(pipelineBarrier.TextureBarriers.ElementCount());
 	//GTSL::Array<VkBufferMemoryBarrier, 1024> bufferMemoryBarriers;
-	Array<VkMemoryBarrier, 128> memoryBarriers(pipelineBarrier.MemoryBarriers.ElementCount());
+	Array<VkMemoryBarrier, 32> memoryBarriers(pipelineBarrier.MemoryBarriers.ElementCount());
 
 	for (uint32 i = 0; i < pipelineBarrier.TextureBarriers.ElementCount(); ++i)
 	{
@@ -231,7 +231,7 @@ void GAL::VulkanCommandBuffer::AddPipelineBarrier(const AddPipelineBarrierInfo& 
 		memoryBarriers[i].sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
 		memoryBarriers[i].pNext = nullptr;
 		memoryBarriers[i].srcAccessMask = static_cast<VkAccessFlags>(pipelineBarrier.MemoryBarriers[i].SourceAccessFlags);
-		memoryBarriers[i].dstAccessMask = static_cast<VkAccessFlags>(pipelineBarrier.MemoryBarriers[i].DestinationAccessFlags);;
+		memoryBarriers[i].dstAccessMask = static_cast<VkAccessFlags>(pipelineBarrier.MemoryBarriers[i].DestinationAccessFlags);
 	}
 	
 	vkCmdPipelineBarrier(commandBuffer, static_cast<VkPipelineStageFlags>(pipelineBarrier.InitialStage), static_cast<VkPipelineStageFlags>(pipelineBarrier.FinalStage), 0,

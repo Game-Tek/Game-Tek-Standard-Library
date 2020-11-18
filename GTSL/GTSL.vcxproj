@@ -97,6 +97,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GTSL\StaticMap.hpp" />
+    <ClCompile Include="GTSL\ShortString.hpp" />
     <ClCompile Include="src\Allocator.cpp" />
     <ClCompile Include="GTSL\ArrayCommon.hpp" />
     <ClCompile Include="src\Console.cpp" />

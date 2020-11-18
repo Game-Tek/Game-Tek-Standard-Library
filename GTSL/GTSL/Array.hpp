@@ -2,6 +2,7 @@
 
 #include "Core.h"
 
+#include "ArrayCommon.hpp"
 #include <initializer_list>
 #include "Memory.h"
 #include "Assert.h"
@@ -36,6 +37,9 @@ namespace GTSL
 		operator GTSL::Range<T*>() { return Range<T*>(this->length, this->begin()); }
 		operator GTSL::Range<const T*>() const { return Range<const T*>(this->length, this->begin()); }
 
+
+		auto GetRange() { return Range<T*>(this->length, this->begin()); }
+		
 		constexpr Array() noexcept = default;
 
 		constexpr Array(const std::initializer_list<T> list) noexcept : length(static_cast<uint32>(list.size()))
@@ -161,6 +165,12 @@ namespace GTSL
 			return ret;
 		}
 
+		void Pop(const uint32 index)
+		{
+			GTSL_ASSERT(length != 0, "Length can't be 0");
+			popElement(GetRange(), index);
+		}
+		
 		//constexpr uint32 Insert(const uint32 index, const Range<const T*> ranger) noexcept
 		//{
 		//	copy(ranger.ElementCount(), ranger.begin(), this->data + index);

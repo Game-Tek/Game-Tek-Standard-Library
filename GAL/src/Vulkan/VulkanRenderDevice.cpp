@@ -199,7 +199,6 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		Array<const char*, 16> instanceExtensions{
 	#if(_DEBUG)
 			VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-			VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
 	#endif
 
 			VK_KHR_SURFACE_EXTENSION_NAME,
@@ -210,14 +209,14 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		};
 
 #if (_DEBUG)
-		Array<VkValidationFeatureEnableEXT, 8> enables{ VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT, VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT };
+		Array<VkValidationFeatureEnableEXT, 8> enables{ VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT };
 		VkValidationFeaturesEXT features = {};
 		features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
 		features.enabledValidationFeatureCount = enables.GetLength();
 		features.pEnabledValidationFeatures = enables.begin();
 		
 		VkDebugUtilsMessengerCreateInfoEXT vkDebugUtilsMessengerCreateInfoExt{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
-		vkDebugUtilsMessengerCreateInfoExt.pNext = &features;
+		vkDebugUtilsMessengerCreateInfoExt.pNext = createInfo.Debug ? &features : nullptr;
 		vkDebugUtilsMessengerCreateInfoExt.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 		vkDebugUtilsMessengerCreateInfoExt.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 		vkDebugUtilsMessengerCreateInfoExt.pfnUserCallback = debugCallback;
@@ -381,7 +380,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 				VkPhysicalDeviceTimelineSemaphoreFeatures vkPhysicalDeviceTimelineSemaphoreFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES };
 				vkPhysicalDeviceTimelineSemaphoreFeatures.timelineSemaphore = true;
 				placeFeaturesStructure(vkPhysicalDeviceTimelineSemaphoreFeatures);
-				tryAddExtension(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
+				//tryAddExtension(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
 			}
 		
 			tryAddExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
@@ -401,18 +400,19 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 				vkPhysicalDeviceDescriptorIndexingFeatures.shaderStorageBufferArrayNonUniformIndexing = true;
 				vkPhysicalDeviceDescriptorIndexingFeatures.shaderUniformBufferArrayNonUniformIndexing = true;
 
-				if (tryAddExtension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME))
-				{
-					placeFeaturesStructure(vkPhysicalDeviceDescriptorIndexingFeatures);
-				}
+				placeFeaturesStructure(vkPhysicalDeviceDescriptorIndexingFeatures);
+				
+				//if (tryAddExtension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME))
+				//{
+				//}
 			}
 
-			if (tryAddExtension(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME))
-			{
+			//if (tryAddExtension(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME))
+			//{
 				VkPhysicalDeviceBufferDeviceAddressFeatures vkBufferAddressFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES };
 				vkBufferAddressFeatures.bufferDeviceAddress = true;
 				placeFeaturesStructure(vkBufferAddressFeatures);
-			}
+			//}
 			
 			for (uint32 extension = 0; extension < createInfo.Extensions.ElementCount(); ++extension)
 			{
