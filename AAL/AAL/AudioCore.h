@@ -48,7 +48,9 @@ namespace AAL
 		/**
 		 * \brief Audio bit depth is 24 bit.
 		 */
-		BIT_DEPTH_24 = 24
+		BIT_DEPTH_24 = 24,
+
+		BIT_DEPTH_32 = 32
 	};
 
 	/**

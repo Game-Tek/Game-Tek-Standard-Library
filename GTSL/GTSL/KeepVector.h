@@ -231,7 +231,7 @@ namespace GTSL
 		[[nodiscard]] bool IsSlotOccupied(const uint32 index) const
 		{
 			const auto number = index / BITS; const auto bit = modulo(index);
-			return !CheckBit(bit, number);
+			return !CheckBit(bit, *(getIndices().begin() + number));
 		}
 
 		void Clear()

@@ -11,7 +11,6 @@ namespace AAL
 	{
 	public:
 		WindowsAudioDevice() = default;
-		WindowsAudioDevice(const CreateInfo& audioDeviceCreateInfo);
 		~WindowsAudioDevice() = default;
 
 		void Initialize(const CreateInfo& audioDeviceCreateInfo);
@@ -25,9 +24,9 @@ namespace AAL
 		/**
 		* \brief Sets the passed variable as the available size in the allocated buffer.
 		* Should be called to query the available size before filling the audio buffer size it may have some space still occupied since the audio driver may not have consumed it.
-		* \param availableBufferSize Pointer to a variable to set as the available buffer size.
+		* \param availableBufferFrames Pointer to a variable to set as the available buffer size.
 		*/
-		void GetAvailableBufferSize(GTSL::uint64& availableBufferSize) const;
+		void GetAvailableBufferFrames(GTSL::uint64& availableBufferFrames) const;
 
 		/**
 		* \brief Sets the passed variable as the size of the allocated buffer.

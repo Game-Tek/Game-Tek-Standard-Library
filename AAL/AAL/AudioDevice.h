@@ -16,6 +16,7 @@ namespace AAL
 		struct CreateInfo
 		{
 			StreamShareMode ShareMode;
+			GTSL::uint32 BitDepth, Frequency;
 		};
 
 		AudioBitDepth GetBitDepth() const { return bitDepth; }

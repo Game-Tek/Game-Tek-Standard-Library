@@ -17,7 +17,7 @@ namespace GTSL
 		constexpr ShortString()
 		{
 			static_assert(SIZE < 255, "Size must be less that 255");
-			array[SIZE - 1] = 32;
+			array[SIZE - 1] = SIZE;
 		}
 
 		operator Range<UTF8*>() { return Range<UTF8*>(GetLength(), array); }
@@ -25,7 +25,7 @@ namespace GTSL
 
 		constexpr ShortString(const UTF8* text)
 		{
-			array[SIZE - 1] = 32;
+			array[SIZE - 1] = SIZE;
 			(*this) += Range<const UTF8*>(StringLength(text), text);
 		}
 

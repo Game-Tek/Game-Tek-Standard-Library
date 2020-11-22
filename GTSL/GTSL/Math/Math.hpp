@@ -271,6 +271,9 @@ namespace GTSL
 
 		static float32 Abs(const float32 _A) { return _A > 0.0f ? _A : -_A; }
 
+		template<typename T>
+		static T Limit(const T a, const T max) { return a > max ? max : a; }
+		
 		template <typename T>
 		static T Min(const T& A, const T& B)
 		{
@@ -644,7 +647,7 @@ namespace GTSL
 
 		static Matrix4 Scaling(const Vector3& A)
 		{
-			Matrix4 Result;
+			Matrix4 Result(1.0f);
 
 			Result[0] = A.X;
 			Result[5] = A.Y;
