@@ -26,13 +26,13 @@ namespace AAL
 		* Should be called to query the available size before filling the audio buffer size it may have some space still occupied since the audio driver may not have consumed it.
 		* \param availableBufferFrames Pointer to a variable to set as the available buffer size.
 		*/
-		void GetAvailableBufferFrames(GTSL::uint64& availableBufferFrames) const;
+		void GetAvailableBufferFrames(GTSL::uint32& availableBufferFrames) const;
 
 		/**
 		* \brief Sets the passed variable as the size of the allocated buffer.
-		* \param totalBufferSize Pointer to to variable for storing the size of the allocated buffer.
+		* \param totalBufferFrames Pointer to to variable for storing the size of the allocated buffer.
 		*/
-		void GetBufferSize(GTSL::uint32& totalBufferSize) const;
+		void GetBufferFrameCount(GTSL::uint32& totalBufferFrames) const;
 		
 		/**
 		* \brief Pushes the audio data found in the passed in buffer for the amount of specified samples to the audio buffer, making such data available for the next request from the driver to retrieve audio data.

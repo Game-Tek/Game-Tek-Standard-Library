@@ -86,7 +86,7 @@ namespace GTSL
 			class Application* Application = nullptr;
 			WindowElements::value_type Elements;
 		};
-		explicit Window(const WindowCreateInfo & windowCreateInfo);
+		void BindToOS(const WindowCreateInfo & windowCreateInfo);
 		~Window();
 
 		void SetTitle(const char* title);
@@ -100,7 +100,7 @@ namespace GTSL
 		void SetIcon(const WindowIconInfo & windowIconInfo);
 
 		void GetFramebufferExtent(Extent2D & extent) const;
-		void GetWindowExtent(Extent2D & windowExtent) const { windowExtent = windowSize; }
+		void GetWindowExtent(Extent2D& windowExtent) const;
 
 		void SetMousePosition(Extent2D position);
 		void LimitMousePosition(Extent2D range);
@@ -138,8 +138,6 @@ namespace GTSL
 		void SetProgressState(ProgressState progressState) const;
 		void SetProgressValue(float32 value) const;
 	protected:
-		Extent2D windowSize;
-		Extent2D clientSize;
 		WindowSizeState windowSizeState;
 
 		void* windowHandle = nullptr;
@@ -149,7 +147,7 @@ namespace GTSL
 
 #if (_WIN32)
 		static uint64 __stdcall Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam);
-		void Win32_calculateMousePos(uint32 x, uint32 y, Vector2& mousePos) const;
+		static void Win32_calculateMousePos(uint32 x, uint32 y, Extent2D windowExtent, Vector2& mousePos);
 		static void Win32_translateKeys(uint64 win32Key, uint64 context, KeyboardKeys& key);
 #endif
 		

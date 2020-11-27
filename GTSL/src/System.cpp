@@ -130,3 +130,13 @@ void System::GetSystemInfo(SystemInfo& systemInfo)
 	GetRAMInfo(systemInfo.RAM);
 	//GetCPUName(systemInfo.CPU.CpuBrand);
 }
+
+Extent2D System::GetScreenExtent()
+{
+	if constexpr (_WIN32)
+	{
+		int width = GetSystemMetrics(SM_CXSCREEN);
+		int height = GetSystemMetrics(SM_CYSCREEN);
+		return Extent2D(width, height);
+	}
+}

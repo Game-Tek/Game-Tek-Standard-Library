@@ -34,7 +34,7 @@ void* vkReallocate(void* data, void* originalAlloc, uint64 size, uint64 alignmen
 
 void vkFree(void* data, void* alloc)
 {
-	if (data)
+	if (alloc)
 	{
 		auto* allocation_info = static_cast<GAL::VulkanRenderDevice::AllocationInfo*>(data);
 		allocation_info->Deallocate(allocation_info->UserData, alloc);
@@ -222,7 +222,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		vkDebugUtilsMessengerCreateInfoExt.pfnUserCallback = debugCallback;
 		vkDebugUtilsMessengerCreateInfoExt.pUserData = this;
 #endif
-
+		
 		VkInstanceCreateInfo vkInstanceCreateInfo{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
 		vkInstanceCreateInfo.pNext = &vkDebugUtilsMessengerCreateInfoExt;
 		vkInstanceCreateInfo.pApplicationInfo = &vkApplicationInfo;

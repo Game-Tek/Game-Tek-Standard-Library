@@ -16,7 +16,7 @@ using namespace AAL;
 
 void WindowsAudioDevice::Initialize(const CreateInfo& audioDeviceCreateInfo)
 {
-	CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	CoInitializeEx(nullptr, 0);
 	
 	ZeroMemory(&pwfx, sizeof(WAVEFORMATEXTENSIBLE));
 	pwfx.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
@@ -89,23 +89,23 @@ void WindowsAudioDevice::Destroy()
 
 void WindowsAudioDevice::Start() const { audioClient->Start(); }
 
-void WindowsAudioDevice::GetAvailableBufferFrames(uint64& availableBufferFrames) const
+void WindowsAudioDevice::GetAvailableBufferFrames(uint32& availableBufferFrames) const
 {
-	UINT32 num_frames_padding = 0;
+	UINT32 numFramesAvailable = 0;
 	//For a shared-mode rendering stream, the padding value reported by GetCurrentPadding specifies the number of audio frames
 	//that are queued up to play in the endpoint buffer. Before writing to the endpoint buffer, the client can calculate the
 	//amount of available space in the buffer by subtracting the padding value from the buffer length.
-	audioClient->GetCurrentPadding(&num_frames_padding);
+	audioClient->GetCurrentPadding(&numFramesAvailable);
 
-	availableBufferFrames = bufferFrameCount - num_frames_padding;
+	availableBufferFrames = bufferFrameCount - numFramesAvailable;
 }
 
-void WindowsAudioDevice::GetBufferSize(uint32& totalBufferSize) const
+void WindowsAudioDevice::GetBufferFrameCount(uint32& totalBufferFrames) const
 {
-	audioClient->GetBufferSize(&totalBufferSize);
+	audioClient->GetBufferSize(&totalBufferFrames);
 }
 
-void WindowsAudioDevice::PushAudioData(void* data, const uint32 pushedSamples) const
+void WindowsAudioDevice::PushAudioData(void* data, uint32 pushedSamples) const
 {
 	//Block alignment, in bytes.The block alignment is the minimum atomic unit of data for the wFormatTag format type.
 	//If wFormatTag is WAVE_FORMAT_PCM or WAVE_FORMAT_EXTENSIBLE, nBlockAlign must be equal to the product of nChannels
@@ -116,6 +116,11 @@ void WindowsAudioDevice::PushAudioData(void* data, const uint32 pushedSamples) c
 	//of a sample(that is, on a non - block - aligned boundary).
 
 	// block_alignment = nChannels * (wBitsPerSample / 8);
+
+	UINT32 numFramesAvailable;
+	GTSL_ASSERT(audioClient->GetCurrentPadding(&numFramesAvailable) >= pushedSamples, "Pushing more samples than what buffer can handle!");
+
+	if constexpr (_DEBUG) { if (numFramesAvailable < pushedSamples) { pushedSamples = numFramesAvailable; } }
 	
 	BYTE* buffer_address = nullptr;
 	GTSL_ASSERT(renderClient->GetBuffer(pushedSamples, &buffer_address) == S_OK, "IAudioRenderClient::GetBuffer failed");

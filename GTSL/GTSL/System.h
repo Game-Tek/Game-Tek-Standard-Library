@@ -1,5 +1,6 @@
 #pragma once
 #include "Core.h"
+#include "Extent.h"
 
 namespace GTSL
 {
@@ -69,5 +70,6 @@ namespace GTSL
 		static void GetRAMInfo(RamInfo& ramInfo);
 		static void GetVectorInfo(VectorInfo& vectorInfo);
 		static void GetSystemInfo(SystemInfo& systemInfo);
+		static Extent2D GetScreenExtent();
 	};
 }

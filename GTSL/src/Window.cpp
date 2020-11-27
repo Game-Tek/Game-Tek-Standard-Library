@@ -5,17 +5,25 @@
 #include "GTSL/Assert.h"
 #include "GTSL/StaticString.hpp"
 
-#include "shobjidl_core.h"
+#include "ShObjIdl_core.h"
 #include "GTSL/Bitman.h"
 
 #if (_WIN32)
 GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam)
 {
-	const auto window = reinterpret_cast<Window*>(GetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA));
-	const auto win_handle = static_cast<HWND>(hwnd);
+	auto* window = reinterpret_cast<Window*>(GetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA));
+	const HWND winHandle = static_cast<HWND>(hwnd);
 	
 	switch (uMsg)
 	{
+	case WM_CREATE:
+	{
+		auto* createStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
+		window = static_cast<Window*>(createStruct->lpCreateParams);
+		window->windowHandle = hwnd;
+		SetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
+		break;
+	}
 	case WM_CLOSE:
 	{
 		window->onCloseDelegate();	return 0;
@@ -23,7 +31,15 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	case WM_MOUSEMOVE: /*absolute pos*/
 	{
 		Vector2 mousePos;
-		window->Win32_calculateMousePos(LOWORD(lParam), HIWORD(lParam), mousePos);
+
+		RECT rect;
+		Extent2D clientSize;
+		GetClientRect(winHandle, &rect);
+		clientSize.Width = static_cast<uint16>(rect.right);
+		clientSize.Height = static_cast<uint16>(rect.bottom);
+			
+		Win32_calculateMousePos(LOWORD(lParam), HIWORD(lParam), clientSize, mousePos);
+			
 		window->onMouseMove(mousePos); return 0;
 	}
 	case WM_MOUSEWHEEL:
@@ -73,38 +89,40 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	case WM_SIZE:
 	{
 		RECT rect;
-		GetWindowRect(win_handle, &rect);
-		window->windowSize.Width = static_cast<uint16>(rect.right - rect.left);
-		window->windowSize.Height = static_cast<uint16>(rect.bottom - rect.top);
+		Extent2D clientSize;
+		GetClientRect(winHandle, &rect);
+		clientSize.Width = static_cast<uint16>(rect.right);
+		clientSize.Height = static_cast<uint16>(rect.bottom);
 
-		GetClientRect(win_handle, &rect);
-		window->clientSize.Width = static_cast<uint16>(rect.right);
-		window->clientSize.Height = static_cast<uint16>(rect.bottom);
-
-		window->onResizeDelegate(window->clientSize); return 0;
+		window->onResizeDelegate(clientSize); return 0;
 	}
 	case WM_SIZING:
 	{
 		RECT rect;
-		GetWindowRect(win_handle, &rect);
-		window->windowSize.Width = static_cast<uint16>(rect.right - rect.left);
-		window->windowSize.Height = static_cast<uint16>(rect.bottom - rect.top);
+		Extent2D clientSize;
+		GetClientRect(winHandle, &rect);
+		clientSize.Width = static_cast<uint16>(rect.right);
+		clientSize.Height = static_cast<uint16>(rect.bottom);
 
-		GetClientRect(win_handle, &rect);
-		window->clientSize.Width = static_cast<uint16>(rect.right);
-		window->clientSize.Height = static_cast<uint16>(rect.bottom);
-
-		window->onResizeDelegate(window->clientSize); return 0;
+		window->onResizeDelegate(clientSize); return 0;
 	}
 	case WM_MOVING:
 	{
-		window->onWindowMove(reinterpret_cast<LPRECT>(lParam)->left + window->windowSize.Width / 2, reinterpret_cast<LPRECT>(lParam)->top - window->windowSize.Height / 2); return 0;
+		RECT rect;
+		Extent2D windowSize;
+		GetWindowRect(winHandle, &rect);
+		windowSize.Width = static_cast<uint16>(rect.right);
+		windowSize.Height = static_cast<uint16>(rect.bottom);
+			
+		window->onWindowMove(reinterpret_cast<LPRECT>(lParam)->left + windowSize.Width / 2, reinterpret_cast<LPRECT>(lParam)->top - windowSize.Height / 2); return 0;
 	}
-	default: return DefWindowProcA(win_handle, uMsg, wParam, lParam);
+	default: return DefWindowProcA(winHandle, uMsg, wParam, lParam);
 	}
+
+	return 0;
 }
 
-void GTSL::Window::Win32_calculateMousePos(const uint32 x, const uint32 y, GTSL::Vector2& mousePos) const
+void GTSL::Window::Win32_calculateMousePos(const uint32 x, const uint32 y, GTSL::Extent2D clientSize, GTSL::Vector2& mousePos)
 {
 	const auto halfX = static_cast<float>(clientSize.Width) * 0.5f;
 	const auto halfY = static_cast<float>(clientSize.Height) * 0.5f;
@@ -194,7 +212,7 @@ void GTSL::Window::Win32_translateKeys(const uint64 win32Key, uint64 context, Ke
 }
 #endif
 
-GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
+void GTSL::Window::BindToOS(const WindowCreateInfo& windowCreateInfo)
 {
 #if (_WIN32)
 	WNDCLASSA wndclass{};
@@ -206,7 +224,7 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 	wndclass.lpszMenuName = nullptr;
 	wndclass.style = 0;
 	wndclass.cbWndExtra = 0;
-	wndclass.lpszClassName = "badonk";
+	wndclass.lpszClassName = windowCreateInfo.Name.begin();
 
 	Application::Win32NativeHandles win32NativeHandles;
 	windowCreateInfo.Application->GetNativeHandles(&win32NativeHandles);
@@ -217,11 +235,9 @@ GTSL::Window::Window(const WindowCreateInfo& windowCreateInfo)
 	uint32 style = 0;
 	SetBitAs(FindFirstSetBit(WS_CAPTION), windowCreateInfo.Elements & WindowElements::TITLE_BAR, style);
 	
-	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, "badonk", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), nullptr);
+	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), this);
 
 	GTSL_ASSERT(windowHandle, "Window failed to create!");
-	
-	SetWindowLongPtrA(static_cast<HWND>(windowHandle), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
 	defaultWindowStyle = GetWindowLongA(static_cast<HWND>(windowHandle), GWL_STYLE);
 
@@ -250,7 +266,18 @@ void GTSL::Window::SetIcon(const WindowIconInfo& windowIconInfo)
 
 void GTSL::Window::GetFramebufferExtent(Extent2D& extent) const
 {
-	extent = clientSize;
+	RECT rect;
+	GetClientRect(static_cast<HWND>(windowHandle), &rect);
+	extent.Width = static_cast<uint16>(rect.right);
+	extent.Height = static_cast<uint16>(rect.bottom);
+}
+
+void GTSL::Window::GetWindowExtent(Extent2D& windowExtent) const
+{
+	RECT rect;
+	GetWindowRect(static_cast<HWND>(windowHandle), &rect);
+	windowExtent.Width = static_cast<uint16>(rect.right - rect.left);
+	windowExtent.Height = static_cast<uint16>(rect.bottom - rect.top);
 }
 
 void GTSL::Window::SetMousePosition(const Extent2D position)

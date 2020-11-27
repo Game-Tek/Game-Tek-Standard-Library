@@ -57,7 +57,7 @@ namespace GTSL
 			this->length = newLength;
 		}
 
-		operator GTSL::Range<const UTF8*>() const { return Range<const UTF8*>(this->length + 1, this->array); }
+		constexpr operator GTSL::Range<const UTF8*>() const { return Range<const UTF8*>(this->length + 1, this->array); }
 
 		void Drop(const uint32 from)
 		{
@@ -191,7 +191,7 @@ namespace GTSL
 		uint32 length = 0;
 		friend class StaticString;
 
-		void copy(const uint32 size, const UTF8* data)
+		constexpr void copy(const uint32 size, const UTF8* data)
 		{
 			for(uint32 i = this->length, iD = 0; iD < size; ++i, ++iD) { this->array[i] = data[iD]; }
 		}
