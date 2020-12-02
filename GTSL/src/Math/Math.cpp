@@ -29,12 +29,6 @@ float32 Math::ArcTangent(const float32 A) { return atan(A); }
 
 float32 Math::ArcTan2(const float32 X, const float32 Y) { return atan2(Y, X); }
 
-float32 Math::LengthSquared(const Vector2& a)
-{
-	const SIMD128<float32> vec(a.X, a.Y, 0.0f, 0.0f);
-	return SIMD128<float32>::DotProduct(vec, vec).GetElement<0>();
-}
-
 float32 Math::LengthSquared(const Vector3& a)
 {
 	//const SIMD128<float32> vec(a.X, a.Y, a.Z, 0.0f);
@@ -111,10 +105,10 @@ void Math::Normalize(Vector4& a)
 	vec.CopyTo(AlignedPointer<float32, 16>(&a.X));
 }
 
-float32 Math::DotProduct(const Vector2& _A, const Vector2& _B)
-{
-	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, 0.0f, 0.0f), SIMD128<float32>(_B.X, _B.Y, 0.0f, 0.0f)).GetElement<0>();
-}
+//float32 Math::DotProduct(const Vector2& _A, const Vector2& _B)
+//{
+//	return SIMD128<float32>::DotProduct(SIMD128<float32>(_A.X, _A.Y, 0.0f, 0.0f), SIMD128<float32>(_B.X, _B.Y, 0.0f, 0.0f)).GetElement<0>();
+//}
 
 float32 Math::DotProduct(const Vector3& _A, const Vector3& _B)
 {

@@ -67,9 +67,9 @@ namespace GTSL
 			F12
 		};
 
-		struct WindowElements : Flags<uint32>
+		enum class WindowType : uint8
 		{
-			static constexpr value_type TITLE_BAR = 0;
+			OS_WINDOW, NO_ELEMENTS
 		};
 
 		enum class WindowSizeState : uint8
@@ -84,7 +84,7 @@ namespace GTSL
 			Extent2D Extent;
 			Window* ParentWindow = nullptr;
 			class Application* Application = nullptr;
-			WindowElements::value_type Elements;
+			WindowType Type = WindowType::OS_WINDOW;
 		};
 		void BindToOS(const WindowCreateInfo & windowCreateInfo);
 		~Window();

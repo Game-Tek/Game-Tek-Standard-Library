@@ -15,6 +15,7 @@
 #include "Rotator.h"
 #include "GTSL/Assert.h"
 #include "GTSL/Range.h"
+#include "GTSL/Window.h"
 
 namespace GTSL
 {
@@ -206,11 +207,11 @@ namespace GTSL
 		//Returns 1 if A is bigger than 0. 0 if A is equal to 0. and -1 if A is less than 0.
 		static int8 Sign(const float32 A)
 		{
-			if (A > 0.0)
+			if (A > 0.0f)
 			{
 				return 1;
 			}
-			if (A < 0.0)
+			if (A < 0.0f)
 			{
 				return -1;
 			}
@@ -230,9 +231,15 @@ namespace GTSL
 			return (Target - Current) * DT * InterpSpeed + Current;
 		}
 
-		static float32 MapToRange(const float32 A, const float32 InMin, const float32 InMax, const float32 OutMin, const float32 OutMax)
+		static float32 MapToRange(const float32 x, const float32 InMin, const float32 InMax, const float32 OutMin, const float32 OutMax)
 		{
-			return InMin + ((OutMax - OutMin) / (InMax - InMin)) * (A - InMin);
+			GTSL_ASSERT(x >= InMin && x <= InMax, "Not in range") GTSL_ASSERT(InMax - InMin != 0.0f, "Divide by 0")
+			return (x - InMin) / (InMax - InMin) * (OutMax - OutMin) + OutMin;
+		}
+
+		static Vector2 MapToRange(const GTSL::Vector2 A, const Vector2 InMin, const Vector2 InMax, const Vector2 OutMin, const Vector2 OutMax)
+		{
+			return Vector2(MapToRange(A.X, InMin.X, InMax.X, OutMin.X, OutMax.X), MapToRange(A.Y, InMin.Y, InMax.Y, OutMin.Y, OutMax.Y));
 		}
 
 		static float32 obMapToRange(const float32 a, const float32 inMax, const float32 outMax) { return a / (inMax / outMax); }
@@ -331,7 +338,16 @@ namespace GTSL
 
 		static float32 Length(const Vector4& _A, const Vector4& _B)	{ return SquareRoot(LengthSquared(_A - _B)); }
 
-		static float32 LengthSquared(const Vector2& a);
+		static float32 LengthSquared(const Vector2& a)
+		{
+			return a.X * a.X + a.Y * a.Y;
+		}
+
+		static float32 LengthSquared(const Vector2 a, const Vector2 b)
+		{
+			const auto c = b - a;
+			return c.X * c.X + c.Y * c.Y;
+		}
 
 		static float32 LengthSquared(const Vector3& a);
 
@@ -349,7 +365,7 @@ namespace GTSL
 
 		static void Normalize(Vector4& a);
 
-		static float32 DotProduct(const Vector2& _A, const Vector2& _B);
+		static float32 DotProduct(const Vector2& a, const Vector2& b) { return a.X * b.X + a.Y * b.Y; }
 
 		static float32 DotProduct(const Vector3& _A, const Vector3& _B);
 
@@ -707,7 +723,7 @@ namespace GTSL
 
 		static float32 Clamp(float32 _A, float32 _Min, float32 _Max)
 		{
-			return _A > _Max ? _Max : _A < _Min ? _Min : _A;
+			return _A >= _Max ? _Max : (_A <= _Min ? _Min : _A);
 		}
 
 		static Vector3 ClosestPointOnPlane(const Vector3& _Point, const Plane& _Plane)
@@ -722,16 +738,35 @@ namespace GTSL
 			return (DotProduct(plane.Normal, point) - plane.D) / DotProduct(plane.Normal, plane.Normal);
 		}
 
-		static void ClosestPointOnLineSegmentToPoint(const Vector3& _C, const Vector3& _A, const Vector3& _B, float32& _T, Vector3& _D)
+		static Vector2 ClosestPointOnLineToPoint(const Vector2 a, const Vector2 b, const Vector2 p)
 		{
-			const Vector3 AB = _B - _A;
+			const auto m = b - a;
+			const auto t0 = DotProduct(m, p - a) / DotProduct(m, m);
+			return a + m * t0;
+		}
+
+		static Vector2 ClosestPointOnLineSegmentToPoint(const Vector2 a, const Vector2 b, const Vector2 p)
+		{
+			const auto AB = b - a;
 			// Project c onto ab, computing parameterized position d(t) = a + t*(b – a)
-			_T = DotProduct(_C - _A, AB) / DotProduct(AB, AB);
+			auto t = DotProduct(p - a, AB) / LengthSquared(AB);
 			// If outside segment, clamp t (and therefore d) to the closest endpoint
-			if (_T < 0.0) _T = 0.0;
-			if (_T > 1.0) _T = 1.0;
+			if (t < 0.0f) { return a; }
+			if (t > 1.0f) { return b; }
 			// Compute projected position from the clamped t
-			_D = _A + AB * _T;
+			return a + AB * t;
+		}
+
+		static Vector3 ClosestPointOnLineSegmentToPoint(const Vector3& a, const Vector3& b, const Vector3& p)
+		{
+			const Vector3 AB = b - a;
+			// Project c onto ab, computing parameterized position d(t) = a + t*(b – a)
+			auto t = DotProduct(p - a, AB) / LengthSquared(AB);
+			// If outside segment, clamp t (and therefore d) to the closest endpoint
+			if (t < 0.0f) t = 0.0f;
+			if (t > 1.0f) t = 1.0f;
+			// Compute projected position from the clamped t
+			return a + AB * t;
 		}
 
 		static float64 SquaredDistancePointToSegment(const Vector3& _A, const Vector3& _B, const Vector3& _C)

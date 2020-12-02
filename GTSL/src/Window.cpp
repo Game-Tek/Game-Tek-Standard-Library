@@ -233,9 +233,13 @@ void GTSL::Window::BindToOS(const WindowCreateInfo& windowCreateInfo)
 	RegisterClassA(&wndclass);
 
 	uint32 style = 0;
-	SetBitAs(FindFirstSetBit(WS_CAPTION), windowCreateInfo.Elements & WindowElements::TITLE_BAR, style);
+	switch (windowCreateInfo.Type)
+	{
+	case WindowType::OS_WINDOW: style = WS_OVERLAPPEDWINDOW; break;
+	case WindowType::NO_ELEMENTS: style = WS_POPUP; break;
+	}
 	
-	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), this);
+	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), style, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), this);
 
 	GTSL_ASSERT(windowHandle, "Window failed to create!");
 

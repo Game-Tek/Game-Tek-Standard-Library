@@ -38,7 +38,7 @@ namespace GTSL
 		template<class ALLOCATOR>
 		void Join(const ALLOCATOR& allocator) noexcept
 		{
-			this->Join(); //wait first
+			this->join(); //wait first
 			allocator.Deallocate(this->dataSize, 8, this->data); //deallocate next
 		}
 		
@@ -84,6 +84,6 @@ namespace GTSL
 
 		thread_local static uint8 threadId;
 
-		void Join() noexcept;
+		void join() noexcept;
 	};
 }
