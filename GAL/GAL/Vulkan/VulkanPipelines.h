@@ -203,7 +203,12 @@ namespace GAL
 			GTSL::Range<Group*> Groups;
 		};
 
-		explicit VulkanRayTracingPipeline(const CreateInfo& createInfo);
+		explicit VulkanRayTracingPipeline() = default;
+		void Initialize(const CreateInfo& createInfo);
 		void Destroy(const VulkanRenderDevice* renderDevice);
+
+		void GetShaderGroupHandles(VulkanRenderDevice* renderDevice, GTSL::uint32 firstGroup, GTSL::uint32 groupCount, GTSL::Range<GTSL::byte*> buffer);
+		
+		[[nodiscard]] GTSL::uint64 GetHandle() const {return reinterpret_cast<uint64_t>(pipeline);}
 	};
 }

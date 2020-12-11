@@ -31,9 +31,10 @@ namespace GTSL
 
 		constexpr ShortString& operator+=(const Range<const UTF8*> text)
 		{
-			const auto toCopy = GetLength() + text.ElementCount() <= array[SIZE - 1] ? text.ElementCount() : array[SIZE - 1];
+			auto oldSize = array[SIZE - 1];
+			const auto toCopy = GetLength() + text.ElementCount() <= array[SIZE - 1] ? text.ElementCount() : oldSize;
 			for (uint8 s = GetLength(), i = 0; i < toCopy; ++i, ++s) { array[s] = text[i]; }
-			array[SIZE - 1] -= toCopy;
+			array[SIZE - 1] = oldSize - toCopy;
 			return *this;
 		}
 		

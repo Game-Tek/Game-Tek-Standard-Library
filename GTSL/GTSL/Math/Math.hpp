@@ -88,19 +88,19 @@ namespace GTSL
 
 		static bool IsPowerOfTwo(const uint64 n) { return (n & (n - 1)) == 0; }
 		
-		static uint64 PowerOf2RoundUp(const uint64 n, const uint64 powerOfTwo)
+		static uint64 RoundUpByPowerOf2(const uint64 n, const uint64 powerOfTwo)
 		{
 			GTSL_ASSERT(IsPowerOfTwo(powerOfTwo), "Is not multiple of two!")
 			return n + (powerOfTwo - 1) & ~(powerOfTwo - 1);
 		}
 
-		static uint32 PowerOf2RoundUp(const uint32 n, const uint32 powerOfTwo)
+		static uint32 RoundUpByPowerOf2(const uint32 n, const uint32 powerOfTwo)
 		{
 			GTSL_ASSERT(IsPowerOfTwo(powerOfTwo), "Is not multiple of two!")
 			return n + (powerOfTwo - 1) & ~(powerOfTwo - 1);
 		}
 
-		static uint16 PowerOf2RoundUp(const uint16 n, const uint16 powerOfTwo)
+		static uint16 RoundUpByPowerOf2(const uint16 n, const uint16 powerOfTwo)
 		{
 			GTSL_ASSERT(IsPowerOfTwo(powerOfTwo), "Is not multiple of two!")
 			return n + (powerOfTwo - 1) & ~(powerOfTwo - 1);
@@ -225,6 +225,11 @@ namespace GTSL
 			return A + Alpha * (B - A);
 		}
 
+		static Vector2 Lerp(const Vector2 a, const Vector2 b, const float32 alpha)
+		{
+			return Vector2(Lerp(a.X, b.X, alpha), Lerp(a.Y, b.Y, alpha));
+		}
+
 		//Interpolates from Current to Target, returns Current + an amount determined by the InterpSpeed.
 		static float32 FInterp(const float32 Target, const float32 Current, const float32 DT, const float32 InterpSpeed)
 		{
@@ -279,7 +284,7 @@ namespace GTSL
 		static float32 Abs(const float32 _A) { return _A > 0.0f ? _A : -_A; }
 
 		template<typename T>
-		static T Limit(const T a, const T max) { return a > max ? max : a; }
+		static T Limit(const T a, const T max) { return a >= max ? max : a; }
 		
 		template <typename T>
 		static T Min(const T& A, const T& B)
@@ -455,12 +460,12 @@ namespace GTSL
 
 		static bool IsNearlyEqual(const float32 A, const float32 Target, const float32 Tolerance)
 		{
-			return (A > Target - Tolerance) && (A < Target + Tolerance);
+			return (A >= Target - Tolerance) && (A <= Target + Tolerance);
 		}
 
 		static bool IsInRange(const float32 A, const float32 Min, const float32 Max)
 		{
-			return (A > Min) && (A < Max);
+			return (A >= Min) && (A <= Max);
 		}
 
 		static bool IsVectorNearlyEqual(const Vector2& A, const Vector2& Target, const float32 Tolerance)
@@ -721,10 +726,8 @@ namespace GTSL
 			matrix(3, 2) = -nearPlane / (farPlane - nearPlane);
 		}
 
-		static float32 Clamp(float32 _A, float32 _Min, float32 _Max)
-		{
-			return _A >= _Max ? _Max : (_A <= _Min ? _Min : _A);
-		}
+		template<typename T>
+		static T Clamp(T a, T min, T max) { return a >= max ? max : (a <= min ? min : a); }
 
 		static Vector3 ClosestPointOnPlane(const Vector3& _Point, const Plane& _Plane)
 		{

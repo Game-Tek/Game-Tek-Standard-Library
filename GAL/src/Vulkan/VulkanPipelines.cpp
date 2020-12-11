@@ -435,9 +435,9 @@ void GAL::VulkanComputePipeline::Destroy(const VulkanRenderDevice* renderDevice)
 
 static_assert(sizeof(GAL::VulkanRayTracingPipeline::Group) == sizeof(VkRayTracingShaderGroupCreateInfoKHR), "Size doesn't match!");
 
-GAL::VulkanRayTracingPipeline::VulkanRayTracingPipeline(const CreateInfo& createInfo)
+void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 {
-	VkRayTracingPipelineCreateInfoKHR vkRayTracingPipelineCreateInfo{VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
+	VkRayTracingPipelineCreateInfoKHR vkRayTracingPipelineCreateInfo{ VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR };
 	vkRayTracingPipelineCreateInfo.maxRecursionDepth = createInfo.MaxRecursionDepth;
 
 	GTSL::Array<VkPipelineShaderStageCreateInfo, 32> vkPipelineShaderStageCreateInfos(static_cast<GTSL::uint32>(createInfo.Stages.ElementCount()));
@@ -471,7 +471,7 @@ GAL::VulkanRayTracingPipeline::VulkanRayTracingPipeline(const CreateInfo& create
 	
 	if (createInfo.ParentPipeline)
 	{
-		vkRayTracingPipelineCreateInfo.basePipelineIndex = createInfo.ParentPipeline ? 0 : -1;
+		vkRayTracingPipelineCreateInfo.basePipelineIndex = 0;
 		vkRayTracingPipelineCreateInfo.basePipelineHandle = createInfo.ParentPipeline->GetVkPipeline();
 	}
 	else
@@ -489,3 +489,9 @@ void GAL::VulkanRayTracingPipeline::Destroy(const VulkanRenderDevice* renderDevi
 	vkDestroyPipeline(renderDevice->GetVkDevice(), pipeline, renderDevice->GetVkAllocationCallbacks());
 	debugClear(pipeline);
 }
+
+void GAL::VulkanRayTracingPipeline::GetShaderGroupHandles(VulkanRenderDevice* renderDevice, GTSL::uint32 firstGroup, GTSL::uint32 groupCount, GTSL::Range<GTSL::byte*> buffer)
+{
+	renderDevice->vkGetRayTracingShaderGroupHandlesKHR(renderDevice->GetVkDevice(), pipeline, firstGroup, groupCount, buffer.Bytes(), buffer.begin());
+}
+

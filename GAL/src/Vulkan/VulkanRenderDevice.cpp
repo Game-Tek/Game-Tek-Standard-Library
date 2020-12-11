@@ -368,10 +368,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 				StaticString<32> name(extensionName);
 				for (auto& e : deviceExtensions)
 				{
-					if (e == name)
-					{
-						return false;
-					}
+					if (e == name) { return false; }
 				}
 				deviceExtensions.EmplaceBack(name); return true;
 			};
@@ -380,7 +377,6 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 				VkPhysicalDeviceTimelineSemaphoreFeatures vkPhysicalDeviceTimelineSemaphoreFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES };
 				vkPhysicalDeviceTimelineSemaphoreFeatures.timelineSemaphore = true;
 				placeFeaturesStructure(vkPhysicalDeviceTimelineSemaphoreFeatures);
-				//tryAddExtension(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
 			}
 		
 			tryAddExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
@@ -401,18 +397,11 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 				vkPhysicalDeviceDescriptorIndexingFeatures.shaderUniformBufferArrayNonUniformIndexing = true;
 
 				placeFeaturesStructure(vkPhysicalDeviceDescriptorIndexingFeatures);
-				
-				//if (tryAddExtension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME))
-				//{
-				//}
 			}
 
-			//if (tryAddExtension(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME))
-			//{
-				VkPhysicalDeviceBufferDeviceAddressFeatures vkBufferAddressFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES };
-				vkBufferAddressFeatures.bufferDeviceAddress = true;
-				placeFeaturesStructure(vkBufferAddressFeatures);
-			//}
+			VkPhysicalDeviceBufferDeviceAddressFeatures vkBufferAddressFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES };
+			vkBufferAddressFeatures.bufferDeviceAddress = true;
+			placeFeaturesStructure(vkBufferAddressFeatures);
 			
 			for (uint32 extension = 0; extension < createInfo.Extensions.ElementCount(); ++extension)
 			{
@@ -437,6 +426,8 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 						auto* capabilities = static_cast<RayTracingCapabilities*>(createInfo.ExtensionCapabilities[extension]);
 						capabilities->CanBuildOnHost = vkRayTracingFeatures.rayTracingHostAccelerationStructureCommands;
 						capabilities->RecursionDepth = vkRayTracingProperties.maxRecursionDepth;
+						capabilities->ShaderGroupAlignment = vkRayTracingProperties.shaderGroupBaseAlignment;
+						capabilities->ShaderGroupHandleSize = vkRayTracingProperties.shaderGroupHandleSize;
 					}
 						
 					if(tryAddExtension(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME)) {}
