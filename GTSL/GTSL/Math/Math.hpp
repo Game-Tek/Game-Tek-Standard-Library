@@ -198,6 +198,19 @@ namespace GTSL
 		//						SCALAR MATH							//
 		//////////////////////////////////////////////////////////////
 
+		template<typename T>
+		static void MinMax(T a, T b, T& min, T& max)
+		{
+			if (a < b) { min = a; max = b; }
+			else { max = a; min = b; }
+		}
+
+		template<>
+		static void MinMax(Vector2 a, Vector2 b, Vector2& min, Vector2& max)
+		{
+			MinMax(a.X, b.X, min.X, max.X); MinMax(a.Y, b.Y, min.Y, max.Y);
+		}
+
 		//Returns 1 if A is bigger than 0. 0 if A is equal to 0. and -1 if A is less than 0.
 		static int8 Sign(const int64 A)
 		{
@@ -229,6 +242,8 @@ namespace GTSL
 		{
 			return Vector2(Lerp(a.X, b.X, alpha), Lerp(a.Y, b.Y, alpha));
 		}
+
+		static float32 Square(const float32 a) { return a * a; }
 
 		//Interpolates from Current to Target, returns Current + an amount determined by the InterpSpeed.
 		static float32 FInterp(const float32 Target, const float32 Current, const float32 DT, const float32 InterpSpeed)
@@ -513,6 +528,10 @@ namespace GTSL
 			return A.X > B.X && A.Y > B.Y && A.Z > B.Z;
 		}
 
+		static bool PointInBox(Vector2 min, Vector2 max, Vector2 p) { return p.X >= min.X && p.X <= max.X && p.Y >= min.Y && p.Y <= max.Y; }
+
+		static bool PointInBoxProjection(Vector2 min, Vector2 max, Vector2 p) { return p.X >= min.X && p.X <= max.X || p.Y >= min.Y && p.Y <= max.Y; }
+
 		//////////////////////////////////////////////////////////////
 		//						MATRIX MATH							//
 		//////////////////////////////////////////////////////////////
@@ -554,6 +573,15 @@ namespace GTSL
 
 			A *= rotation;
 		}
+
+		//Returns point colinearity to a line defined by two points.
+		// +0 indicates point is to the right
+		// 0 indicates point is on the line
+		// -0 indicates point is to the left
+		static float32 TestPointToLineSide(const GTSL::Vector2 a, const GTSL::Vector2 b, const GTSL::Vector2 p)
+		{
+			return ((a.X - b.X) * (p.Y - b.Y) - (a.Y - b.Y) * (p.X - b.X));
+		};
 
 		static Vector3 SphericalCoordinatesToCartesianCoordinates(const Vector2& sphericalCoordinates)
 		{
@@ -759,6 +787,20 @@ namespace GTSL
 			// Compute projected position from the clamped t
 			return a + AB * t;
 		}
+		
+		static Vector2 ClosestPointOnLineSegmentToPoint(const Vector2 a, const Vector2 b, const Vector2 p, float32& isOnLine)
+		{
+			const auto AB = b - a;
+			// Project c onto ab, computing parameterized position d(t) = a + t*(b – a)
+			auto t = DotProduct(p - a, AB) / LengthSquared(AB);
+			// If outside segment, clamp t (and therefore d) to the closest endpoint
+			if (t < 0.0f) { isOnLine = 0.0f; return a; }
+			if (t > 1.0f) { isOnLine = 0.0f; return b; }
+
+			isOnLine = 1.0f;
+			// Compute projected position from the clamped t
+			return a + AB * t;
+		}
 
 		static Vector3 ClosestPointOnLineSegmentToPoint(const Vector3& a, const Vector3& b, const Vector3& p)
 		{
@@ -784,6 +826,17 @@ namespace GTSL
 			if (E >= f) return DotProduct(BC, BC);
 			// Handle cases where c projects onto ab
 			return DotProduct(AC, AC) - E * E / f;
+		}
+
+		// Compute barycentric coordinates (u, v, w) for
+		// point p with respect to triangle (a, b, c)
+		static void Barycentric(Vector2 a, Vector2 b, Vector2 c, Vector2 p, float32& s, float32& t, float32& u)
+		{
+			Vector2 v0 = b - a, v1 = c - a, v2 = p - a;
+			float32 den = v0.X * v1.Y - v1.X * v0.Y;
+			s = (v2.X * v1.Y - v1.X * v2.Y) / den;	
+			t = (v0.X * v2.Y - v2.X * v0.Y) / den;
+			u = 1.0f - s - t;
 		}
 
 		static Vector3 ClosestPointOnTriangleToPoint(const Vector3& _A, const Vector3& _P1, const Vector3& _P2, const Vector3& _P3)

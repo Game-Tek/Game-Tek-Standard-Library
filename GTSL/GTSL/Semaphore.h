@@ -17,11 +17,19 @@ namespace GTSL
             GTSL_ASSERT(count > -1, "Count must be more than -1.")
         }
 
-        void Post() noexcept
+        void Add() noexcept
         {
             {
                 Lock lock(mutex);
                 ++count;
+            }
+        }
+
+        void Post() noexcept
+        {
+            {
+                Lock lock(mutex);
+                --count;
             }
             cv.NotifyOne();
         }
@@ -29,8 +37,7 @@ namespace GTSL
         void Wait() noexcept
         {
 	        const Lock lock(mutex);
-            cv.Wait(lock, [&]() { return count != 0; });
-            --count;
+            cv.Wait(lock, [&]() { return count == 0; });
         }
 
     private:

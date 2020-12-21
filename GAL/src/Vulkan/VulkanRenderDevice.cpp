@@ -209,7 +209,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		};
 
 #if (_DEBUG)
-		Array<VkValidationFeatureEnableEXT, 8> enables{ VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT };
+		Array<VkValidationFeatureEnableEXT, 8> enables{ VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT, VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT };
 		VkValidationFeaturesEXT features = {};
 		features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
 		features.enabledValidationFeatureCount = enables.GetLength();
@@ -405,11 +405,11 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 			
 			for (uint32 extension = 0; extension < createInfo.Extensions.ElementCount(); ++extension)
 			{
-				switch (createInfo.Extensions[extension])
+				switch (createInfo.Extensions[extension].First)
 				{
 				case Extension::RAY_TRACING:
 				{
-					if(tryAddExtension(VK_KHR_RAY_TRACING_EXTENSION_NAME))
+					if(tryAddExtension("VK_KHR_acceleration_structure"))
 					{
 						VkPhysicalDeviceRayTracingPropertiesKHR vkRayTracingProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_KHR };
 						VkPhysicalDeviceRayTracingFeaturesKHR vkRayTracingFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_FEATURES_KHR };
@@ -423,13 +423,16 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 						getProperties(&vkRayTracingProperties);
 						getFeatures(&vkRayTracingFeatures);
 
-						auto* capabilities = static_cast<RayTracingCapabilities*>(createInfo.ExtensionCapabilities[extension]);
+						auto* capabilities = static_cast<RayTracingCapabilities*>(createInfo.Extensions[extension].Second);
 						capabilities->CanBuildOnHost = vkRayTracingFeatures.rayTracingHostAccelerationStructureCommands;
 						capabilities->RecursionDepth = vkRayTracingProperties.maxRecursionDepth;
 						capabilities->ShaderGroupAlignment = vkRayTracingProperties.shaderGroupBaseAlignment;
 						capabilities->ShaderGroupHandleSize = vkRayTracingProperties.shaderGroupHandleSize;
 					}
-						
+					
+					tryAddExtension("VK_KHR_ray_query");
+					tryAddExtension("VK_KHR_ray_tracing_pipeline");
+
 					if(tryAddExtension(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME)) {}
 						
 					if(tryAddExtension(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME)) {}
@@ -485,7 +488,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 	for (auto e : createInfo.Extensions)
 	{
-		switch (e)
+		switch (e.First)
 		{
 		case Extension::RAY_TRACING:
 		{		

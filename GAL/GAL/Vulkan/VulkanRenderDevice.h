@@ -5,6 +5,8 @@
 #include "Vulkan.h"
 #include <GAL/ext/vulkan/vulkan_beta.h>
 
+#include <GTSL/Pair.h>
+
 namespace GAL
 {
 	class VulkanFence;
@@ -65,8 +67,7 @@ namespace GAL
 			GTSL::Range<VulkanQueue**> Queues;
 			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
 			bool Debug = false;
-			GTSL::Range<const Extension*> Extensions;
-			GTSL::Range<void**> ExtensionCapabilities;
+			GTSL::Range<const GTSL::Pair<Extension, void*>*> Extensions;
 			AllocationInfo AllocationInfo;
 		};
 		explicit VulkanRenderDevice(const CreateInfo& createInfo);
