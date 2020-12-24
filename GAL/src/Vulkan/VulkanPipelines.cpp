@@ -438,7 +438,7 @@ static_assert(sizeof(GAL::VulkanRayTracingPipeline::Group) == sizeof(VkRayTracin
 void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 {
 	VkRayTracingPipelineCreateInfoKHR vkRayTracingPipelineCreateInfo{ VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR };
-	vkRayTracingPipelineCreateInfo.maxRecursionDepth = createInfo.MaxRecursionDepth;
+	vkRayTracingPipelineCreateInfo.maxPipelineRayRecursionDepth = createInfo.MaxRecursionDepth;
 
 	GTSL::Array<VkPipelineShaderStageCreateInfo, 32> vkPipelineShaderStageCreateInfos(static_cast<GTSL::uint32>(createInfo.Stages.ElementCount()));
 
@@ -467,7 +467,6 @@ void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 
 	vkRayTracingPipelineCreateInfo.groupCount = createInfo.Groups.ElementCount();
 	vkRayTracingPipelineCreateInfo.pGroups = reinterpret_cast<const VkRayTracingShaderGroupCreateInfoKHR*>(createInfo.Groups.begin());
-	vkRayTracingPipelineCreateInfo.libraries.sType = VK_STRUCTURE_TYPE_PIPELINE_LIBRARY_CREATE_INFO_KHR;
 	
 	if (createInfo.ParentPipeline)
 	{
@@ -480,7 +479,7 @@ void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 		vkRayTracingPipelineCreateInfo.basePipelineHandle = nullptr;
 	}
 	
-	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vkRayTracingPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
+	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, nullptr, 1, &vkRayTracingPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
 	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo)
 }
 

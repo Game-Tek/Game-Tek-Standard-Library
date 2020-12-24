@@ -5,6 +5,7 @@
 #include "Vulkan.h"
 #include "VulkanTexture.h"
 #include "VulkanAccelerationStructures.h"
+#include "VulkanPipelines.h"
 #include <GTSL/RGB.h>
 
 #undef MemoryBarrier
@@ -74,7 +75,7 @@ namespace GAL
 		
 		struct BindPipelineInfo final : VulkanRenderInfo
 		{
-			const VulkanPipeline* Pipeline = nullptr;
+			VulkanPipeline Pipeline;
 			VulkanPipelineType PipelineType;
 		};
 		void BindPipeline(const BindPipelineInfo& bindPipelineInfo);
@@ -123,8 +124,8 @@ namespace GAL
 		{
 			struct ShaderTableDescriptor
 			{
-				VulkanBuffer* Buffer = nullptr;
-				GTSL::uint32 Size = 0, Offset = 0, Stride = 0;
+				VulkanDeviceAddress Address = 0;
+				GTSL::uint32 Size = 0, Stride = 0;
 			} RayGenDescriptor, HitDescriptor, MissDescriptor;
 			
 			GTSL::Extent3D DispatchSize;

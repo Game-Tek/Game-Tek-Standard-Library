@@ -83,7 +83,7 @@ void GAL::VulkanCommandBuffer::SetScissor(const SetScissorInfo& info)
 
 void GAL::VulkanCommandBuffer::BindPipeline(const BindPipelineInfo& bindPipelineInfo)
 {
-	vkCmdBindPipeline(commandBuffer, static_cast<VkPipelineBindPoint>(bindPipelineInfo.PipelineType), bindPipelineInfo.Pipeline->GetVkPipeline());
+	vkCmdBindPipeline(commandBuffer, static_cast<VkPipelineBindPoint>(bindPipelineInfo.PipelineType), bindPipelineInfo.Pipeline.GetVkPipeline());
 }
 
 void GAL::VulkanCommandBuffer::BindIndexBuffer(const BindIndexBufferInfo& buffer) const
@@ -115,20 +115,17 @@ void GAL::VulkanCommandBuffer::DrawIndexed(const DrawIndexedInfo& drawIndexedInf
 
 void GAL::VulkanCommandBuffer::TraceRays(const TraceRaysInfo& traceRaysInfo)
 {
-	VkStridedBufferRegionKHR raygenSbt, hitSbt, missSbt;
+	VkStridedDeviceAddressRegionKHR raygenSbt, hitSbt, missSbt;
+	raygenSbt.deviceAddress = traceRaysInfo.RayGenDescriptor.Address;
 	raygenSbt.size = traceRaysInfo.RayGenDescriptor.Size;
-	raygenSbt.offset = traceRaysInfo.RayGenDescriptor.Offset;
-	raygenSbt.buffer = traceRaysInfo.RayGenDescriptor.Buffer->GetVkBuffer();
 	raygenSbt.stride = traceRaysInfo.RayGenDescriptor.Stride;
 
+	hitSbt.deviceAddress = traceRaysInfo.HitDescriptor.Address;
 	hitSbt.size = traceRaysInfo.HitDescriptor.Size;
-	hitSbt.offset = traceRaysInfo.HitDescriptor.Offset;
-	hitSbt.buffer = traceRaysInfo.HitDescriptor.Buffer->GetVkBuffer();
 	hitSbt.stride = traceRaysInfo.HitDescriptor.Stride;
 
+	missSbt.deviceAddress = traceRaysInfo.MissDescriptor.Address;
 	missSbt.size = traceRaysInfo.MissDescriptor.Size;
-	missSbt.offset = traceRaysInfo.MissDescriptor.Offset;
-	missSbt.buffer = traceRaysInfo.MissDescriptor.Buffer->GetVkBuffer();
 	missSbt.stride = traceRaysInfo.MissDescriptor.Stride;
 	
 	traceRaysInfo.RenderDevice->vkCmdTraceRaysKHR(commandBuffer, &raygenSbt, &missSbt, &hitSbt, nullptr, traceRaysInfo.DispatchSize.Width, traceRaysInfo.DispatchSize.Height, traceRaysInfo.DispatchSize.Depth);
@@ -248,56 +245,32 @@ void GAL::VulkanCommandBuffer::CopyBuffers(const CopyBuffersInfo& copyBuffersInf
 }
 
 void GAL::VulkanCommandBuffer::BuildAccelerationStructure(const BuildAccelerationStructuresInfo& info) const
-{
-	GTSL::Array<GTSL::Array<VkAccelerationStructureGeometryKHR, 8>, 8> geometries(info.BuildAccelerationStructureInfos.ElementCount());
+{	
 	GTSL::Array<VkAccelerationStructureBuildGeometryInfoKHR, 8> buildGeometryInfo(info.BuildAccelerationStructureInfos.ElementCount());
 
-	GTSL::Array<VkAccelerationStructureGeometryKHR*, 8> geometryPointers(info.BuildAccelerationStructureInfos.ElementCount());
-	
-	for(uint32 i = 0; i < info.BuildAccelerationStructureInfos.ElementCount(); ++i)
+	for (GTSL::uint32 i = 0; i < info.BuildAccelerationStructureInfos.ElementCount(); ++i)
 	{
 		auto& source = info.BuildAccelerationStructureInfos[i];
 		auto& target = buildGeometryInfo[i];
 
-		geometries[i].Resize(static_cast<uint32>(source.Geometries.ElementCount()));
+		GTSL::Array<VkAccelerationStructureGeometryKHR, 8> geometries(source.Geometries.ElementCount());
+		buildGeometries(geometries, source.Geometries);
 
-		for(uint32 g = 0; g < static_cast<uint32>(source.Geometries.ElementCount()); ++g)
-		{
-			auto& targetGeo = geometries[i][g];
-			const auto& sourceGeo = source.Geometries[g];
-
-			targetGeo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
-			targetGeo.pNext = nullptr;
-			targetGeo.flags = sourceGeo.Flags;
-			targetGeo.geometryType = static_cast<VkGeometryTypeKHR>(sourceGeo.Type);
-			targetGeo.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
-			targetGeo.geometry.triangles.pNext = nullptr;
-			targetGeo.geometry.triangles.vertexData.deviceAddress = sourceGeo.VertexData;
-			targetGeo.geometry.triangles.vertexFormat = static_cast<VkFormat>(sourceGeo.VertexFormat);
-			targetGeo.geometry.triangles.vertexStride = sourceGeo.VertexStride;
-			targetGeo.geometry.triangles.indexData.deviceAddress = sourceGeo.IndexData;
-			targetGeo.geometry.triangles.indexType = static_cast<VkIndexType>(sourceGeo.IndexType);
-			
-		}
-
-		geometryPointers[i] = geometries[i].begin();
-		
 		target.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
 		target.pNext = nullptr;
 		target.flags = source.Flags;
 		target.dstAccelerationStructure = source.DestinationAccelerationStructure.GetVkAccelerationStructure();
 		target.srcAccelerationStructure = source.SourceAccelerationStructure.GetVkAccelerationStructure();
 		target.type = static_cast<VkAccelerationStructureTypeKHR>(source.Type);
-		target.geometryArrayOfPointers = source.IsArrayOfPointers;
-		target.geometryCount = static_cast<uint32>(source.Geometries.ElementCount());
+		target.pGeometries = geometries.begin();
+		target.geometryCount = geometries.GetLength();
 		target.scratchData.deviceAddress = source.ScratchBufferAddress;
-		target.update = source.Update;
-		target.ppGeometries = geometryPointers.begin();
+		target.type = (VkAccelerationStructureTypeKHR)source.Type;
 	}
 	
-	info.RenderDevice->vkCmdBuildAccelerationStructureKHR(commandBuffer, info.BuildAccelerationStructureInfos.ElementCount(),
+	info.RenderDevice->vkCmdBuildAccelerationStructuresKHR(commandBuffer, info.BuildAccelerationStructureInfos.ElementCount(),
 		buildGeometryInfo.begin(),
-		reinterpret_cast<const VkAccelerationStructureBuildOffsetInfoKHR* const*>(info.BuildOffsets));
+		reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(info.BuildOffsets));
 }
 
 GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)

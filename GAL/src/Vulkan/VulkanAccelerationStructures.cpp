@@ -5,43 +5,40 @@
 
 void GAL::VulkanAccelerationStructure::GetMemoryRequirements(GetMemoryRequirementsInfo* memoryRequirements)
 {
-	for (auto& e : memoryRequirements->CreateInfo->GeometryDescriptors)
-	{
-		e.stype = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_GEOMETRY_TYPE_INFO_KHR;
-		e.next = nullptr;
-	}
+	GTSL::Array<VkAccelerationStructureGeometryKHR, 8> geometries(memoryRequirements->CreateInfo->GeometryDescriptors.ElementCount());
+	buildGeometries(geometries, memoryRequirements->CreateInfo->GeometryDescriptors);
 
-	VkAccelerationStructureCreateInfoKHR vkAccelerationStructureCreateInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
-	vkAccelerationStructureCreateInfoKhr.flags = memoryRequirements->CreateInfo->Flags;
-	vkAccelerationStructureCreateInfoKhr.type = memoryRequirements->CreateInfo->IsTopLevel ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-	vkAccelerationStructureCreateInfoKhr.pGeometryInfos = reinterpret_cast<const VkAccelerationStructureCreateGeometryTypeInfoKHR*>(memoryRequirements->CreateInfo->GeometryDescriptors.begin());
-	vkAccelerationStructureCreateInfoKhr.maxGeometryCount = memoryRequirements->CreateInfo->GeometryDescriptors.ElementCount();
-	vkAccelerationStructureCreateInfoKhr.compactedSize = memoryRequirements->CreateInfo->CompactedSize;
-	vkAccelerationStructureCreateInfoKhr.deviceAddress = memoryRequirements->CreateInfo->DeviceAddress;
-
-	memoryRequirements->RenderDevice->vkCreateAccelerationStructureKHR(memoryRequirements->RenderDevice->GetVkDevice(), &vkAccelerationStructureCreateInfoKhr, memoryRequirements->RenderDevice->GetVkAllocationCallbacks(), &accelerationStructure);
+	auto type = memoryRequirements->CreateInfo->IsTopLevel ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
 	
-	VkAccelerationStructureMemoryRequirementsInfoKHR vkAccelerationStructureMemoryRequirementsInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_KHR };
-	vkAccelerationStructureMemoryRequirementsInfoKhr.accelerationStructure = accelerationStructure;
-	vkAccelerationStructureMemoryRequirementsInfoKhr.buildType = static_cast<VkAccelerationStructureBuildTypeKHR>(memoryRequirements->BuildType);
-	vkAccelerationStructureMemoryRequirementsInfoKhr.type = static_cast<VkAccelerationStructureMemoryRequirementsTypeKHR>(memoryRequirements->MemoryRequirementsType);
-	VkMemoryRequirements2 vkMemoryRequirements2{ VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2 };
-	memoryRequirements->RenderDevice->vkGetAccelerationStructureMemoryRequirementsKHR(memoryRequirements->RenderDevice->GetVkDevice(), &vkAccelerationStructureMemoryRequirementsInfoKhr, &vkMemoryRequirements2);
-	memoryRequirements->MemoryRequirements.Size = vkMemoryRequirements2.memoryRequirements.size;
-	memoryRequirements->MemoryRequirements.Alignment = vkMemoryRequirements2.memoryRequirements.alignment;
-	memoryRequirements->MemoryRequirements.MemoryTypes = vkMemoryRequirements2.memoryRequirements.memoryTypeBits;
+	uint32_t maxPrimitiveCount = 0;
+	VkAccelerationStructureBuildSizesInfoKHR buildSizes{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR };
+	VkAccelerationStructureBuildGeometryInfoKHR buildInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR };
+	buildInfo.flags = memoryRequirements->CreateInfo->Flags;
+	buildInfo.geometryCount = 1;
+	buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+	buildInfo.scratchData.hostAddress;
+	buildInfo.type = type;
+
+	buildInfo.pGeometries = (const VkAccelerationStructureGeometryKHR*)memoryRequirements->CreateInfo->GeometryDescriptors.begin();
+
+	memoryRequirements->RenderDevice->vkGetAccelerationStructureBuildSizesKHR(memoryRequirements->RenderDevice->GetVkDevice(),
+		(VkAccelerationStructureBuildTypeKHR)memoryRequirements->BuildType, &buildInfo, &maxPrimitiveCount, &buildSizes);
+
+	memoryRequirements->BufferSize = buildSizes.accelerationStructureSize;
+	memoryRequirements->ScratchSize = buildSizes.buildScratchSize;
 }
 
 void GAL::VulkanAccelerationStructure::Initialize(const CreateInfo& info)
 {
-	VkBindAccelerationStructureMemoryInfoKHR bind{ VK_STRUCTURE_TYPE_BIND_ACCELERATION_STRUCTURE_MEMORY_INFO_KHR };
-	bind.accelerationStructure = accelerationStructure;
-	bind.deviceIndexCount = 0;
-	bind.pDeviceIndices = nullptr;
-	bind.memory = static_cast<VkDeviceMemory>(info.Memory.GetVkDeviceMemory());
-	bind.memoryOffset = info.Offset;
+	VkAccelerationStructureCreateInfoKHR vkAccelerationStructureCreateInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
+	vkAccelerationStructureCreateInfoKhr.createFlags = info.Flags;
+	vkAccelerationStructureCreateInfoKhr.type = info.IsTopLevel ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+	vkAccelerationStructureCreateInfoKhr.offset = 0;
+	vkAccelerationStructureCreateInfoKhr.deviceAddress = info.DeviceAddress;
+	vkAccelerationStructureCreateInfoKhr.buffer = info.Buffer.GetVkBuffer();
+	vkAccelerationStructureCreateInfoKhr.size = info.Size;
 
-	info.RenderDevice->vkBindAccelerationStructureMemoryKHR(info.RenderDevice->GetVkDevice(), 1, &bind);
+	info.RenderDevice->vkCreateAccelerationStructureKHR(info.RenderDevice->GetVkDevice(), &vkAccelerationStructureCreateInfoKhr, info.RenderDevice->GetVkAllocationCallbacks(), &accelerationStructure);
 	
 	SET_NAME(accelerationStructure, VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR, info)
 }
@@ -68,17 +65,20 @@ void GAL::VulkanAccelerationStructure::BuildAccelerationStructure(const BuildAcc
 		auto& source = info.BuildAccelerationStructureInfos[i];
 		auto& target = buildGeometryInfo[i];
 
+		GTSL::Array<VkAccelerationStructureGeometryKHR, 8> geometries(source.Geometries.ElementCount());
+		buildGeometries(geometries, source.Geometries);
+
 		target.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
 		target.pNext = nullptr;
 		target.flags = source.Flags;
 		target.dstAccelerationStructure = source.DestinationAccelerationStructure.GetVkAccelerationStructure();
 		target.srcAccelerationStructure = source.SourceAccelerationStructure.GetVkAccelerationStructure();
 		target.type = static_cast<VkAccelerationStructureTypeKHR>(source.Type);
-		target.geometryArrayOfPointers = source.IsArrayOfPointers;
-		target.geometryCount = static_cast<GTSL::uint32>(source.Geometries.ElementCount());
+		target.pGeometries = geometries.begin();
+		target.geometryCount = geometries.GetLength();
 		target.scratchData.deviceAddress = source.ScratchBufferAddress;
-		target.update = source.Update;
+		target.type = (VkAccelerationStructureTypeKHR)source.Type;
 	}
-	
-	info.RenderDevice->vkBuildAccelerationStructureKHR(info.RenderDevice->GetVkDevice(), info.BuildAccelerationStructureInfos.ElementCount(), buildGeometryInfo.begin(), reinterpret_cast<const VkAccelerationStructureBuildOffsetInfoKHR* const*>(info.BuildOffsets));
+
+	info.RenderDevice->vkBuildAccelerationStructuresKHR(info.RenderDevice->GetVkDevice(), nullptr, info.BuildAccelerationStructureInfos.ElementCount(), buildGeometryInfo.begin(), reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(info.BuildOffsets));
 }

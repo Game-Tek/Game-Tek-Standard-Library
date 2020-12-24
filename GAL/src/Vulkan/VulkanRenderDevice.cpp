@@ -411,27 +411,42 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 				{
 					if(tryAddExtension("VK_KHR_acceleration_structure"))
 					{
-						VkPhysicalDeviceRayTracingPropertiesKHR vkRayTracingProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_KHR };
-						VkPhysicalDeviceRayTracingFeaturesKHR vkRayTracingFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_FEATURES_KHR };
+						VkPhysicalDeviceAccelerationStructureFeaturesKHR features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR };
+						VkPhysicalDeviceAccelerationStructurePropertiesKHR properties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR };
 
-						vkRayTracingFeatures.rayTracing = true;
-						vkRayTracingFeatures.rayQuery = true;
+						features.accelerationStructure = true;
+						features.accelerationStructureHostCommands;
 						
-						placePropertiesStructure(vkRayTracingProperties);
-						placeFeaturesStructure(vkRayTracingFeatures);
+						placePropertiesStructure(properties);
+						placeFeaturesStructure(features);
 
-						getProperties(&vkRayTracingProperties);
-						getFeatures(&vkRayTracingFeatures);
+						getProperties(&properties);
+						getFeatures(&features);
 
 						auto* capabilities = static_cast<RayTracingCapabilities*>(createInfo.Extensions[extension].Second);
-						capabilities->CanBuildOnHost = vkRayTracingFeatures.rayTracingHostAccelerationStructureCommands;
-						capabilities->RecursionDepth = vkRayTracingProperties.maxRecursionDepth;
-						capabilities->ShaderGroupAlignment = vkRayTracingProperties.shaderGroupBaseAlignment;
-						capabilities->ShaderGroupHandleSize = vkRayTracingProperties.shaderGroupHandleSize;
+						capabilities->CanBuildOnHost = features.accelerationStructureHostCommands;
 					}
 					
 					tryAddExtension("VK_KHR_ray_query");
-					tryAddExtension("VK_KHR_ray_tracing_pipeline");
+
+					if(tryAddExtension("VK_KHR_ray_tracing_pipeline"))
+					{
+						VkPhysicalDeviceRayTracingPipelineFeaturesKHR features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR };
+						VkPhysicalDeviceRayTracingPipelinePropertiesKHR properties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR };
+
+						features.rayTracingPipeline = true;
+
+						placePropertiesStructure(properties);
+						placeFeaturesStructure(features);
+
+						getProperties(&properties);
+						getFeatures(&features);
+
+						auto* capabilities = static_cast<RayTracingCapabilities*>(createInfo.Extensions[extension].Second);
+						capabilities->RecursionDepth = properties.maxRayRecursionDepth;
+						capabilities->ShaderGroupAlignment = properties.shaderGroupHandleAlignment;
+						capabilities->ShaderGroupHandleSize = properties.shaderGroupHandleSize;
+					}
 
 					if(tryAddExtension(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME)) {}
 						
@@ -495,15 +510,14 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 			GET_DEVICE_PROC(device, vkCreateAccelerationStructureKHR);
 			GET_DEVICE_PROC(device, vkDestroyAccelerationStructureKHR);
 				
-			GET_DEVICE_PROC(device, vkBuildAccelerationStructureKHR);
-			GET_DEVICE_PROC(device, vkBindAccelerationStructureMemoryKHR);
-				
 			GET_DEVICE_PROC(device, vkCreateRayTracingPipelinesKHR);
 				
-			GET_DEVICE_PROC(device, vkGetAccelerationStructureMemoryRequirementsKHR);
-			GET_DEVICE_PROC(device, vkGetAccelerationStructureDeviceAddressKHR);
+			GET_DEVICE_PROC(device, vkGetAccelerationStructureBuildSizesKHR);
 			GET_DEVICE_PROC(device, vkGetRayTracingShaderGroupHandlesKHR);
-				
+			
+			GET_DEVICE_PROC(device, vkBuildAccelerationStructuresKHR);
+			GET_DEVICE_PROC(device, vkCmdBuildAccelerationStructuresKHR);
+
 			GET_DEVICE_PROC(device, vkCreateDeferredOperationKHR);
 			GET_DEVICE_PROC(device, vkDeferredOperationJoinKHR);
 			GET_DEVICE_PROC(device, vkGetDeferredOperationResultKHR);
@@ -511,7 +525,6 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 			GET_DEVICE_PROC(device, vkDestroyDeferredOperationKHR);
 				
 			GET_DEVICE_PROC(device, vkCmdCopyAccelerationStructureKHR);
-			GET_DEVICE_PROC(device, vkCmdBuildAccelerationStructureKHR);
 			GET_DEVICE_PROC(device, vkCmdCopyAccelerationStructureToMemoryKHR);
 			GET_DEVICE_PROC(device, vkCmdCopyMemoryToAccelerationStructureKHR);
 			GET_DEVICE_PROC(device, vkCmdWriteAccelerationStructuresPropertiesKHR);
