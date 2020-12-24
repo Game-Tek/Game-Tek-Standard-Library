@@ -72,7 +72,6 @@ namespace GAL
 		struct CreateInfo : VulkanCreateInfo
 		{
 			bool IsTopLevel = false;
-			VulkanAccelerationStructureFlags::value_type Flags;
 		
 			VulkanDeviceAddress DeviceAddress = 0;
 
@@ -93,6 +92,8 @@ namespace GAL
 
 			VulkanAccelerationStructureBuildType BuildType;
 			VulkanAccelerationStructureMemoryRequirementsType MemoryRequirementsType;
+
+			VulkanAccelerationStructureFlags::value_type Flags;
 		};
 		void GetMemoryRequirements(GetMemoryRequirementsInfo* memoryRequirements);
 		
@@ -110,10 +111,8 @@ namespace GAL
 
 	};
 
-	void buildGeometries(GTSL::Range<VkAccelerationStructureGeometryKHR*> vkGeometries, GTSL::Range<const GAL::VulkanAccelerationStructure::GeometryDescriptor*> descriptors)
+	inline void buildGeometries(GTSL::Range<VkAccelerationStructureGeometryKHR*> vkGeometries, GTSL::Range<const VulkanAccelerationStructure::GeometryDescriptor*> descriptors)
 	{
-		using namespace GAL;
-
 		for (GTSL::uint32 i = 0; i < vkGeometries.ElementCount(); ++i)
 		{
 			auto& s = descriptors[i];

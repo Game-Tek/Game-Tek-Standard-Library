@@ -518,6 +518,8 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 			GET_DEVICE_PROC(device, vkBuildAccelerationStructuresKHR);
 			GET_DEVICE_PROC(device, vkCmdBuildAccelerationStructuresKHR);
 
+			GET_DEVICE_PROC(device, vkGetAccelerationStructureDeviceAddressKHR);
+
 			GET_DEVICE_PROC(device, vkCreateDeferredOperationKHR);
 			GET_DEVICE_PROC(device, vkDeferredOperationJoinKHR);
 			GET_DEVICE_PROC(device, vkGetDeferredOperationResultKHR);

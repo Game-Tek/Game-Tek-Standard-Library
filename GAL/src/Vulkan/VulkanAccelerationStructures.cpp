@@ -13,13 +13,13 @@ void GAL::VulkanAccelerationStructure::GetMemoryRequirements(GetMemoryRequiremen
 	uint32_t maxPrimitiveCount = 0;
 	VkAccelerationStructureBuildSizesInfoKHR buildSizes{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR };
 	VkAccelerationStructureBuildGeometryInfoKHR buildInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR };
-	buildInfo.flags = memoryRequirements->CreateInfo->Flags;
-	buildInfo.geometryCount = 1;
+	buildInfo.flags = memoryRequirements->Flags;
+	buildInfo.geometryCount = geometries.GetLength();
 	buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
 	buildInfo.scratchData.hostAddress;
 	buildInfo.type = type;
 
-	buildInfo.pGeometries = (const VkAccelerationStructureGeometryKHR*)memoryRequirements->CreateInfo->GeometryDescriptors.begin();
+	buildInfo.pGeometries = geometries.begin();
 
 	memoryRequirements->RenderDevice->vkGetAccelerationStructureBuildSizesKHR(memoryRequirements->RenderDevice->GetVkDevice(),
 		(VkAccelerationStructureBuildTypeKHR)memoryRequirements->BuildType, &buildInfo, &maxPrimitiveCount, &buildSizes);
@@ -31,7 +31,7 @@ void GAL::VulkanAccelerationStructure::GetMemoryRequirements(GetMemoryRequiremen
 void GAL::VulkanAccelerationStructure::Initialize(const CreateInfo& info)
 {
 	VkAccelerationStructureCreateInfoKHR vkAccelerationStructureCreateInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
-	vkAccelerationStructureCreateInfoKhr.createFlags = info.Flags;
+	vkAccelerationStructureCreateInfoKhr.createFlags = 0;
 	vkAccelerationStructureCreateInfoKhr.type = info.IsTopLevel ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
 	vkAccelerationStructureCreateInfoKhr.offset = 0;
 	vkAccelerationStructureCreateInfoKhr.deviceAddress = info.DeviceAddress;

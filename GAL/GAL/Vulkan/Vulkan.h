@@ -487,10 +487,12 @@ namespace GAL
 		FIFO = 2,
 	};
 	
+	VkBufferUsageFlags;
+
 	struct VulkanBufferType : GTSL::Flags<GTSL::uint32>
 	{
 		static constexpr value_type	TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, UNIFORM = 16, STORAGE = 0x00000020, INDEX = 64, VERTEX = 128, ADDRESS = 0x00020000;
-		static constexpr value_type	RAY_TRACING = 0x00000400, INDIRECT = 0x00000100;
+		static constexpr value_type	RAY_TRACING = 0x00000400, INDIRECT = 0x00000100, ACCELERATION_STRUCTURE = 0x00100000;
 	};
 	
 	struct VulkanQueueCapabilities : GTSL::Flags<GTSL::uint32>
