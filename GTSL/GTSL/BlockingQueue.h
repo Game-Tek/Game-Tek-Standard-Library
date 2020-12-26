@@ -11,12 +11,15 @@ namespace GTSL
 	class BlockingQueue
 	{
 	public:
+		BlockingQueue() : done(false), working(false) {}
+
 		void Push(const T& item)
 		{
 			{
 				Lock lock(mutex);
 				queue.push(item);
 			}
+
 			ready.NotifyOne();
 		}
 
@@ -26,32 +29,22 @@ namespace GTSL
 				Lock lock(mutex);
 				queue.emplace(GTSL::ForwardRef<T>(item));
 			}
-			ready.NotifyOne();
-		}
-
-		bool TryPush(const T& item)
-		{
-			{
-				if (!mutex.TryLock()) { return false; }
-
-				queue.push(item);
-				mutex.Unlock();
-			}
 
 			ready.NotifyOne();
-			return true;
 		}
 
 		bool TryPush(T&& item)
 		{
+			if (mutex.TryLock())
 			{
-				if (!mutex.TryLock()) { return false; }
+				if (working) { mutex.Unlock(); return false; }
 				queue.emplace(GTSL::ForwardRef<T>(item));
 				mutex.Unlock();
+				ready.NotifyOne();
+				return true;
 			}
 
-			ready.NotifyOne();
-			return true;
+			return false;
 		}
 
 		bool Pop(T& item)
@@ -62,27 +55,36 @@ namespace GTSL
 			if (queue.empty()) { return false; }
 			item = queue.front();
 			queue.pop();
+			working = true;
 			
 			return true;
 		}
 
 		bool TryPop(T& item)
 		{
-			if (!mutex.TryLock()) { return false; }
-			if (queue.empty()) { mutex.Unlock(); return false; }
-			
-			item = queue.front();
-			queue.pop();
+			if (mutex.TryLock())
+			{
+				if (queue.empty()) { mutex.Unlock(); return false; }
+				item = queue.front();
+				queue.pop();
+				working = true;
+				mutex.Unlock();
+				return true;
+			}
 
-			mutex.Unlock();
-
-			return true;
+			return false;
 		}
 
 		void Done() noexcept
 		{
+			Lock lock(mutex);
+			working = false;
+		}
+
+		void End() noexcept
+		{
 			{
-				Lock lock(mutex); done = true;
+				Lock lock(mutex); done = true; working = false;
 			}
 			ready.NotifyAll();
 		}
@@ -103,6 +105,7 @@ namespace GTSL
 		std::queue<T> queue;
 		mutable Mutex mutex;
 		ConditionVariable ready;
-		bool done = false;
+		bool done : 4;
+		bool working : 4;
 	};
 }

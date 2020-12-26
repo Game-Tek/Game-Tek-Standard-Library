@@ -58,7 +58,7 @@ namespace GAL
 			GTSL::uint32 RecursionDepth = 0, ShaderGroupAlignment = 0, ShaderGroupHandleSize = 0;
 			bool CanBuildOnHost = false;
 		};
-		
+
 		struct CreateInfo
 		{
 			GTSL::Range<const GTSL::UTF8*> ApplicationName;
@@ -67,6 +67,7 @@ namespace GAL
 			GTSL::Range<VulkanQueue**> Queues;
 			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
 			bool Debug = false;
+			bool PerformanceValidation = false;
 			GTSL::Range<const GTSL::Pair<Extension, void*>*> Extensions;
 			AllocationInfo AllocationInfo;
 		};

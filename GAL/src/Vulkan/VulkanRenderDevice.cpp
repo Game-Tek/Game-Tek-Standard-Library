@@ -209,7 +209,8 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		};
 
 #if (_DEBUG)
-		Array<VkValidationFeatureEnableEXT, 8> enables{ VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT, VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT };
+		Array<VkValidationFeatureEnableEXT, 8> enables{ VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT };
+		if (createInfo.PerformanceValidation) { enables.EmplaceBack(VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT); }
 		VkValidationFeaturesEXT features = {};
 		features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
 		features.enabledValidationFeatureCount = enables.GetLength();
