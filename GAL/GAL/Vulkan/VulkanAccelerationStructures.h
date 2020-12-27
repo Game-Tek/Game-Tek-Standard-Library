@@ -1,6 +1,5 @@
 #pragma once
 
-#define VK_ENABLE_BETA_EXTENSIONS
 #include "Vulkan.h"
 #include "VulkanMemory.h"
 #include "GTSL/Range.h"
@@ -23,12 +22,11 @@ namespace GAL
 		{
 			VulkanGeometryType Type;
 			void* Data;
-			VulkanGeometryFlags Flags;
+			VulkanGeometryFlags::value_type Flags;
 		};
 
 		struct GeometryTriangles
 		{
-			VulkanGeometryFlags::value_type Flags;
 			VulkanGeometryType Type;
 			VulkanShaderDataType VertexFormat;
 			GTSL::uint32 VertexStride, MaxVertices;

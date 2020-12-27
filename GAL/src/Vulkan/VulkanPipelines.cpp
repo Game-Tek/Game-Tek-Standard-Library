@@ -391,7 +391,7 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	
 	VkGraphicsPipelineCreateInfo vkGraphicsPipelineCreateInfo{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 	GTSL::SetBitAs(1, createInfo.IsInheritable, vkGraphicsPipelineCreateInfo.flags);
-	GTSL::SetBitAs(2, createInfo.ParentPipeline, vkGraphicsPipelineCreateInfo.flags);
+	GTSL::SetBitAs(2, createInfo.ParentPipeline.GetHandle(), vkGraphicsPipelineCreateInfo.flags);
 	vkGraphicsPipelineCreateInfo.stageCount = vkPipelineShaderStageCreateInfos.GetLength();
 	vkGraphicsPipelineCreateInfo.pStages = vkPipelineShaderStageCreateInfos.begin();
 	vkGraphicsPipelineCreateInfo.pVertexInputState = &vkPipelineVertexInputStateCreateInfo;
@@ -403,21 +403,13 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkGraphicsPipelineCreateInfo.pDepthStencilState = &vkPipelineDepthStencilStateCreateInfo;
 	vkGraphicsPipelineCreateInfo.pColorBlendState = &vkPipelineColorblendStateCreateInfo;
 	vkGraphicsPipelineCreateInfo.pDynamicState = &vkPipelineDynamicStateCreateInfo;
-	vkGraphicsPipelineCreateInfo.layout = createInfo.PipelineLayout->GetVkPipelineLayout();
+	vkGraphicsPipelineCreateInfo.layout = createInfo.PipelineLayout.GetVkPipelineLayout();
 	vkGraphicsPipelineCreateInfo.renderPass = createInfo.RenderPass->GetVkRenderPass();
 	vkGraphicsPipelineCreateInfo.subpass = createInfo.SubPass;
-	vkGraphicsPipelineCreateInfo.basePipelineHandle = createInfo.ParentPipeline ? createInfo.ParentPipeline->pipeline : nullptr; // Optional
-	vkGraphicsPipelineCreateInfo.basePipelineIndex = createInfo.ParentPipeline ? 0 : -1;
-
-	if(createInfo.PipelineCache)
-	{
-		VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), createInfo.PipelineCache->GetVkPipelineCache(), 1, &vkGraphicsPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
-
-		SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
-		return;
-	}
+	vkGraphicsPipelineCreateInfo.basePipelineHandle = createInfo.ParentPipeline.GetVkPipeline();
+	vkGraphicsPipelineCreateInfo.basePipelineIndex = createInfo.ParentPipeline.GetHandle() ? 0 : -1;
 	
-	VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), nullptr, 1, &vkGraphicsPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
+	VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), createInfo.PipelineCache.GetVkPipelineCache(), 1, &vkGraphicsPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
 	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
 }
 
@@ -463,15 +455,15 @@ void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 	vkRayTracingPipelineCreateInfo.stageCount = vkPipelineShaderStageCreateInfos.GetLength();
 	vkRayTracingPipelineCreateInfo.pStages = vkPipelineShaderStageCreateInfos.begin();
 	
-	vkRayTracingPipelineCreateInfo.layout = createInfo.PipelineLayout->GetVkPipelineLayout();
+	vkRayTracingPipelineCreateInfo.layout = createInfo.PipelineLayout.GetVkPipelineLayout();
 
 	vkRayTracingPipelineCreateInfo.groupCount = createInfo.Groups.ElementCount();
 	vkRayTracingPipelineCreateInfo.pGroups = reinterpret_cast<const VkRayTracingShaderGroupCreateInfoKHR*>(createInfo.Groups.begin());
 	
-	if (createInfo.ParentPipeline)
+	if (createInfo.ParentPipeline.GetHandle())
 	{
 		vkRayTracingPipelineCreateInfo.basePipelineIndex = 0;
-		vkRayTracingPipelineCreateInfo.basePipelineHandle = createInfo.ParentPipeline->GetVkPipeline();
+		vkRayTracingPipelineCreateInfo.basePipelineHandle = createInfo.ParentPipeline.GetVkPipeline();
 	}
 	else
 	{
@@ -479,7 +471,7 @@ void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 		vkRayTracingPipelineCreateInfo.basePipelineHandle = nullptr;
 	}
 	
-	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, nullptr, 1, &vkRayTracingPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
+	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, createInfo.PipelineCache.GetVkPipelineCache(), 1, &vkRayTracingPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
 	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo)
 }
 

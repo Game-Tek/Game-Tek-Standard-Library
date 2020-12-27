@@ -143,89 +143,95 @@ namespace GTSL
 		SparseVector(const uint32 maxElements, const ALLOCATOR& allo) : allocator(allo)
 		{
 			uint64 allocatedSize;
-
-			allocator.Allocate(sizeof(Group<T>) * maxElements, alignof(Group), reinterpret_cast<void**>(&groups), &allocatedSize);
-
 			capacity = maxElements;
+
+			allocator.Allocate(sizeof(Group<T>) * capacity, alignof(Group<T>), reinterpret_cast<void**>(&groups), &allocatedSize);
+
 		}
 		
 		~SparseVector()
 		{
-			Clear();
+			if (groups) [[likely]]
+			{
+				Clear();
+				allocator.Deallocate(sizeof(Group<T>) * capacity, alignof(Group<T>), groups);
+				groups = nullptr;
+			}
 		}
 		
 		void Initialize(const uint32 maxElements, const ALLOCATOR& allo)
 		{
 			uint64 allocatedSize;
+			capacity = maxElements;
 			
 			allocator = allo;
-			allocator.Allocate(sizeof(Group<T>) * maxElements, alignof(Group), reinterpret_cast<void**>(&groups), &allocatedSize);
-
-			capacity = maxElements;
+			allocator.Allocate(sizeof(Group<T>) * capacity, alignof(Group<T>), reinterpret_cast<void**>(&groups), &allocatedSize);
 		}
 
 		template<typename... ARGS>
 		void EmplaceAt(const uint32 pos, ARGS&&... args)
 		{			
-			for(uint32 i = 0; i < groupCount; ++i)
-			{
-				uint8 tag = 0;
-				
-				Group<T>& group = groups[i];
-				
-				if (pos + 1 == group.First) { tag = IS_PRE_CONTIGUOUS; }
-				if (pos == group.First + group.ElementCount) { tag = IS_POST_CONTIGUOUS; }
-				if (pos > group.First && pos < group.First) { tag = IS_INSIDE; }
-
-				switch (tag)
-				{
-				case IS_PRE_CONTIGUOUS:
-				{
-					//GTSL_ASSERT(pos != group.First, "There's an element alredy using that slot")
-						
-					insertElement(group.GetElements(), 0);
-						
-					new(group.Elements) T(ForwardRef<ARGS>(args)...);
-
-					group.First = pos;
-						
-					//GTSL_ASSERT(group.ElementCount != capacity, "No more space available");
-						
-					++group.ElementCount;
-						
-					return;
-				}
-
-				case IS_POST_CONTIGUOUS:
-				{
-					//GTSL_ASSERT(pos != group.First + group.ElementCount, "There's an element alredy using that slot")
-						
-					new(group.Elements + group.ElementCount) T(ForwardRef<ARGS>(args)...);
-						
-					//GTSL_ASSERT(group.ElementCount != capacity, "No more space available");
-						
-					++group.ElementCount;
-					return;
-				}
-				case IS_INSIDE:
-				{
-					insertElement(group.GetElements(), group.First - pos);
-					new(group.Elements + group.First - pos) T(ForwardRef<ARGS>(args)...);
-
-					GTSL_ASSERT(group.ElementCount != capacity, "No more space available");
-
-					++group.ElementCount;
-						
-					return;
-				}
-				default:;
-				}
-			}
+			//for(uint32 i = 0; i < groupCount; ++i)
+			//{
+			//	uint8 tag = 0;
+			//	
+			//	Group<T>& group = groups[i];
+			//	
+			//	if (pos + 1 == group.First) { tag = IS_PRE_CONTIGUOUS; }
+			//	if (pos == group.First + group.ElementCount) { tag = IS_POST_CONTIGUOUS; }
+			//	if (pos > group.First && pos < group.First) { tag = IS_INSIDE; }
+			//
+			//	switch (tag)
+			//	{
+			//	case IS_PRE_CONTIGUOUS:
+			//	{
+			//		//GTSL_ASSERT(pos != group.First, "There's an element alredy using that slot")
+			//			
+			//		insertElement(group.GetElements(), 0);
+			//			
+			//		new(group.Elements) T(ForwardRef<ARGS>(args)...);
+			//
+			//		group.First = pos;
+			//			
+			//		//GTSL_ASSERT(group.ElementCount != capacity, "No more space available");
+			//			
+			//		++group.ElementCount;
+			//			
+			//		return;
+			//	}
+			//
+			//	case IS_POST_CONTIGUOUS:
+			//	{
+			//		//GTSL_ASSERT(pos != group.First + group.ElementCount, "There's an element alredy using that slot")
+			//			
+			//		new(group.Elements + group.ElementCount) T(ForwardRef<ARGS>(args)...);
+			//			
+			//		//GTSL_ASSERT(group.ElementCount != capacity, "No more space available");
+			//			
+			//		++group.ElementCount;
+			//		return;
+			//	}
+			//	case IS_INSIDE:
+			//	{
+			//		insertElement(group.GetElements(), group.First - pos);
+			//		new(group.Elements + group.First - pos) T(ForwardRef<ARGS>(args)...);
+			//
+			//		GTSL_ASSERT(group.ElementCount != capacity, "No more space available");
+			//
+			//		++group.ElementCount;
+			//			
+			//		return;
+			//	}
+			//	default:;
+			//	}
+			//}
 
 			{
 				uint64 allocatedSize;
+
+				GTSL_ASSERT(groupCount != capacity, "No more allocated groups!")
 				
-				Group<T>& group = groups[groupCount];
+				Group<T>& group = groups[groupCount]; //TODO: GUARANTEE ORDERING
 				group.First = pos;
 				group.ElementCount = 1;
 				allocator.Allocate(sizeof(T) * capacity, alignof(T), reinterpret_cast<void**>(&group.Elements), &allocatedSize);
@@ -241,13 +247,14 @@ namespace GTSL
 			for(uint32 i = 0; i < groupCount; ++i)
 			{
 				auto& group = groups[i];
-				
-				for(uint32 j = 0; j < group.ElementCount; ++j)
-				{
-					group.Elements[j].~T();
-				}
 
-				allocator.Deallocate(sizeof(T) * capacity, alignof(T), group.Elements);
+				if (group.Elements)
+				{
+					for (uint32 j = 0; j < group.ElementCount; ++j) { group.Elements[j].~T(); }
+
+					allocator.Deallocate(sizeof(T) * capacity, alignof(T), group.Elements);
+					group.Elements = nullptr;
+				}
 			}
 
 			groupCount = 0;

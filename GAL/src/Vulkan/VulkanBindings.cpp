@@ -31,7 +31,7 @@ void GAL::VulkanBindingsPool::Destroy(const VulkanRenderDevice* renderDevice)
 void GAL::VulkanBindingsPool::AllocateBindingsSets(const AllocateBindingsSetsInfo& allocateBindingsSetsInfo)
 {	
 	VkDescriptorSetVariableDescriptorCountAllocateInfo vkDescriptorSetVariableDescriptorCountAllocateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO };
-	vkDescriptorSetVariableDescriptorCountAllocateInfo.descriptorSetCount = static_cast<GTSL::uint32>(allocateBindingsSetsInfo.BindingsSets.ElementCount());
+	vkDescriptorSetVariableDescriptorCountAllocateInfo.descriptorSetCount = static_cast<GTSL::uint32>(allocateBindingsSetsInfo.BindingsSetDynamicBindingsCounts.ElementCount());
 	vkDescriptorSetVariableDescriptorCountAllocateInfo.pDescriptorCounts = allocateBindingsSetsInfo.BindingsSetDynamicBindingsCounts.begin();
 
 	GTSL::Array<VkDescriptorSet, 32> descriptorSets(allocateBindingsSetsInfo.BindingsSets.ElementCount());
@@ -106,7 +106,7 @@ void GAL::VulkanBindingsSetLayout::Destroy(const VulkanRenderDevice* renderDevic
 
 void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateInfo)
 {
-	GTSL::Array<VkWriteDescriptorSet, 128> vkWriteDescriptorSets(static_cast<uint32_t>(bindingsUpdateInfo.BindingUpdateInfos.ElementCount()));
+	GTSL::Array<VkWriteDescriptorSet, 64> vkWriteDescriptorSets(static_cast<uint32_t>(bindingsUpdateInfo.BindingUpdateInfos.ElementCount()));
 
 	for(GTSL::uint32 binding = 0; binding < bindingsUpdateInfo.BindingUpdateInfos.ElementCount(); ++binding)
 	{

@@ -486,8 +486,6 @@ namespace GAL
 		*/
 		FIFO = 2,
 	};
-	
-	VkBufferUsageFlags;
 
 	struct VulkanBufferType : GTSL::Flags<GTSL::uint32>
 	{

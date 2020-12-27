@@ -32,6 +32,9 @@ namespace GAL
 			GTSL::Range<const VulkanCreateInfo*> BindingsSetCreateInfos;
 			GTSL::Range<class VulkanBindingsSet**> BindingsSets;
 			GTSL::Range<const class VulkanBindingsSetLayout*> BindingsSetLayouts;
+			/**
+			 * \brief Array of binding counts, with each member specifying the number of bindings in a variable binding count binding in the corresponding descriptor set being allocated.
+			 */
 			GTSL::Range<const GTSL::uint32*> BindingsSetDynamicBindingsCounts;
 		};
 		void AllocateBindingsSets(const AllocateBindingsSetsInfo& allocateBindingsSetsInfo);

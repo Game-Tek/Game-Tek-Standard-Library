@@ -35,27 +35,27 @@ namespace GTSL
 	inline void SetBitAs(const uint8 bitN, const bool value, uint64& n) { n = (n & ~(1ull << bitN)) | (static_cast<uint64>(value) << bitN); }
 	inline void SetBitAs(const uint8 bitN, const bool value, uint32& n) { n = (n & ~(1u << bitN)) | (static_cast<uint32>(value) << bitN); }
 	
-	inline void NextPowerOfTwo(uint8 number, uint8& nextPow2)
+	inline uint8 NextPowerOfTwo(uint8 number)
 	{
 		--number; number |= number >> 1; number |= number >> 2; number |= number >> 4; ++number;
-		nextPow2 = number;
+		return number;
 	}
 
-	inline void NextPowerOfTwo(uint16 number, uint16& nextPow2)
+	inline uint16 NextPowerOfTwo(uint16 number)
 	{
 		--number; number |= number >> 1; number |= number >> 2; number |= number >> 4; number |= number >> 8; ++number;
-		nextPow2 = number;
+		return number;
 	}
 
-	inline void NextPowerOfTwo(uint32 number, uint32& nextPow2)
+	inline uint32 NextPowerOfTwo(uint32 number)
 	{
 		--number; number |= number >> 1; number |= number >> 2; number |= number >> 4; number |= number >> 8; number |= number >> 16; ++number;
-		nextPow2 = number;
+		return number;
 	}
 
-	inline void NextPowerOfTwo(uint64 number, uint64& nextPow2)
+	inline uint64 NextPowerOfTwo(uint64 number)
 	{
 		--number; number |= number >> 1; number |= number >> 2; number |= number >> 4; number |= number >> 8; number |= number >> 16; number |= number >> 32; ++number;
-		nextPow2 = number;
+		return number;
 	}
 }

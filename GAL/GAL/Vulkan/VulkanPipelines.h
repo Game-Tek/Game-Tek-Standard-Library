@@ -86,6 +86,7 @@ namespace GAL
 
 
 		[[nodiscard]] VkPipeline GetVkPipeline() const { return pipeline; }
+		[[nodiscard]] GTSL::uint64 GetHandle() const { return reinterpret_cast<uint64_t>(pipeline); }
 	protected:
 		VkPipeline pipeline = nullptr;
 	};
@@ -129,9 +130,9 @@ namespace GAL
 			VulkanPipelineDescriptor PipelineDescriptor;
 			GTSL::Range<const ShaderInfo*> Stages;
 			bool IsInheritable = false;
-			const VulkanPipelineLayout* PipelineLayout = nullptr;
-			const VulkanRasterizationPipeline* ParentPipeline = nullptr;
-			const VulkanPipelineCache* PipelineCache = nullptr;
+			VulkanPipelineLayout PipelineLayout;
+			VulkanPipeline ParentPipeline;
+			VulkanPipelineCache PipelineCache;
 			uint32_t SubPass;
 		};
 		
@@ -163,11 +164,6 @@ namespace GAL
 		~VulkanComputePipeline() = default;
 
 		void Destroy(const VulkanRenderDevice* renderDevice);
-
-		[[nodiscard]] VkPipeline GetVkPipeline() const { return pipeline; }
-
-	private:
-		VkPipeline pipeline = nullptr;
 	};
 
 	class VulkanRayTracingPipeline final : public VulkanPipeline
@@ -192,13 +188,12 @@ namespace GAL
 		struct CreateInfo : VulkanCreateInfo
 		{
 			bool IsInheritable = false;
-			const VulkanRayTracingPipeline* ParentPipeline = nullptr;
-
-			const VulkanPipelineLayout* PipelineLayout = nullptr;
+			VulkanPipeline ParentPipeline;
+			VulkanPipelineCache PipelineCache;
+			VulkanPipelineLayout PipelineLayout;
 			
 			GTSL::uint32 MaxRecursionDepth = 0;
 			GTSL::Range<const ShaderInfo*> Stages;
-			GTSL::Range<const VulkanBindingsSetLayout*> BindingsSetLayouts;
 
 			GTSL::Range<Group*> Groups;
 		};
@@ -208,7 +203,5 @@ namespace GAL
 		void Destroy(const VulkanRenderDevice* renderDevice);
 
 		void GetShaderGroupHandles(VulkanRenderDevice* renderDevice, GTSL::uint32 firstGroup, GTSL::uint32 groupCount, GTSL::Range<GTSL::byte*> buffer);
-		
-		[[nodiscard]] GTSL::uint64 GetHandle() const {return reinterpret_cast<uint64_t>(pipeline);}
 	};
 }
