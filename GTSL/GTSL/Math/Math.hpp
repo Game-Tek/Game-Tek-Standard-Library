@@ -251,18 +251,18 @@ namespace GTSL
 			return (Target - Current) * DT * InterpSpeed + Current;
 		}
 
-		static float32 MapToRange(const float32 x, const float32 InMin, const float32 InMax, const float32 OutMin, const float32 OutMax)
+		static float32 MapToRange(const float32 x, const float32 matrixin, const float32 matrixax, const float32 OutMin, const float32 OutMax)
 		{
-			GTSL_ASSERT(x >= InMin && x <= InMax, "Not in range") GTSL_ASSERT(InMax - InMin != 0.0f, "Divide by 0")
-			return (x - InMin) / (InMax - InMin) * (OutMax - OutMin) + OutMin;
+			GTSL_ASSERT(x >= matrixin && x <= matrixax, "Not in range") GTSL_ASSERT(matrixax - matrixin != 0.0f, "Divide by 0")
+			return (x - matrixin) / (matrixax - matrixin) * (OutMax - OutMin) + OutMin;
 		}
 
-		static Vector2 MapToRange(const GTSL::Vector2 A, const Vector2 InMin, const Vector2 InMax, const Vector2 OutMin, const Vector2 OutMax)
+		static Vector2 MapToRange(const GTSL::Vector2 A, const Vector2 matrixin, const Vector2 matrixax, const Vector2 OutMin, const Vector2 OutMax)
 		{
-			return Vector2(MapToRange(A.X, InMin.X, InMax.X, OutMin.X, OutMax.X), MapToRange(A.Y, InMin.Y, InMax.Y, OutMin.Y, OutMax.Y));
+			return Vector2(MapToRange(A.X, matrixin.X, matrixax.X, OutMin.X, OutMax.X), MapToRange(A.Y, matrixin.Y, matrixax.Y, OutMin.Y, OutMax.Y));
 		}
 
-		static float32 obMapToRange(const float32 a, const float32 inMax, const float32 outMax) { return a / (inMax / outMax); }
+		static float32 obMapToRange(const float32 a, const float32 matrixax, const float32 outMax) { return a / (matrixax / outMax); }
 
 		static float32 SquareRoot(const float32 a)
 		{
@@ -955,6 +955,9 @@ namespace GTSL
 			*sp = Sine(degrees);
 			*cp = Cosine(degrees);
 		}
+
+		//https://lxjk.github.io/2017/09/03/Fast-4x4-Matrix-Inverse-with-SSE-SIMD-Explained.html
+		static Matrix4 Inverse(const Matrix4& matrix);
 
 		template<typename T1, typename T2, typename MF, typename SF>
 		static void MultiplesFor(const Range<T1*> range1, const Range<T2*> range2, const uint64 multiple, const MF& multiplesFunction, const SF& singlesFunction)

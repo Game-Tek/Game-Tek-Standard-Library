@@ -114,6 +114,9 @@ namespace GTSL
 		 * \return const float* to the matrices' data.
 		 */
 		[[nodiscard]] const float* GetData() const { return array; }
+		
+		[[nodiscard]] const float* GetData(uint8 row, uint8 column) const { return &array[row * 4 + column]; }
+		[[nodiscard]] float* GetData(uint8 row, uint8 column) { return &array[row * 4 + column]; }
 
 		[[nodiscard]] Vector4 GetXBasisVector() const { return Vector4(array[0], array[1], array[2], array[3]); }
 		[[nodiscard]] Vector4 GetYBasisVector() const { return Vector4(array[4], array[5], array[6], array[7]); }

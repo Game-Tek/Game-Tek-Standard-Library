@@ -358,6 +358,9 @@ namespace GTSL
 		template<typename TT, class ALLOCATOR, typename L>
 		friend void PairForEach(FlatHashMap<TT, ALLOCATOR>& collection, L&& lambda);
 
+		template<typename TT, class ALLOCATOR, typename L>
+		friend void ForEachKey(FlatHashMap<TT, ALLOCATOR>& collection, L&& lambda);
+
 		template<typename T, class ALLOCATOR>
 		friend void Insert(const FlatHashMap<T, ALLOCATOR>&, class Buffer& buffer);
 		template<typename T, class ALLOCATOR>
@@ -374,6 +377,12 @@ namespace GTSL
 	void ForEach(const FlatHashMap<T, ALLOCATOR>& collection, L&& lambda)
 	{
 		for (uint32 bucketIndex = 0; bucketIndex < collection.capacity; ++bucketIndex) { for (const auto& e : collection.getValuesBucket(bucketIndex)) { lambda(e); } }
+	}
+
+	template<typename T, class ALLOCATOR, typename L>
+	void ForEachKey(const FlatHashMap<T, ALLOCATOR>& collection, L&& lambda)
+	{
+		for (uint32 bucketIndex = 0; bucketIndex < collection.capacity; ++bucketIndex) { for (const auto e : collection.getKeysBucket(bucketIndex)) { lambda(e); } }
 	}
 
 	template<typename T, class ALLOCATOR, typename L>
