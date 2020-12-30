@@ -81,9 +81,8 @@ namespace GAL
 		struct ShaderInfo
 		{
 			VulkanShaderType Type = VulkanShaderType::VERTEX;
-			const VulkanShader* Shader = nullptr;
+			VulkanShader Shader;
 		};
-
 
 		[[nodiscard]] VkPipeline GetVkPipeline() const { return pipeline; }
 		[[nodiscard]] GTSL::uint64 GetHandle() const { return reinterpret_cast<uint64_t>(pipeline); }

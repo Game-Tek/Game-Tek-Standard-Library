@@ -46,7 +46,8 @@ namespace GAL
 		void FreeBindingsSet(const FreeBindingsSetInfo& freeBindingsSetInfo);
 
 		[[nodiscard]] VkDescriptorPool GetVkDescriptorPool() const { return descriptorPool; }
-
+		[[nodiscard]] GTSL::uint64 GetHandle() const { return (GTSL::uint64)descriptorPool; }
+	
 	private:
 		VkDescriptorPool descriptorPool = nullptr;
 	};
@@ -86,7 +87,8 @@ namespace GAL
 		void Destroy(const VulkanRenderDevice* renderDevice);
 
 		[[nodiscard]] VkDescriptorSetLayout GetVkDescriptorSetLayout() const { return descriptorSetLayout; }
-		
+		[[nodiscard]] GTSL::uint64 GetHandle() const { return (GTSL::uint64)descriptorSetLayout; }
+	
 	private:
 		VkDescriptorSetLayout descriptorSetLayout = nullptr;
 	};
@@ -126,6 +128,7 @@ namespace GAL
 		void Update(const BindingsSetUpdateInfo& bindingsUpdateInfo);
 
 		[[nodiscard]] VkDescriptorSet GetVkDescriptorSet() const { return descriptorSet; }
+		[[nodiscard]] GTSL::uint64 GetHandle() const { return (GTSL::uint64)descriptorSet; }
 
 	private:
 		VkDescriptorSet descriptorSet{ nullptr };

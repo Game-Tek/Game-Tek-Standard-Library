@@ -29,20 +29,26 @@ bool GAL::VulkanShader::CompileShader(GTSL::Range<const GTSL::UTF8*> code, GTSL:
 {
 	shaderc_shader_kind shaderc_stage;
 
-	switch (ShaderTypeToVkShaderStageFlagBits(shaderType))
+	switch (shaderType)
 	{
-	case VK_SHADER_STAGE_VERTEX_BIT: shaderc_stage = shaderc_vertex_shader;	break;
-	case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT: shaderc_stage = shaderc_tess_control_shader;	break;
-	case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT: shaderc_stage = shaderc_tess_evaluation_shader; break;
-	case VK_SHADER_STAGE_GEOMETRY_BIT: shaderc_stage = shaderc_geometry_shader;	break;
-	case VK_SHADER_STAGE_FRAGMENT_BIT: shaderc_stage = shaderc_fragment_shader;	break;
-	case VK_SHADER_STAGE_COMPUTE_BIT: shaderc_stage = shaderc_compute_shader; break;
+	case ShaderType::VERTEX_SHADER: shaderc_stage = shaderc_vertex_shader;	break;
+	case ShaderType::TESSELLATION_CONTROL_SHADER: shaderc_stage = shaderc_tess_control_shader;	break;
+	case ShaderType::TESSELLATION_EVALUATION_SHADER: shaderc_stage = shaderc_tess_evaluation_shader; break;
+	case ShaderType::GEOMETRY_SHADER: shaderc_stage = shaderc_geometry_shader;	break;
+	case ShaderType::FRAGMENT_SHADER: shaderc_stage = shaderc_fragment_shader;	break;
+	case ShaderType::COMPUTE_SHADER: shaderc_stage = shaderc_compute_shader; break;
+	case ShaderType::RAY_GEN: shaderc_stage = shaderc_raygen_shader; break;
+	case ShaderType::CLOSEST_HIT: shaderc_stage = shaderc_closesthit_shader; break;
+	case ShaderType::ANY_HIT: shaderc_stage = shaderc_anyhit_shader; break;
+	case ShaderType::INTERSECTION: shaderc_stage = shaderc_intersection_shader; break;
+	case ShaderType::MISS: shaderc_stage = shaderc_miss_shader; break;
+	case ShaderType::CALLABLE: shaderc_stage = shaderc_callable_shader; break;
 	default: GAL_DEBUG_BREAK;
 	}
 
 	const shaderc::Compiler shaderc_compiler;
 	shaderc::CompileOptions shaderc_compile_options;
-	shaderc_compile_options.SetTargetSpirv(shaderc_spirv_version_1_3);
+	shaderc_compile_options.SetTargetSpirv(shaderc_spirv_version_1_5);
 	shaderc_compile_options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
 
 	shaderc_source_language shaderc_source_language;
@@ -385,7 +391,7 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 		vkPipelineShaderStageCreateInfos[i].flags = 0;
 		vkPipelineShaderStageCreateInfos[i].stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
 		vkPipelineShaderStageCreateInfos[i].pName = "main";
-		vkPipelineShaderStageCreateInfos[i].module = createInfo.Stages[i].Shader->GetVkShaderModule();
+		vkPipelineShaderStageCreateInfos[i].module = createInfo.Stages[i].Shader.GetVkShaderModule();
 		vkPipelineShaderStageCreateInfos[i].pSpecializationInfo = nullptr;
 	}
 	
@@ -441,7 +447,7 @@ void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 		vkPipelineShaderStageCreateInfos[i].flags = 0;
 		vkPipelineShaderStageCreateInfos[i].stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
 		vkPipelineShaderStageCreateInfos[i].pName = "main";
-		vkPipelineShaderStageCreateInfos[i].module = createInfo.Stages[i].Shader->GetVkShaderModule();
+		vkPipelineShaderStageCreateInfos[i].module = createInfo.Stages[i].Shader.GetVkShaderModule();
 		vkPipelineShaderStageCreateInfos[i].pSpecializationInfo = nullptr;
 	}
 

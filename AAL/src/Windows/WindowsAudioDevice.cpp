@@ -73,6 +73,7 @@ void WindowsAudioDevice::Initialize(const CreateInfo& audioDeviceCreateInfo)
 	case 8: bitDepth = AudioBitDepth::BIT_DEPTH_8; break;
 	case 16:bitDepth = AudioBitDepth::BIT_DEPTH_16; break;
 	case 24:bitDepth = AudioBitDepth::BIT_DEPTH_24; break;
+	case 32:bitDepth = AudioBitDepth::BIT_DEPTH_32; break;
 	default:;
 	}
 }
@@ -117,10 +118,12 @@ void WindowsAudioDevice::PushAudioData(void* data, uint32 pushedSamples) const
 
 	// block_alignment = nChannels * (wBitsPerSample / 8);
 
-	UINT32 numFramesAvailable;
-	GTSL_ASSERT(audioClient->GetCurrentPadding(&numFramesAvailable) >= pushedSamples, "Pushing more samples than what buffer can handle!");
-
-	if constexpr (_DEBUG) { if (numFramesAvailable < pushedSamples) { pushedSamples = numFramesAvailable; } }
+	if constexpr (_DEBUG)
+	{
+		UINT32 numFramesAvailable;
+		GetAvailableBufferFrames(numFramesAvailable);
+		GTSL_ASSERT(numFramesAvailable >= pushedSamples, "Pushing more samples than what buffer can handle!");
+	}
 	
 	BYTE* buffer_address = nullptr;
 	GTSL_ASSERT(renderClient->GetBuffer(pushedSamples, &buffer_address) == S_OK, "IAudioRenderClient::GetBuffer failed");
