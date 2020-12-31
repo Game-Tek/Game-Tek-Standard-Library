@@ -115,8 +115,7 @@ namespace GAL
 		{
 			VulkanBindingType Type;
 
-			GTSL::uint32 ArrayElement = 0;
-			GTSL::uint32 Count;
+			GTSL::uint32 ArrayElement = 0, Count = 0, Binding = 0;
 			
 			void* BindingsUpdates;
 		};

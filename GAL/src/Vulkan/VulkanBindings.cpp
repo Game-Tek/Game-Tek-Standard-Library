@@ -115,7 +115,7 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 		writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		writeSet.pNext = nullptr;
 		writeSet.dstSet = descriptorSet;
-		writeSet.dstBinding = binding;
+		writeSet.dstBinding = bindingsUpdateInfo.BindingUpdateInfos[binding].Binding;
 		writeSet.dstArrayElement = bindingsUpdateInfo.BindingUpdateInfos[binding].ArrayElement;
 		writeSet.descriptorCount = bindingsUpdateInfo.BindingUpdateInfos[binding].Count;
 		writeSet.descriptorType = static_cast<VkDescriptorType>(bindingsUpdateInfo.BindingUpdateInfos[binding].Type);

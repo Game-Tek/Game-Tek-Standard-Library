@@ -226,6 +226,9 @@ namespace GTSL
 			for (uint32 bucket = 0; bucket < this->capacity; ++bucket) { getBucketLength(bucket) = 0; }
 		}
 
+		T& operator[](const uint64 key) { return At(key); }
+		const T& operator[](const uint64 key) const { return At(key); }
+	
 	private:
 		friend class Iterator<T>;
 

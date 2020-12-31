@@ -8,6 +8,9 @@
 #include "VulkanPipelines.h"
 #include <GTSL/RGB.h>
 
+#include "VulkanFramebuffer.h"
+#include "VulkanRenderPass.h"
+
 #undef MemoryBarrier
 
 namespace GAL
@@ -49,8 +52,8 @@ namespace GAL
 
 		struct BeginRenderPassInfo final : VulkanRenderInfo
 		{
-			const VulkanRenderPass* RenderPass = nullptr;
-			const VulkanFramebuffer* Framebuffer = nullptr;
+			VulkanRenderPass RenderPass;
+			VulkanFramebuffer Framebuffer;
 			GTSL::Extent2D RenderArea;
 			GTSL::Range<const GTSL::RGBA*> ClearValues;
 		};
@@ -82,7 +85,7 @@ namespace GAL
 
 		struct BindIndexBufferInfo final : VulkanRenderInfo
 		{
-			const VulkanBuffer* Buffer{ nullptr };
+			VulkanBuffer Buffer;
 			GTSL::uint32 Offset{ 0 };
 			VulkanIndexType IndexType;
 		};
@@ -90,14 +93,14 @@ namespace GAL
 
 		struct BindVertexBufferInfo final : VulkanRenderInfo
 		{
-			const VulkanBuffer* Buffer{ nullptr };
+			VulkanBuffer Buffer;
 			GTSL::uint32 Offset{ 0 };
 		};
 		void BindVertexBuffer(const BindVertexBufferInfo& buffer) const;
 
 		struct UpdatePushConstantsInfo : VulkanRenderInfo
 		{
-			const VulkanPipelineLayout* PipelineLayout = nullptr;
+			VulkanPipelineLayout PipelineLayout;
 			size_t Offset = 0;
 			size_t Size = 0;
 			GTSL::byte* Data = nullptr;
@@ -160,7 +163,7 @@ namespace GAL
 			VulkanPipelineType PipelineType;
 			GTSL::Range<const VulkanBindingsSet*> BindingsSets;
 			GTSL::Range<const GTSL::uint32*> Offsets;
-			const VulkanPipelineLayout* PipelineLayout = nullptr;
+			VulkanPipelineLayout PipelineLayout;
 			GTSL::uint32 FirstSet = 0, BoundSets = 0;
 		};
 		void BindBindingsSets(const BindBindingsSetInfo& info);
@@ -176,9 +179,9 @@ namespace GAL
 
 		struct CopyBufferToTextureInfo : VulkanRenderInfo
 		{
-			const VulkanBuffer* SourceBuffer{ nullptr };
+			VulkanBuffer SourceBuffer;
 			VulkanTextureLayout TextureLayout;
-			const VulkanTexture* DestinationTexture{ nullptr };
+			VulkanTexture DestinationTexture;
 
 			GTSL::Extent3D Extent;
 			GTSL::Extent3D Offset;
@@ -213,9 +216,9 @@ namespace GAL
 
 		struct CopyBuffersInfo : VulkanRenderInfo
 		{
-			const VulkanBuffer* Source{ nullptr };
+			VulkanBuffer Source;
 			GTSL::uint32 SourceOffset{ 0 };
-			const class VulkanBuffer* Destination{ nullptr };
+			VulkanBuffer Destination;
 			GTSL::uint32 DestinationOffset{ 0 };
 
 			GTSL::uint32 Size{ 0 };

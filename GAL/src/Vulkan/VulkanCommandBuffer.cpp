@@ -29,7 +29,7 @@ void GAL::VulkanCommandBuffer::EndRecording(const EndRecordingInfo& endRecording
 void GAL::VulkanCommandBuffer::BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo)
 {
 	VkRenderPassBeginInfo vkRenderPassBeginInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-	vkRenderPassBeginInfo.renderPass = static_cast<const VulkanRenderPass*>(beginRenderPassInfo.RenderPass)->GetVkRenderPass();
+	vkRenderPassBeginInfo.renderPass = beginRenderPassInfo.RenderPass.GetVkRenderPass();
 
 	Array<VkClearValue, 32> vkClearValues(static_cast<uint32>(beginRenderPassInfo.ClearValues.ElementCount()));
 	
@@ -41,7 +41,7 @@ void GAL::VulkanCommandBuffer::BeginRenderPass(const BeginRenderPassInfo& beginR
 	
 	vkRenderPassBeginInfo.pClearValues = vkClearValues.begin();
 	vkRenderPassBeginInfo.clearValueCount = vkClearValues.GetLength();
-	vkRenderPassBeginInfo.framebuffer = static_cast<const VulkanFramebuffer*>(beginRenderPassInfo.Framebuffer)->GetVkFramebuffer();
+	vkRenderPassBeginInfo.framebuffer = beginRenderPassInfo.Framebuffer.GetVkFramebuffer();
 	vkRenderPassBeginInfo.renderArea.extent = Extent2DToVkExtent2D(beginRenderPassInfo.RenderArea);
 	vkRenderPassBeginInfo.renderArea.offset = { 0, 0 };
 
@@ -88,19 +88,19 @@ void GAL::VulkanCommandBuffer::BindPipeline(const BindPipelineInfo& bindPipeline
 
 void GAL::VulkanCommandBuffer::BindIndexBuffer(const BindIndexBufferInfo& buffer) const
 {
-	vkCmdBindIndexBuffer(commandBuffer, buffer.Buffer->GetVkBuffer(), buffer.Offset, static_cast<VkIndexType>(buffer.IndexType));
+	vkCmdBindIndexBuffer(commandBuffer, buffer.Buffer.GetVkBuffer(), buffer.Offset, static_cast<VkIndexType>(buffer.IndexType));
 }
 
 void GAL::VulkanCommandBuffer::BindVertexBuffer(const BindVertexBufferInfo& buffer) const
 {
-	auto* vkBuffer = static_cast<const VulkanBuffer*>(buffer.Buffer)->GetVkBuffer();
+	auto vkBuffer = buffer.Buffer.GetVkBuffer();
 	GTSL::uint64 offset = buffer.Offset;
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vkBuffer, &offset);
 }
 
 void GAL::VulkanCommandBuffer::UpdatePushConstant(const UpdatePushConstantsInfo& info)
 {
-	vkCmdPushConstants(commandBuffer, info.PipelineLayout->GetVkPipelineLayout(), info.ShaderStages, info.Offset, info.Size, info.Data);
+	vkCmdPushConstants(commandBuffer, info.PipelineLayout.GetVkPipelineLayout(), info.ShaderStages, info.Offset, info.Size, info.Data);
 }
 
 void GAL::VulkanCommandBuffer::Draw(const DrawInfo& info) const
@@ -159,7 +159,7 @@ void GAL::VulkanCommandBuffer::Dispatch(const DispatchInfo& dispatchInfo)
 
 void GAL::VulkanCommandBuffer::BindBindingsSets(const BindBindingsSetInfo& info)
 {
-	vkCmdBindDescriptorSets(commandBuffer, static_cast<VkPipelineBindPoint>(info.PipelineType), info.PipelineLayout->GetVkPipelineLayout(), info.FirstSet,
+	vkCmdBindDescriptorSets(commandBuffer, static_cast<VkPipelineBindPoint>(info.PipelineType), info.PipelineLayout.GetVkPipelineLayout(), info.FirstSet,
 	info.BoundSets, reinterpret_cast<const VkDescriptorSet*>(info.BindingsSets.begin()), info.Offsets.ElementCount(), info.Offsets.begin());
 }
 
@@ -195,7 +195,7 @@ void GAL::VulkanCommandBuffer::CopyBufferToTexture(const CopyBufferToTextureInfo
 	region.imageSubresource.layerCount = 1;
 	region.imageOffset = VkOffset3D{ copyBufferToImageInfo.Offset.Width, copyBufferToImageInfo.Offset.Depth, copyBufferToImageInfo.Offset.Height };
 	region.imageExtent = Extent3DToVkExtent3D(copyBufferToImageInfo.Extent);
-	vkCmdCopyBufferToImage(commandBuffer, copyBufferToImageInfo.SourceBuffer->GetVkBuffer(), copyBufferToImageInfo.DestinationTexture->GetVkImage(),
+	vkCmdCopyBufferToImage(commandBuffer, copyBufferToImageInfo.SourceBuffer.GetVkBuffer(), copyBufferToImageInfo.DestinationTexture.GetVkImage(),
 		static_cast<VkImageLayout>(copyBufferToImageInfo.TextureLayout), 1, &region);
 }
 
@@ -241,7 +241,7 @@ void GAL::VulkanCommandBuffer::CopyBuffers(const CopyBuffersInfo& copyBuffersInf
 	vk_buffer_copy.size = copyBuffersInfo.Size;
 	vk_buffer_copy.srcOffset = copyBuffersInfo.SourceOffset;
 	vk_buffer_copy.dstOffset = copyBuffersInfo.DestinationOffset;
-	vkCmdCopyBuffer(commandBuffer, copyBuffersInfo.Source->GetVkBuffer(), copyBuffersInfo.Destination->GetVkBuffer(), 1, &vk_buffer_copy);
+	vkCmdCopyBuffer(commandBuffer, copyBuffersInfo.Source.GetVkBuffer(), copyBuffersInfo.Destination.GetVkBuffer(), 1, &vk_buffer_copy);
 }
 
 void GAL::VulkanCommandBuffer::BuildAccelerationStructure(const BuildAccelerationStructuresInfo& info) const
