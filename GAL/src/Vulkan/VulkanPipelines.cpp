@@ -451,11 +451,11 @@ void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 		vkPipelineShaderStageCreateInfos[i].pSpecializationInfo = nullptr;
 	}
 
-	for(uint32_t i = 0; i < createInfo.Groups.ElementCount(); ++i)
+	for(auto& e : createInfo.Groups)
 	{
-		reinterpret_cast<VkRayTracingShaderGroupCreateInfoKHR*>(createInfo.Groups.begin())->sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
-		reinterpret_cast<VkRayTracingShaderGroupCreateInfoKHR*>(createInfo.Groups.begin())->pNext = nullptr;
-		reinterpret_cast<VkRayTracingShaderGroupCreateInfoKHR*>(createInfo.Groups.begin())->pShaderGroupCaptureReplayHandle = nullptr;
+		reinterpret_cast<VkRayTracingShaderGroupCreateInfoKHR&>(e).sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+		reinterpret_cast<VkRayTracingShaderGroupCreateInfoKHR&>(e).pNext = nullptr;
+		reinterpret_cast<VkRayTracingShaderGroupCreateInfoKHR&>(e).pShaderGroupCaptureReplayHandle = nullptr;
 	}
 	
 	vkRayTracingPipelineCreateInfo.stageCount = vkPipelineShaderStageCreateInfos.GetLength();

@@ -558,6 +558,12 @@ namespace GAL
 		case ShaderType::GEOMETRY_SHADER: return VulkanShaderType::GEOMETRY;
 		case ShaderType::FRAGMENT_SHADER: return VulkanShaderType::FRAGMENT;
 		case ShaderType::COMPUTE_SHADER: return VulkanShaderType::COMPUTE;
+		case ShaderType::RAY_GEN: return VulkanShaderType::RAY_GEN;
+		case ShaderType::CALLABLE: return VulkanShaderType::CALLABLE;
+		case ShaderType::CLOSEST_HIT: return VulkanShaderType::CLOSEST_HIT;
+		case ShaderType::ANY_HIT: return VulkanShaderType::ANY_HIT;
+		case ShaderType::MISS: return VulkanShaderType::MISS;
+		case ShaderType::INTERSECTION: return VulkanShaderType::INTERSECTION;
 		default: GAL_DEBUG_BREAK;
 		}
 	}
