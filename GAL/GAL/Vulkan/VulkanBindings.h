@@ -3,6 +3,7 @@
 #include "GAL/Bindings.h"
 
 #include "Vulkan.h"
+#include "VulkanAccelerationStructures.h"
 #include "VulkanBuffer.h"
 #include "VulkanTexture.h"
 
@@ -98,31 +99,47 @@ namespace GAL
 	public:
 		VulkanBindingsSet() = default;
 
-		struct TextureBindingsUpdateInfo
+		struct TextureBindingUpdateInfo
 		{
 			VulkanSampler Sampler;
 			VulkanTextureView TextureView;
 			VulkanTextureLayout TextureLayout;
 		};
 
-		struct BufferBindingsUpdateInfo
+		struct BufferBindingUpdateInfo
 		{
 			VulkanBuffer Buffer;
 			GTSL::uint64 Offset, Range;
 		};
 
-		struct BindingUpdateInfo
+		struct AccelerationStructureBindingUpdateInfo
+		{
+			VulkanAccelerationStructure AccelerationStructure;
+		};
+		
+		union BindingUpdateInfo
+		{
+			BindingUpdateInfo(TextureBindingUpdateInfo info) : TextureBindingUpdateInfo(info) {}
+			BindingUpdateInfo(BufferBindingUpdateInfo info) : BufferBindingUpdateInfo(info) {}
+			BindingUpdateInfo(AccelerationStructureBindingUpdateInfo info) : AccelerationStructureBindingUpdateInfo(info) {}
+			
+			TextureBindingUpdateInfo TextureBindingUpdateInfo;
+			BufferBindingUpdateInfo BufferBindingUpdateInfo;
+			AccelerationStructureBindingUpdateInfo AccelerationStructureBindingUpdateInfo;
+		};
+
+		struct BindingsUpdateInfo
 		{
 			VulkanBindingType Type;
 
-			GTSL::uint32 ArrayElement = 0, Count = 0, Binding = 0;
+			GTSL::uint32 ArrayElement = 0, Binding = 0;
 			
-			void* BindingsUpdates;
+			GTSL::Range<const BindingUpdateInfo*> BindingUpdateInfos;
 		};
 		
 		struct BindingsSetUpdateInfo final : VulkanRenderInfo
 		{
-			GTSL::Range<const BindingUpdateInfo*> BindingUpdateInfos;
+			GTSL::Range<const BindingsUpdateInfo*> BindingsUpdateInfos;
 		};
 		void Update(const BindingsSetUpdateInfo& bindingsUpdateInfo);
 

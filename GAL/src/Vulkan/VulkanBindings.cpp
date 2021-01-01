@@ -106,28 +106,32 @@ void GAL::VulkanBindingsSetLayout::Destroy(const VulkanRenderDevice* renderDevic
 
 void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateInfo)
 {
-	GTSL::Array<VkWriteDescriptorSet, 64> vkWriteDescriptorSets(static_cast<uint32_t>(bindingsUpdateInfo.BindingUpdateInfos.ElementCount()));
+	GTSL::Array<VkWriteDescriptorSet, 64> vkWriteDescriptorSets(static_cast<uint32_t>(bindingsUpdateInfo.BindingsUpdateInfos.ElementCount()));
 
-	for(GTSL::uint32 binding = 0; binding < bindingsUpdateInfo.BindingUpdateInfos.ElementCount(); ++binding)
+	VkWriteDescriptorSetAccelerationStructureKHR as{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR };
+	
+	for(GTSL::uint32 binding = 0; binding < bindingsUpdateInfo.BindingsUpdateInfos.ElementCount(); ++binding)
 	{
 		auto& writeSet = vkWriteDescriptorSets[binding];
-
+		auto& info = bindingsUpdateInfo.BindingsUpdateInfos[binding];
+		
 		writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		writeSet.pNext = nullptr;
 		writeSet.dstSet = descriptorSet;
-		writeSet.dstBinding = bindingsUpdateInfo.BindingUpdateInfos[binding].Binding;
-		writeSet.dstArrayElement = bindingsUpdateInfo.BindingUpdateInfos[binding].ArrayElement;
-		writeSet.descriptorCount = bindingsUpdateInfo.BindingUpdateInfos[binding].Count;
-		writeSet.descriptorType = static_cast<VkDescriptorType>(bindingsUpdateInfo.BindingUpdateInfos[binding].Type);
+		writeSet.dstBinding = info.Binding;
+		writeSet.dstArrayElement = info.ArrayElement;
+		writeSet.descriptorCount = info.BindingUpdateInfos.ElementCount();
+		writeSet.descriptorType = static_cast<VkDescriptorType>(info.Type);
 
-		switch (bindingsUpdateInfo.BindingUpdateInfos[binding].Type)
+		switch (info.Type)
 		{
 		case VulkanBindingType::SAMPLER:
 		case VulkanBindingType::COMBINED_IMAGE_SAMPLER:
 		case VulkanBindingType::SAMPLED_IMAGE:
 		case VulkanBindingType::STORAGE_IMAGE: 
+		case VulkanBindingType::INPUT_ATTACHMENT:
 		{
-			writeSet.pImageInfo = static_cast<VkDescriptorImageInfo*>(bindingsUpdateInfo.BindingUpdateInfos[binding].BindingsUpdates);
+			writeSet.pImageInfo = reinterpret_cast<const VkDescriptorImageInfo*>(info.BindingUpdateInfos.begin());
 			writeSet.pBufferInfo = nullptr;
 			writeSet.pTexelBufferView = nullptr;
 			break;	
@@ -142,13 +146,18 @@ void GAL::VulkanBindingsSet::Update(const BindingsSetUpdateInfo& bindingsUpdateI
 		case VulkanBindingType::STORAGE_BUFFER_DYNAMIC:
 		{				
 			writeSet.pImageInfo = nullptr;
-			writeSet.pBufferInfo = static_cast<VkDescriptorBufferInfo*>(bindingsUpdateInfo.BindingUpdateInfos[binding].BindingsUpdates);
+			writeSet.pBufferInfo = reinterpret_cast<const VkDescriptorBufferInfo*>(info.BindingUpdateInfos.begin());
 			writeSet.pTexelBufferView = nullptr;
 			break;
 		}
 			
-		case VulkanBindingType::INPUT_ATTACHMENT: GAL_DEBUG_BREAK;
-		case VulkanBindingType::ACCELERATION_STRUCTURE: GAL_DEBUG_BREAK;
+		case VulkanBindingType::ACCELERATION_STRUCTURE:
+		{
+			writeSet.pNext = &as;
+			as.accelerationStructureCount = info.BindingUpdateInfos.ElementCount();
+			as.pAccelerationStructures = reinterpret_cast<const VkAccelerationStructureKHR*>(info.BindingUpdateInfos.begin());
+			break;
+		}
 		default: __debugbreak();
 		}
 	}
