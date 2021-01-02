@@ -21,8 +21,8 @@ namespace GAL
 		struct GeometryDescriptor
 		{
 			VulkanGeometryType Type;
-			void* Data;
-			VulkanGeometryFlags::value_type Flags;
+			void* Data = nullptr;
+			VulkanGeometryFlags::value_type Flags = 0;
 		};
 
 		struct GeometryTriangles

@@ -75,9 +75,10 @@ void GAL::VulkanAccelerationStructure::BuildAccelerationStructure(const BuildAcc
 		target.srcAccelerationStructure = source.SourceAccelerationStructure.GetVkAccelerationStructure();
 		target.type = static_cast<VkAccelerationStructureTypeKHR>(source.Type);
 		target.pGeometries = geometries.begin();
+		target.ppGeometries = nullptr;
 		target.geometryCount = geometries.GetLength();
 		target.scratchData.deviceAddress = source.ScratchBufferAddress;
-		target.type = (VkAccelerationStructureTypeKHR)source.Type;
+		target.mode = source.Update ? VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR : VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
 	}
 
 	info.RenderDevice->vkBuildAccelerationStructuresKHR(info.RenderDevice->GetVkDevice(), nullptr, info.BuildAccelerationStructureInfos.ElementCount(), buildGeometryInfo.begin(), reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(info.BuildOffsets));
