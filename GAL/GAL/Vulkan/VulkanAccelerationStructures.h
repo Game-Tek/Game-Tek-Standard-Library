@@ -27,7 +27,6 @@ namespace GAL
 
 		struct GeometryTriangles
 		{
-			VulkanGeometryType Type;
 			VulkanShaderDataType VertexFormat;
 			GTSL::uint32 VertexStride, MaxVertices;
 			VulkanIndexType IndexType;
@@ -86,14 +85,15 @@ namespace GAL
 		struct GetMemoryRequirementsInfo final : VulkanRenderInfo
 		{
 			CreateInfo* CreateInfo;
-			GTSL::uint32 BufferSize, ScratchSize;
 
+			GTSL::Range<const GTSL::uint32*> PrimitiveCounts;
+			
 			VulkanAccelerationStructureBuildType BuildType;
 			VulkanAccelerationStructureMemoryRequirementsType MemoryRequirementsType;
 
 			VulkanAccelerationStructureFlags::value_type Flags;
 		};
-		void GetMemoryRequirements(GetMemoryRequirementsInfo* memoryRequirements);
+		void GetMemoryRequirements(GetMemoryRequirementsInfo* memoryRequirements, GTSL::uint32* bufferSize, GTSL::uint32* scratchSize);
 		
 		void Initialize(const CreateInfo& info);
 

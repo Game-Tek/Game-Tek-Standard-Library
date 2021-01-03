@@ -247,22 +247,24 @@ void GAL::VulkanCommandBuffer::CopyBuffers(const CopyBuffersInfo& copyBuffersInf
 void GAL::VulkanCommandBuffer::BuildAccelerationStructure(const BuildAccelerationStructuresInfo& info) const
 {	
 	GTSL::Array<VkAccelerationStructureBuildGeometryInfoKHR, 8> buildGeometryInfo(info.BuildAccelerationStructureInfos.ElementCount());
+	GTSL::Array<GTSL::Array<VkAccelerationStructureGeometryKHR, 8>, 8> geometries;
 
 	for (GTSL::uint32 i = 0; i < info.BuildAccelerationStructureInfos.ElementCount(); ++i)
 	{
 		auto& source = info.BuildAccelerationStructureInfos[i];
 		auto& target = buildGeometryInfo[i];
 
-		GTSL::Array<VkAccelerationStructureGeometryKHR, 8> geometries(source.Geometries.ElementCount());
-		buildGeometries(geometries, source.Geometries);
+		geometries.EmplaceBack(source.Geometries.ElementCount());
+		
+		buildGeometries(geometries[i], source.Geometries);
 
 		target.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
 		target.pNext = nullptr;
 		target.flags = source.Flags;
-		target.dstAccelerationStructure = source.DestinationAccelerationStructure.GetVkAccelerationStructure();
 		target.srcAccelerationStructure = source.SourceAccelerationStructure.GetVkAccelerationStructure();
+		target.dstAccelerationStructure = source.DestinationAccelerationStructure.GetVkAccelerationStructure();
 		target.type = static_cast<VkAccelerationStructureTypeKHR>(source.Type);
-		target.pGeometries = geometries.begin();
+		target.pGeometries = geometries[i].begin();
 		target.ppGeometries = nullptr;
 		target.geometryCount = geometries.GetLength();
 		target.scratchData.deviceAddress = source.ScratchBufferAddress;

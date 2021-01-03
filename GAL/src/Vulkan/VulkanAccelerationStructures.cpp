@@ -3,29 +3,28 @@
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 #include "GTSL/Array.hpp"
 
-void GAL::VulkanAccelerationStructure::GetMemoryRequirements(GetMemoryRequirementsInfo* memoryRequirements)
+void GAL::VulkanAccelerationStructure::GetMemoryRequirements(GetMemoryRequirementsInfo* memoryRequirements, GTSL::uint32* bufferSize, GTSL::uint32* scratchSize)
 {
 	GTSL::Array<VkAccelerationStructureGeometryKHR, 8> geometries(memoryRequirements->CreateInfo->GeometryDescriptors.ElementCount());
 	buildGeometries(geometries, memoryRequirements->CreateInfo->GeometryDescriptors);
 
 	auto type = memoryRequirements->CreateInfo->IsTopLevel ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
 	
-	uint32_t maxPrimitiveCount = 0;
 	VkAccelerationStructureBuildSizesInfoKHR buildSizes{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR };
 	VkAccelerationStructureBuildGeometryInfoKHR buildInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR };
 	buildInfo.flags = memoryRequirements->Flags;
+	buildInfo.type = type;
 	buildInfo.geometryCount = geometries.GetLength();
 	buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
-	buildInfo.scratchData.hostAddress;
-	buildInfo.type = type;
+	uint32_t maxPrimitiveCount = 0;
 
 	buildInfo.pGeometries = geometries.begin();
 
 	memoryRequirements->RenderDevice->vkGetAccelerationStructureBuildSizesKHR(memoryRequirements->RenderDevice->GetVkDevice(),
 		(VkAccelerationStructureBuildTypeKHR)memoryRequirements->BuildType, &buildInfo, &maxPrimitiveCount, &buildSizes);
 
-	memoryRequirements->BufferSize = buildSizes.accelerationStructureSize;
-	memoryRequirements->ScratchSize = buildSizes.buildScratchSize;
+	*bufferSize = buildSizes.accelerationStructureSize;
+	*scratchSize = buildSizes.buildScratchSize;
 }
 
 void GAL::VulkanAccelerationStructure::Initialize(const CreateInfo& info)

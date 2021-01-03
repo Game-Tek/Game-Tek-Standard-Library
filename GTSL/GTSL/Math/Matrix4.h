@@ -259,11 +259,12 @@ namespace GTSL
 	public:
 		Matrix3x4() = default;
 
+		explicit Matrix3x4(const float32 i) : array{ i, 0.0f, 0.0f, 0.0f, i, 0.0f, 0.0f, 0.0f, i, 0.0f, 0.0f, 0.0f } {}
 		explicit Matrix3x4(const Matrix4& matrix4) : array{ matrix4[0], matrix4[1], matrix4[2], matrix4[3], matrix4[4], matrix4[5], matrix4[6], matrix4[7], matrix4[8], matrix4[9], matrix4[10], matrix4[11] } {}
 		
 		float32& operator[](const uint8 index) { return array[index]; }
 		float32 operator[](const uint8 index) const { return array[index]; }
 	private:
-		float32 array[12];
+		float32 array[12]{ 0.0f };
 	};
 }
