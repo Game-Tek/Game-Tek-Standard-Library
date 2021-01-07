@@ -91,7 +91,7 @@ namespace GAL
 	//	}
 	//}
 
-	enum class VKAccelerationStructureType : GTSL::uint8
+	enum class VulkanAccelerationStructureType : GTSL::uint8
 	{
 		TOP_LEVEL = 0, BOTTOM_LEVEL = 1
 	};
@@ -417,13 +417,6 @@ namespace GAL
 	{
 		GPU_LOCAL = 0, HOST = 1, GPU_OR_HOST = 2
 	};
-
-	enum class VulkanAccelerationStructureMemoryRequirementsType
-	{
-		OBJECT = 0,
-		BUILD_SCRATCH = 1,
-		UPDATE_SCRATCH = 2,
-	};
 	
 	enum class VulkanColorSpace : GTSL::uint32
 	{
@@ -492,11 +485,11 @@ namespace GAL
 		*/
 		FIFO = 2,
 	};
-
+	
 	struct VulkanBufferType : GTSL::Flags<GTSL::uint32>
 	{
 		static constexpr value_type	TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, UNIFORM = 16, STORAGE = 0x00000020, INDEX = 64, VERTEX = 128, ADDRESS = 0x00020000;
-		static constexpr value_type	RAY_TRACING = 0x00000400, INDIRECT = 0x00000100, ACCELERATION_STRUCTURE = 0x00100000;
+		static constexpr value_type	SHADER_BINDING_TABLE = 0x00000400, INDIRECT = 0x00000100, ACCELERATION_STRUCTURE = 0x00100000, BUILD_INPUT_READ_ONLY = 0x00080000;
 	};
 	
 	struct VulkanQueueCapabilities : GTSL::Flags<GTSL::uint32>

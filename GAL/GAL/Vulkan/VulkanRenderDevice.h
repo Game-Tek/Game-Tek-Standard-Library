@@ -55,7 +55,7 @@ namespace GAL
 
 		struct RayTracingCapabilities
 		{
-			GTSL::uint32 RecursionDepth = 0, ShaderGroupAlignment = 0, ShaderGroupHandleSize = 0;
+			GTSL::uint32 RecursionDepth = 0, ShaderGroupAlignment = 0, ShaderGroupHandleSize = 0, ScratchBuildOffsetAlignment = 0;
 			bool CanBuildOnHost = false;
 		};
 
@@ -97,6 +97,8 @@ namespace GAL
 
 		[[nodiscard]] const VkAllocationCallbacks* GetVkAllocationCallbacks() const { return nullptr; }
 
+		GTSL::uint32 GetLinearNonLinearGranularity() const { return deviceProperties.limits.bufferImageGranularity; }
+		
 		PFN_vkCreateAccelerationStructureKHR vkCreateAccelerationStructureKHR;
 		PFN_vkDestroyAccelerationStructureKHR vkDestroyAccelerationStructureKHR;
 		

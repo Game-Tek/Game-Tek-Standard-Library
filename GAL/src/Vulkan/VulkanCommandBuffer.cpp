@@ -246,34 +246,42 @@ void GAL::VulkanCommandBuffer::CopyBuffers(const CopyBuffersInfo& copyBuffersInf
 
 void GAL::VulkanCommandBuffer::BuildAccelerationStructure(const BuildAccelerationStructuresInfo& info) const
 {	
-	GTSL::Array<VkAccelerationStructureBuildGeometryInfoKHR, 8> buildGeometryInfo(info.BuildAccelerationStructureInfos.ElementCount());
-	GTSL::Array<GTSL::Array<VkAccelerationStructureGeometryKHR, 8>, 8> geometries;
+	GTSL::Array<VkAccelerationStructureBuildGeometryInfoKHR, 8> buildGeometryInfos;
+	GTSL::Array<GTSL::Array<VkAccelerationStructureGeometryKHR, 8>, 8> geometriesPerAccelerationStructure;
+	GTSL::Array<GTSL::Array<VkAccelerationStructureBuildRangeInfoKHR, 8>, 8> buildRangesPerAccelerationStructure;
+	GTSL::Array<VkAccelerationStructureBuildRangeInfoKHR*, 8> buildRangesRangePerAccelerationStructure;
 
-	for (GTSL::uint32 i = 0; i < info.BuildAccelerationStructureInfos.ElementCount(); ++i)
+	for (GTSL::uint32 accStrInfoIndex = 0; accStrInfoIndex < info.BuildAccelerationStructureInfos.ElementCount(); ++accStrInfoIndex)
 	{
-		auto& source = info.BuildAccelerationStructureInfos[i];
-		auto& target = buildGeometryInfo[i];
+		auto& source = info.BuildAccelerationStructureInfos[accStrInfoIndex];
 
-		geometries.EmplaceBack(source.Geometries.ElementCount());
+		geometriesPerAccelerationStructure.EmplaceBack();
+		buildRangesPerAccelerationStructure.EmplaceBack();
+		buildRangesRangePerAccelerationStructure.EmplaceBack(buildRangesPerAccelerationStructure[accStrInfoIndex].begin());
 		
-		buildGeometries(geometries[i], source.Geometries);
+		for(uint32 i = 0; i < source.Geometries.ElementCount(); ++i)
+		{
+			VkAccelerationStructureGeometryKHR accelerationStructureGeometry; VkAccelerationStructureBuildRangeInfoKHR buildRange;
+			buildGeometryAndRange(source.Geometries[i], accelerationStructureGeometry, buildRange);
+			geometriesPerAccelerationStructure[accStrInfoIndex].EmplaceBack(accelerationStructureGeometry);
+			buildRangesPerAccelerationStructure[accStrInfoIndex].EmplaceBack(buildRange);
+		}
 
-		target.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-		target.pNext = nullptr;
-		target.flags = source.Flags;
-		target.srcAccelerationStructure = source.SourceAccelerationStructure.GetVkAccelerationStructure();
-		target.dstAccelerationStructure = source.DestinationAccelerationStructure.GetVkAccelerationStructure();
-		target.type = static_cast<VkAccelerationStructureTypeKHR>(source.Type);
-		target.pGeometries = geometries[i].begin();
-		target.ppGeometries = nullptr;
-		target.geometryCount = geometries.GetLength();
-		target.scratchData.deviceAddress = source.ScratchBufferAddress;
-		target.mode = source.Update ? VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR : VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+		VkAccelerationStructureBuildGeometryInfoKHR buildGeometryInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR };
+		buildGeometryInfo.flags = source.Flags;
+		buildGeometryInfo.srcAccelerationStructure = source.SourceAccelerationStructure.GetVkAccelerationStructure();
+		buildGeometryInfo.dstAccelerationStructure = source.DestinationAccelerationStructure.GetVkAccelerationStructure();
+		buildGeometryInfo.type = source.Geometries[0].Type == VulkanGeometryType::INSTANCES ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+		buildGeometryInfo.pGeometries = geometriesPerAccelerationStructure[accStrInfoIndex].begin();
+		buildGeometryInfo.ppGeometries = nullptr;
+		buildGeometryInfo.geometryCount = geometriesPerAccelerationStructure[accStrInfoIndex].GetLength();
+		buildGeometryInfo.scratchData.deviceAddress = source.ScratchBufferAddress;
+		buildGeometryInfo.mode = source.SourceAccelerationStructure.GetVkAccelerationStructure() ? VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR : VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+		buildGeometryInfos.EmplaceBack(buildGeometryInfo);
 	}
 	
 	info.RenderDevice->vkCmdBuildAccelerationStructuresKHR(commandBuffer, info.BuildAccelerationStructureInfos.ElementCount(),
-		buildGeometryInfo.begin(),
-		reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR* const*>(info.BuildOffsets));
+		buildGeometryInfos.begin(), buildRangesRangePerAccelerationStructure.begin());
 }
 
 GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)

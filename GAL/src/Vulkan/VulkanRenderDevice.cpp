@@ -426,6 +426,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 
 						auto* capabilities = static_cast<RayTracingCapabilities*>(createInfo.Extensions[extension].Second);
 						capabilities->CanBuildOnHost = features.accelerationStructureHostCommands;
+						capabilities->ScratchBuildOffsetAlignment = properties.minAccelerationStructureScratchOffsetAlignment;
 					}
 					
 					tryAddExtension("VK_KHR_ray_query");
