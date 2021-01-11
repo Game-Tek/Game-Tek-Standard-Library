@@ -73,6 +73,7 @@ namespace GAL
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 
 		[[nodiscard]] VkRenderPass GetVkRenderPass() const { return renderPass; }
+		[[nodiscard]] uint64_t GetHandle() const { return (uint64_t)renderPass; }
 	private:
 		VkRenderPass renderPass = nullptr;
 	};

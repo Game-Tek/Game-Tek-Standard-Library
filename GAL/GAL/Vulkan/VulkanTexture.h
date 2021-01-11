@@ -26,7 +26,7 @@ namespace GAL
 
 		struct GetMemoryRequirementsInfo final : VulkanRenderInfo
 		{
-			CreateInfo* CreateInfo;
+			const CreateInfo* CreateInfo;
 			MemoryRequirements MemoryRequirements;
 		};
 		void GetMemoryRequirements(GetMemoryRequirementsInfo* info);

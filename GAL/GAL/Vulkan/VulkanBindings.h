@@ -13,7 +13,7 @@ namespace GAL
 	{
 	public:
 		VulkanBindingsPool() = default;
-		struct DescriptorPoolSize
+		struct BindingsPoolSize
 		{
 			VulkanBindingType BindingType;
 			GTSL::uint32 Count = 0;
@@ -21,7 +21,7 @@ namespace GAL
 		
 		struct CreateInfo : VulkanCreateInfo
 		{
-			GTSL::Range<const DescriptorPoolSize*> DescriptorPoolSizes;
+			GTSL::Range<const BindingsPoolSize*> BindingsPoolSizes;
 			GTSL::uint32 MaxSets = 0;
 		};
 		VulkanBindingsPool(const CreateInfo& createInfo);
@@ -33,10 +33,6 @@ namespace GAL
 			GTSL::Range<const VulkanCreateInfo*> BindingsSetCreateInfos;
 			GTSL::Range<class VulkanBindingsSet**> BindingsSets;
 			GTSL::Range<const class VulkanBindingsSetLayout*> BindingsSetLayouts;
-			/**
-			 * \brief Array of binding counts, with each member specifying the number of bindings in a variable binding count binding in the corresponding descriptor set being allocated.
-			 */
-			GTSL::Range<const GTSL::uint32*> BindingsSetDynamicBindingsCounts;
 		};
 		void AllocateBindingsSets(const AllocateBindingsSetsInfo& allocateBindingsSetsInfo);
 		
@@ -60,7 +56,7 @@ namespace GAL
 		{
 			VulkanBindingType BindingType = VulkanBindingType::UNIFORM_BUFFER;
 			VulkanShaderStage::value_type ShaderStage = VulkanShaderStage::ALL;
-			GTSL::uint32 UniformCount = 0;
+			GTSL::uint32 BindingsCount = 0;
 			VulkanBindingFlags::value_type Flags;
 		};
 
@@ -131,9 +127,7 @@ namespace GAL
 		struct BindingsUpdateInfo
 		{
 			VulkanBindingType Type;
-
-			GTSL::uint32 ArrayElement = 0, Binding = 0;
-			
+			GTSL::uint32 SubsetIndex = 0, BindingIndex = 0;
 			GTSL::Range<const BindingUpdateInfo*> BindingUpdateInfos;
 		};
 		

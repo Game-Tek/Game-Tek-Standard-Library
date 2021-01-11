@@ -9,6 +9,7 @@ void GAL::DX12Buffer::Initialize(const CreateInfo& info)
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	resourceDesc.Width = info.Size;
 	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
 	DX_CHECK(info.RenderDevice->GetID3D12Device2()->CreatePlacedResource(info.Memory.GetID3D12Heap(), info.Offset, &resourceDesc, static_cast<D3D12_RESOURCE_STATES>(info.BufferType), nullptr, __uuidof(ID3D12Resource), reinterpret_cast<void**>(&resource)))
 }
 

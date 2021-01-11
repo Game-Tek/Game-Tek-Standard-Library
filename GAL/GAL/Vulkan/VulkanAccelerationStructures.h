@@ -79,7 +79,6 @@ namespace GAL
 			VulkanBuffer Buffer;
 			GTSL::uint32 Size, Offset;
 		};
-		//VulkanAccelerationStructure(const TopLevelCreateInfo& info);
 
 		struct GetMemoryRequirementsInfo final : VulkanRenderInfo
 		{
