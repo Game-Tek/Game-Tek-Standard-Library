@@ -129,7 +129,7 @@ namespace GAL
 			{
 				VulkanDeviceAddress Address = 0;
 				GTSL::uint32 Size = 0, Stride = 0;
-			} RayGenDescriptor, HitDescriptor, MissDescriptor;
+			} RayGenDescriptor, HitDescriptor, MissDescriptor, CallableDescriptor;
 			
 			GTSL::Extent3D DispatchSize;
 		};

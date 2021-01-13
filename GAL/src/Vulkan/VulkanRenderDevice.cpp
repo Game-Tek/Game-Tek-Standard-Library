@@ -183,12 +183,13 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 	
 	{
 		VkApplicationInfo vkApplicationInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
-		vkEnumerateInstanceVersion(&vkApplicationInfo.apiVersion);
+		//vkEnumerateInstanceVersion(&vkApplicationInfo.apiVersion);
+		vkApplicationInfo.apiVersion = VK_MAKE_VERSION(1, 2, 0);
 		vkApplicationInfo.applicationVersion = VK_MAKE_VERSION(createInfo.ApplicationVersion[0], createInfo.ApplicationVersion[1], createInfo.ApplicationVersion[2]);
 		vkApplicationInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
 		vkApplicationInfo.pApplicationName = createInfo.ApplicationName.begin();
 		vkApplicationInfo.pEngineName = "Game-Tek | GAL";
-
+		
 		Array<const char*, 8> instanceLayers;
 
 		if constexpr (_DEBUG)
@@ -447,6 +448,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 						auto* capabilities = static_cast<RayTracingCapabilities*>(createInfo.Extensions[extension].Second);
 						capabilities->RecursionDepth = properties.maxRayRecursionDepth;
 						capabilities->ShaderGroupAlignment = properties.shaderGroupHandleAlignment;
+						capabilities->ShaderGroupBaseAlignment = properties.shaderGroupBaseAlignment;
 						capabilities->ShaderGroupHandleSize = properties.shaderGroupHandleSize;
 					}
 

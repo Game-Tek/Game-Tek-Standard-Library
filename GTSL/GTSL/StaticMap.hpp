@@ -44,7 +44,7 @@ namespace GTSL
 			return values[bucketIndex][index.Get()];
 		}
 
-		[[nodiscard]] bool Find(const uint64 key) const { return findElementIndex(keys[modulo(key)], key); }
+		[[nodiscard]] bool Find(const uint64 key) const { return findElementIndex(keys[modulo(key)], key).State(); }
 
 	private:
 		using keys_bucket = Array<uint64, Y>;

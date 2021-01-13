@@ -55,7 +55,7 @@ namespace GAL
 
 		struct RayTracingCapabilities
 		{
-			GTSL::uint32 RecursionDepth = 0, ShaderGroupAlignment = 0, ShaderGroupHandleSize = 0, ScratchBuildOffsetAlignment = 0;
+			GTSL::uint32 RecursionDepth = 0, ShaderGroupAlignment = 0, ShaderGroupBaseAlignment = 0, ShaderGroupHandleSize = 0, ScratchBuildOffsetAlignment = 0;
 			bool CanBuildOnHost = false;
 		};
 

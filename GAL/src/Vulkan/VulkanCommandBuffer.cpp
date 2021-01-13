@@ -115,20 +115,24 @@ void GAL::VulkanCommandBuffer::DrawIndexed(const DrawIndexedInfo& drawIndexedInf
 
 void GAL::VulkanCommandBuffer::TraceRays(const TraceRaysInfo& traceRaysInfo)
 {
-	VkStridedDeviceAddressRegionKHR raygenSbt, hitSbt, missSbt;
-	raygenSbt.deviceAddress = traceRaysInfo.RayGenDescriptor.Address;
-	raygenSbt.size = traceRaysInfo.RayGenDescriptor.Size;
-	raygenSbt.stride = traceRaysInfo.RayGenDescriptor.Stride;
+	VkStridedDeviceAddressRegionKHR raygenSBT, hitSBT, missSBT, callableSBT;
+	raygenSBT.deviceAddress = traceRaysInfo.RayGenDescriptor.Address;
+	raygenSBT.size = traceRaysInfo.RayGenDescriptor.Size;
+	raygenSBT.stride = traceRaysInfo.RayGenDescriptor.Stride;
 
-	hitSbt.deviceAddress = traceRaysInfo.HitDescriptor.Address;
-	hitSbt.size = traceRaysInfo.HitDescriptor.Size;
-	hitSbt.stride = traceRaysInfo.HitDescriptor.Stride;
+	hitSBT.deviceAddress = traceRaysInfo.HitDescriptor.Address;
+	hitSBT.size = traceRaysInfo.HitDescriptor.Size;
+	hitSBT.stride = traceRaysInfo.HitDescriptor.Stride;
 
-	missSbt.deviceAddress = traceRaysInfo.MissDescriptor.Address;
-	missSbt.size = traceRaysInfo.MissDescriptor.Size;
-	missSbt.stride = traceRaysInfo.MissDescriptor.Stride;
+	missSBT.deviceAddress = traceRaysInfo.MissDescriptor.Address;
+	missSBT.size = traceRaysInfo.MissDescriptor.Size;
+	missSBT.stride = traceRaysInfo.MissDescriptor.Stride;
+
+	callableSBT.deviceAddress = traceRaysInfo.CallableDescriptor.Address;
+	callableSBT.size = traceRaysInfo.CallableDescriptor.Size;
+	callableSBT.stride = traceRaysInfo.CallableDescriptor.Stride;
 	
-	traceRaysInfo.RenderDevice->vkCmdTraceRaysKHR(commandBuffer, &raygenSbt, &missSbt, &hitSbt, nullptr, traceRaysInfo.DispatchSize.Width, traceRaysInfo.DispatchSize.Height, traceRaysInfo.DispatchSize.Depth);
+	traceRaysInfo.RenderDevice->vkCmdTraceRaysKHR(commandBuffer, &raygenSBT, &missSBT, &hitSBT, &callableSBT, traceRaysInfo.DispatchSize.Width, traceRaysInfo.DispatchSize.Height, traceRaysInfo.DispatchSize.Depth);
 }
 
 void GAL::VulkanCommandBuffer::AddLabel(const AddLabelInfo& info)
