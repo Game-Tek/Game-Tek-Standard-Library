@@ -295,13 +295,13 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkViewport.minDepth = 0.0f;
 	vkViewport.maxDepth = 1.0f;
 
-	VkRect2D vk_scissor = { { 0, 0 }, { windowExtent.Width, windowExtent.Height } };
+	VkRect2D vkScissor = { { 0, 0 }, { windowExtent.Width, windowExtent.Height } };
 
 	VkPipelineViewportStateCreateInfo vkPipelineViewportStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
 	vkPipelineViewportStateCreateInfo.viewportCount = 1;
 	vkPipelineViewportStateCreateInfo.pViewports = &vkViewport;
 	vkPipelineViewportStateCreateInfo.scissorCount = 1;
-	vkPipelineViewportStateCreateInfo.pScissors = &vk_scissor;
+	vkPipelineViewportStateCreateInfo.pScissors = &vkScissor;
 
 	//  RASTERIZATION STATE
 	VkPipelineRasterizationStateCreateInfo vkPipelineRasterizationStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
@@ -354,21 +354,27 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	}
 
 	//  COLOR BLEND STATE
-	VkPipelineColorBlendAttachmentState vkPipelineColorblendAttachmentState;
-	vkPipelineColorblendAttachmentState.blendEnable = createInfo.PipelineDescriptor.BlendEnable;
-	vkPipelineColorblendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT	| VK_COLOR_COMPONENT_A_BIT;
-	vkPipelineColorblendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-	vkPipelineColorblendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-	vkPipelineColorblendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
-	vkPipelineColorblendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-	vkPipelineColorblendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-	vkPipelineColorblendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
+
+	GTSL::Array<VkPipelineColorBlendAttachmentState, 12> colorBlendAttachmentStates;
+	for(GTSL::uint8 i = 0; i < createInfo.AttachmentCount; ++i)
+	{
+		VkPipelineColorBlendAttachmentState vkPipelineColorblendAttachmentState;
+		vkPipelineColorblendAttachmentState.blendEnable = createInfo.PipelineDescriptor.BlendEnable;
+		vkPipelineColorblendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+		vkPipelineColorblendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+		vkPipelineColorblendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+		vkPipelineColorblendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
+		vkPipelineColorblendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		vkPipelineColorblendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		vkPipelineColorblendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
+		colorBlendAttachmentStates.EmplaceBack(vkPipelineColorblendAttachmentState);
+	}
 
 	VkPipelineColorBlendStateCreateInfo vkPipelineColorblendStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
 	vkPipelineColorblendStateCreateInfo.logicOpEnable = VK_FALSE;
 	vkPipelineColorblendStateCreateInfo.logicOp = VK_LOGIC_OP_COPY; // Optional
-	vkPipelineColorblendStateCreateInfo.attachmentCount = 1;
-	vkPipelineColorblendStateCreateInfo.pAttachments = &vkPipelineColorblendAttachmentState;
+	vkPipelineColorblendStateCreateInfo.attachmentCount = colorBlendAttachmentStates.GetLength();
+	vkPipelineColorblendStateCreateInfo.pAttachments = colorBlendAttachmentStates.begin();
 	vkPipelineColorblendStateCreateInfo.blendConstants[0] = 0.0f; // Optional
 	vkPipelineColorblendStateCreateInfo.blendConstants[1] = 0.0f; // Optional
 	vkPipelineColorblendStateCreateInfo.blendConstants[2] = 0.0f; // Optional
@@ -396,8 +402,8 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	}
 	
 	VkGraphicsPipelineCreateInfo vkGraphicsPipelineCreateInfo{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-	GTSL::SetBitAs(1, createInfo.IsInheritable, vkGraphicsPipelineCreateInfo.flags);
-	GTSL::SetBitAs(2, createInfo.ParentPipeline.GetHandle(), vkGraphicsPipelineCreateInfo.flags);
+	GTSL::SetBitAs(GTSL::FindFirstSetBit(VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT), createInfo.IsInheritable, vkGraphicsPipelineCreateInfo.flags);
+	GTSL::SetBitAs(GTSL::FindFirstSetBit(VK_PIPELINE_CREATE_DERIVATIVE_BIT), createInfo.ParentPipeline.GetHandle(), vkGraphicsPipelineCreateInfo.flags);
 	vkGraphicsPipelineCreateInfo.stageCount = vkPipelineShaderStageCreateInfos.GetLength();
 	vkGraphicsPipelineCreateInfo.pStages = vkPipelineShaderStageCreateInfos.begin();
 	vkGraphicsPipelineCreateInfo.pVertexInputState = &vkPipelineVertexInputStateCreateInfo;
@@ -410,7 +416,7 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkGraphicsPipelineCreateInfo.pColorBlendState = &vkPipelineColorblendStateCreateInfo;
 	vkGraphicsPipelineCreateInfo.pDynamicState = &vkPipelineDynamicStateCreateInfo;
 	vkGraphicsPipelineCreateInfo.layout = createInfo.PipelineLayout.GetVkPipelineLayout();
-	vkGraphicsPipelineCreateInfo.renderPass = createInfo.RenderPass->GetVkRenderPass();
+	vkGraphicsPipelineCreateInfo.renderPass = createInfo.RenderPass.GetVkRenderPass();
 	vkGraphicsPipelineCreateInfo.subpass = createInfo.SubPass;
 	vkGraphicsPipelineCreateInfo.basePipelineHandle = createInfo.ParentPipeline.GetVkPipeline();
 	vkGraphicsPipelineCreateInfo.basePipelineIndex = createInfo.ParentPipeline.GetHandle() ? 0 : -1;

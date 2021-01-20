@@ -466,6 +466,13 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 					
 					break;
 				}
+				case Extension::SCALAR_LAYOUT:
+				{
+					VkPhysicalDeviceScalarBlockLayoutFeatures scalarBlockLayoutFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES };
+					scalarBlockLayoutFeatures.scalarBlockLayout = true;
+					placeFeaturesStructure(scalarBlockLayoutFeatures);
+					break;
+				}
 				default: __debugbreak();
 				}
 			}

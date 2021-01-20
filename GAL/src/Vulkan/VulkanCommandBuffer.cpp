@@ -116,21 +116,21 @@ void GAL::VulkanCommandBuffer::DrawIndexed(const DrawIndexedInfo& drawIndexedInf
 void GAL::VulkanCommandBuffer::TraceRays(const TraceRaysInfo& traceRaysInfo)
 {
 	VkStridedDeviceAddressRegionKHR raygenSBT, hitSBT, missSBT, callableSBT;
-	raygenSBT.deviceAddress = traceRaysInfo.RayGenDescriptor.Address;
-	raygenSBT.size = traceRaysInfo.RayGenDescriptor.Size;
-	raygenSBT.stride = traceRaysInfo.RayGenDescriptor.Stride;
+	raygenSBT.deviceAddress = traceRaysInfo.ShaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].Address;
+	raygenSBT.size = traceRaysInfo.ShaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].Size;
+	raygenSBT.stride = traceRaysInfo.ShaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].Stride;
 
-	hitSBT.deviceAddress = traceRaysInfo.HitDescriptor.Address;
-	hitSBT.size = traceRaysInfo.HitDescriptor.Size;
-	hitSBT.stride = traceRaysInfo.HitDescriptor.Stride;
+	hitSBT.deviceAddress = traceRaysInfo.ShaderTableDescriptors[GAL::HIT_TABLE_INDEX].Address;
+	hitSBT.size = traceRaysInfo.ShaderTableDescriptors[GAL::HIT_TABLE_INDEX].Size;
+	hitSBT.stride = traceRaysInfo.ShaderTableDescriptors[GAL::HIT_TABLE_INDEX].Stride;
 
-	missSBT.deviceAddress = traceRaysInfo.MissDescriptor.Address;
-	missSBT.size = traceRaysInfo.MissDescriptor.Size;
-	missSBT.stride = traceRaysInfo.MissDescriptor.Stride;
+	missSBT.deviceAddress = traceRaysInfo.ShaderTableDescriptors[GAL::MISS_TABLE_INDEX].Address;
+	missSBT.size = traceRaysInfo.ShaderTableDescriptors[GAL::MISS_TABLE_INDEX].Size;
+	missSBT.stride = traceRaysInfo.ShaderTableDescriptors[GAL::MISS_TABLE_INDEX].Stride;
 
-	callableSBT.deviceAddress = traceRaysInfo.CallableDescriptor.Address;
-	callableSBT.size = traceRaysInfo.CallableDescriptor.Size;
-	callableSBT.stride = traceRaysInfo.CallableDescriptor.Stride;
+	callableSBT.deviceAddress = traceRaysInfo.ShaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].Address;
+	callableSBT.size = traceRaysInfo.ShaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].Size;
+	callableSBT.stride = traceRaysInfo.ShaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].Stride;
 	
 	traceRaysInfo.RenderDevice->vkCmdTraceRaysKHR(commandBuffer, &raygenSBT, &missSBT, &hitSBT, &callableSBT, traceRaysInfo.DispatchSize.Width, traceRaysInfo.DispatchSize.Height, traceRaysInfo.DispatchSize.Depth);
 }
@@ -218,7 +218,7 @@ void GAL::VulkanCommandBuffer::AddPipelineBarrier(const AddPipelineBarrierInfo& 
 		imageMemoryBarriers[i].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		imageMemoryBarriers[i].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		imageMemoryBarriers[i].image = pipelineBarrier.TextureBarriers[i].Texture.GetVkImage();
-		imageMemoryBarriers[i].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		imageMemoryBarriers[i].subresourceRange.aspectMask = (VkImageAspectFlags)pipelineBarrier.TextureBarriers[i].TextureType;
 		imageMemoryBarriers[i].subresourceRange.baseMipLevel = 0;
 		imageMemoryBarriers[i].subresourceRange.levelCount = 1;
 		imageMemoryBarriers[i].subresourceRange.baseArrayLayer = 0;

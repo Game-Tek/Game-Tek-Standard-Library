@@ -4,6 +4,7 @@
 
 #define VK_ENABLE_BETA_EXTENSIONS
 #include "Vulkan.h"
+#include "VulkanRenderPass.h"
 #include "GTSL/Array.hpp"
 
 namespace GTSL {
@@ -123,10 +124,11 @@ namespace GAL
 		
 		struct CreateInfo : VulkanCreateInfo
 		{
-			const class VulkanRenderPass* RenderPass = nullptr;
+			VulkanRenderPass RenderPass;
 			GTSL::Extent2D SurfaceExtent;
 			GTSL::Range<const VulkanShaderDataType*> VertexDescriptor;
 			VulkanPipelineDescriptor PipelineDescriptor;
+			GTSL::uint8 AttachmentCount = 0;
 			GTSL::Range<const ShaderInfo*> Stages;
 			bool IsInheritable = false;
 			VulkanPipelineLayout PipelineLayout;

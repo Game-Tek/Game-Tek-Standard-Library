@@ -9,6 +9,8 @@
 #include "Range.h"
 #include <new>
 
+#include "Result.h"
+
 namespace GTSL
 {
 	template <typename T, uint32 CAPACITY>
@@ -206,6 +208,12 @@ namespace GTSL
 			--this->length;
 		}
 
+		Result<uint32> Find(const T& obj) const
+		{
+			for (uint32 i = 0; i < GetLength(); ++i) { if (data[i] == obj) { return Result<uint32>(MoveRef(i), true); } ++i; }
+			return Result<uint32>(false);
+		}
+		
 		[[nodiscard]] constexpr uint32 GetLength() const noexcept { return this->length; }
 
 		[[nodiscard]] constexpr uint32 GetCapacity() const noexcept { return CAPACITY; }

@@ -91,7 +91,8 @@ namespace GAL
 		
 		[[nodiscard]] GTSL::uint32 FindMemoryType(GTSL::uint32 typeFilter, GTSL::uint32 memoryType) const;
 
-		[[nodiscard]] GTSL::uint32 GetMinUniformBufferOffset() const { return static_cast<GTSL::uint32>(deviceProperties.limits.minUniformBufferOffsetAlignment); }
+		[[nodiscard]] GTSL::uint32 GetuniformBufferBindingOffsetAlignment() const { return static_cast<GTSL::uint32>(deviceProperties.limits.minUniformBufferOffsetAlignment); }
+		[[nodiscard]] GTSL::uint32 GetStorageBufferBindingOffsetAlignment() const { return static_cast<GTSL::uint32>(deviceProperties.limits.minStorageBufferOffsetAlignment); }
 		
 		[[nodiscard]] const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const { return deviceProperties; }
 

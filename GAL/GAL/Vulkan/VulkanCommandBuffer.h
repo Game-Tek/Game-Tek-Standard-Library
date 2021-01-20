@@ -129,7 +129,7 @@ namespace GAL
 			{
 				VulkanDeviceAddress Address = 0;
 				GTSL::uint32 Size = 0, Stride = 0;
-			} RayGenDescriptor, HitDescriptor, MissDescriptor, CallableDescriptor;
+			} ShaderTableDescriptors[4];
 			
 			GTSL::Extent3D DispatchSize;
 		};
@@ -203,6 +203,7 @@ namespace GAL
 
 			VulkanTextureLayout CurrentLayout, TargetLayout;
 			VulkanAccessFlags::value_type SourceAccessFlags, DestinationAccessFlags;
+			VulkanTextureType::value_type TextureType = VulkanTextureType::COLOR;
 		};
 
 		struct AddPipelineBarrierInfo : VulkanRenderInfo

@@ -23,6 +23,16 @@ namespace GAL
 		GTSL::uint32 Alignment{ 0 };
 		GTSL::uint32 MemoryTypes{ 0 };
 	};
+
+	constexpr GTSL::uint8 RAY_GEN_TABLE_INDEX = 0, HIT_TABLE_INDEX = 1, MISS_TABLE_INDEX = 2, CALLABLE_TABLE_INDEX = 3;
+
+#define MAKE_FORMAT_FLAG(compCount, compType, bitDepth, a, b, c, d) ((bitDepth) | (compType << 6) | (compCount << 10) | ((a | (b << 2) | (c << 4) | (d << 6)) << 14))
+
+	enum class Format
+	{
+		BGRA_I8 = MAKE_FORMAT_FLAG(4, 0, 8, 2, 1, 0, 3),
+		RGBA_F32 = MAKE_FORMAT_FLAG(4, 1, 32, 0, 1, 2, 3)
+	};
 	
 	class RenderDevice;
 	
