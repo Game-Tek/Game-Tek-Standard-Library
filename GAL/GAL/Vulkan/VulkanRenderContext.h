@@ -25,11 +25,21 @@ namespace GAL
 
 		void Destroy(class VulkanRenderDevice* renderDevice);
 
-		GTSL::uint32 GetSupportedRenderContextFormat(const class VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::Pair<VulkanColorSpace, VulkanTextureFormat>*> formats) const;
+		GTSL::Array<GTSL::Pair<VulkanColorSpace, VulkanTextureFormat>, 16> GetSupportedFormatsAndColorSpaces(const class VulkanRenderDevice* renderDevice) const;
 
-		GTSL::uint32 GetSupportedPresentMode(class VulkanRenderDevice* renderDevice, GTSL::Range<const VulkanPresentMode*> presentModes);
+		GTSL::Array<VulkanPresentMode, 4> GetSupportedPresentModes(class VulkanRenderDevice* renderDevice) const;
 
-		bool IsSupported(class VulkanRenderDevice* renderDevice);
+		struct SurfaceCapabilities
+		{
+			uint32_t MinImageCount, MaxImageCount;
+			GTSL::Extent2D CurrentExtent, MinImageExtent, MaxImageExtent;
+//			uint32_t                         maxImageArrayLayers;
+			//VkSurfaceTransformFlagsKHR       supportedTransforms;
+			//VkSurfaceTransformFlagBitsKHR    currentTransform;
+			//VkCompositeAlphaFlagsKHR         supportedCompositeAlpha;
+			VkImageUsageFlags SupportedUsageFlags;
+		};
+		bool IsSupported(class VulkanRenderDevice* renderDevice, SurfaceCapabilities* surfaceCapabilities);
 
 		[[nodiscard]] VulkanHandle GetVkSurface() const { return surface; }
 	private:
@@ -95,12 +105,12 @@ namespace GAL
 		{
 			GTSL::Range<const VulkanTextureView::CreateInfo*> TextureViewCreateInfos;
 		};
-		GTSL::Array<VulkanTextureView, 5> GetTextureViews(const GetTextureViewsInfo& getTextureViewsInfo) const;
+		GTSL::Array<VulkanTextureView, 8> GetTextureViews(const GetTextureViewsInfo& getTextureViewsInfo) const;
 
 		struct GetTexturesInfo : VulkanRenderInfo
 		{
 		};
-		GTSL::Array<VulkanTexture, 5> GetTextures(const GetTexturesInfo& info) const;
+		GTSL::Array<VulkanTexture, 8> GetTextures(const GetTexturesInfo& info) const;
 		
 	private:
 		void* swapchain = nullptr;

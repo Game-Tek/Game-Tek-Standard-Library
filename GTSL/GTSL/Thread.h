@@ -74,7 +74,7 @@ namespace GTSL
 
 			threadId = functionData->ThreadId;
 			
-			Call(functionData->Delegate, functionData->Parameters);
+			Call(functionData->Delegate, GTSL::MoveRef(functionData->Parameters));
 
 			return 0;
 		}

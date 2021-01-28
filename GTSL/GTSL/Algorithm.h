@@ -3,15 +3,15 @@
 #include "Tuple.h"
 
 namespace GTSL
-{
+{	
 	//template<typename CALLABLE, typename... ARGS>
 	//static auto Call(CALLABLE&& callable, Tuple<ARGS...>& tup) { using indices = BuildIndices<sizeof...(ARGS)>; return callable(TupleAccessor<indices>::Get(tup)...); }
 	
 	template <typename LAMBDA, typename... ARGS, uint64... IS>
-	static auto Call(LAMBDA&& lambda, Tuple<ARGS...>& tup, Indices<IS...>) { return lambda(TupleAccessor<IS>::Get(tup)...); }
+	static auto Call(LAMBDA&& lambda, Tuple<ARGS...>&& tup, Indices<IS...>) { return lambda(GTSL::MoveRef(TupleAccessor<IS>::Get(tup))...); }
 
 	template <typename LAMBDA, typename... ARGS>
-	static auto Call(LAMBDA&& lambda, Tuple<ARGS...>& tup) { return Call(lambda, tup, BuildIndices<sizeof...(ARGS)>{}); }
+	static auto Call(LAMBDA&& lambda, Tuple<ARGS...>&& tup) { return Call(lambda, GTSL::MoveRef(tup), BuildIndices<sizeof...(ARGS)>{}); }
 
 	template<typename T>
 	constexpr uint64 Bits() { return sizeof(T) * 8; }

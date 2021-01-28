@@ -90,15 +90,15 @@ void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)
 	VK_CHECK(vkQueuePresentKHR(static_cast<const VulkanQueue*>(presentInfo.Queue)->GetVkQueue(), &vkPresentInfoKhr));
 }
 
-GTSL::Array<GAL::VulkanTextureView, 5> GAL::VulkanRenderContext::GetTextureViews(const GetTextureViewsInfo& getTextureViewsInfo) const
+GTSL::Array<GAL::VulkanTextureView, 8> GAL::VulkanRenderContext::GetTextureViews(const GetTextureViewsInfo& getTextureViewsInfo) const
 {
-	GTSL::Array<VulkanTextureView, 5> vulkanTextureViews;
+	GTSL::Array<VulkanTextureView, 8> vulkanTextureViews;
 	
 	GTSL::uint32 swapchainImageCount = 0;
 	VK_CHECK(vkGetSwapchainImagesKHR(getTextureViewsInfo.RenderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), &swapchainImageCount, nullptr))
 	vulkanTextureViews.Resize(swapchainImageCount);
 
-	GTSL::Array<VkImage, 5> vkImages(swapchainImageCount);
+	GTSL::Array<VkImage, 8> vkImages(swapchainImageCount);
 	VK_CHECK(vkGetSwapchainImagesKHR(getTextureViewsInfo.RenderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), &swapchainImageCount, vkImages.begin()))
 
 	GTSL::uint32 i = 0;
@@ -135,12 +135,12 @@ GTSL::Array<GAL::VulkanTextureView, 5> GAL::VulkanRenderContext::GetTextureViews
 	return vulkanTextureViews;
 }
 
-GTSL::Array<GAL::VulkanTexture, 5> GAL::VulkanRenderContext::GetTextures(const GetTexturesInfo& info) const
+GTSL::Array<GAL::VulkanTexture, 8> GAL::VulkanRenderContext::GetTextures(const GetTexturesInfo& info) const
 {
 	GTSL::uint32 swapchainImageCount = 0;
 	VK_CHECK(vkGetSwapchainImagesKHR(info.RenderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), &swapchainImageCount, nullptr))
 
-	GTSL::Array<VulkanTexture, 5> vkImages(swapchainImageCount);
+	GTSL::Array<VulkanTexture, 8> vkImages(swapchainImageCount);
 	VK_CHECK(vkGetSwapchainImagesKHR(info.RenderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), &swapchainImageCount, reinterpret_cast<VkImage*>(vkImages.begin())))
 
 	return vkImages;
@@ -161,7 +161,7 @@ void GAL::VulkanSurface::Destroy(VulkanRenderDevice* renderDevice)
 	debugClear(surface);
 }
 
-GTSL::uint32 GAL::VulkanSurface::GetSupportedRenderContextFormat(const VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::Pair<VulkanColorSpace, VulkanTextureFormat>*> formats) const
+GTSL::Array<GTSL::Pair<GAL::VulkanColorSpace, GAL::VulkanTextureFormat>, 16> GAL::VulkanSurface::GetSupportedFormatsAndColorSpaces(const VulkanRenderDevice* renderDevice) const
 {
 	GTSL::uint32 surfaceFormatsCount = 0;
 	vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &surfaceFormatsCount, nullptr);
@@ -169,33 +169,47 @@ GTSL::uint32 GAL::VulkanSurface::GetSupportedRenderContextFormat(const VulkanRen
 	GTSL::Array<VkSurfaceFormatKHR, 32> surfaceFormats(surfaceFormatsCount);
 	vkGetPhysicalDeviceSurfaceFormatsKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &surfaceFormatsCount, surfaceFormats.begin());
 
-	for (auto& e : surfaceFormats)
-	{
-		for (auto p : formats) { if (e.colorSpace == static_cast<VkColorSpaceKHR>(p.First) && e.format == static_cast<VkFormat>(p.Second)) { return &e - surfaceFormats.begin(); } }
+	GTSL::Array<GTSL::Pair<VulkanColorSpace, VulkanTextureFormat>, 16> result;
+	
+	for (auto e : surfaceFormats) {
+		result.EmplaceBack(static_cast<VulkanColorSpace>(e.colorSpace), static_cast<VulkanTextureFormat>(e.format));
 	}
 
-	return 0xFFFFFFFF;
+	return result;
 }
 
-GTSL::uint32 GAL::VulkanSurface::GetSupportedPresentMode(VulkanRenderDevice* renderDevice, GTSL::Range<const VulkanPresentMode*> presentModes)
+GTSL::Array<GAL::VulkanPresentMode, 4> GAL::VulkanSurface::GetSupportedPresentModes(VulkanRenderDevice* renderDevice) const
 {
 	GTSL::uint32 presentModesCount = 0;
 	vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &presentModesCount, nullptr);
 	GTSL::Array<VkPresentModeKHR, 8> vkPresentModes(presentModesCount);
 	vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &presentModesCount, vkPresentModes.begin());
 
-	for (auto& presentMode : vkPresentModes) { for (auto p_m : vkPresentModes) { if (presentMode == p_m) { return &presentMode - vkPresentModes.begin(); } } }
+	GTSL::Array<GAL::VulkanPresentMode, 4> result;
+	
+	for (auto presentMode : vkPresentModes) {
+		result.EmplaceBack(static_cast<VulkanPresentMode>(presentMode));
+	}
 
-	return 0xFFFFFFFF;
+	return result;
 }
 
-bool GAL::VulkanSurface::IsSupported(VulkanRenderDevice* renderDevice)
+bool GAL::VulkanSurface::IsSupported(class VulkanRenderDevice* renderDevice, SurfaceCapabilities* surfaceCapabilities)
 {
 	VkBool32 supported = 0;
 	vkGetPhysicalDeviceSurfaceSupportKHR(renderDevice->GetVkPhysicalDevice(), 0, static_cast<VkSurfaceKHR>(surface), &supported);
 
-	VkSurfaceCapabilitiesKHR surface_capabilities;
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &surface_capabilities);
+	VkSurfaceCapabilitiesKHR vkSurfaceCapabilitiesKhr;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &vkSurfaceCapabilitiesKhr);
+
+	auto vkExtentToExtent = [](const VkExtent2D vkExtent) { return GTSL::Extent2D(vkExtent.width, vkExtent.height); };
+	
+	surfaceCapabilities->CurrentExtent = vkExtentToExtent(vkSurfaceCapabilitiesKhr.currentExtent);
+	surfaceCapabilities->MinImageExtent = vkExtentToExtent(vkSurfaceCapabilitiesKhr.minImageExtent);
+	surfaceCapabilities->MaxImageExtent = vkExtentToExtent(vkSurfaceCapabilitiesKhr.maxImageExtent);
+	surfaceCapabilities->MinImageCount = vkSurfaceCapabilitiesKhr.minImageCount;
+	surfaceCapabilities->MaxImageCount = vkSurfaceCapabilitiesKhr.maxImageCount;
+	surfaceCapabilities->SupportedUsageFlags = vkSurfaceCapabilitiesKhr.supportedUsageFlags;
 
 	return supported;
 }

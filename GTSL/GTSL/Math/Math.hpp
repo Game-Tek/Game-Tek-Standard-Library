@@ -19,6 +19,45 @@
 
 namespace GTSL
 {
+	union FloatintPoint
+	{
+		FloatintPoint(float32 f) : Float(f) {}
+		FloatintPoint(int32 i) : Int(i) {}
+
+		float32 Float; int32 Int;
+	};
+	
+	/**
+	 * \brief Provides most of the same methods of math but usually skips input checking for non valid inputs, NaN, etc. Useful when working in conditions which assure you certain
+	 * validity of inputs. This functions are faster than those of Math.
+	 */
+	class AdvancedMath
+	{
+	public:
+		/**
+		 * \brief Computes a square root via IEEE754 bit hacking which is faster but less accurate(6% deviation). Accepts only positive values, undefined for negative values or NaN.
+		 * \param x Number to compute the square root of
+		 * \return The square root of x
+		 */
+		static float32 FastImpreciseSqrt(const float32 x)
+		{
+			return FloatintPoint((FloatintPoint(x).Int >> 1) + (FloatintPoint(1.0f).Int >> 1)).Float; // aprox
+		}
+
+		/**
+		 * \brief Computes a more precise square root via IEEE754 bit hacking (0.04% deviation). Accepts only positive values, undefined for negative values or NaN.
+		 * \param x Number to compute the square root of
+		 * \return The square root of x
+		 */
+		static float32 FastSqrt(const float32 x)
+		{
+			auto y = FastImpreciseSqrt(x);
+			return (y * y + x) / (2.0f * y); //Newton-Rhapson iteration for increased precision
+		}
+	
+	private:
+	};
+	
 	class Math
 	{
 	public:
@@ -194,6 +233,17 @@ namespace GTSL
 		*/
 		static float32 ArcTan2(float32 X, float32 Y);
 
+		/**
+		 * \brief Computes a square root via IEEE754 bit hacking which is faster but less accurate.
+		 * \param x Number to compute the square root of
+		 * \return The square root of x
+		 */
+		static float32 FastSqrt(const float32 x)
+		{
+			if (x > 0.0f) { return AdvancedMath::FastSqrt(x); }
+			return 0.0f;
+		}
+		
 		//////////////////////////////////////////////////////////////
 		//						SCALAR MATH							//
 		//////////////////////////////////////////////////////////////
@@ -251,10 +301,15 @@ namespace GTSL
 			return (Target - Current) * DT * InterpSpeed + Current;
 		}
 
-		static float32 MapToRange(const float32 x, const float32 matrixin, const float32 matrixax, const float32 OutMin, const float32 OutMax)
+		static float32 MapToRange(const float32 x, const float32 inMin, const float32 inMax, const float32 outMin, const float32 outMax)
 		{
-			GTSL_ASSERT(x >= matrixin && x <= matrixax, "Not in range") GTSL_ASSERT(matrixax - matrixin != 0.0f, "Divide by 0")
-			return (x - matrixin) / (matrixax - matrixin) * (OutMax - OutMin) + OutMin;
+			if ((inMax - inMin) != 0.0f)
+			{
+				GTSL_ASSERT(x >= inMin && x <= inMax, "Not in range");
+				return (x - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
+			}
+
+			return x;
 		}
 
 		static Vector2 MapToRange(const GTSL::Vector2 A, const Vector2 matrixin, const Vector2 matrixax, const Vector2 OutMin, const Vector2 OutMax)
@@ -266,28 +321,38 @@ namespace GTSL
 
 		static float32 SquareRoot(const float32 a)
 		{
-			constexpr auto error = 0.00001; //define the precision of your result
-			float64 s = a;
-
-			while (s - a / s > error) //loop until precision satisfied 
+			if (a > 0.0f)
 			{
-				s = (s + a / s) / 2.0;
+				constexpr auto error = 0.00001; //define the precision of your result
+				float64 s = a;
+
+				while (s - a / s > error) //loop until precision satisfied 
+				{
+					s = (s + a / s) / 2.0;
+				}
+
+				return static_cast<float32>(s);
 			}
 
-			return static_cast<float32>(s);
+			return 0.0f;
 		}
 
 		static float64 SquareRoot(const float64 a)
 		{
-			constexpr auto error = 0.00001; //define the precision of your result
-			float64 s = a;
-
-			while (s - a / s > error) //loop until precision satisfied 
+			if (a > 0.0)
 			{
-				s = (s + a / s) / 2.0;
+				constexpr auto error = 0.00001; //define the precision of your result
+				float64 s = a;
+
+				while (s - a / s > error) //loop until precision satisfied 
+				{
+					s = (s + a / s) / 2.0;
+				}
+
+				return s;
 			}
 
-			return s;
+			return 0.0;
 		}
 
 		static float32 Root(const float32 a, const float32 root) { return Power(a, 1.0f / root); }
@@ -296,7 +361,7 @@ namespace GTSL
 
 		static uint64 Abs(const int64 A) { return ((A >> 63) + A) ^ (A >> 63); }
 
-		static float32 Abs(const float32 _A) { return _A > 0.0f ? _A : -_A; }
+		static float32 Abs(const float32 a) { return FloatintPoint((int32)Abs(FloatintPoint(a).Int)).Float; }
 
 		template<typename T>
 		static T Limit(const T a, const T max) { return a >= max ? max : a; }
@@ -346,28 +411,21 @@ namespace GTSL
 		//////////////////////////////////////////////////////////////
 
 		//Calculates the length of a 2D vector.
-		static float32 Length(const Vector2& _A) { return SquareRoot(LengthSquared(_A)); }
+		static float32 Length(const Vector2 a) { return SquareRoot(LengthSquared(a)); }
 
-		static float32 Length(const Vector2& _A, const Vector2& _B) { return SquareRoot(LengthSquared(_A - _B)); }
+		static float32 Length(const Vector2 a, const Vector2 b) { return SquareRoot(LengthSquared(a, b)); }
 
-		static float32 Length(const Vector3& _A) { return SquareRoot(LengthSquared(_A)); }
+		static float32 Length(const Vector3 a) { return SquareRoot(LengthSquared(a)); }
 
-		static float32 Length(const Vector3& _A, const Vector3& _B) { return SquareRoot(LengthSquared(_A - _B)); }
+		static float32 Length(const Vector3 a, const Vector3 b) { return SquareRoot(LengthSquared(b - a)); }
 
-		static float32 Length(const Vector4& _A) { return SquareRoot(LengthSquared(_A)); }
+		static float32 Length(const Vector4& a) { return SquareRoot(LengthSquared(a)); }
 
-		static float32 Length(const Vector4& _A, const Vector4& _B)	{ return SquareRoot(LengthSquared(_A - _B)); }
+		static float32 Length(const Vector4& a, const Vector4& b)	{ return SquareRoot(LengthSquared(b - a)); }
 
-		static float32 LengthSquared(const Vector2& a)
-		{
-			return a.X * a.X + a.Y * a.Y;
-		}
+		static float32 LengthSquared(const Vector2 a) { return a.X * a.X + a.Y * a.Y; }
 
-		static float32 LengthSquared(const Vector2 a, const Vector2 b)
-		{
-			const auto c = b - a;
-			return c.X * c.X + c.Y * c.Y;
-		}
+		static float32 LengthSquared(const Vector2 a, const Vector2 b) { return LengthSquared(b - a); }
 
 		static float32 LengthSquared(const Vector3& a);
 
@@ -385,22 +443,22 @@ namespace GTSL
 
 		static void Normalize(Vector4& a);
 
-		static float32 DotProduct(const Vector2& a, const Vector2& b) { return a.X * b.X + a.Y * b.Y; }
+		static float32 DotProduct(const Vector2 a, const Vector2 b) { return a.X * b.X + a.Y * b.Y; }
 
-		static float32 DotProduct(const Vector3& _A, const Vector3& _B);
+		static float32 DotProduct(const Vector3& a, const Vector3& b);
 
-		static float32 DotProduct(const Vector4& _A, const Vector4& _B);
+		static float32 DotProduct(const Vector4& a, const Vector4& b);
 
 		static Vector3 Cross(const Vector3& a, const Vector3& b);
 
-		static Vector2 Abs(const Vector2& Vec1)
+		static Vector2 Abs(const Vector2& a)
 		{
-			return Vector2(Abs(Vec1.X), Abs(Vec1.Y));
+			return Vector2(Abs(a.X), Abs(a.Y));
 		}
 
-		static Vector3 Abs(const Vector3& Vec1)
+		static Vector3 Abs(const Vector3& a)
 		{
-			return Vector3(Abs(Vec1.X), Abs(Vec1.Y), Abs(Vec1.Z));
+			return Vector3(Abs(a.X), Abs(a.Y), Abs(a.Z));
 		}
 
 		static Vector4 Abs(const Vector4& a);
@@ -757,10 +815,10 @@ namespace GTSL
 		template<typename T>
 		static T Clamp(T a, T min, T max) { return a >= max ? max : (a <= min ? min : a); }
 
-		static Vector3 ClosestPointOnPlane(const Vector3& _Point, const Plane& _Plane)
+		static Vector3 ClosestPointOnPlane(const Vector3& point, const Plane& plane)
 		{
-			const float32 T = (DotProduct(_Plane.Normal, _Point) - _Plane.D) / DotProduct(_Plane.Normal, _Plane.Normal);
-			return _Point - _Plane.Normal * T;
+			const float32 T = (DotProduct(plane.Normal, point) - plane.D) / DotProduct(plane.Normal, plane.Normal);
+			return point - plane.Normal * T;
 		}
 
 		static float64 DistanceFromPointToPlane(const Vector3& point, const Plane& plane)

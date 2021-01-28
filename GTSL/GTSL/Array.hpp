@@ -210,7 +210,7 @@ namespace GTSL
 
 		Result<uint32> Find(const T& obj) const
 		{
-			for (uint32 i = 0; i < GetLength(); ++i) { if (data[i] == obj) { return Result<uint32>(MoveRef(i), true); } ++i; }
+			for (uint32 i = 0; i < GetLength(); ++i) { if (data[i] == obj) { return Result<uint32>(MoveRef(i), true); } }
 			return Result<uint32>(false);
 		}
 		

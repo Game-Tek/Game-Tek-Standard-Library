@@ -232,12 +232,6 @@ Matrix4 Math::Inverse(const Matrix4& matrix)
 	__m128 C = VecShuffle_0101(vec2, vec3);
 	__m128 D = VecShuffle_2323(vec2, vec3);
 
-#if 0
-	__m128 detA = _mm_set1_ps(matrix.m[0][0] * matrix.m[1][1] - matrix.m[0][1] * matrix.m[1][0]);
-	__m128 detB = _mm_set1_ps(matrix.m[0][2] * matrix.m[1][3] - matrix.m[0][3] * matrix.m[1][2]);
-	__m128 detC = _mm_set1_ps(matrix.m[2][0] * matrix.m[3][1] - matrix.m[2][1] * matrix.m[3][0]);
-	__m128 detD = _mm_set1_ps(matrix.m[2][2] * matrix.m[3][3] - matrix.m[2][3] * matrix.m[3][2]);
-#else
 	// determinant as (|A| |B| |C| |D|)
 	__m128 detSub = _mm_sub_ps(
 		_mm_mul_ps(VecShuffle(vec0, vec2, 0, 2, 0, 2), VecShuffle(vec1, vec3, 1, 3, 1, 3)),
@@ -247,7 +241,6 @@ Matrix4 Math::Inverse(const Matrix4& matrix)
 	__m128 detB = VecSwizzle1(detSub, 1);
 	__m128 detC = VecSwizzle1(detSub, 2);
 	__m128 detD = VecSwizzle1(detSub, 3);
-#endif
 
 	// let iM = 1/|M| * | X  Y |
 	//                  | Z  W |

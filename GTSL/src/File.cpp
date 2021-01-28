@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 
-#include "GTSL/Buffer.h"
+#include "GTSL/Buffer.hpp"
 #include "GTSL/StaticString.hpp"
 
 using namespace GTSL;
@@ -36,13 +36,6 @@ void File::OpenFile(const Range<const UTF8*> path, const AccessMode::value_type 
 	GTSL_ASSERT(w == ERROR_SUCCESS || w == ERROR_ALREADY_EXISTS, "Win32 Error!");
 }
 
-void File::CloseFile()
-{
-	CloseHandle(static_cast<HANDLE>(fileHandle));
-	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
-	fileHandle = nullptr;
-}
-
 uint32 File::WriteToFile(const Range<const byte*> buffer) const
 {
 	DWORD bytes{ 0 };
@@ -51,12 +44,12 @@ uint32 File::WriteToFile(const Range<const byte*> buffer) const
 	return bytes;
 }
 
-uint32 File::WriteToFile(Buffer& buffer) const
+uint32 File::WriteToFile(BufferInterface buffer) const
 {
 	DWORD bytes{ 0 };
-	WriteFile(static_cast<HANDLE>(fileHandle), buffer.GetData(), static_cast<uint32>(buffer.GetLength()), &bytes, nullptr);
+	WriteFile(static_cast<HANDLE>(fileHandle), buffer.begin(), static_cast<uint32>(buffer.GetLength()), &bytes, nullptr);
 	//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
-	buffer.Resize(buffer.GetLength() - bytes);
+	buffer.AddResize(-(int64)bytes);
 	return bytes;
 }
 
@@ -69,13 +62,41 @@ uint32 File::ReadFromFile(Range<byte*> buffer) const
 	return bytes;
 }
 
-uint32 File::ReadFile(Buffer& buffer) const
+uint32 File::ReadFile(BufferInterface buffer) const
 {
 	DWORD bytes{ 0 };
-	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.GetData(), static_cast<uint32>(GetFileSize()), &bytes, nullptr);
+	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin() + buffer.GetLength(), static_cast<uint32>(GetFileSize()), &bytes, nullptr);
 	auto w = GetLastError();
 	//GTSL_ASSERT(w , "Win32 Error!");
-	buffer.Resize(bytes);
+	buffer.AddResize(bytes);
+	return bytes;
+}
+
+uint32 File::ReadFile(uint64 size, BufferInterface buffer) const
+{
+	DWORD bytes{ 0 };
+	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin() + buffer.GetLength(), static_cast<uint32>(size), &bytes, nullptr);
+	auto w = GetLastError();
+	//GTSL_ASSERT(w , "Win32 Error!");
+	buffer.AddResize(bytes);
+	return bytes;
+}
+
+uint32 File::ReadFile(GTSL::Range<byte*> buffer) const
+{
+	DWORD bytes{ 0 };
+	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
+	auto w = GetLastError();
+	//GTSL_ASSERT(w , "Win32 Error!");
+	return bytes;
+}
+
+uint32 File::ReadFile(uint64 size, uint64 offset, GTSL::Range<byte*> buffer) const
+{
+	DWORD bytes{ 0 };
+	::ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin() + offset, static_cast<uint32>(size), &bytes, nullptr);
+	auto w = GetLastError();
+	GTSL_ASSERT(buffer.begin() + offset + size < buffer.end() , "Trying to write outside of buffer!");
 	return bytes;
 }
 

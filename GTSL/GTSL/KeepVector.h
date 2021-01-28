@@ -400,7 +400,10 @@ namespace GTSL
 		friend void ForEach(KeepVector<TT, ALLOC>& keepVector, L&& lambda);
 
 		template<typename TT, class ALLOC, typename L>
-		friend void ForEachIndexed(KeepVector<TT, ALLOC>& keepVector, L&& lambda);
+		friend void IndexedForEach(KeepVector<TT, ALLOC>& keepVector, L&& lambda);
+
+		template<typename TT, class ALLOC, typename L>
+		friend void IndexedForEach(const KeepVector<TT, ALLOC>& keepVector, L&& lambda);
 
 		template<typename TT, class ALLOC, typename L>
 		friend void ReverseForEach(KeepVector<TT, ALLOC>& keepVector, L&& lambda);
@@ -422,7 +425,22 @@ namespace GTSL
 	}
 
 	template<typename T, class ALLOCATOR, typename L>
-	void ForEachIndexed(KeepVector<T, ALLOCATOR>& keepVector, L&& lambda)
+	void IndexedForEach(KeepVector<T, ALLOCATOR>& keepVector, L&& lambda)
+	{
+		uint32 num = 0;
+		for (auto& index : keepVector.getIndices())
+		{
+			for (uint32 i = 0; i < 32; ++i)
+			{
+				if (!GTSL::CheckBit(i, index)) { lambda(num + i, keepVector.getObjects()[num + i]); }
+			}
+
+			num += 32;
+		}
+	}
+
+	template<typename T, class ALLOCATOR, typename L>
+	void IndexedForEach(const KeepVector<T, ALLOCATOR>& keepVector, L&& lambda)
 	{
 		uint32 num = 0;
 		for (auto& index : keepVector.getIndices())

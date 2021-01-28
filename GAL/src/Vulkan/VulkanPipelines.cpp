@@ -8,24 +8,9 @@
 //#include <GAL/ext/glslang/SPIRV/GlslangToSpv.h>
 
 #include "GTSL/Bitman.h"
-#include "GTSL/Buffer.h"
+#include "GTSL/Buffer.hpp"
 
-GAL::VulkanShader::VulkanShader(const CreateInfo& createInfo)
-{
-	VkShaderModuleCreateInfo vk_shader_module_create_info{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-	vk_shader_module_create_info.codeSize = createInfo.ShaderData.Bytes();
-	vk_shader_module_create_info.pCode = reinterpret_cast<const uint32_t*>(createInfo.ShaderData.begin());
-
-	VK_CHECK(vkCreateShaderModule(static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkDevice(), &vk_shader_module_create_info, static_cast<const VulkanRenderDevice*>(createInfo.RenderDevice)->GetVkAllocationCallbacks(), &shaderModule));
-}
-
-void GAL::VulkanShader::Destroy(const VulkanRenderDevice* renderDevice)
-{
-	vkDestroyShaderModule(renderDevice->GetVkDevice(), shaderModule, renderDevice->GetVkAllocationCallbacks());
-	debugClear(shaderModule);
-}
-
-bool GAL::VulkanShader::CompileShader(GTSL::Range<const GTSL::UTF8*> code, GTSL::Range<const GTSL::UTF8*> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringResult)
+bool GAL::CompileShader(GTSL::Range<const GTSL::UTF8*> code, GTSL::Range<const GTSL::UTF8*> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::BufferInterface result, GTSL::BufferInterface stringResult)
 {
 	shaderc_shader_kind shaderc_stage;
 
@@ -65,11 +50,11 @@ bool GAL::VulkanShader::CompileShader(GTSL::Range<const GTSL::UTF8*> code, GTSL:
 
 	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		stringResult.WriteBytes(shaderc_module.GetErrorMessage().size(), reinterpret_cast<const GTSL::byte*>(shaderc_module.GetErrorMessage().c_str()));
+		stringResult.CopyBytes(shaderc_module.GetErrorMessage().size(), reinterpret_cast<const GTSL::byte*>(shaderc_module.GetErrorMessage().c_str()));
 		return false;
 	}
 
-	result.WriteBytes((shaderc_module.end() - shaderc_module.begin()) * sizeof(GTSL::uint32), reinterpret_cast<const GTSL::byte*>(shaderc_module.begin()));
+	result.CopyBytes((shaderc_module.end() - shaderc_module.begin()) * sizeof(GTSL::uint32), reinterpret_cast<const GTSL::byte*>(shaderc_module.begin()));
 
 	auto test = shaderc_module.end() - shaderc_module.begin();
 	auto test2 = (shaderc_module.end() - shaderc_module.begin()) * sizeof(GTSL::uint32);
@@ -194,10 +179,10 @@ void GAL::VulkanPipelineCache::GetCacheSize(const VulkanRenderDevice* renderDevi
 	size = static_cast<GTSL::uint32>(data_size);
 }
 
-void GAL::VulkanPipelineCache::GetCache(const VulkanRenderDevice* renderDevice, const GTSL::uint32 size, GTSL::Buffer& buffer) const
+void GAL::VulkanPipelineCache::GetCache(const VulkanRenderDevice* renderDevice, GTSL::BufferInterface buffer) const
 {
-	GTSL::uint64 data_size = size;
-	VK_CHECK(vkGetPipelineCacheData(renderDevice->GetVkDevice(), pipelineCache, &data_size, buffer.GetData()));
+	GTSL::uint64 data_size;
+	VK_CHECK(vkGetPipelineCacheData(renderDevice->GetVkDevice(), pipelineCache, &data_size, buffer.begin()));
 	buffer.Resize(data_size);
 }
 
@@ -397,13 +382,15 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 		vkPipelineShaderStageCreateInfos[i].flags = 0;
 		vkPipelineShaderStageCreateInfos[i].stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
 		vkPipelineShaderStageCreateInfos[i].pName = "main";
-		vkPipelineShaderStageCreateInfos[i].module = createInfo.Stages[i].Shader.GetVkShaderModule();
 		vkPipelineShaderStageCreateInfos[i].pSpecializationInfo = nullptr;
+
+		VkShaderModuleCreateInfo shaderModuleCreateInfo{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
+		shaderModuleCreateInfo.codeSize = createInfo.Stages[i].Blob.Bytes();
+		shaderModuleCreateInfo.pCode = reinterpret_cast<const GTSL::uint32*>(createInfo.Stages[i].Blob.begin());
+		vkCreateShaderModule(createInfo.RenderDevice->GetVkDevice(), &shaderModuleCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &vkPipelineShaderStageCreateInfos[i].module);
 	}
 	
 	VkGraphicsPipelineCreateInfo vkGraphicsPipelineCreateInfo{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-	GTSL::SetBitAs(GTSL::FindFirstSetBit(VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT), createInfo.IsInheritable, vkGraphicsPipelineCreateInfo.flags);
-	GTSL::SetBitAs(GTSL::FindFirstSetBit(VK_PIPELINE_CREATE_DERIVATIVE_BIT), createInfo.ParentPipeline.GetHandle(), vkGraphicsPipelineCreateInfo.flags);
 	vkGraphicsPipelineCreateInfo.stageCount = vkPipelineShaderStageCreateInfos.GetLength();
 	vkGraphicsPipelineCreateInfo.pStages = vkPipelineShaderStageCreateInfos.begin();
 	vkGraphicsPipelineCreateInfo.pVertexInputState = &vkPipelineVertexInputStateCreateInfo;
@@ -418,17 +405,37 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkGraphicsPipelineCreateInfo.layout = createInfo.PipelineLayout.GetVkPipelineLayout();
 	vkGraphicsPipelineCreateInfo.renderPass = createInfo.RenderPass.GetVkRenderPass();
 	vkGraphicsPipelineCreateInfo.subpass = createInfo.SubPass;
-	vkGraphicsPipelineCreateInfo.basePipelineHandle = createInfo.ParentPipeline.GetVkPipeline();
-	vkGraphicsPipelineCreateInfo.basePipelineIndex = createInfo.ParentPipeline.GetHandle() ? 0 : -1;
+	vkGraphicsPipelineCreateInfo.basePipelineIndex = -1;
 	
 	VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), createInfo.PipelineCache.GetVkPipelineCache(), 1, &vkGraphicsPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
 	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
+
+	for (auto& e : vkPipelineShaderStageCreateInfos) { vkDestroyShaderModule(createInfo.RenderDevice->GetVkDevice(), e.module, createInfo.RenderDevice->GetVkAllocationCallbacks()); }
 }
 
 void GAL::VulkanRasterizationPipeline::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroyPipeline(renderDevice->GetVkDevice(), pipeline, renderDevice->GetVkAllocationCallbacks());
 	debugClear(pipeline);
+}
+
+void GAL::VulkanComputePipeline::Initialize(const CreateInfo& createInfo)
+{
+	VkComputePipelineCreateInfo computePipelineCreateInfo{ VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
+	computePipelineCreateInfo.basePipelineIndex = -1;
+	computePipelineCreateInfo.layout = createInfo.PipelineLayout.GetVkPipelineLayout();
+	computePipelineCreateInfo.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	computePipelineCreateInfo.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+	computePipelineCreateInfo.stage.pName = "main";
+
+	VkShaderModuleCreateInfo shaderModuleCreateInfo{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
+	shaderModuleCreateInfo.codeSize = createInfo.ShaderInfo.Blob.Bytes();
+	shaderModuleCreateInfo.pCode = reinterpret_cast<const GTSL::uint32*>(createInfo.ShaderInfo.Blob.begin());
+	vkCreateShaderModule(createInfo.RenderDevice->GetVkDevice(), &shaderModuleCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &computePipelineCreateInfo.stage.module);
+	
+	vkCreateComputePipelines(createInfo.RenderDevice->GetVkDevice(), createInfo.PipelineCache.GetVkPipelineCache(), 1, &computePipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
+
+	vkDestroyShaderModule(createInfo.RenderDevice->GetVkDevice(), computePipelineCreateInfo.stage.module, createInfo.RenderDevice->GetVkAllocationCallbacks());
 }
 
 void GAL::VulkanComputePipeline::Destroy(const VulkanRenderDevice* renderDevice)
@@ -442,6 +449,7 @@ static_assert(sizeof(GAL::VulkanRayTracingPipeline::Group) == sizeof(VkRayTracin
 void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 {
 	VkRayTracingPipelineCreateInfoKHR vkRayTracingPipelineCreateInfo{ VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR };
+	vkRayTracingPipelineCreateInfo.basePipelineIndex = -1;
 	vkRayTracingPipelineCreateInfo.maxPipelineRayRecursionDepth = createInfo.MaxRecursionDepth;
 
 	GTSL::Array<VkPipelineShaderStageCreateInfo, 32> vkPipelineShaderStageCreateInfos(static_cast<GTSL::uint32>(createInfo.Stages.ElementCount()));
@@ -453,8 +461,12 @@ void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 		vkPipelineShaderStageCreateInfos[i].flags = 0;
 		vkPipelineShaderStageCreateInfos[i].stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
 		vkPipelineShaderStageCreateInfos[i].pName = "main";
-		vkPipelineShaderStageCreateInfos[i].module = createInfo.Stages[i].Shader.GetVkShaderModule();
 		vkPipelineShaderStageCreateInfos[i].pSpecializationInfo = nullptr;
+
+		VkShaderModuleCreateInfo shaderModuleCreateInfo{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
+		shaderModuleCreateInfo.codeSize = createInfo.Stages[i].Blob.Bytes();
+		shaderModuleCreateInfo.pCode = reinterpret_cast<const GTSL::uint32*>(createInfo.Stages[i].Blob.begin());
+		vkCreateShaderModule(createInfo.RenderDevice->GetVkDevice(), &shaderModuleCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &vkPipelineShaderStageCreateInfos[i].module);
 	}
 
 	for(auto& e : createInfo.Groups)
@@ -472,19 +484,10 @@ void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 	vkRayTracingPipelineCreateInfo.groupCount = createInfo.Groups.ElementCount();
 	vkRayTracingPipelineCreateInfo.pGroups = reinterpret_cast<const VkRayTracingShaderGroupCreateInfoKHR*>(createInfo.Groups.begin());
 	
-	if (createInfo.ParentPipeline.GetHandle())
-	{
-		vkRayTracingPipelineCreateInfo.basePipelineIndex = 0;
-		vkRayTracingPipelineCreateInfo.basePipelineHandle = createInfo.ParentPipeline.GetVkPipeline();
-	}
-	else
-	{
-		vkRayTracingPipelineCreateInfo.basePipelineIndex = -1;
-		vkRayTracingPipelineCreateInfo.basePipelineHandle = nullptr;
-	}
-	
 	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, createInfo.PipelineCache.GetVkPipelineCache(), 1, &vkRayTracingPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
 	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo)
+
+	for (auto& e : vkPipelineShaderStageCreateInfos) { vkDestroyShaderModule(createInfo.RenderDevice->GetVkDevice(), e.module, createInfo.RenderDevice->GetVkAllocationCallbacks()); }
 }
 
 void GAL::VulkanRayTracingPipeline::Destroy(const VulkanRenderDevice* renderDevice)

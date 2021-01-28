@@ -8,30 +8,12 @@
 #include "GTSL/Array.hpp"
 
 namespace GTSL {
-	class Buffer;
+	class BufferInterface;
 }
 
 namespace GAL
 {
-	class VulkanShader final : public Shader
-	{
-	public:
-		VulkanShader() = default;
-
-		struct CreateInfo final : VulkanCreateInfo
-		{
-			GTSL::Range<const GTSL::byte*> ShaderData;
-		};
-		explicit VulkanShader(const CreateInfo& createInfo);
-
-		void Destroy(const class VulkanRenderDevice* renderDevice);
-		
-		[[nodiscard]] static bool CompileShader(GTSL::Range<const GTSL::UTF8*> code, GTSL::Range<const GTSL::UTF8*> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringError);
-
-		[[nodiscard]] VkShaderModule GetVkShaderModule() const { return shaderModule; }
-	protected:
-		VkShaderModule shaderModule{ nullptr };
-	};
+	[[nodiscard]] bool CompileShader(GTSL::Range<const GTSL::UTF8*> code, GTSL::Range<const GTSL::UTF8*> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::BufferInterface result, GTSL::BufferInterface stringError);
 
 	class VulkanPipelineCache : public PipelineCache
 	{
@@ -56,7 +38,7 @@ namespace GAL
 		[[nodiscard]] VkPipelineCache GetVkPipelineCache() const { return pipelineCache; }
 
 		void GetCacheSize(const VulkanRenderDevice* renderDevice, GTSL::uint32& size) const;
-		void GetCache(const VulkanRenderDevice* renderDevice, GTSL::uint32 size, GTSL::Buffer& buffer) const;
+		void GetCache(const VulkanRenderDevice* renderDevice, GTSL::BufferInterface buffer) const;
 		
 	private:
 		VkPipelineCache pipelineCache = nullptr;
@@ -76,21 +58,6 @@ namespace GAL
 		StencilOperations StencilOperations;
 	};
 
-	class VulkanPipeline : public Pipeline
-	{
-	public:
-		struct ShaderInfo
-		{
-			VulkanShaderType Type = VulkanShaderType::VERTEX;
-			VulkanShader Shader;
-		};
-
-		[[nodiscard]] VkPipeline GetVkPipeline() const { return pipeline; }
-		[[nodiscard]] GTSL::uint64 GetHandle() const { return reinterpret_cast<uint64_t>(pipeline); }
-	protected:
-		VkPipeline pipeline = nullptr;
-	};
-
 	class VulkanPipelineLayout final
 	{
 	public:
@@ -99,7 +66,7 @@ namespace GAL
 			GTSL::uint32 Size = 0, Offset = 0;
 			VulkanShaderStage::value_type ShaderStages;
 		};
-		
+
 		VulkanPipelineLayout() = default;
 
 		struct CreateInfo final : VulkanCreateInfo
@@ -117,24 +84,41 @@ namespace GAL
 		VkPipelineLayout pipelineLayout = nullptr;
 	};
 	
+	class VulkanPipeline : public Pipeline
+	{
+	public:
+		struct ShaderInfo
+		{
+			VulkanShaderType Type = VulkanShaderType::VERTEX;
+			GTSL::Range<const GTSL::byte*> Blob;
+		};
+
+		struct CreateInfo : VulkanCreateInfo
+		{
+			VulkanPipelineLayout PipelineLayout;
+			VulkanPipelineCache PipelineCache;
+		};
+		
+		[[nodiscard]] VkPipeline GetVkPipeline() const { return pipeline; }
+		[[nodiscard]] GTSL::uint64 GetHandle() const { return reinterpret_cast<uint64_t>(pipeline); }
+	protected:
+		VkPipeline pipeline = nullptr;
+	};
+	
 	class VulkanRasterizationPipeline final : public VulkanPipeline
 	{
 	public:
 		VulkanRasterizationPipeline() = default;
 		
-		struct CreateInfo : VulkanCreateInfo
+		struct CreateInfo : VulkanPipeline::CreateInfo
 		{
 			VulkanRenderPass RenderPass;
+			uint32_t SubPass;
 			GTSL::Extent2D SurfaceExtent;
 			GTSL::Range<const VulkanShaderDataType*> VertexDescriptor;
 			VulkanPipelineDescriptor PipelineDescriptor;
 			GTSL::uint8 AttachmentCount = 0;
 			GTSL::Range<const ShaderInfo*> Stages;
-			bool IsInheritable = false;
-			VulkanPipelineLayout PipelineLayout;
-			VulkanPipeline ParentPipeline;
-			VulkanPipelineCache PipelineCache;
-			uint32_t SubPass;
 		};
 		
 		VulkanRasterizationPipeline(const CreateInfo& createInfo);
@@ -158,11 +142,15 @@ namespace GAL
 	class VulkanComputePipeline final : public VulkanPipeline
 	{
 	public:
-		struct CreateInfo : VulkanRenderInfo
+		VulkanComputePipeline() = default;
+		
+		struct CreateInfo : VulkanPipeline::CreateInfo
 		{
+			ShaderInfo ShaderInfo;	
 		};
-		VulkanComputePipeline(const CreateInfo& createInfo);
 		~VulkanComputePipeline() = default;
+
+		void Initialize(const CreateInfo& createInfo);
 
 		void Destroy(const VulkanRenderDevice* renderDevice);
 	};
@@ -186,13 +174,8 @@ namespace GAL
 			void* replayGroupHandle;
 		};
 		
-		struct CreateInfo : VulkanCreateInfo
-		{
-			bool IsInheritable = false;
-			VulkanPipeline ParentPipeline;
-			VulkanPipelineCache PipelineCache;
-			VulkanPipelineLayout PipelineLayout;
-			
+		struct CreateInfo : VulkanPipeline::CreateInfo
+		{			
 			GTSL::uint32 MaxRecursionDepth = 0;
 			GTSL::Range<const ShaderInfo*> Stages;
 

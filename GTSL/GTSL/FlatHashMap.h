@@ -13,6 +13,9 @@
 
 namespace GTSL
 {
+	template<class ALLOCATOR>
+	class Buffer;
+	
 	template<typename T, Allocator ALLOCATOR>
 	class FlatHashMap
 	{
@@ -364,10 +367,10 @@ namespace GTSL
 		template<typename TT, class ALLOCATOR, typename L>
 		friend void ForEachKey(FlatHashMap<TT, ALLOCATOR>& collection, L&& lambda);
 
-		template<typename T, class ALLOCATOR>
-		friend void Insert(const FlatHashMap<T, ALLOCATOR>&, class Buffer& buffer);
-		template<typename T, class ALLOCATOR>
-		friend void Extract(FlatHashMap<T, ALLOCATOR>&, class Buffer& buffer);
+		template<typename T, class ALLOCATOR1, class ALLOCATOR2>
+		friend void Insert(const FlatHashMap<T, ALLOCATOR1>&, Buffer<ALLOCATOR2>& buffer);
+		template<typename T, class ALLOCATOR1, class ALLOCATOR2>
+		friend void Extract(FlatHashMap<T, ALLOCATOR1>&, Buffer<ALLOCATOR2>& buffer);
 	};
 
 	template<typename T, class ALLOCATOR, typename L>

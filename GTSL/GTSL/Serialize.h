@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Buffer.h"
+#include "Buffer.hpp"
 #include "FlatHashMap.h"
 #include "Array.hpp"
 #include "Extent.h"
@@ -11,30 +11,56 @@
 
 namespace GTSL
 {
-	template<typename T, uint32 N>
-	void Insert(const Array<T, N>& array, Buffer& buffer)
+	template<class ALLOCATOR>
+	void Insert(bool n, Buffer<ALLOCATOR>& buffer) { buffer.CopyBytes(sizeof(bool), reinterpret_cast<const byte*>(&n)); }
+	template<class ALLOCATOR>
+	void Insert(uint8 n, Buffer<ALLOCATOR>& buffer) { buffer.CopyBytes(sizeof(uint8), reinterpret_cast<byte*>(&n)); }
+	template<class ALLOCATOR>
+	void Insert(uint16 n, Buffer<ALLOCATOR>& buffer) { buffer.CopyBytes(sizeof(uint16), reinterpret_cast<byte*>(&n)); }
+	template<class ALLOCATOR>
+	void Insert(uint32 n, Buffer<ALLOCATOR>& buffer) { buffer.CopyBytes(sizeof(uint32), reinterpret_cast<const byte*>(&n)); }
+	template<class ALLOCATOR>
+	void Insert(uint64 n, Buffer<ALLOCATOR>& buffer) { buffer.CopyBytes(sizeof(uint64), reinterpret_cast<const byte*>(&n)); }
+	template<class ALLOCATOR>
+	void Insert(float32 n, Buffer<ALLOCATOR>& buffer) { buffer.CopyBytes(sizeof(float32), reinterpret_cast<const byte*>(&n)); }
+
+	template<class ALLOCATOR>
+	void Extract(bool& n, Buffer<ALLOCATOR>& buffer) { buffer.ReadBytes(sizeof(bool), reinterpret_cast<byte*>(&n)); }
+	template<class ALLOCATOR>
+	void Extract(uint8& n, Buffer<ALLOCATOR>& buffer) { buffer.ReadBytes(sizeof(uint8), reinterpret_cast<byte*>(&n)); }
+	template<class ALLOCATOR>
+	void Extract(uint16& n, Buffer<ALLOCATOR>& buffer) { buffer.ReadBytes(sizeof(uint16), reinterpret_cast<byte*>(&n)); }
+	template<class ALLOCATOR>
+	void Extract(uint32& n, Buffer<ALLOCATOR>& buffer) { buffer.ReadBytes(sizeof(uint32), reinterpret_cast<byte*>(&n)); }
+	template<class ALLOCATOR>
+	void Extract(uint64& n, Buffer<ALLOCATOR>& buffer) { buffer.ReadBytes(sizeof(uint64), reinterpret_cast<byte*>(&n)); }
+	template<class ALLOCATOR>
+	void Extract(float32& n, Buffer<ALLOCATOR>& buffer) { buffer.ReadBytes(sizeof(float32), reinterpret_cast<byte*>(&n)); }
+	
+	template<typename T, uint32 N, class ALLOCATOR>
+	void Insert(const Array<T, N>& array, Buffer<ALLOCATOR>& buffer)
 	{
 		Insert(array.GetLength(), buffer);
 		for (const auto& e : array) { Insert(e, buffer); }
 	}
 
-	template<typename T, uint32 N>
-	void Extract(Array<T, N>& array, Buffer& buffer)
+	template<typename T, uint32 N, class ALLOCATOR>
+	void Extract(Array<T, N>& array, Buffer<ALLOCATOR>& buffer)
 	{
 		uint32 length{ 0 };
 		Extract(length, buffer); array.Resize(length);
 		for (auto& e : array) { Extract(e, buffer); }
 	}
 
-	template<typename T, class ALLOCATOR>
-	void Insert(const Vector<T, ALLOCATOR>& vector, Buffer& buffer)
+	template<typename T, class ALLOCATOR1, class ALLOCATOR2>
+	void Insert(const Vector<T, ALLOCATOR1>& vector, Buffer<ALLOCATOR2>& buffer)
 	{
 		Insert(vector.GetLength(), buffer);
 		for (const auto& e : vector) { Insert(e, buffer); }
 	}
 	
-	template<typename T, class ALLOCATOR>
-	void Extract(Vector<T, ALLOCATOR>& vector, Buffer& buffer)
+	template<typename T, class ALLOCATOR1, class ALLOCATOR2>
+	void Extract(Vector<T, ALLOCATOR1>& vector, Buffer<ALLOCATOR2>& buffer)
 	{
 		uint32 length{ 0 };
 		Extract(length, buffer); vector.Initialize(length);
@@ -42,8 +68,8 @@ namespace GTSL
 		for (auto& e : vector) { Extract(e, buffer); }
 	}
 	
-	template<typename T, class ALLOCATOR>
-	void Insert(const FlatHashMap<T, ALLOCATOR>& map, Buffer& buffer)
+	template<typename T, class ALLOCATOR1, class ALLOCATOR2>
+	void Insert(const FlatHashMap<T, ALLOCATOR1>& map, Buffer<ALLOCATOR2>& buffer)
 	{
 		Insert(map.capacity, buffer);
 		Insert(map.maxBucketLength, buffer);
@@ -58,8 +84,8 @@ namespace GTSL
 		}
 	}
 
-	template<typename T, class ALLOCATOR>
-	void Extract(FlatHashMap<T, ALLOCATOR>& map, Buffer& buffer)
+	template<typename T, class ALLOCATOR1, class ALLOCATOR2>
+	void Extract(FlatHashMap<T, ALLOCATOR1>& map, Buffer<ALLOCATOR2>& buffer)
 	{
 		uint32 capacity{ 0 }, maxBucketLength = 0;
 		Extract(capacity, buffer);
@@ -75,56 +101,57 @@ namespace GTSL
 		}
 	}
 
-	template<Enum T>
-	void Insert(const T enu, Buffer& buffer)
+	template<Enum T, class ALLOCATOR>
+	void Insert(const T enu, Buffer<ALLOCATOR>& buffer)
 	{
-		buffer.WriteBytes(sizeof(T), reinterpret_cast<const byte*>(&enu));
+		buffer.CopyBytes(sizeof(T), reinterpret_cast<const byte*>(&enu));
 	}
 
-	template<Enum T>
-	void Extract(T& enu, Buffer& buffer)
+	template<Enum T, class ALLOCATOR>
+	void Extract(T& enu, Buffer<ALLOCATOR>& buffer)
 	{
 		buffer.ReadBytes(sizeof(T), reinterpret_cast<byte*>(&enu));
 	}
 
-	inline void Insert(const Extent2D extent, Buffer& buffer)
+	template<class ALLOCATOR>
+	inline void Insert(const Extent2D extent, Buffer<ALLOCATOR>& buffer)
 	{
-		buffer.WriteBytes(sizeof(Extent2D), reinterpret_cast<const byte*>(&extent));
+		buffer.CopyBytes(sizeof(Extent2D), reinterpret_cast<const byte*>(&extent));
 	}
-
-	inline void Extract(Extent2D& extent, Buffer& buffer)
+	template<class ALLOCATOR>
+	inline void Extract(Extent2D& extent, Buffer<ALLOCATOR>& buffer)
 	{
 		buffer.ReadBytes(sizeof(Extent2D), reinterpret_cast<byte*>(&extent));
 	}
-	
-	inline void Insert(const Extent3D extent, Buffer& buffer)
+	template<class ALLOCATOR>
+	inline void Insert(const Extent3D extent, Buffer<ALLOCATOR>& buffer)
 	{
-		buffer.WriteBytes(sizeof(Extent3D), reinterpret_cast<const byte*>(&extent));
+		buffer.CopyBytes(sizeof(Extent3D), reinterpret_cast<const byte*>(&extent));
 	}
-
-	inline void Extract(Extent3D& extent, Buffer& buffer)
+	template<class ALLOCATOR>
+	inline void Extract(Extent3D& extent, Buffer<ALLOCATOR>& buffer)
 	{
 		buffer.ReadBytes(sizeof(Extent3D), reinterpret_cast<byte*>(&extent));
 	}
-
-	inline void Insert(const Id64 id, Buffer& buffer)
+	template<class ALLOCATOR>
+	inline void Insert(const Id64 id, Buffer<ALLOCATOR>& buffer)
 	{
-		buffer.WriteBytes(sizeof(Id64), reinterpret_cast<const byte*>(&id));
+		buffer.CopyBytes(sizeof(Id64), reinterpret_cast<const byte*>(&id));
 	}
-	
-	inline void Extract(Id64& id, Buffer& buffer)
+	template<class ALLOCATOR>
+	inline void Extract(Id64& id, Buffer<ALLOCATOR>& buffer)
 	{
 		buffer.ReadBytes(sizeof(Id64), reinterpret_cast<byte*>(&id));
 	}
 
-	template<uint8 SIZE>
-	inline void Insert(const ShortString<SIZE>& string, Buffer& buffer)
+	template<uint8 SIZE, class ALLOCATOR>
+	inline void Insert(const ShortString<SIZE>& string, Buffer<ALLOCATOR>& buffer)
 	{
-		buffer.WriteBytes(SIZE, reinterpret_cast<const byte*>((Range<const UTF8*>(string).begin())));
+		buffer.CopyBytes(SIZE, reinterpret_cast<const byte*>((Range<const UTF8*>(string).begin())));
 	}
 
-	template<uint8 SIZE>
-	inline void Extract(ShortString<SIZE>& string, Buffer& buffer)
+	template<uint8 SIZE, class ALLOCATOR>
+	inline void Extract(ShortString<SIZE>& string, Buffer<ALLOCATOR>& buffer)
 	{
 		buffer.ReadBytes(SIZE, reinterpret_cast<byte*>((Range<UTF8*>(string).begin())));
 	}

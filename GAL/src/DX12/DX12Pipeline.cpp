@@ -3,7 +3,7 @@
 #include "GAL/DX12/DX12RenderDevice.h"
 #include "GAL/RenderCore.h"
 #include "GTSL/Array.hpp"
-#include "GTSL/Buffer.h"
+#include "GTSL/Buffer.hpp"
 
 void GAL::DX12PipelineLayout::Initialize(const CreateInfo& info)
 {
@@ -38,10 +38,8 @@ void GAL::DX12PipelineLayout::Destroy(const DX12RenderDevice* renderDevice)
 }
 
 void GAL::DX12RasterPipeline::Initialize(const CreateInfo& info)
-{
-	GTSL::StackAllocator<1024> allocator;
-	
-	GTSL::Buffer buffer;
+{	
+	GTSL::Buffer<GTSL::StackAllocator<1024>> buffer;
 	//buffer.Allocate(1024, 8, allocator);
 
 	GTSL::Array<D3D12_INPUT_ELEMENT_DESC, 12> vertexElements;
@@ -63,17 +61,17 @@ void GAL::DX12RasterPipeline::Initialize(const CreateInfo& info)
 				default: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_MAX_VALID;
 				}
 
-				buffer.WriteBytes(sizeof(D3D12_PIPELINE_STATE_SUBOBJECT_TYPE), reinterpret_cast<const byte*>(&type));
+				buffer.CopyBytes(sizeof(D3D12_PIPELINE_STATE_SUBOBJECT_TYPE), reinterpret_cast<const byte*>(&type));
 				D3D12_SHADER_BYTECODE bytecode;
 				bytecode.BytecodeLength = info.Stages[i].ShaderData.ElementCount();
 				bytecode.pShaderBytecode = info.Stages[i].ShaderData.begin();
-				buffer.WriteBytes(sizeof(D3D12_SHADER_BYTECODE), reinterpret_cast<const byte*>(&bytecode));
+				buffer.CopyBytes(sizeof(D3D12_SHADER_BYTECODE), reinterpret_cast<const byte*>(&bytecode));
 			}
 		}
 
 		{
 			type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_INPUT_LAYOUT;
-			buffer.WriteBytes(sizeof(D3D12_PIPELINE_STATE_SUBOBJECT_TYPE), reinterpret_cast<const byte*>(&type));
+			buffer.CopyBytes(sizeof(D3D12_PIPELINE_STATE_SUBOBJECT_TYPE), reinterpret_cast<const byte*>(&type));
 
 			D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
 			inputLayoutDesc.NumElements = static_cast<UINT32>(info.VertexDescriptor.ElementCount());
@@ -109,7 +107,7 @@ void GAL::DX12RasterPipeline::Initialize(const CreateInfo& info)
 			}
 
 			inputLayoutDesc.pInputElementDescs = vertexElements.begin();
-			buffer.WriteBytes(sizeof(D3D12_INPUT_LAYOUT_DESC), reinterpret_cast<const byte*>(&inputLayoutDesc));
+			buffer.CopyBytes(sizeof(D3D12_INPUT_LAYOUT_DESC), reinterpret_cast<const byte*>(&inputLayoutDesc));
 		}
 	}
 	

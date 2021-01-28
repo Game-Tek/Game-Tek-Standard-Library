@@ -33,55 +33,6 @@ namespace GTSL
 		auto GetElements()  { return Range<T*>(ElementCount, Elements); }
 		auto GetElements() const { return Range<const T*>(ElementCount, Elements); }
 	};
-
-	template<typename T>
-	struct GroupIterator
-	{
-	public:
-		GroupIterator(Group<T>* dt) : group(dt)
-		{
-		}
-
-		GroupIterator(const uint32 lastElem, Group<T>* dt) : group(dt), currentElementInGroup(lastElem)
-		{
-		}
-
-		bool operator!=(const GroupIterator& other) const { return currentElementInGroup != other.currentElementInGroup; }
-		bool operator==(const GroupIterator& other) const { return currentElementInGroup == other.currentElementInGroup; }
-
-		GroupIterator& operator++()
-		{
-			++currentElementInGroup;
-
-			return *this;
-		}
-
-		//GVectorIterator& operator--()
-		//{
-		//	//while pos is not occupied
-		//	do
-		//	{
-		//		--pos;
-		//	} while (GTSL::CheckBit(pos % 32, getIndices()[pos / 32]));
-		//
-		//	return *this;
-		//}
-
-		Pair<uint32, T> operator*() { return Pair<uint32, T>(group->First + currentElementInGroup, group->Elements[currentElementInGroup]); }
-		Pair<uint32, T> operator->() { return Pair<uint32, T>(group->First + currentElementInGroup, group->Elements + currentElementInGroup); }
-
-		//T& operator[](const uint32 index) { return getObjects()[index]; }
-
-		T* begin() { return group->Elements; }
-		T* end() { return group->Elements + group->ElementCount; }
-
-		Group<T>* GetGroup() { return group; }
-		
-	private:
-		Group<T>* group;
-
-		uint32 currentElementInGroup = 0;
-	};
 	
 	template<typename T>
 	struct SparseVectorIterator
@@ -100,29 +51,11 @@ namespace GTSL
 
 		SparseVectorIterator& operator++()
 		{
-			++currentGroup;
-
-			return *this;
+			++currentGroup; return *this;
 		}
 
-		//GVectorIterator& operator--()
-		//{
-		//	//while pos is not occupied
-		//	do
-		//	{
-		//		--pos;
-		//	} while (GTSL::CheckBit(pos % 32, getIndices()[pos / 32]));
-		//
-		//	return *this;
-		//}
-		
-		GroupIterator<T> operator*() { return GroupIterator<T>(groups + currentGroup); }
-		//GroupIterator<T> operator->() { return Pair<uint32, T*>(groups[currentGroup].First + currentElementInGroup, groups[currentGroup].Elements + currentElementInGroup); }
-
-		//T& operator[](const uint32 index) { return getObjects()[index]; }
-
-		GroupIterator<T> begin() { return GroupIterator<T>(groups); }
-		GroupIterator<T> end() { return GroupIterator<T>(groups->ElementCount, groups); }
+		Group<T>& operator*() { return groups[currentGroup]; }
+		Group<T>* operator->() { return groups + currentGroup; }
 		
 	private:
 		Group<T>* groups;
@@ -169,60 +102,41 @@ namespace GTSL
 		}
 
 		template<typename... ARGS>
-		void EmplaceAt(const uint32 pos, ARGS&&... args)
+		T& EmplaceAt(const uint32 pos, ARGS&&... args)
 		{			
 			//for(uint32 i = 0; i < groupCount; ++i)
-			//{
-			//	uint8 tag = 0;
-			//	
+			//{				
 			//	Group<T>& group = groups[i];
 			//	
-			//	if (pos + 1 == group.First) { tag = IS_PRE_CONTIGUOUS; }
-			//	if (pos == group.First + group.ElementCount) { tag = IS_POST_CONTIGUOUS; }
-			//	if (pos > group.First && pos < group.First) { tag = IS_INSIDE; }
-			//
-			//	switch (tag)
+			//	if (pos == group.First)
 			//	{
-			//	case IS_PRE_CONTIGUOUS:
-			//	{
-			//		//GTSL_ASSERT(pos != group.First, "There's an element alredy using that slot")
-			//			
+			//		GTSL_ASSERT(group.ElementCount != capacity, "No more space available");
 			//		insertElement(group.GetElements(), 0);
-			//			
 			//		new(group.Elements) T(ForwardRef<ARGS>(args)...);
-			//
 			//		group.First = pos;
-			//			
-			//		//GTSL_ASSERT(group.ElementCount != capacity, "No more space available");
-			//			
-			//		++group.ElementCount;
-			//			
-			//		return;
-			//	}
 			//
-			//	case IS_POST_CONTIGUOUS:
-			//	{
-			//		//GTSL_ASSERT(pos != group.First + group.ElementCount, "There's an element alredy using that slot")
-			//			
-			//		new(group.Elements + group.ElementCount) T(ForwardRef<ARGS>(args)...);
-			//			
-			//		//GTSL_ASSERT(group.ElementCount != capacity, "No more space available");
-			//			
 			//		++group.ElementCount;
+			//
 			//		return;
 			//	}
-			//	case IS_INSIDE:
+			//	
+			//	if (pos == group.First + group.ElementCount)
 			//	{
+			//		GTSL_ASSERT(group.ElementCount != capacity, "No more space available");
+			//		new(group.Elements + group.ElementCount) T(ForwardRef<ARGS>(args)...);
+			//		++group.ElementCount;
+			//
+			//		return;
+			//	}
+			//	
+			//	if (pos > group.First && pos < group.First)
+			//	{
+			//		GTSL_ASSERT(group.ElementCount != capacity, "No more space available");
 			//		insertElement(group.GetElements(), group.First - pos);
 			//		new(group.Elements + group.First - pos) T(ForwardRef<ARGS>(args)...);
-			//
-			//		GTSL_ASSERT(group.ElementCount != capacity, "No more space available");
-			//
 			//		++group.ElementCount;
-			//			
+			//		
 			//		return;
-			//	}
-			//	default:;
 			//	}
 			//}
 
@@ -236,9 +150,11 @@ namespace GTSL
 				group.ElementCount = 1;
 				allocator.Allocate(sizeof(T) * capacity, alignof(T), reinterpret_cast<void**>(&group.Elements), &allocatedSize);
 
-				new(group.Elements + (pos - group.First)) T(GTSL::ForwardRef<ARGS>(args)...);
+				auto* obj = new(group.Elements + (pos - group.First)) T(GTSL::ForwardRef<ARGS>(args)...);
 				
 				++groupCount;
+
+				return *obj;
 			}
 		}
 
@@ -268,12 +184,27 @@ namespace GTSL
 		[[nodiscard]] uint32 GetGroupCount() const { return groupCount; }
 
 		auto GetGroups() const { return GTSL::Range<const Group<T>*>(groupCount, groups); }
+
+		bool IsSlotOccupied(const uint32 element) const
+		{
+			for (uint32 g = 0; g < groupCount; ++g)
+			{
+				auto& group = groups[g];
+				
+				if (element >= groups[g].First && element < groups[g].First + groups[g].ElementCount) //TODO: CAN REMOVE FIRST CONDITION IF WE CAN GUARANTEE AN ORDERED ARRAY
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
 		
 		T& operator[](const uint32 element)
 		{
 			for(uint32 g = 0; g < groupCount; ++g)
 			{
-				if(groups[g].First >= element && element < groups[g].First + groups[g].ElementCount) //TODO: CAN REMOVE FIRST CONDITION IF WE CAN GUARANTEE AN ORDERED ARRAY
+				if(element >= groups[g].First && element < groups[g].First + groups[g].ElementCount) //TODO: CAN REMOVE FIRST CONDITION IF WE CAN GUARANTEE AN ORDERED ARRAY
 				{
 					return groups[g].Elements[element - groups[g].First];
 				}
@@ -282,13 +213,28 @@ namespace GTSL
 			GTSL_ASSERT(false, "No such element")
 			return groups[0].Elements[0];
 		}
-		
+
+		ALLOCATOR& GetAllocator() { return allocator; }
+		const ALLOCATOR& GetAllocator() const { return allocator; }
+	
 	private:
 		Group<T>* groups;
 
+		friend struct SparseVectorIterator<T>;
+		friend class SparseVector;
+		
 		uint32 capacity = 0;
 		uint32 groupCount = 0;
 
 		ALLOCATOR allocator;
+
+		template<typename TT, class ALLOC, typename L>
+		friend void ForEach(const SparseVector<TT, ALLOC>& keepVector, L&& lambda);
 	};
+
+	template<typename TT, class ALLOC, typename L>
+	void ForEach(const SparseVector<TT, ALLOC>& keepVector, L&& lambda)
+	{
+		for(uint32 g = 0; g < keepVector.groupCount; ++g) { lambda(keepVector.groups[g]); }
+	}
 }

@@ -1,5 +1,7 @@
 #include "GAL/DX12/DX12RenderContext.h"
 
+
+#include "GAL/RenderCore.h"
 #include "GAL/DX12/DX12RenderDevice.h"
 
 void GAL::DX12Surface::Initialize(const CreateInfo& info)
@@ -86,4 +88,5 @@ void GAL::DX12RenderContext::Recreate(const RecreateInfo& info)
 GAL::DX12RenderContext::~DX12RenderContext()
 {
 	swapChain4->Release();
+	debugClear(swapChain4);
 }

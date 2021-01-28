@@ -11,6 +11,9 @@
 
 namespace GTSL
 {
+	template<class ALLOCATOR>
+	class Buffer;
+	
 	template <typename T, class ALLOCATOR>
 	class Vector
 	{
@@ -553,8 +556,10 @@ namespace GTSL
 		iterator getIterator(const length_type index) noexcept { return &this->data[index]; }
 
 		friend class Vector;
-		
-		friend void Insert(const Vector&, class Buffer&);
-		friend void Extract(Vector&, class Buffer&);
+
+		template<class ALLOC>
+		friend void Insert(const Vector&, Buffer<ALLOC>&);
+		template<class ALLOC>
+		friend void Extract(Vector&, Buffer<ALLOC>&);
 	};
 }

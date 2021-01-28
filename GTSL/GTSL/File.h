@@ -7,7 +7,7 @@
 
 namespace GTSL
 {
-	class Buffer;
+	class BufferInterface;
 
 	class File
 	{		
@@ -20,12 +20,15 @@ namespace GTSL
 		enum class OpenMode : uint8 { LEAVE_CONTENTS, CLEAR };
 		
 		void OpenFile(Range<const UTF8*> path, AccessMode::value_type accessMode, OpenMode openMode = OpenMode::LEAVE_CONTENTS);
-		void CloseFile();
 
 		[[nodiscard]] uint32 WriteToFile(const Range<const byte*> buffer) const;
 		[[nodiscard]] uint32 ReadFromFile(const Range<byte*> buffer) const;
-		uint32 WriteToFile(Buffer& buffer) const;
-		uint32 ReadFile(Buffer& buffer) const;
+		uint32 WriteToFile(BufferInterface buffer) const;
+		
+		uint32 ReadFile(BufferInterface buffer) const;
+		uint32 ReadFile(uint64 size, BufferInterface buffer) const;
+		uint32 ReadFile(GTSL::Range<byte*> buffer) const;
+		uint32 ReadFile(uint64 size, uint64 offset, GTSL::Range<byte*> buffer) const;
 
 		void SetEndOfFile();
 		
