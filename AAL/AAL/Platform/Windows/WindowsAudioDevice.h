@@ -5,6 +5,8 @@
 #include <mmdeviceapi.h>
 #include <Audioclient.h>
 
+#include "GTSL/Result.h"
+
 namespace AAL
 {
 	class WindowsAudioDevice final : public AudioDevice
@@ -14,7 +16,14 @@ namespace AAL
 		~WindowsAudioDevice() = default;
 
 		void Initialize(const CreateInfo& audioDeviceCreateInfo);
+		
+		void CreateAudioStream(StreamShareMode shareMode, MixFormat mixFormat);
+		
 		void Destroy();
+
+		MixFormat GetMixFormat() const;
+
+		bool IsMixFormatSupported(StreamShareMode shareMode, MixFormat mixFormat) const;
 		
 		/**
 		* \brief Initializes the audio device to start receiving audio. Must be called before any other function.
@@ -39,7 +48,17 @@ namespace AAL
 		* \param data Pointer to the buffer containing the audio data to be used for filling the audio buffer.
 		* \param pushedSamples Number of audio samples to copy from the passed pointer to the audio buffer.
 		*/
-		void PushAudioData(void* data, GTSL::uint32 pushedSamples) const;
+		template<typename F>
+		bool PushAudioData(F&& copyFunction, GTSL::uint32 pushedSamples) const
+		{
+			// block_alignment = nChannels * (wBitsPerSample / 8);
+			
+			auto getResult = getBuffer(pushedSamples);
+			if(!getResult.State()) { return false; }
+			copyFunction(pushedSamples * blockAlign, getResult.Get());
+			auto releaseResult = realeaseBuffer(pushedSamples);
+			if (!releaseResult) { return false; }
+		}
 		
 		/**
 		 * \brief Shutdowns and destroys the audio device resources. Must be called before destroying the audio device, no other functions shall be called after this.
@@ -71,8 +90,12 @@ namespace AAL
 		 * with parameter riid set to REFIID IID_IAudioRenderClient.
 		 */
 		IAudioRenderClient* renderClient = nullptr;
-		WAVEFORMATEXTENSIBLE pwfx;
+
+		GTSL::uint32 blockAlign = 0;
 
 		GTSL::uint32 bufferFrameCount = 0;
+
+		GTSL::Result<void*> getBuffer(GTSL::uint32 pushedSamples);
+		bool realeaseBuffer(GTSL::uint32 pushedSamples);
 	};
 }

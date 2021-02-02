@@ -213,6 +213,13 @@ namespace GTSL
 			for (uint32 i = 0; i < GetLength(); ++i) { if (data[i] == obj) { return Result<uint32>(MoveRef(i), true); } }
 			return Result<uint32>(false);
 		}
+
+		template<typename F>
+		Result<uint32> LookFor(F&& function) const
+		{
+			for (uint32 i = 0; i < GetLength(); ++i) { if (function(data[i])) { return Result<uint32>(MoveRef(i), true); } }
+			return Result<uint32>(false);
+		}
 		
 		[[nodiscard]] constexpr uint32 GetLength() const noexcept { return this->length; }
 

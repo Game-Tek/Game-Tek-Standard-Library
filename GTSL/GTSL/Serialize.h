@@ -7,6 +7,7 @@
 #include "Vector.hpp"
 #include "Algorithm.h"
 #include "Id.h"
+#include "Pair.h"
 #include "ShortString.hpp"
 
 namespace GTSL
@@ -37,6 +38,18 @@ namespace GTSL
 	template<class ALLOCATOR>
 	void Extract(float32& n, Buffer<ALLOCATOR>& buffer) { buffer.ReadBytes(sizeof(float32), reinterpret_cast<byte*>(&n)); }
 	
+	template<typename A, typename B, class ALLOCATOR>
+	void Insert(const Pair<A, B>& pair, Buffer<ALLOCATOR>& buffer)
+	{
+		Insert(pair.First, buffer); Insert(pair.Second, buffer);
+	}
+
+	template<typename A, typename B, class ALLOCATOR>
+	void Extract(Pair<A, B>& pair, Buffer<ALLOCATOR>& buffer)
+	{
+		Extract(pair.First, buffer); Extract(pair.Second, buffer);
+	}
+
 	template<typename T, uint32 N, class ALLOCATOR>
 	void Insert(const Array<T, N>& array, Buffer<ALLOCATOR>& buffer)
 	{
@@ -113,11 +126,24 @@ namespace GTSL
 		buffer.ReadBytes(sizeof(T), reinterpret_cast<byte*>(&enu));
 	}
 
+	//template<Union U, class ALLOCATOR>
+	//void Insert(const U& uni, Buffer<ALLOCATOR>& buffer) //if trivially copyable
+	//{
+	//	buffer.CopyBytes(sizeof(U), reinterpret_cast<const byte*>(&uni));
+	//}
+	//
+	//template<Union U, class ALLOCATOR>
+	//void Extract(U& uni, Buffer<ALLOCATOR>& buffer)
+	//{
+	//	buffer.ReadBytes(sizeof(U), reinterpret_cast<byte*>(&uni));
+	//}
+
 	template<class ALLOCATOR>
 	inline void Insert(const Extent2D extent, Buffer<ALLOCATOR>& buffer)
 	{
 		buffer.CopyBytes(sizeof(Extent2D), reinterpret_cast<const byte*>(&extent));
 	}
+	
 	template<class ALLOCATOR>
 	inline void Extract(Extent2D& extent, Buffer<ALLOCATOR>& buffer)
 	{

@@ -2,9 +2,6 @@
 
 #include "AAL/AudioCore.h"
 
-#include <mmdeviceapi.h>
-#include <exception>
-
 #include "GTSL/Assert.h"
 
 #define SAFE_RELEASE(punk)  \
@@ -18,29 +15,35 @@ void WindowsAudioDevice::Initialize(const CreateInfo& audioDeviceCreateInfo)
 {
 	CoInitializeEx(nullptr, 0);
 	
-	ZeroMemory(&pwfx, sizeof(WAVEFORMATEXTENSIBLE));
-	pwfx.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-	pwfx.Format.cbSize = 22;
-	pwfx.Format.nChannels = 2;
-	pwfx.Format.nSamplesPerSec = audioDeviceCreateInfo.Frequency;
-	pwfx.Format.wBitsPerSample = pwfx.Samples.wValidBitsPerSample = audioDeviceCreateInfo.BitDepth;
-	pwfx.Format.nBlockAlign = 2u * (audioDeviceCreateInfo.BitDepth / 8u);
-	if (audioDeviceCreateInfo.BitDepth == 24)
-	{
-		pwfx.Format.wBitsPerSample = 32;
-		pwfx.Format.nBlockAlign = 2 * (32 / 8);
-	}
-	pwfx.SubFormat = GUID{ STATIC_KSDATAFORMAT_SUBTYPE_PCM };
-	pwfx.Format.nAvgBytesPerSec = audioDeviceCreateInfo.Frequency * pwfx.Format.nBlockAlign;
-	
 	CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), reinterpret_cast<void**>(&enumerator));
 
 	enumerator->GetDefaultAudioEndpoint(eRender, eConsole, &endPoint);
 
 	endPoint->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, reinterpret_cast<void**>(&audioClient));
+}
 
+void WindowsAudioDevice::CreateAudioStream(StreamShareMode shareMode, MixFormat mixFormat)
+{
+	WAVEFORMATEXTENSIBLE pwfx;
+	ZeroMemory(&pwfx, sizeof(WAVEFORMATEXTENSIBLE));
+	pwfx.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+	pwfx.Format.cbSize = 22;
+	pwfx.Format.nChannels = 2;
+	pwfx.Format.nSamplesPerSec = mixFormat.SamplesPerSecond;
+	pwfx.Format.wBitsPerSample = pwfx.Samples.wValidBitsPerSample = mixFormat.BitsPerSample;
+	pwfx.Format.nBlockAlign = 2u * (mixFormat.BitsPerSample / 8u);
+	if (mixFormat.BitsPerSample == 24)
+	{
+		pwfx.Format.wBitsPerSample = 32;
+		pwfx.Format.nBlockAlign = 2 * (32 / 8);
+	}
+	pwfx.SubFormat = GUID{ STATIC_KSDATAFORMAT_SUBTYPE_PCM };
+	pwfx.Format.nAvgBytesPerSec = mixFormat.SamplesPerSecond * pwfx.Format.nBlockAlign;
+
+	blockAlign = pwfx.Format.nBlockAlign;
+	
 	_AUDCLNT_SHAREMODE win_share_mode{};
-	switch (audioDeviceCreateInfo.ShareMode)
+	switch (shareMode)
 	{
 	case StreamShareMode::EXCLUSIVE: win_share_mode = AUDCLNT_SHAREMODE_EXCLUSIVE; break;
 	case StreamShareMode::SHARED: win_share_mode = AUDCLNT_SHAREMODE_SHARED; break;
@@ -48,34 +51,34 @@ void WindowsAudioDevice::Initialize(const CreateInfo& audioDeviceCreateInfo)
 	GTSL_ASSERT(audioClient->Initialize(win_share_mode, 0, 0, 0, reinterpret_cast<PWAVEFORMATEX>(&pwfx), nullptr) == S_OK, "Failed to initialize audio client with requested parameters!");
 
 	audioClient->GetBufferSize(&bufferFrameCount);
-	
+
 	audioClient->GetService(__uuidof(IAudioRenderClient), reinterpret_cast<void**>(&renderClient));
 
-	switch (pwfx.Format.nChannels)
-	{
-	case 1: channelCount = AudioChannelCount::CHANNELS_MONO; break;
-	case 2: channelCount = AudioChannelCount::CHANNELS_STEREO; break;
-	case 6: channelCount = AudioChannelCount::CHANNELS_5_1; break;
-	case 8: channelCount = AudioChannelCount::CHANNELS_7_1; break;
-	default:;
-	}
-
-	switch (pwfx.Format.nSamplesPerSec)
-	{
-	case 44100: sampleRate = AudioSampleRate::KHZ_44_1; break;
-	case 48000: sampleRate = AudioSampleRate::KHZ_48; break;
-	case 96000: sampleRate = AudioSampleRate::KHZ_96; break;
-	default:;
-	}
-
-	switch (pwfx.Format.wBitsPerSample)
-	{
-	case 8: bitDepth = AudioBitDepth::BIT_DEPTH_8; break;
-	case 16:bitDepth = AudioBitDepth::BIT_DEPTH_16; break;
-	case 24:bitDepth = AudioBitDepth::BIT_DEPTH_24; break;
-	case 32:bitDepth = AudioBitDepth::BIT_DEPTH_32; break;
-	default:;
-	}
+	//switch (pwfx.Format.nChannels)
+	//{
+	//case 1: channelCount = AudioChannelCount::CHANNELS_MONO; break;
+	//case 2: channelCount = AudioChannelCount::CHANNELS_STEREO; break;
+	//case 6: channelCount = AudioChannelCount::CHANNELS_5_1; break;
+	//case 8: channelCount = AudioChannelCount::CHANNELS_7_1; break;
+	//default:;
+	//}
+	//
+	//switch (pwfx.Format.nSamplesPerSec)
+	//{
+	//case 44100: sampleRate = AudioSampleRate::KHZ_44_1; break;
+	//case 48000: sampleRate = AudioSampleRate::KHZ_48; break;
+	//case 96000: sampleRate = AudioSampleRate::KHZ_96; break;
+	//default:;
+	//}
+	//
+	//switch (pwfx.Format.wBitsPerSample)
+	//{
+	//case 8:  bitDepth = AudioBitDepth::BIT_DEPTH_8; break;
+	//case 16: bitDepth = AudioBitDepth::BIT_DEPTH_16; break;
+	//case 24: bitDepth = AudioBitDepth::BIT_DEPTH_24; break;
+	//case 32: bitDepth = AudioBitDepth::BIT_DEPTH_32; break;
+	//default:;
+	//}
 }
 
 void WindowsAudioDevice::Destroy()
@@ -86,6 +89,54 @@ void WindowsAudioDevice::Destroy()
 	SAFE_RELEASE(enumerator)
 
 	CoUninitialize();
+}
+
+AudioDevice::MixFormat WindowsAudioDevice::GetMixFormat() const
+{
+	WAVEFORMATEXTENSIBLE* waveformatex;
+	audioClient->GetMixFormat(reinterpret_cast<WAVEFORMATEX**>(&waveformatex));
+
+	AudioDevice::MixFormat mixFormat;
+	
+	GTSL_ASSERT(waveformatex->Format.wFormatTag == WAVE_FORMAT_PCM, "Format mismatch!");
+	
+	mixFormat.NumberOfChannels = waveformatex->Format.nChannels;
+	mixFormat.BlockAlign = waveformatex->Format.nBlockAlign;
+	mixFormat.SamplesPerSecond = waveformatex->Format.nSamplesPerSec;
+	mixFormat.BitsPerSample = waveformatex->Format.wBitsPerSample;
+
+	CoTaskMemFree(waveformatex);
+
+	return mixFormat;
+}
+
+bool WindowsAudioDevice::IsMixFormatSupported(StreamShareMode shareMode, AudioDevice::MixFormat mixFormat) const
+{
+	WAVEFORMATEX waveformatex; WAVEFORMATEXTENSIBLE* closestMatch;
+
+	waveformatex.wFormatTag = WAVE_FORMAT_PCM;
+	waveformatex.cbSize = 0;
+	waveformatex.nBlockAlign = mixFormat.BlockAlign;
+	waveformatex.nChannels = mixFormat.NumberOfChannels;
+	waveformatex.nSamplesPerSec = mixFormat.SamplesPerSecond;
+	waveformatex.wBitsPerSample = mixFormat.BitsPerSample;
+	waveformatex.nAvgBytesPerSec = waveformatex.nSamplesPerSec * waveformatex.nBlockAlign;
+
+	bool result = false;
+	
+	switch (shareMode)
+	{
+	case StreamShareMode::SHARED:
+		result = audioClient->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED, &waveformatex, reinterpret_cast<WAVEFORMATEX**>(&closestMatch)) == S_OK;
+		CoTaskMemFree(closestMatch);
+		break;
+		
+	case StreamShareMode::EXCLUSIVE:
+		result = audioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, &waveformatex, nullptr) == S_OK;
+		break;
+	}
+
+	return result;
 }
 
 void WindowsAudioDevice::Start() const { audioClient->Start(); }
@@ -106,29 +157,16 @@ void WindowsAudioDevice::GetBufferFrameCount(uint32& totalBufferFrames) const
 	audioClient->GetBufferSize(&totalBufferFrames);
 }
 
-void WindowsAudioDevice::PushAudioData(void* data, uint32 pushedSamples) const
+GTSL::Result<void*> WindowsAudioDevice::getBuffer(uint32 pushedSamples)
 {
-	//Block alignment, in bytes.The block alignment is the minimum atomic unit of data for the wFormatTag format type.
-	//If wFormatTag is WAVE_FORMAT_PCM or WAVE_FORMAT_EXTENSIBLE, nBlockAlign must be equal to the product of nChannels
-	//and wBitsPerSample divided by 8 (bits per byte).For non - PCM formats, this member must be computed according to the
-	//manufacturer's specification of the format tag.
-	//Software must process a multiple of nBlockAlign bytes of data at a time.Data written to and read from a device
-	//must always start at the beginning of a block.For example, it is illegal to start playback of PCM data in the middle
-	//of a sample(that is, on a non - block - aligned boundary).
+	BYTE* bufferAddress = nullptr;
+	auto result = renderClient->GetBuffer(pushedSamples, &bufferAddress);
+	return GTSL::Result<void*>(GTSL::MoveRef((void*)bufferAddress), true);
+}
 
-	// block_alignment = nChannels * (wBitsPerSample / 8);
-
-	if constexpr (_DEBUG)
-	{
-		UINT32 numFramesAvailable;
-		GetAvailableBufferFrames(numFramesAvailable);
-		GTSL_ASSERT(numFramesAvailable >= pushedSamples, "Pushing more samples than what buffer can handle!");
-	}
-	
-	BYTE* buffer_address = nullptr;
-	GTSL_ASSERT(renderClient->GetBuffer(pushedSamples, &buffer_address) == S_OK, "IAudioRenderClient::GetBuffer failed");
-	memcpy(buffer_address, data, static_cast<uint64>(pushedSamples) * pwfx.Format.nBlockAlign);
-	GTSL_ASSERT(renderClient->ReleaseBuffer(pushedSamples, 0) == S_OK, "IAudioRenderClient::ReleaseBuffer failed");
+bool WindowsAudioDevice::realeaseBuffer(uint32 pushedSamples)
+{
+	return renderClient->ReleaseBuffer(pushedSamples, 0) == S_OK;
 }
 
 void WindowsAudioDevice::Stop() const { audioClient->Stop(); }

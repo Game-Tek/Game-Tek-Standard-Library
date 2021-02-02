@@ -15,24 +15,22 @@ File::~File()
 
 void File::OpenFile(const Range<const UTF8*> path, const AccessMode::value_type accessMode, const OpenMode openMode)
 {
-	DWORD access_mode{ 0 };
+	DWORD desiredAccess = 0;  DWORD shareMode = 0;
 
-	if (static_cast<uint8>(accessMode) & static_cast<uint8>(AccessMode::READ)) { access_mode |= GENERIC_READ; }
-	if (static_cast<uint8>(accessMode) & static_cast<uint8>(AccessMode::WRITE)) { access_mode |= GENERIC_WRITE; }
+	if (static_cast<uint8>(accessMode) & static_cast<uint8>(AccessMode::READ)) { desiredAccess |= GENERIC_READ; shareMode |= FILE_SHARE_READ; }
+	if (static_cast<uint8>(accessMode) & static_cast<uint8>(AccessMode::WRITE)) { desiredAccess |= GENERIC_WRITE; }
 
-	DWORD open_mode{ 0 };
+	DWORD creationDisposition = 0;
 
 	switch (openMode)
 	{
-		case OpenMode::LEAVE_CONTENTS: open_mode = OPEN_ALWAYS; break;
-		case OpenMode::CLEAR: open_mode = CREATE_ALWAYS; break;
+		case OpenMode::LEAVE_CONTENTS: creationDisposition = OPEN_ALWAYS; break;
+		case OpenMode::CLEAR: creationDisposition = CREATE_ALWAYS; break;
 		default: GTSL_ASSERT(false, "");
 	}
 
-	StaticString<MAX_PATH> win32_path(path);
-	win32_path += '\0';
-	fileHandle = CreateFileA(win32_path.begin(), access_mode, 0, nullptr, open_mode, FILE_ATTRIBUTE_NORMAL, nullptr);
-	const auto w = GetLastError();
+	fileHandle = CreateFileA(path.begin(), desiredAccess, shareMode, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
+	const auto	w = GetLastError();
 	GTSL_ASSERT(w == ERROR_SUCCESS || w == ERROR_ALREADY_EXISTS, "Win32 Error!");
 }
 
