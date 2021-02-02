@@ -15,20 +15,37 @@ namespace AAL
 		WindowsAudioDevice() = default;
 		~WindowsAudioDevice() = default;
 
-		void Initialize(const CreateInfo& audioDeviceCreateInfo);
-		
-		void CreateAudioStream(StreamShareMode shareMode, MixFormat mixFormat);
-		
-		void Destroy();
-
-		MixFormat GetMixFormat() const;
-
-		bool IsMixFormatSupported(StreamShareMode shareMode, MixFormat mixFormat) const;
-		
 		/**
 		* \brief Initializes the audio device to start receiving audio. Must be called before any other function.
 		*/
+		void Initialize(const CreateInfo& audioDeviceCreateInfo);
+		
+		/**
+		 * \brief Return the optimal mix format supported by the audio device. Must be called after initialize.
+		 * \return MixFormat supported by the audio device.
+		 */
+		MixFormat GetMixFormat() const;
+		
+		/**
+		 * \brief Queries the audio device for support of the specified format with the specified share mode.
+		 * \param shareMode Shared mode to query support for.
+		 * \param mixFormat Mix format to check support for.
+		 * \return Wheter the format is supported(true) or not(false).
+		 */
+		bool IsMixFormatSupported(StreamShareMode shareMode, MixFormat mixFormat) const;
+		
+		/**
+		 * \brief Creates the audio stream with the requested parameters. The user must make sure the utilized parameter combination is supported by querying the suport function.
+		 * \param shareMode Share mode to initialize the audio stream with.
+		 * \param mixFormat Mix format to initialize the audio stream with.
+		 */
+		void CreateAudioStream(StreamShareMode shareMode, MixFormat mixFormat);
+		
+		/**
+		 * \brief Starts the audio stream. No samples can be pushed if the stream is not started.
+		 */
 		void Start() const;
+	
 		
 		/**
 		* \brief Sets the passed variable as the available size in the allocated buffer.
@@ -44,26 +61,29 @@ namespace AAL
 		void GetBufferFrameCount(GTSL::uint32& totalBufferFrames) const;
 		
 		/**
-		* \brief Pushes the audio data found in the passed in buffer for the amount of specified samples to the audio buffer, making such data available for the next request from the driver to retrieve audio data.
-		* \param data Pointer to the buffer containing the audio data to be used for filling the audio buffer.
-		* \param pushedSamples Number of audio samples to copy from the passed pointer to the audio buffer.
+		* \brief Invokes a function to push audio data for the amount of specified samples to the audio device buffer, making such data available for the next request from the driver to retrieve audio data.
+		* \param copyFunction Callable object taking a uint32 specifying the size in bytes to copy, and a void* to copy the data to.
+		* \param pushedSamples Number of audio frames to copy to the audio buffer.
 		*/
 		template<typename F>
 		bool PushAudioData(F&& copyFunction, GTSL::uint32 pushedSamples) const
-		{
-			// block_alignment = nChannels * (wBitsPerSample / 8);
-			
+		{			
 			auto getResult = getBuffer(pushedSamples);
 			if(!getResult.State()) { return false; }
-			copyFunction(pushedSamples * blockAlign, getResult.Get());
+			copyFunction(pushedSamples * frameSize, getResult.Get());
 			auto releaseResult = realeaseBuffer(pushedSamples);
 			if (!releaseResult) { return false; }
 		}
 		
 		/**
-		 * \brief Shutdowns and destroys the audio device resources. Must be called before destroying the audio device, no other functions shall be called after this.
+		 * \brief Stops the audio stream. No samples can be pushed if the stream is not started. Must be called before destroying the audio device, no other functions shall be called after this.
 		*/
 		void Stop() const;
+
+		/**
+		 * \brief Destroys all remaining audio device resources.
+		 */
+		void Destroy();
 
 	private:
 		/**
@@ -84,6 +104,7 @@ namespace AAL
 		 * (for a shared-mode stream) or the hardware buffer of an audio endpoint device (for an exclusive-mode stream).
 		 */
 		IAudioClient* audioClient = nullptr;
+		
 		/**
 		 * \brief The IAudioRenderClient interface enables a client to write output data to a rendering endpoint buffer.
 		 * The client obtains a reference to the IAudioRenderClient interface of a stream object by calling the IAudioClient::GetService method
@@ -91,11 +112,11 @@ namespace AAL
 		 */
 		IAudioRenderClient* renderClient = nullptr;
 
-		GTSL::uint32 blockAlign = 0;
+		GTSL::uint32 frameSize = 0;
 
 		GTSL::uint32 bufferFrameCount = 0;
 
-		GTSL::Result<void*> getBuffer(GTSL::uint32 pushedSamples);
-		bool realeaseBuffer(GTSL::uint32 pushedSamples);
+		GTSL::Result<void*> getBuffer(GTSL::uint32 pushedSamples) const;
+		bool realeaseBuffer(GTSL::uint32 pushedSamples) const;
 	};
 }

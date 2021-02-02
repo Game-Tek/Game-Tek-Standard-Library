@@ -31,16 +31,16 @@ void WindowsAudioDevice::CreateAudioStream(StreamShareMode shareMode, MixFormat 
 	pwfx.Format.nChannels = 2;
 	pwfx.Format.nSamplesPerSec = mixFormat.SamplesPerSecond;
 	pwfx.Format.wBitsPerSample = pwfx.Samples.wValidBitsPerSample = mixFormat.BitsPerSample;
-	pwfx.Format.nBlockAlign = 2u * (mixFormat.BitsPerSample / 8u);
-	if (mixFormat.BitsPerSample == 24)
+	pwfx.Format.nBlockAlign = mixFormat.GetFrameSize();
+	if (mixFormat.BitsPerSample == 24) // Most devices using WASAPI prefer 24 bits padded to 32 bits per sample.
 	{
-		pwfx.Format.wBitsPerSample = 32;
-		pwfx.Format.nBlockAlign = 2 * (32 / 8);
+		mixFormat.BitsPerSample = 32;
+		pwfx.Format.nBlockAlign = mixFormat.GetFrameSize();
 	}
 	pwfx.SubFormat = GUID{ STATIC_KSDATAFORMAT_SUBTYPE_PCM };
 	pwfx.Format.nAvgBytesPerSec = mixFormat.SamplesPerSecond * pwfx.Format.nBlockAlign;
 
-	blockAlign = pwfx.Format.nBlockAlign;
+	frameSize = pwfx.Format.nBlockAlign;
 	
 	_AUDCLNT_SHAREMODE win_share_mode{};
 	switch (shareMode)
@@ -101,9 +101,8 @@ AudioDevice::MixFormat WindowsAudioDevice::GetMixFormat() const
 	GTSL_ASSERT(waveformatex->Format.wFormatTag == WAVE_FORMAT_PCM, "Format mismatch!");
 	
 	mixFormat.NumberOfChannels = waveformatex->Format.nChannels;
-	mixFormat.BlockAlign = waveformatex->Format.nBlockAlign;
 	mixFormat.SamplesPerSecond = waveformatex->Format.nSamplesPerSec;
-	mixFormat.BitsPerSample = waveformatex->Format.wBitsPerSample;
+	mixFormat.BitsPerSample = waveformatex->Format.wBitsPerSample == 24 ? 32 : waveformatex->Format.wBitsPerSample; // Most devices using WASAPI prefer 24 bits padded to 32 bits per sample.
 
 	CoTaskMemFree(waveformatex);
 
@@ -115,8 +114,8 @@ bool WindowsAudioDevice::IsMixFormatSupported(StreamShareMode shareMode, AudioDe
 	WAVEFORMATEX waveformatex; WAVEFORMATEXTENSIBLE* closestMatch;
 
 	waveformatex.wFormatTag = WAVE_FORMAT_PCM;
-	waveformatex.cbSize = 0;
-	waveformatex.nBlockAlign = mixFormat.BlockAlign;
+	waveformatex.cbSize = 0; //extra data size if using WAVEFORMATEXTENSIBLE, this parameter is ignored since format is PCM but for correctness we set it to 0
+	waveformatex.nBlockAlign = mixFormat.GetFrameSize();
 	waveformatex.nChannels = mixFormat.NumberOfChannels;
 	waveformatex.nSamplesPerSec = mixFormat.SamplesPerSecond;
 	waveformatex.wBitsPerSample = mixFormat.BitsPerSample;
@@ -157,14 +156,14 @@ void WindowsAudioDevice::GetBufferFrameCount(uint32& totalBufferFrames) const
 	audioClient->GetBufferSize(&totalBufferFrames);
 }
 
-GTSL::Result<void*> WindowsAudioDevice::getBuffer(uint32 pushedSamples)
+GTSL::Result<void*> WindowsAudioDevice::getBuffer(uint32 pushedSamples) const
 {
 	BYTE* bufferAddress = nullptr;
 	auto result = renderClient->GetBuffer(pushedSamples, &bufferAddress);
-	return GTSL::Result<void*>(GTSL::MoveRef((void*)bufferAddress), true);
+	return GTSL::Result<void*>(GTSL::MoveRef((void*)bufferAddress), result == S_OK);
 }
 
-bool WindowsAudioDevice::realeaseBuffer(uint32 pushedSamples)
+bool WindowsAudioDevice::realeaseBuffer(uint32 pushedSamples) const
 {
 	return renderClient->ReleaseBuffer(pushedSamples, 0) == S_OK;
 }

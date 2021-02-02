@@ -18,14 +18,16 @@ namespace AAL
 			GTSL::uint8 NumberOfChannels;
 			GTSL::uint32 SamplesPerSecond;
 			GTSL::uint8 BitsPerSample;
+
+			GTSL::uint32 GetBytesPerSample() const { return BitsPerSample / 8; }
 			
 			/**
-			 * \brief Block alignment, in bytes. The block alignment is the minimum atomic unit of data for the format.
-			 * nBlockAlign must be equal to the product of nChannels and * wBitsPerSample divided by 8 (bits per byte).
-			 * Software must process a multiple of nBlockAlign bytes of data at a time. Data written to and read from a device must always start at the beginning of a block.
+			 * \brief Frame size, in bytes. The frame size is the minimum atomic unit of data for the format.
+			 * Frane size is equal to the product of NumberChannels and BitsPerSample divided by 8 (bytes per sample).
+			 * Software must process a multiple of BlockAlignment bytes of data at a time. Data written to and read from a device must always start at the beginning of a block.
 			 * For example, it is illegal to start playback of PCM data in the middle of a sample (that is, on a non-block-aligned boundary).
 			 */
-			GTSL::uint32 BlockAlign;
+			GTSL::uint32 GetFrameSize() const { return NumberOfChannels * GetBytesPerSample(); }
 		};
 		
 		struct CreateInfo
