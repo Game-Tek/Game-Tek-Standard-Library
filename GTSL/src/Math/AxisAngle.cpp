@@ -5,14 +5,14 @@
 
 using namespace GTSL;
 
-AxisAngle::AxisAngle(const Vector3& vector, const float32 angle) : X(vector.X), Y(vector.Y), Z(vector.Z), Angle(angle)
+AxisAngle::AxisAngle(const Vector3& vector, const float32 angle) : X(vector.X()), Y(vector.Y()), Z(vector.Z()), Angle(angle)
 {
 }
 
-AxisAngle::AxisAngle(const Quaternion& quaternion) : Angle(2.0f * Math::ArcCosine(quaternion.Q))
+AxisAngle::AxisAngle(const Quaternion& quaternion) : Angle(2.0f * Math::ArcCosine(quaternion.W()))
 {
-	SIMD128<float32> components(quaternion.X, quaternion.Y, quaternion.Z, quaternion.Q);
-	const SIMD128<float32> sqrt(1 - quaternion.Q * quaternion.Q);
+	SIMD128<float32> components(quaternion.X(), quaternion.Y(), quaternion.Z(), quaternion.W());
+	const SIMD128<float32> sqrt(1 - quaternion.W() * quaternion.W());
 	components /= sqrt;
 	alignas(16) float data[4];
 	components.CopyTo(AlignedPointer<float32, 16>(data));

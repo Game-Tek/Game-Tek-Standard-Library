@@ -39,6 +39,12 @@ namespace GTSL
 			another.callee = nullptr; another.callerFunction = nullptr;
 		}
 
+		template<typename R, typename... A>
+		Delegate(Delegate<R(A...)> other) noexcept : callerFunction(reinterpret_cast<RET(*)(void*, ARGS&&...)>(other.callerFunction)), callee(other.callee)
+		{
+			static_assert(sizeof(other) == sizeof(decltype(*this)), "Size doesn't match. Illegal conversion!");
+		}
+		
 		//template <RET(*FUNCTION)(PARAMS ...)>
 		//explicit Delegate() : callerFunction(&functionCaller<FUNCTION>), callee(nullptr)
 		//{}
@@ -90,7 +96,9 @@ namespace GTSL
 
 		RET operator()(ARGS... args) const { return (*callerFunction)(callee, GTSL::ForwardRef<ARGS>(args)...); }
 
-	private:		
+	private:
+		friend class Delegate;
+		
 		RET(*callerFunction)(void*, ARGS&&...) { nullptr };
 		void* callee{ nullptr };
 

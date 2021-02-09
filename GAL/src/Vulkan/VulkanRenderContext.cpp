@@ -12,6 +12,30 @@
 
 #include "GAL/Vulkan/VulkanSynchronization.h"
 
+
+VkPresentModeKHR PresentModesToVkPresentModeKHR(const GAL::PresentModes presentModes)
+{
+	switch (presentModes) {
+	case GAL::PresentModes::FIFO: return VK_PRESENT_MODE_FIFO_KHR;
+	case GAL::PresentModes::SWAP: return VK_PRESENT_MODE_MAILBOX_KHR;
+	default: return VK_PRESENT_MODE_MAX_ENUM_KHR;
+	}
+}
+
+GAL::PresentModes VkPresentModeKHRToPresentModes(const VkPresentModeKHR presentModes)
+{
+	switch (presentModes) {
+	case VK_PRESENT_MODE_FIFO_KHR: return GAL::PresentModes::FIFO;
+	case VK_PRESENT_MODE_FIFO_RELAXED_KHR: return GAL::PresentModes::FIFO;
+	case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR: return GAL::PresentModes::SWAP;
+	case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR: return GAL::PresentModes::SWAP;
+	case VK_PRESENT_MODE_MAX_ENUM_KHR: return GAL::PresentModes::SWAP;
+	case VK_PRESENT_MODE_IMMEDIATE_KHR: return GAL::PresentModes::FIFO;
+	case VK_PRESENT_MODE_MAILBOX_KHR:  return GAL::PresentModes::SWAP;
+	default: return GAL::PresentModes::SWAP;
+	}
+}
+
 GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo)
 {
 	VkSwapchainCreateInfoKHR vkSwapchainCreateInfoKhr{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
@@ -28,7 +52,7 @@ GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo)
 	vkSwapchainCreateInfoKhr.pQueueFamilyIndices = nullptr;
 	vkSwapchainCreateInfoKhr.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 	vkSwapchainCreateInfoKhr.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	vkSwapchainCreateInfoKhr.presentMode = static_cast<VkPresentModeKHR>(createInfo.PresentMode);
+	vkSwapchainCreateInfoKhr.presentMode = PresentModesToVkPresentModeKHR(createInfo.PresentMode);
 	vkSwapchainCreateInfoKhr.clipped = VK_TRUE;
 	vkSwapchainCreateInfoKhr.oldSwapchain = nullptr;
 
@@ -58,7 +82,7 @@ void GAL::VulkanRenderContext::Recreate(const RecreateInfo& resizeInfo)
 	vkSwapchainCreateInfoKhr.pQueueFamilyIndices = nullptr;
 	vkSwapchainCreateInfoKhr.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 	vkSwapchainCreateInfoKhr.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	vkSwapchainCreateInfoKhr.presentMode = static_cast<VkPresentModeKHR>(resizeInfo.PresentMode);
+	vkSwapchainCreateInfoKhr.presentMode = PresentModesToVkPresentModeKHR(resizeInfo.PresentMode);
 	vkSwapchainCreateInfoKhr.clipped = VK_TRUE;
 	vkSwapchainCreateInfoKhr.oldSwapchain = static_cast<VkSwapchainKHR>(swapchain);
 
@@ -146,11 +170,11 @@ GTSL::Array<GAL::VulkanTexture, 8> GAL::VulkanRenderContext::GetTextures(const G
 	return vkImages;
 }
 
-GAL::VulkanSurface::VulkanSurface(const CreateInfo& createInfo)
+void GAL::VulkanSurface::Initialize(const CreateInfo& createInfo)
 {
 	VkWin32SurfaceCreateInfoKHR vkWin32SurfaceCreateInfoKhr{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
-	vkWin32SurfaceCreateInfoKhr.hwnd = static_cast<HWND>(createInfo.SystemData->WindowHandle);
-	vkWin32SurfaceCreateInfoKhr.hinstance = static_cast<HINSTANCE>(createInfo.SystemData->InstanceHandle);
+	vkWin32SurfaceCreateInfoKhr.hwnd = static_cast<HWND>(createInfo.SystemData.WindowHandle);
+	vkWin32SurfaceCreateInfoKhr.hinstance = static_cast<HINSTANCE>(createInfo.SystemData.InstanceHandle);
 	VK_CHECK(vkCreateWin32SurfaceKHR(createInfo.RenderDevice->GetVkInstance(), &vkWin32SurfaceCreateInfoKhr, createInfo.RenderDevice->GetVkAllocationCallbacks(), reinterpret_cast<VkSurfaceKHR*>(&surface)));
 	SET_NAME(surface, VK_OBJECT_TYPE_SURFACE_KHR, createInfo);
 }
@@ -178,17 +202,17 @@ GTSL::Array<GTSL::Pair<GAL::VulkanColorSpace, GAL::VulkanTextureFormat>, 16> GAL
 	return result;
 }
 
-GTSL::Array<GAL::VulkanPresentMode, 4> GAL::VulkanSurface::GetSupportedPresentModes(VulkanRenderDevice* renderDevice) const
+GTSL::Array<GAL::PresentModes, 4> GAL::VulkanSurface::GetSupportedPresentModes(VulkanRenderDevice* renderDevice) const
 {
 	GTSL::uint32 presentModesCount = 0;
 	vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &presentModesCount, nullptr);
 	GTSL::Array<VkPresentModeKHR, 8> vkPresentModes(presentModesCount);
 	vkGetPhysicalDeviceSurfacePresentModesKHR(renderDevice->GetVkPhysicalDevice(), static_cast<VkSurfaceKHR>(surface), &presentModesCount, vkPresentModes.begin());
 
-	GTSL::Array<GAL::VulkanPresentMode, 4> result;
+	GTSL::Array<PresentModes, 4> result;
 	
 	for (auto presentMode : vkPresentModes) {
-		result.EmplaceBack(static_cast<VulkanPresentMode>(presentMode));
+		result.EmplaceBack(VkPresentModeKHRToPresentModes(presentMode));
 	}
 
 	return result;

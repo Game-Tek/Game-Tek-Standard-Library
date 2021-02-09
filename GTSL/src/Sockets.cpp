@@ -9,8 +9,6 @@ using namespace GTSL;
 #define WIN32_LEAN_AND_MEAN
 #if (_WIN32)
 #include <WinSock2.h>
-#pragma comment(lib, "wsock32.lib")
-
 typedef int socklen_t;
 #endif
 

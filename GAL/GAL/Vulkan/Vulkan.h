@@ -474,21 +474,6 @@ namespace GAL
 		DEPTH32_STENCIL8 = 130
 	};
 	
-	/**
-	* \brief Enumeration of all possible presentation modes, which define the order at which the rendered images are presented to the screen.
-	*/
-	enum class VulkanPresentMode : GTSL::uint32
-	{
-		/**
-		* \brief The last rendered image is the one which will be presented. Best for when latency is important and energy consumption is not.
-		*/
-		SWAP = 1,
-		/**
-		* \brief All rendered images are queued in FIFO fashion and presented at V-BLANK. Best for when latency is not that important and energy consumption is.
-		*/
-		FIFO = 2,
-	};
-	
 	struct VulkanBufferType : GTSL::Flags<GTSL::uint32>
 	{
 		static constexpr value_type	TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, UNIFORM = 16, STORAGE = 0x00000020, INDEX = 64, VERTEX = 128, ADDRESS = 0x00020000;

@@ -126,7 +126,7 @@ void GTSL::Window::Win32_calculateMousePos(const uint32 x, const uint32 y, GTSL:
 {
 	const auto halfX = static_cast<float>(clientSize.Width) * 0.5f;
 	const auto halfY = static_cast<float>(clientSize.Height) * 0.5f;
-	mousePos.X = (x - halfX) / halfX; mousePos.Y = (halfY - y) / halfY;
+	mousePos.X() = (x - halfX) / halfX; mousePos.Y() = (halfY - y) / halfY;
 }
 
 void GTSL::Window::Win32_translateKeys(const uint64 win32Key, uint64 context, KeyboardKeys& key)

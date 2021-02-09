@@ -3,8 +3,9 @@
 #include "DX12.h"
 #include <dxgi1_6.h>
 
-#include "GAL/RenderContext.h"
+#include "GAL/RenderCore.h"
 #include "GTSL/Extent.h"
+#include <GAL/Vulkan/VulkanRenderContext.h>
 
 namespace GAL
 {
@@ -33,7 +34,7 @@ namespace GAL
 		{
 			GTSL::Extent2D SurfaceArea;
 			GTSL::uint8 DesiredFramesInFlight = 0;
-			DX12PresentMode PresentMode;
+			PresentModes PresentMode;
 			DX12TextureFormat Format;
 			//VulkanColorSpace ColorSpace;
 			//VulkanTextureUses::value_type TextureUses;
@@ -46,7 +47,7 @@ namespace GAL
 		{
 			GTSL::Extent2D SurfaceArea;
 			GTSL::uint8 DesiredFramesInFlight = 0;
-			DX12PresentMode PresentMode;
+			PresentModes PresentMode;
 			DX12TextureFormat Format;
 			//VulkanColorSpace ColorSpace;
 			//VulkanTextureUses::value_type TextureUses;
@@ -56,8 +57,9 @@ namespace GAL
 		void Recreate(const RecreateInfo& info);
 		
 		~DX12RenderContext();
-		
+
+		void Present(const DX12RenderDevice* renderDevice, GTSL::Range<const GTSL::uint32*> waitSemaphores, GTSL::uint32 imageIndex, DX12Queue queue);
 	private:
-		IDXGISwapChain4* swapChain4 = nullptr;
+		IDXGISwapChain4* swapChain4 = nullptr; bool vSync = false; bool tear = false;
 	};
 }

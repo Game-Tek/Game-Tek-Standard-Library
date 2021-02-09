@@ -148,18 +148,6 @@ namespace GAL
 		BOOL = 60
 	};
 	
-	enum class DX12PresentMode
-	{
-		/**
-		* \brief The last rendered image is the one which will be presented. Best for when latency is important and energy consumption is not.
-		*/
-		SWAP = 2048,
-		/**
-		* \brief All rendered images are queued in FIFO fashion and presented at V-BLANK. Best for when latency is not that important and energy consumption is.
-		*/
-		FIFO = 2048,
-	};
-	
 	enum class DX12TextureFormat
 	{
 		UNDEFINED = 0,

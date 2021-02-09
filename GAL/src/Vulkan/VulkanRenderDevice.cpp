@@ -102,18 +102,20 @@ GAL::GPUInfo GAL::VulkanRenderDevice::GetGPUInfo()
 	return result;
 }
 
+#define TRANSLATE_MASK(toVal, fromVar, fromVal, toVar) GTSL::SetBitAs(GTSL::FindFirstSetBit(toVal), fromVar & (fromVal), toVar)
+
 GAL::VulkanTextureFormat GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const FindSupportedImageFormat& findSupportedImageFormat) const
 {
 	VkFormatProperties format_properties;
 
 	VkFormatFeatureFlags features{};
 
-	SetBitAs(FindFirstSetBit(VK_FORMAT_FEATURE_TRANSFER_SRC_BIT), findSupportedImageFormat.TextureUses & VulkanTextureUses::TRANSFER_SOURCE, features);
-	SetBitAs(FindFirstSetBit(VK_FORMAT_FEATURE_TRANSFER_DST_BIT), findSupportedImageFormat.TextureUses & VulkanTextureUses::TRANSFER_DESTINATION, features);
-	SetBitAs(FindFirstSetBit(VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT), findSupportedImageFormat.TextureUses & VulkanTextureUses::SAMPLE, features);
-	SetBitAs(FindFirstSetBit(VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT), findSupportedImageFormat.TextureUses & VulkanTextureUses::STORAGE, features);
-	SetBitAs(FindFirstSetBit(VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT), findSupportedImageFormat.TextureUses & VulkanTextureUses::COLOR_ATTACHMENT, features);
-	SetBitAs(FindFirstSetBit(VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT), findSupportedImageFormat.TextureUses & VulkanTextureUses::DEPTH_STENCIL_ATTACHMENT, features);
+	TRANSLATE_MASK(VK_FORMAT_FEATURE_TRANSFER_SRC_BIT, findSupportedImageFormat.TextureUses, VulkanTextureUses::TRANSFER_SOURCE, features);
+	TRANSLATE_MASK(VK_FORMAT_FEATURE_TRANSFER_DST_BIT, findSupportedImageFormat.TextureUses, VulkanTextureUses::TRANSFER_DESTINATION, features);
+	TRANSLATE_MASK(VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, findSupportedImageFormat.TextureUses, VulkanTextureUses::SAMPLE, features);
+	TRANSLATE_MASK(VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT, findSupportedImageFormat.TextureUses, VulkanTextureUses::STORAGE, features);
+	TRANSLATE_MASK(VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT, findSupportedImageFormat.TextureUses, VulkanTextureUses::COLOR_ATTACHMENT, features);
+	TRANSLATE_MASK(VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT, findSupportedImageFormat.TextureUses, VulkanTextureUses::DEPTH_STENCIL_ATTACHMENT, features);
 	
 	for (auto e : findSupportedImageFormat.Candidates)
 	{

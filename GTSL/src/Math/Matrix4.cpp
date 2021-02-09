@@ -11,15 +11,15 @@ using namespace GTSL;
 //CODE IS CORRECT
 Matrix4::Matrix4(const Quaternion& quaternion)
 {
-	const auto xx = quaternion.X * quaternion.X;
-	const auto xy = quaternion.X * quaternion.Y;
-	const auto xz = quaternion.X * quaternion.Z;
-	const auto xw = quaternion.X * quaternion.Q;
-	const auto yy = quaternion.Y * quaternion.Y;
-	const auto yz = quaternion.Y * quaternion.Z;
-	const auto yw = quaternion.Y * quaternion.Q;
-	const auto zz = quaternion.Z * quaternion.Z;
-	const auto zw = quaternion.Z * quaternion.Q;
+	const auto xx = quaternion.X() * quaternion.X();
+	const auto xy = quaternion.X() * quaternion.Y();
+	const auto xz = quaternion.X() * quaternion.Z();
+	const auto xw = quaternion.X() * quaternion.W();
+	const auto yy = quaternion.Y() * quaternion.Y();
+	const auto yz = quaternion.Y() * quaternion.Z();
+	const auto yw = quaternion.Y() * quaternion.W();
+	const auto zz = quaternion.Z() * quaternion.Z();
+	const auto zw = quaternion.Z() * quaternion.W();
 
 	array[0] = 1 - 2 * (yy + zz);
 	array[1] = 2 * (xy - zw);
@@ -107,12 +107,12 @@ Vector4 Matrix4::operator*(const Vector4& other) const
 {
 	alignas(16) Vector4 Result;
 
-	const auto P1(SIMD128<float32>(AlignedPointer<const float32, 16>(&other.X)) * SIMD128<float32>(AlignedPointer<const float32, 16>(&array[0])));
-	const auto P2(SIMD128<float32>(AlignedPointer<const float32, 16>(&other.Y)) * SIMD128<float32>(AlignedPointer<const float32, 16>(&array[4])));
-	const auto P3(SIMD128<float32>(AlignedPointer<const float32, 16>(&other.Z)) * SIMD128<float32>(AlignedPointer<const float32, 16>(&array[8])));
-	const auto P4(SIMD128<float32>(AlignedPointer<const float32, 16>(&other.W)) * SIMD128<float32>(AlignedPointer<const float32, 16>(&array[12])));
+	const auto P1(SIMD128<float32>(AlignedPointer<const float32, 16>(other.GetData())) * SIMD128<float32>(AlignedPointer<const float32, 16>(&array[0])));
+	const auto P2(SIMD128<float32>(AlignedPointer<const float32, 16>(other.GetData())) * SIMD128<float32>(AlignedPointer<const float32, 16>(&array[4])));
+	const auto P3(SIMD128<float32>(AlignedPointer<const float32, 16>(other.GetData())) * SIMD128<float32>(AlignedPointer<const float32, 16>(&array[8])));
+	const auto P4(SIMD128<float32>(AlignedPointer<const float32, 16>(other.GetData())) * SIMD128<float32>(AlignedPointer<const float32, 16>(&array[12])));
 
-	SIMD128<float32>(P1 + P2 + P3 + P4).CopyTo(AlignedPointer<float32, 16>(&Result.X));
+	SIMD128<float32>(P1 + P2 + P3 + P4).CopyTo(AlignedPointer<float32, 16>(Result.GetData()));
 
 	return Result;
 }

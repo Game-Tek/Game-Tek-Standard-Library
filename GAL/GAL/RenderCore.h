@@ -292,6 +292,19 @@ namespace GAL
 		DEPTH32_STENCIL8 = 130
 	};
 
+	enum class PresentModes : GTSL::uint8
+	{
+		/**
+		* \brief All rendered images are queued in FIFO fashion and presented at V-BLANK. Best for when latency is not that important and energy consumption is.
+		*/
+		FIFO = 0,
+		
+		/**
+		* \brief The last rendered image is the one which will be presented. Best for when latency is important and energy consumption is not.
+		*/
+		SWAP = 1
+	};
+	
 	inline GTSL::uint8 ShaderDataTypesSize(const ShaderDataType type)
 	{
 		switch (type)

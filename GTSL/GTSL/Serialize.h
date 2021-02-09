@@ -84,10 +84,10 @@ namespace GTSL
 	template<typename T, class ALLOCATOR1, class ALLOCATOR2>
 	void Insert(const FlatHashMap<T, ALLOCATOR1>& map, Buffer<ALLOCATOR2>& buffer)
 	{
-		Insert(map.capacity, buffer);
+		Insert(map.bucketCount, buffer);
 		Insert(map.maxBucketLength, buffer);
 
-		for(uint32 bucket = 0; bucket < map.capacity; ++bucket)
+		for(uint32 bucket = 0; bucket < map.bucketCount; ++bucket)
 		{
 			Insert(map.getBucketLength(bucket), buffer);
 			auto keysBucket = map.getKeysBucket(bucket);

@@ -81,9 +81,6 @@
     <ClInclude Include="GTSL\Vector.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\FixedVector.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\GamepadQuery.h">
       <Filter>Header Files</Filter>
     </ClInclude>

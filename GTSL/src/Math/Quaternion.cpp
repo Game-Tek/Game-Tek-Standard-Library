@@ -16,17 +16,13 @@ Quaternion::Quaternion(const Rotator& rotator)
 	const auto cr = Math::Cosine(rotator.Z * 0.5f);
 	const auto sr = Math::Sine(rotator.Z   * 0.5f);
 
-	X = sy * cp * cr - cy * sp * sr;
-	Y = sy * cp * sr + cy * sp * cr;
-	Z = cy * cp * sr - sy * sp * cr;
-	Q = cy * cp * cr + sy * sp * sr;
+	X() = sy * cp * cr - cy * sp * sr;
+	Y() = sy * cp * sr + cy * sp * cr;
+	Z() = cy * cp * sr - sy * sp * cr;
+	W() = cy * cp * cr + sy * sp * sr;
 }
 
-Quaternion::Quaternion(const AxisAngle& axisAngle) :
-	X(axisAngle.X * Math::Sine(axisAngle.Angle / 2)),
-	Y(axisAngle.Y * Math::Sine(axisAngle.Angle / 2)),
-	Z(axisAngle.Z * Math::Sine(axisAngle.Angle / 2)),
-	Q(Math::Cosine(axisAngle.Angle / 2))
+Quaternion::Quaternion(const AxisAngle& axisAngle) : Vector4(axisAngle.X * Math::Sine(axisAngle.Angle / 2), axisAngle.Y * Math::Sine(axisAngle.Angle / 2), axisAngle.Z * Math::Sine(axisAngle.Angle / 2), Math::Cosine(axisAngle.Angle / 2))
 {
 }
 
@@ -95,10 +91,10 @@ Quaternion& Quaternion::operator*=(const Quaternion& other)
 	//Z = Q * other.Z + Z * other.Q + X * other.Y - Y * other.X;
 	//Q = Q * other.Q - X * other.X - Y * other.Y - Z * other.Z;
 
-	X = Q * other.X + X * other.Q + Y * other.Z - Z * other.Y;
-	Y = Q * other.Y + Y * other.Q + Z * other.X - X * other.Z;
-	Z = Q * other.Z + Z * other.Q + X * other.Y - Y * other.X;
-	Q = Q * other.Q - X * other.X - Y * other.Y - Z * other.Z;
+	X() = W() * other.X() + X() * other.W() + Y() * other.Z() - Z() * other.Y();
+	Y() = W() * other.Y() + Y() * other.W() + Z() * other.X() - X() * other.Z();
+	Z() = W() * other.Z() + Z() * other.W() + X() * other.Y() - Y() * other.X();
+	W() = W() * other.W() - X() * other.X() - Y() * other.Y() - Z() * other.Z();
 	
 	return *this;
 }

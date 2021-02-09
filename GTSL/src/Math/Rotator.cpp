@@ -6,6 +6,6 @@
 
 using namespace GTSL;
 
-Rotator::Rotator(const Vector3& vector) : X(Math::ArcSine(vector.Y)), Y(Math::ArcSine(vector.X / Math::Cosine(X)))
+Rotator::Rotator(const Vector3& vector) : X(Math::ArcSine(vector.Y())), Y(Math::ArcSine(vector.X() / Math::Cosine(X)))
 {
 }

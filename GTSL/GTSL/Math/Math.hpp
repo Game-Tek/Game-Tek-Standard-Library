@@ -258,7 +258,7 @@ namespace GTSL
 		template<>
 		static void MinMax(Vector2 a, Vector2 b, Vector2& min, Vector2& max)
 		{
-			MinMax(a.X, b.X, min.X, max.X); MinMax(a.Y, b.Y, min.Y, max.Y);
+			MinMax(a.X(), b.X(), min.X(), max.X()); MinMax(a.Y(), b.Y(), min.Y(), max.Y());
 		}
 
 		//Returns 1 if A is bigger than 0. 0 if A is equal to 0. and -1 if A is less than 0.
@@ -290,7 +290,7 @@ namespace GTSL
 
 		static Vector2 Lerp(const Vector2 a, const Vector2 b, const float32 alpha)
 		{
-			return Vector2(Lerp(a.X, b.X, alpha), Lerp(a.Y, b.Y, alpha));
+			return Vector2(Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha));
 		}
 
 		static float32 Square(const float32 a) { return a * a; }
@@ -301,6 +301,16 @@ namespace GTSL
 			return (Target - Current) * DT * InterpSpeed + Current;
 		}
 
+		static uint32 InvertRange(const uint32 a, const uint32 max)
+		{
+			return max - a;
+		}
+
+		static float32 InvertRange(const float32 a, const float32 max)
+		{
+			return max - a;
+		}
+		
 		static float32 MapToRange(const float32 x, const float32 inMin, const float32 inMax, const float32 outMin, const float32 outMax)
 		{
 			if ((inMax - inMin) != 0.0f)
@@ -314,10 +324,10 @@ namespace GTSL
 
 		static Vector2 MapToRange(const GTSL::Vector2 A, const Vector2 matrixin, const Vector2 matrixax, const Vector2 OutMin, const Vector2 OutMax)
 		{
-			return Vector2(MapToRange(A.X, matrixin.X, matrixax.X, OutMin.X, OutMax.X), MapToRange(A.Y, matrixin.Y, matrixax.Y, OutMin.Y, OutMax.Y));
+			return Vector2(MapToRange(A.X(), matrixin.X(), matrixax.X(), OutMin.X(), OutMax.X()), MapToRange(A.Y(), matrixin.Y(), matrixax.Y(), OutMin.Y(), OutMax.Y()));
 		}
 
-		static float32 obMapToRange(const float32 a, const float32 matrixax, const float32 outMax) { return a / (matrixax / outMax); }
+		static float32 MapToRangeZeroToOne(const float32 a, const float32 inMax, const float32 outMax) { return a / (inMax / outMax); }
 
 		static float32 SquareRoot(const float32 a)
 		{
@@ -326,8 +336,7 @@ namespace GTSL
 				constexpr auto error = 0.00001; //define the precision of your result
 				float64 s = a;
 
-				while (s - a / s > error) //loop until precision satisfied 
-				{
+				while (s - a / s > error) { //loop until precision satisfied 
 					s = (s + a / s) / 2.0;
 				}
 
@@ -344,8 +353,7 @@ namespace GTSL
 				constexpr auto error = 0.00001; //define the precision of your result
 				float64 s = a;
 
-				while (s - a / s > error) //loop until precision satisfied 
-				{
+				while (s - a / s > error) { //loop until precision satisfied
 					s = (s + a / s) / 2.0;
 				}
 
@@ -412,119 +420,127 @@ namespace GTSL
 
 		//Calculates the length of a 2D vector.
 		static float32 Length(const Vector2 a) { return SquareRoot(LengthSquared(a)); }
-
 		static float32 Length(const Vector2 a, const Vector2 b) { return SquareRoot(LengthSquared(a, b)); }
-
 		static float32 Length(const Vector3 a) { return SquareRoot(LengthSquared(a)); }
-
 		static float32 Length(const Vector3 a, const Vector3 b) { return SquareRoot(LengthSquared(b - a)); }
-
 		static float32 Length(const Vector4& a) { return SquareRoot(LengthSquared(a)); }
-
 		static float32 Length(const Vector4& a, const Vector4& b)	{ return SquareRoot(LengthSquared(b - a)); }
 
-		static float32 LengthSquared(const Vector2 a) { return a.X * a.X + a.Y * a.Y; }
-
+		static float32 LengthSquared(const Vector2 a) { return a.X() * a.X() + a.Y() * a.Y(); }
+		static float32 LengthSquared(const Vector3& a) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z(); }
+		static float32 LengthSquared(const Vector4& a) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z() + a.W() * a.W(); }
+		
 		static float32 LengthSquared(const Vector2 a, const Vector2 b) { return LengthSquared(b - a); }
 
-		static float32 LengthSquared(const Vector3& a);
-
-		static float32 LengthSquared(const Vector4& a);
-
-		static Vector2 Normalized(const Vector2& a);
-
-		static void Normalize(Vector2& a);
-
-		static Vector3 Normalized(const Vector3& _A);
-
-		static void Normalize(Vector3& a);
-
-		static Vector4 Normalized(const Vector4& a);
-
-		static void Normalize(Vector4& a);
-
-		static float32 DotProduct(const Vector2 a, const Vector2 b) { return a.X * b.X + a.Y * b.Y; }
-
-		static float32 DotProduct(const Vector3& a, const Vector3& b);
-
-		static float32 DotProduct(const Vector4& a, const Vector4& b);
-
-		static Vector3 Cross(const Vector3& a, const Vector3& b);
-
-		static Vector2 Abs(const Vector2& a)
+		static Vector2 Normalized(const Vector2& a)
 		{
-			return Vector2(Abs(a.X), Abs(a.Y));
+			auto length = Length(a); if (length == 0.0f) { return a; }
+			length = 1.0f / length;
+			return Vector2(a.X() * length, a.Y() * length);
+		}
+		static void Normalize(Vector2& a)
+		{
+			auto length = Length(a);
+			if (length == 0.0f) { return; }
+			length = 1.0f / length;
+			a.X() *= length; a.Y() *= length;
+		}
+		static Vector3 Normalized(const Vector3& a)
+		{
+			auto length = Length(a); if (length == 0.0f) { return a; }
+			length = 1.0f / length;
+			return Vector3(a.X() * length, a.Y() * length, a.Z() * length);
+		}
+		static void Normalize(Vector3& a)
+		{
+			auto length = Length(a);
+			if (length == 0.0f) { return; }
+			length = 1.0f / length;
+			a.X() *= length; a.Y() *= length; a.Z() *= length;
+		}
+		static Vector4 Normalized(const Vector4& a)
+		{
+			auto length = Length(a); if (length == 0.0f) { return a; }
+			length = 1.0f / length;
+			return Vector4(a.X() * length, a.Y() * length, a.Z() * length, a.W() * length);
+		}
+		static void Normalize(Vector4& a)
+		{
+			auto length = Length(a);
+			if (length == 0.0f) { return; }
+			length = 1.0f / length;
+			a.X() *= length; a.Y() *= length; a.Z() *= length; a.W() *= length;
+		}
+		static void Normalize(Quaternion& a)
+		{
+			auto length = Length(a);
+			if (length == 0.0f) { a.X() = 1.0f; return; }
+			length = 1.0f / length;
+			a.X() *= length; a.Y() *= length; a.Z() *= length; a.W() *= length;
 		}
 
-		static Vector3 Abs(const Vector3& a)
-		{
-			return Vector3(Abs(a.X), Abs(a.Y), Abs(a.Z));
-		}
+		static float32 DotProduct(const Vector2 a, const Vector2 b) { return a.X() * b.X() + a.Y() * b.Y(); }
+		static float32 DotProduct(const Vector3& a, const Vector3& b) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z(); }
+		static float32 DotProduct(const Vector4& a, const Vector4& b) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z() + a.W() * a.W(); }
 
-		static Vector4 Abs(const Vector4& a);
+		static Vector3 Cross(const Vector3& a, const Vector3& b) { return Vector3(a.Y() * b.Z() - a.Z() * b.Y(), a.Z() * b.X() - a.X() * b.Z(), a.X() * b.Y() - a.Y() * b.X()); }
+
+		static Vector2 Abs(const Vector2 a) { return Vector2(Abs(a.X()), Abs(a.Y())); }
+		static Vector3 Abs(const Vector3& a) { return Vector3(Abs(a.X()), Abs(a.Y()), Abs(a.Z())); }
+		static Vector4 Abs(const Vector4& a) { return Vector4(Abs(a.X()), Abs(a.Y()), Abs(a.Z()), Abs(a.W())); }
 
 		static Vector2 Negated(const Vector2& Vec)
 		{
 			Vector2 Result;
 
-			Result.X = -Vec.X;
-			Result.Y = -Vec.Y;
+			Result.X() = -Vec.X();
+			Result.Y() = -Vec.Y();
 
 			return Result;
 		}
 
-		static void Negate(Vector2& Vec) { Vec.X = -Vec.X; Vec.Y = -Vec.Y; }
+		static void Negate(Vector2& Vec) { Vec.X() = -Vec.X(); Vec.Y() = -Vec.Y(); }
 
 		static Vector3 Negated(const Vector3& Vec)
 		{
 			Vector3 Result;
 
-			Result.X = -Vec.X;
-			Result.Y = -Vec.Y;
-			Result.Z = -Vec.Z;
+			Result.X() = -Vec.X();
+			Result.Y() = -Vec.Y();
+			Result.Z() = -Vec.Z();
 
 			return Result;
 		}
 
-		static void Negate(Vector3& Vec) { Vec.X = -Vec.X; Vec.Y = -Vec.Y; Vec.Z = -Vec.Z; }
+		static void Negate(Vector3& Vec) { Vec.X() = -Vec.X(); Vec.Y() = -Vec.Y(); Vec.Z() = -Vec.Z(); }
 
 		static Vector4 Negated(const Vector4& Vec)
 		{
 			Vector4 Result;
 
-			Result.X = -Vec.X;
-			Result.Y = -Vec.Y;
-			Result.Z = -Vec.Z;
-			Result.W = -Vec.W;
+			Result.X() = -Vec.X();
+			Result.Y() = -Vec.Y();
+			Result.Z() = -Vec.Z();
+			Result.W() = -Vec.W();
 
 			return Result;
 		}
 
 		static void Negate(Vector4& a)
 		{
-			a.X = -a.X;
-			a.Y = -a.Y;
-			a.Z = -a.Z;
-			a.W = -a.W;
+			a.X() = -a.X();
+			a.Y() = -a.Y();
+			a.Z() = -a.Z();
+			a.W() = -a.W();
 		}
 
 		//////////////////////////////////////////////////////////////
 		//						QUATERNION MATH						//
 		//////////////////////////////////////////////////////////////
 
-		static float32 DotProduct(const Quaternion& a, const Quaternion& b);
+		static Quaternion Conjugated(const Quaternion& a) { return Quaternion(-a.X(), -a.Y(), -a.Z(), a.W()); }
 
-		static float32 LengthSquared(const Quaternion& a);
-
-		static float32 Length(const Quaternion& a) { return SquareRoot(LengthSquared(a)); }
-
-		static Quaternion Normalized(const Quaternion& a);
-
-		static void Normalize(Quaternion& a);
-
-		static Quaternion Conjugated(const Quaternion& a) { return Quaternion(-a.X, -a.Y, -a.Z, a.Q); }
-
-		static void Conjugate(Quaternion& a) { a.X = -a.X; a.Y = -a.Y; a.Z = -a.Z; }
+		static void Conjugate(Quaternion& a) { a.X() = -a.X(); a.Y() = -a.Y(); a.Z() = -a.Z(); }
 
 
 		//////////////////////////////////////////////////////////////
@@ -543,16 +559,16 @@ namespace GTSL
 
 		static bool IsVectorNearlyEqual(const Vector2& A, const Vector2& Target, const float32 Tolerance)
 		{
-			return IsNearlyEqual(A.X, Target.X, Tolerance) && IsNearlyEqual(A.Y, Target.Y, Tolerance);
+			return IsNearlyEqual(A.X(), Target.X(), Tolerance) && IsNearlyEqual(A.Y(), Target.Y(), Tolerance);
 		}
 
 		static bool IsVectorNearlyEqual(const Vector3& A, const Vector3& Target, const float32 Tolerance)
 		{
-			if (IsNearlyEqual(A.X, Target.X, Tolerance))
+			if (IsNearlyEqual(A.X(), Target.X(), Tolerance))
 			{
-				if (IsNearlyEqual(A.Y, Target.Y, Tolerance))
+				if (IsNearlyEqual(A.Y(), Target.Y(), Tolerance))
 				{
-					if (IsNearlyEqual(A.Z, Target.Z, Tolerance))
+					if (IsNearlyEqual(A.Z(), Target.Z(), Tolerance))
 					{
 						return true;
 					}
@@ -564,14 +580,10 @@ namespace GTSL
 
 		static bool IsVectorNearlyEqual(const Vector4& a, const Vector4& b, const float32 tolerance)
 		{
-			if (IsNearlyEqual(a.X, b.X, tolerance))
-			{
-				if (IsNearlyEqual(a.Y, b.Y, tolerance))
-				{
-					if (IsNearlyEqual(a.Z, b.Z, tolerance))
-					{
-						if (IsNearlyEqual(a.W, b.W, tolerance))
-						{
+			if (IsNearlyEqual(a.X(), b.X(), tolerance)) {
+				if (IsNearlyEqual(a.Y(), b.Y(), tolerance)) {
+					if (IsNearlyEqual(a.Z(), b.Z(), tolerance)) {
+						if (IsNearlyEqual(a.W(), b.W(), tolerance)) {
 							return true;
 						}
 					}
@@ -583,12 +595,12 @@ namespace GTSL
 
 		static bool AreVectorComponentsGreater(const Vector3& A, const Vector3& B)
 		{
-			return A.X > B.X && A.Y > B.Y && A.Z > B.Z;
+			return A.X() > B.X() && A.Y() > B.Y() && A.Z() > B.Z();
 		}
 
-		static bool PointInBox(Vector2 min, Vector2 max, Vector2 p) { return p.X >= min.X && p.X <= max.X && p.Y >= min.Y && p.Y <= max.Y; }
+		static bool PointInBox(Vector2 min, Vector2 max, Vector2 p) { return p.X() >= min.X() && p.X() <= max.X() && p.Y() >= min.Y() && p.Y() <= max.Y(); }
 
-		static bool PointInBoxProjection(Vector2 min, Vector2 max, Vector2 p) { return p.X >= min.X && p.X <= max.X || p.Y >= min.Y && p.Y <= max.Y; }
+		static bool PointInBoxProjection(Vector2 min, Vector2 max, Vector2 p) { return p.X() >= min.X() && p.X() <= max.X() || p.Y() >= min.Y() && p.Y() <= max.Y(); }
 
 		//////////////////////////////////////////////////////////////
 		//						MATRIX MATH							//
@@ -599,9 +611,9 @@ namespace GTSL
 		{
 			Matrix4 result(1);
 
-			result(0, 3) = Vector.X;
-			result(1, 3) = Vector.Y;
-			result(2, 3) = Vector.Z;
+			result(0, 3) = Vector.X();
+			result(1, 3) = Vector.Y();
+			result(2, 3) = Vector.Z();
 
 			return result;
 		}
@@ -622,7 +634,7 @@ namespace GTSL
 			Normalize(tangent0);
 			// Find another vector in the plane
 			const Vector3 tangent1 = Normalized(Cross(normal, tangent0));
-			return Matrix4(tangent0.X, tangent0.Y, tangent0.Z, 0.0f, tangent1.X, tangent1.Y, tangent1.Z, 0.0f, normal.X, normal.Y, normal.Z, 0.0f, 0, 0, 0, 0);
+			return Matrix4(tangent0.X(), tangent0.Y(), tangent0.Z(), 0.0f, tangent1.X(), tangent1.Y(), tangent1.Z(), 0.0f, normal.X(), normal.Y(), normal.Z(), 0.0f, 0, 0, 0, 0);
 		}
 
 		static void Rotate(Matrix4& A, const Quaternion& Q)
@@ -638,14 +650,14 @@ namespace GTSL
 		// -0 indicates point is to the left
 		static float32 TestPointToLineSide(const GTSL::Vector2 a, const GTSL::Vector2 b, const GTSL::Vector2 p)
 		{
-			return ((a.X - b.X) * (p.Y - b.Y) - (a.Y - b.Y) * (p.X - b.X));
+			return ((a.X() - b.X()) * (p.Y() - b.Y()) - (a.Y() - b.Y()) * (p.X() - b.X()));
 		};
 
 		static Vector3 SphericalCoordinatesToCartesianCoordinates(const Vector2& sphericalCoordinates)
 		{
-			const auto cy = Cosine(sphericalCoordinates.Y);
+			const auto cy = Cosine(sphericalCoordinates.Y());
 
-			return Vector3(cy * Sine(sphericalCoordinates.X), Sine(sphericalCoordinates.Y),	cy * Cosine(sphericalCoordinates.X));
+			return Vector3(cy * Sine(sphericalCoordinates.X()), Sine(sphericalCoordinates.Y()),	cy * Cosine(sphericalCoordinates.X()));
 		}
 
 		static Vector3 RotatorToNormalVector(const Rotator& rotator)
@@ -668,10 +680,10 @@ namespace GTSL
 			const auto sr = Sine(rotator.Z * 0.5f);
 
 			Quaternion result;
-			result.X = sy * cp * sr + cy * sp * cr;
-			result.Y = sy * cp * cr - cy * sp * sr;
-			result.Z = cy * cp * sr - sy * sp * cr;
-			result.Q = cy * cp * cr + sy * sp * sr;
+			result.X() = sy * cp * sr + cy * sp * cr;
+			result.Y() = sy * cp * cr - cy * sp * sr;
+			result.Z() = cy * cp * sr - sy * sp * cr;
+			result.W() = cy * cp * cr + sy * sp * sr;
 
 			return result;
 		}
@@ -680,15 +692,15 @@ namespace GTSL
 		{
 			Matrix4 result(1);
 
-			const auto xx = A.X * A.X;
-			const auto xy = A.X * A.Y;
-			const auto xz = A.X * A.Z;
-			const auto xw = A.X * A.Q;
-			const auto yy = A.Y * A.Y;
-			const auto yz = A.Y * A.Z;
-			const auto yw = A.Y * A.Q;
-			const auto zz = A.Z * A.Z;
-			const auto zw = A.Z * A.Q;
+			const auto xx = A.X() * A.X();
+			const auto xy = A.X() * A.Y();
+			const auto xz = A.X() * A.Z();
+			const auto xw = A.X() * A.W();
+			const auto yy = A.Y() * A.Y();
+			const auto yz = A.Y() * A.Z();
+			const auto yw = A.Y() * A.W();
+			const auto zz = A.Z() * A.Z();
+			const auto zw = A.Z() * A.W();
 
 			result(0, 0) = 1 - 2 * (yy + zz);
 			result(0, 1) = 2 * (xy - zw);
@@ -712,12 +724,12 @@ namespace GTSL
 			const float32 c = Cosine(angle);
 			const float32 s = Sine(angle);
 			const auto t = 1.0f - c;
-			const float32 xx = A.X * A.X;
-			const float32 xy = A.X * A.Y;
-			const float32 xz = A.X * A.Z;
-			const float32 yy = A.Y * A.Y;
-			const float32 yz = A.Y * A.Z;
-			const float32 zz = A.Z * A.Z;
+			const float32 xx = A.X() * A.X();
+			const float32 xy = A.X() * A.Y();
+			const float32 xz = A.X() * A.Z();
+			const float32 yy = A.Y() * A.Y();
+			const float32 yz = A.Y() * A.Z();
+			const float32 zz = A.Z() * A.Z();
 
 			// build rotation matrix
 			result(0, 0) = c + xx * t;
@@ -725,19 +737,19 @@ namespace GTSL
 			result(2, 2) = c + zz * t;
 
 			auto tmp1 = xy * t;
-			auto tmp2 = A.Z * s;
+			auto tmp2 = A.Z() * s;
 			
 			result(1, 0) = tmp1 + tmp2;
 			result(0, 1) = tmp1 - tmp2;
 
 			tmp1 = xz * t;
-			tmp2 = A.Y * s;
+			tmp2 = A.Y() * s;
 			
 			result(2, 0) = tmp1 - tmp2;
 			result(0, 2) = tmp1 + tmp2;
 
 			tmp1 = yz * t;
-			tmp2 = A.X * s;
+			tmp2 = A.X() * s;
 			
 			result(2, 1) = tmp1 + tmp2;
 			result(1, 2) = tmp1 - tmp2;
@@ -756,9 +768,9 @@ namespace GTSL
 		{
 			Matrix4 Result(1.0f);
 
-			Result[0] = A.X;
-			Result[5] = A.Y;
-			Result[10] = A.Z;
+			Result[0] = A.X();
+			Result[5] = A.Y();
+			Result[10] = A.Z();
 
 			return Result;
 		}
@@ -891,9 +903,9 @@ namespace GTSL
 		static void Barycentric(Vector2 a, Vector2 b, Vector2 c, Vector2 p, float32& s, float32& t, float32& u)
 		{
 			Vector2 v0 = b - a, v1 = c - a, v2 = p - a;
-			float32 den = v0.X * v1.Y - v1.X * v0.Y;
-			s = (v2.X * v1.Y - v1.X * v2.Y) / den;	
-			t = (v0.X * v2.Y - v2.X * v0.Y) / den;
+			float32 den = v0.X() * v1.Y() - v1.X() * v0.Y();
+			s = (v2.X() * v1.Y() - v1.X() * v2.Y()) / den;	
+			t = (v0.X() * v2.Y() - v2.X() * v0.Y()) / den;
 			u = 1.0f - s - t;
 		}
 

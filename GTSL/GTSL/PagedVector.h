@@ -1,12 +1,9 @@
 #pragma once
 
-#if(_WIN64)
-#include <immintrin.h>
-#endif
-
 #include "Core.h"
 
 #include "Assert.h"
+#include "Bitman.h"
 #include "Memory.h"
 
 namespace GTSL
@@ -50,18 +47,10 @@ namespace GTSL
 		uint32 PAGE_LENGTH = 0, allocatedPages = 0;
 		uint32 length = 0;
 
-		T* iterator(const uint32 pos) const
-		{
-			if constexpr (_WIN64)
-			{
-				uint32 remainder;
-				uint32 quotient = _udiv64(length, PAGE_LENGTH, &remainder);
-				return pages[quotient] + remainder;
-			}
-			else
-			{
-				return pages[length / PAGE_LENGTH] + length % PAGE_LENGTH;
-			}
+		static constexpr uint32 modulo(const uint32 key, const uint32 size) { return key & (size - 1); }
+		
+		T* iterator(const uint32 pos) const {
+			return pages[pos / PAGE_LENGTH] + modulo(pos, PAGE_LENGTH);
 		}
 	};
 	
@@ -77,15 +66,14 @@ namespace GTSL
 			dataAllocator = allocator;
 
 			uint64 allocatedSize = 0;
-			PAGE_LENGTH = 0xFFFFFFFF;
+			PAGE_LENGTH = NextPowerOfTwo(minPageLength);
 			
 			dataAllocator.Allocate(sizeof(T*) * minPages, alignof(T*), reinterpret_cast<void**>(&pages), &allocatedSize);
 			allocatedPages = allocatedSize / sizeof(T*);
 
 			for (uint32 p = 0; p < allocatedPages; ++p)
 			{
-				dataAllocator.Allocate(sizeof(T) * minPageLength, alignof(T), reinterpret_cast<void**>(&pages[p]), &allocatedSize);
-				PAGE_LENGTH = (allocatedSize / sizeof(T)) < PAGE_LENGTH ? (allocatedSize / sizeof(T)) : PAGE_LENGTH;
+				dataAllocator.Allocate(sizeof(T) * PAGE_LENGTH, alignof(T), reinterpret_cast<void**>(&pages[p]), &allocatedSize);
 			}
 		}
 
@@ -159,11 +147,15 @@ namespace GTSL
 		}
 	private:
 		T** pages = nullptr;
-		uint32 PAGE_LENGTH = 0, allocatedPages = 0;
+		//is a power of 2
+		uint32 PAGE_LENGTH = 0;
+		uint32 allocatedPages = 0;
 		uint32 length = 0;
 		
 		ALLOCATOR dataAllocator;
 
+		static constexpr uint32 modulo(const uint32 key, const uint32 size) { return key & (size - 1); }
+		
 		void addPages(const uint32 count = 1)
 		{
 			uint64 allocatedSize;
@@ -181,18 +173,8 @@ namespace GTSL
 			allocatedPages += count;
 		}
 
-		T* iterator(const uint32 pos) const
-		{
-			if constexpr (_WIN64)
-			{
-				uint32 remainder;
-				uint32 quotient = _udiv64(length, PAGE_LENGTH, &remainder);
-				return pages[quotient] + remainder;
-			}
-			else
-			{
-				return pages[length / PAGE_LENGTH] + length % PAGE_LENGTH;
-			}
+		T* iterator(const uint32 pos) const {
+			return pages[pos / PAGE_LENGTH] + modulo(pos, PAGE_LENGTH);
 		}
 
 		void destroyAllChildren()
@@ -200,16 +182,10 @@ namespace GTSL
 			const uint32 fullyUsedPagesCount = length / PAGE_LENGTH;
 
 			//for all full pages, run destructor on every item
-			for (uint32 i = 0; i < fullyUsedPagesCount; ++i)
-			{
-				for (uint32 j = 0; j < PAGE_LENGTH; ++j) { pages[i][j].~T(); }
-			}
+			for (uint32 i = 0; i < fullyUsedPagesCount; ++i) { for (uint32 j = 0; j < PAGE_LENGTH; ++j) { pages[i][j].~T(); } }
 
 			//run destructor on every item of the potentially partially filled last page
-			for (uint32 j = 0; j < length - (fullyUsedPagesCount * PAGE_LENGTH); ++j) //CHECK
-			{
-				pages[fullyUsedPagesCount][j].~T();
-			}
+			for (uint32 j = 0; j < modulo(length, PAGE_LENGTH); ++j) { pages[fullyUsedPagesCount][j].~T(); }
 		}
 	};
 }

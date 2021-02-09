@@ -19,15 +19,17 @@ namespace GAL
 		
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			WindowsWindowData* SystemData;
+#if _WIN64
+			WindowsWindowData SystemData;
+#endif
 		};
-		VulkanSurface(const CreateInfo& createInfo);
+		void Initialize(const CreateInfo& createInfo);
 
 		void Destroy(class VulkanRenderDevice* renderDevice);
 
 		GTSL::Array<GTSL::Pair<VulkanColorSpace, VulkanTextureFormat>, 16> GetSupportedFormatsAndColorSpaces(const class VulkanRenderDevice* renderDevice) const;
 
-		GTSL::Array<VulkanPresentMode, 4> GetSupportedPresentModes(class VulkanRenderDevice* renderDevice) const;
+		GTSL::Array<PresentModes, 4> GetSupportedPresentModes(class VulkanRenderDevice* renderDevice) const;
 
 		struct SurfaceCapabilities
 		{
@@ -42,8 +44,10 @@ namespace GAL
 		bool IsSupported(class VulkanRenderDevice* renderDevice, SurfaceCapabilities* surfaceCapabilities);
 
 		[[nodiscard]] VulkanHandle GetVkSurface() const { return surface; }
+		[[nodiscard]] GTSL::uint64 GetHandle() const { return (GTSL::uint64)surface; }
+	
 	private:
-		VulkanHandle surface;
+		VulkanHandle surface = nullptr;
 	};
 
 	class VulkanRenderContext final : public RenderContext
@@ -55,7 +59,7 @@ namespace GAL
 		{
 			GTSL::Extent2D SurfaceArea;
 			GTSL::uint8 DesiredFramesInFlight = 0;
-			VulkanPresentMode PresentMode;
+			PresentModes PresentMode;
 			VulkanTextureFormat Format;
 			VulkanColorSpace ColorSpace;
 			VulkanTextureUses::value_type TextureUses;
@@ -72,7 +76,7 @@ namespace GAL
 		{
 			GTSL::Extent2D SurfaceArea;
 			GTSL::uint8 DesiredFramesInFlight = 0;
-			VulkanPresentMode PresentMode;
+			PresentModes PresentMode;
 			VulkanTextureFormat Format;
 			VulkanColorSpace ColorSpace;
 			VulkanTextureUses::value_type TextureUses;

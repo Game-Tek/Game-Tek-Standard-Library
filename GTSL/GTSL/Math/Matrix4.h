@@ -229,9 +229,9 @@ namespace GTSL
 		{
 			Vector3 Result;
 
-			Result.X = array[0] * other.X + array[1] * other.X + array[2] * other.X + array[3] * other.X;
-			Result.Y = array[4] * other.Y + array[5] * other.Y + array[6] * other.Y + array[7] * other.Y;
-			Result.Z = array[8] * other.Z + array[9] * other.Z + array[10] * other.Z + array[11] * other.Z;
+			Result.X() = array[0] * other.X() + array[1] * other.X() + array[2] * other.X() + array[3] * other.X();
+			Result.Y() = array[4] * other.Y() + array[5] * other.Y() + array[6] * other.Y() + array[7] * other.Y();
+			Result.Z() = array[8] * other.Z() + array[9] * other.Z() + array[10] * other.Z() + array[11] * other.Z();
 
 			return Result;
 		}
