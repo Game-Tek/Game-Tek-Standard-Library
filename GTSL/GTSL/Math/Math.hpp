@@ -365,27 +365,30 @@ namespace GTSL
 
 		static float32 Root(const float32 a, const float32 root) { return Power(a, 1.0f / root); }
 
-		static uint32 Abs(const int32 A) { return ((A >> 31) + A) ^ (A >> 31); }
+		static uint32 Abs(const int32 a) { return uint32(a < 0.0f ? -a : a); }
 
-		static uint64 Abs(const int64 A) { return ((A >> 63) + A) ^ (A >> 63); }
+		static uint64 Abs(const int64 a) { return uint64(a < 0.0f ? -a : a); }
 
-		static float32 Abs(const float32 a) { return FloatintPoint((int32)Abs(FloatintPoint(a).Int)).Float; }
+		static float32 Abs(const float32 a) { return a < 0.0f ? -a : a; }
 
 		template<typename T>
-		static T Limit(const T a, const T max) { return a >= max ? max : a; }
+		static T Limit(const T a, const T max) { return a > max ? max : a; }
 		
 		template <typename T>
-		static T Min(const T& A, const T& B)
-		{
-			return (A < B) ? A : B;
-		}
+		static T Min(const T& A, const T& B) { return (A < B) ? A : B; }
 
 		template <typename T>
-		static T Max(const T& A, const T& B)
-		{
-			return (A > B) ? A : B;
-		}
+		static T Max(const T& A, const T& B) { return (A > B) ? A : B; }
 
+		static Vector2 Min(const Vector2 a, const Vector2 b) { return Vector2(Min(a.X(), b.X()), Min(a.Y(), b.Y())); }
+		static Vector2 Max(const Vector2 a, const Vector2 b) { return Vector2(Max(a.X(), b.X()), Max(a.Y(), b.Y())); }
+		
+		static Vector3 Min(const Vector3 a, const Vector3 b) { return Vector3(Min(a.X(), b.X()), Min(a.Y(), b.Y()), Min(a.Z(), b.Z())); }
+		static Vector3 Max(const Vector3 a, const Vector3 b) { return Vector3(Max(a.X(), b.X()), Max(a.Y(), b.Y()), Max(a.Z(), b.Z())); }
+
+		static Vector4 Min(const Vector4 a, const Vector4 b) { return Vector4(Min(a.X(), b.X()), Min(a.Y(), b.Y()), Min(a.Z(), b.Z()), Min(a.W(), b.W())); }
+		static Vector4 Max(const Vector4 a, const Vector4 b) { return Vector4(Max(a.X(), b.X()), Max(a.Y(), b.Y()), Max(a.Z(), b.Z()), Max(a.W(), b.W())); }
+		
 		/**
 		 * \brief Returns degrees converted to radians.
 		 * \param degrees degrees to convert
@@ -486,8 +489,8 @@ namespace GTSL
 		static Vector3 Cross(const Vector3& a, const Vector3& b) { return Vector3(a.Y() * b.Z() - a.Z() * b.Y(), a.Z() * b.X() - a.X() * b.Z(), a.X() * b.Y() - a.Y() * b.X()); }
 
 		static Vector2 Abs(const Vector2 a) { return Vector2(Abs(a.X()), Abs(a.Y())); }
-		static Vector3 Abs(const Vector3& a) { return Vector3(Abs(a.X()), Abs(a.Y()), Abs(a.Z())); }
-		static Vector4 Abs(const Vector4& a) { return Vector4(Abs(a.X()), Abs(a.Y()), Abs(a.Z()), Abs(a.W())); }
+		static Vector3 Abs(const Vector3 a) { return Vector3(Abs(a.X()), Abs(a.Y()), Abs(a.Z())); }
+		static Vector4 Abs(const Vector4 a) { return Vector4(Abs(a.X()), Abs(a.Y()), Abs(a.Z()), Abs(a.W())); }
 
 		static Vector2 Negated(const Vector2& Vec)
 		{
@@ -825,7 +828,7 @@ namespace GTSL
 		}
 
 		template<typename T>
-		static T Clamp(T a, T min, T max) { return a >= max ? max : (a <= min ? min : a); }
+		static T Clamp(T a, T min, T max) { return a > max ? max : (a < min ? min : a); }
 
 		static Vector3 ClosestPointOnPlane(const Vector3& point, const Plane& plane)
 		{

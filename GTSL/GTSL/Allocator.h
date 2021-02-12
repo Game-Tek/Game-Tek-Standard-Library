@@ -79,17 +79,10 @@ namespace GTSL
 			other.data = nullptr;
 		}
 
+		bool TryFree() { if (data) { Free(); return true; } return false; }
 		void Free() { this->data->~T(); this->data = nullptr; }
 		
-		~SmartPointer()
-		{
-			if (this->data)
-			{
-				this->data->~T();
-				this->allocator.Deallocate(this->size, this->alignment, this->data);
-				this->data = nullptr;
-			}
-		}
+		~SmartPointer() { TryFree(); }
 
 		SmartPointer& operator=(SmartPointer&& other) noexcept
 		{

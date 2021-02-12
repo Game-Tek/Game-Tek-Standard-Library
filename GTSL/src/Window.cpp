@@ -9,6 +9,9 @@
 #include "GTSL/Bitman.h"
 
 #if (_WIN32)
+
+#include <hidsdi.h>	
+
 GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam)
 {
 	auto* window = reinterpret_cast<Window*>(GetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA));
@@ -84,23 +87,23 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	}
 	case WM_CHAR:
 	{
-		window->onCharEvent(wParam);
+		window->onCharEvent(wParam); return 0;
 	}
 	case WM_SIZE:
 	{
-		RECT rect;
 		Extent2D clientSize;
-		GetClientRect(winHandle, &rect);
-		clientSize.Width = static_cast<uint16>(rect.right);
-		clientSize.Height = static_cast<uint16>(rect.bottom);
+		clientSize.Width = LOWORD(lParam);
+		clientSize.Height = HIWORD(lParam);
 
 		window->onResizeDelegate(clientSize); return 0;
 	}
 	case WM_SIZING:
 	{
-		RECT rect;
-		Extent2D clientSize;
-		GetClientRect(winHandle, &rect);
+		//RECT rect = *reinterpret_cast<RECT*>(lParam);
+		RECT rect = *reinterpret_cast<RECT*>(lParam);
+		GetClientRect(static_cast<HWND>(hwnd), &rect);
+			
+		Extent2D clientSize;		
 		clientSize.Width = static_cast<uint16>(rect.right);
 		clientSize.Height = static_cast<uint16>(rect.bottom);
 
@@ -115,6 +118,89 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 		windowSize.Height = static_cast<uint16>(rect.bottom);
 			
 		window->onWindowMove(reinterpret_cast<LPRECT>(lParam)->left + windowSize.Width / 2, reinterpret_cast<LPRECT>(lParam)->top - windowSize.Height / 2); return 0;
+	}
+	case WM_INPUT:
+	{
+		PRAWINPUT pRawInput; UINT bufferSize; HANDLE hHeap = GetProcessHeap();
+
+		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, nullptr,	&bufferSize, sizeof(RAWINPUTHEADER));
+
+		pRawInput = (PRAWINPUT)HeapAlloc(hHeap, 0, bufferSize);
+		if (!pRawInput)
+			return 0;
+
+		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, pRawInput, &bufferSize, sizeof(RAWINPUTHEADER));
+		
+		{
+			GetRawInputDeviceInfoA(pRawInput->header.hDevice, RIDI_PREPARSEDDATA, nullptr, &bufferSize);
+			auto pPreparsedData = (PHIDP_PREPARSED_DATA)HeapAlloc(hHeap, 0, bufferSize);
+			GetRawInputDeviceInfoA(pRawInput->header.hDevice, RIDI_PREPARSEDDATA, pPreparsedData, &bufferSize);
+
+			HIDP_CAPS caps;
+
+			HidP_GetCaps(pPreparsedData, &caps);
+			
+			auto pButtonCaps = (PHIDP_BUTTON_CAPS)HeapAlloc(hHeap, 0, sizeof(HIDP_BUTTON_CAPS) * caps.NumberInputButtonCaps);
+			
+			{
+				auto capsLength = caps.NumberInputButtonCaps;
+				HidP_GetButtonCaps(HidP_Input, pButtonCaps, &capsLength, pPreparsedData);
+			}
+			
+			auto g_NumberOfButtons = pButtonCaps->Range.UsageMax - pButtonCaps->Range.UsageMin + 1;
+
+			auto pValueCaps = (PHIDP_VALUE_CAPS)HeapAlloc(hHeap, 0, sizeof(HIDP_VALUE_CAPS) * caps.NumberInputValueCaps);
+
+			{
+				auto capsLength = caps.NumberInputValueCaps;
+				HidP_GetValueCaps(HidP_Input, pValueCaps, &capsLength, pPreparsedData);
+			}
+
+			USAGE usage[512];
+			
+			ULONG usageLength = g_NumberOfButtons;
+			HidP_GetUsages(HidP_Input, pButtonCaps->UsagePage, 0, usage, &usageLength, pPreparsedData, (PCHAR)pRawInput->data.hid.bRawData, pRawInput->data.hid.dwSizeHid);
+
+			bool buttonStates[512]{ false };
+
+			for (uint32 i = 0; i < usageLength; i++) {
+				buttonStates[usage[i] - pButtonCaps->Range.UsageMin] = true;
+			}
+
+			ULONG value; LONG lAxisX, lAxisY, lAxisZ, lAxisRz, lHat;
+
+			for (uint32 i = 0; i < caps.NumberInputValueCaps; i++)
+			{
+				HidP_GetUsageValue(HidP_Input, pValueCaps[i].UsagePage, 0, pValueCaps[i].Range.UsageMin, &value, pPreparsedData, (PCHAR)pRawInput->data.hid.bRawData, pRawInput->data.hid.dwSizeHid);
+
+				switch (pValueCaps[i].Range.UsageMin)
+				{
+				case 0x30:    // X-axis
+					lAxisX = (LONG)value - 128;
+					break;
+
+				case 0x31:    // Y-axis
+					lAxisY = (LONG)value - 128;
+					break;
+
+				case 0x32: // Z-axis
+					lAxisZ = (LONG)value - 128;
+					break;
+
+				case 0x35: // Rotate-Z
+					lAxisRz = (LONG)value - 128;
+					break;
+
+				case 0x39:    // Hat Switch
+					lHat = value;
+					break;
+				}
+			}
+		}
+
+		HeapFree(hHeap, 0, pRawInput);
+		
+		return 0;
 	}
 	default: return DefWindowProcA(winHandle, uMsg, wParam, lParam);
 	}
@@ -320,7 +406,7 @@ void GTSL::Window::SetState(const WindowState& windowState)
 		const DWORD remove = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 		const DWORD new_style = defaultWindowStyle & ~remove;
 		SetWindowLongPtrA(static_cast<HWND>(windowHandle), GWL_STYLE, new_style);
-		SetWindowPos(static_cast<HWND>(windowHandle), HWND_TOP, 0, 0, GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CXFULLSCREEN), SWP_FRAMECHANGED);
+		SetWindowPos(static_cast<HWND>(windowHandle), HWND_TOP, 0, 0, GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN), 0);
 		::ShowWindow(static_cast<HWND>(windowHandle), SW_SHOWMAXIMIZED);
 
 		//DEVMODEA devmodea;
@@ -363,6 +449,31 @@ void GTSL::Window::ShowWindow()
 void GTSL::Window::HideWindow()
 {
 	::ShowWindow(static_cast<HWND>(windowHandle), SW_HIDE);
+}
+
+void GTSL::Window::AddDevice(const DeviceType deviceType)
+{
+	switch (deviceType)
+	{
+		case DeviceType::MOUSE:
+		{
+			return;
+		}
+		
+		case DeviceType::GAMEPAD:
+		{
+			RAWINPUTDEVICE rid;
+
+			rid.usUsagePage = 1;
+			rid.usUsage = 4; // Joystick
+			rid.dwFlags = 0;
+			rid.hwndTarget = (HWND)windowHandle;
+
+			RegisterRawInputDevices(&rid, 1, sizeof(rid));
+		}
+		
+	default: ;
+	}
 }
 
 void GTSL::Window::SetProgressState(ProgressState progressState) const

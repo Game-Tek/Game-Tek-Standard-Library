@@ -10,7 +10,7 @@ using namespace GTSL;
 File::~File()
 {
 	//GTSL_ASSERT(fileHandle == nullptr, "File was not closed!")
-	if (fileHandle) { CloseHandle(static_cast<HANDLE>(fileHandle)); }
+	if (fileHandle) { CloseHandle(static_cast<HANDLE>(fileHandle)); fileHandle = nullptr; }
 }
 
 void File::OpenFile(const Range<const UTF8*> path, const AccessMode::value_type accessMode, const OpenMode openMode)

@@ -301,10 +301,10 @@ namespace GTSL
 		template<class ALLOC>
 		void PushBack(const Vector<T, ALLOC>& other)
 		{
-			const auto new_length = this->length + other.GetLength();
-			if (this->length + (this->length - other.length) > this->capacity) { reallocate(); }
+			const auto newLength = this->length + other.GetLength();
+			if (newLength > this->capacity) { reallocate(); }
 			for (uint32 i = this->length, o_i = 0; o_i < other.GetLength(); ++i, ++o_i) { this->data[i] = other.data[o_i]; }
-			this->length = new_length;
+			this->length = newLength;
 		}
 
 		/**

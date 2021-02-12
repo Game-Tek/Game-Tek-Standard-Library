@@ -9,6 +9,7 @@
 #include "Id.h"
 #include "Pair.h"
 #include "ShortString.hpp"
+#include "Math/Vector3.h"
 
 namespace GTSL
 {
@@ -126,6 +127,18 @@ namespace GTSL
 		buffer.ReadBytes(sizeof(T), reinterpret_cast<byte*>(&enu));
 	}
 
+	template<class ALLOCATOR>
+	void Insert(const Vector3 vector3, Buffer<ALLOCATOR>& buffer)
+	{
+		buffer.CopyBytes(sizeof(float32) * 3, reinterpret_cast<const byte*>(&vector3));
+	}
+
+	template<class ALLOCATOR>
+	void Extract(Vector3& vector3, Buffer<ALLOCATOR>& buffer)
+	{
+		buffer.ReadBytes(sizeof(float32) * 3, reinterpret_cast<byte*>(&vector3));
+	}
+	
 	//template<Union U, class ALLOCATOR>
 	//void Insert(const U& uni, Buffer<ALLOCATOR>& buffer) //if trivially copyable
 	//{

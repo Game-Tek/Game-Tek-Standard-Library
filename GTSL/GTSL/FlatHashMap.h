@@ -136,8 +136,8 @@ namespace GTSL
 			Iterator operator++(int) { Iterator ret = *this; ++(*this); return ret; }
 			Iterator operator--(int) { Iterator ret = *this; --(*this); return ret; }
 
-			TT& operator*() const { return *(map->getValuesBucket(bucketIndex) + index); }
-			TT* operator->() const { return map->getValuesBucket(bucketIndex) + index; }
+			TT& operator*() const { return map->getValuesBucket(bucketIndex)[index]; }
+			TT* operator->() const { return map->getValuesBucket(bucketIndex).begin() + index; }
 
 			bool operator==(const Iterator& other) const { return bucketIndex == other.bucketIndex && index == other.index; }
 

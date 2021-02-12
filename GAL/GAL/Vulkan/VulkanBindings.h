@@ -175,9 +175,9 @@ namespace GAL
 					for (auto e : info.BindingUpdateInfos)
 					{
 						VkDescriptorImageInfo vkDescriptorImageInfo{ e.TextureBindingUpdateInfo.Sampler.GetVkSampler(), e.TextureBindingUpdateInfo.TextureView.GetVkImageView(), (VkImageLayout)e.TextureBindingUpdateInfo.TextureLayout };
-						imagesPerSubSetUpdate[index].EmplaceBack(vkDescriptorImageInfo);
+						imagesPerSubSetUpdate.back().EmplaceBack(vkDescriptorImageInfo);
 					}
-					writeSet.pImageInfo = imagesPerSubSetUpdate[index].begin();
+					writeSet.pImageInfo = imagesPerSubSetUpdate.back().begin();
 
 					break;
 				}
@@ -195,20 +195,20 @@ namespace GAL
 					for (auto e : info.BindingUpdateInfos)
 					{
 						VkDescriptorBufferInfo vkDescriptorBufferInfo{ e.BufferBindingUpdateInfo.Buffer.GetVkBuffer(), e.BufferBindingUpdateInfo.Offset, e.BufferBindingUpdateInfo.Range };
-						buffersPerSubSetUpdate[index].EmplaceBack(vkDescriptorBufferInfo);
+						buffersPerSubSetUpdate.back().EmplaceBack(vkDescriptorBufferInfo);
 					}
-					writeSet.pBufferInfo = buffersPerSubSetUpdate[index].begin();
+					writeSet.pBufferInfo = buffersPerSubSetUpdate.back().begin();
 					break;
 				}
 
-				case VulkanBindingType::ACCELERATION_STRUCTURE:
+				case VulkanBindingType::ACCELERATION_STRUCTURE: //BUG: IF THERE IS MORE THAN ONE ACC STRCUCT THIS WON'T WORK
 				{
 					writeSet.pNext = &as;
 					as.accelerationStructureCount = info.BindingUpdateInfos.ElementCount();
 					accelerationStructuresPerSubSetUpdate.EmplaceBack(8, allocator);
 						
-					for (auto e : info.BindingUpdateInfos) { accelerationStructuresPerSubSetUpdate[index].EmplaceBack(e.AccelerationStructureBindingUpdateInfo.AccelerationStructure.GetVkAccelerationStructure()); }
-					as.pAccelerationStructures = accelerationStructuresPerSubSetUpdate[index].begin();
+					for (auto e : info.BindingUpdateInfos) { accelerationStructuresPerSubSetUpdate.back().EmplaceBack(e.AccelerationStructureBindingUpdateInfo.AccelerationStructure.GetVkAccelerationStructure()); }
+					as.pAccelerationStructures = accelerationStructuresPerSubSetUpdate.back().begin();
 					break;
 				}
 				default: __debugbreak();

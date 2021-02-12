@@ -63,13 +63,15 @@ namespace GTSL
 			buffer.data = nullptr;
 		}
 		
-		template<class ALLOCATOR>
 		void Allocate(const uint64 bytes, const uint32 alignment, const ALLOCATOR& allocatorReference)
 		{
 			uint64 allocated_size{ 0 };
 			this->allocator = allocatorReference;
 			this->allocator.Allocate(bytes, alignment, reinterpret_cast<void**>(&data), &allocated_size);
 			capacity = allocated_size;
+			this->alignment = alignment;
+			this->length = 0;
+			this->readPos = 0;
 		}
 
 		void Resize(const uint64 size) { length = size; }
@@ -78,7 +80,7 @@ namespace GTSL
 
 		void CopyBytes(const uint64 size, const byte* from)
 		{
-			GTSL_ASSERT(length + size <= capacity, "Buffer can't fit more!");
+			tryResize(size);
 			MemCopy(size, from, data + length); length += size;
 		}
 
@@ -92,7 +94,7 @@ namespace GTSL
 		[[nodiscard]] uint64 GetLength() const { return length; }
 		[[nodiscard]] uint64 GetReadPosition() const { return readPos; }
 		[[nodiscard]] byte* GetData() const { return data; }
-
+		
 		operator Range<byte*>() const { return Range<byte*>(length, data); }
 		operator Range<const byte*>() const { return Range<const byte*>(length, data); }
 
@@ -108,6 +110,12 @@ namespace GTSL
 		uint64 length = 0;
 		uint64 readPos = 0;
 
-		ALLOCATOR allocator;
+		void tryResize(const uint64 deltaSize)
+		{
+			GTSL_ASSERT(length + deltaSize <= capacity, "Buffer can't fit more!");
+			if (length + deltaSize > capacity) { /*TODO: RESIZE*/ }
+		}
+		
+		[[no_unique_address]] ALLOCATOR allocator;
 	};
 }

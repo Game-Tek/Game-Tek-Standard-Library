@@ -127,6 +127,10 @@ namespace GTSL
 		void ShowWindow();
 		void HideWindow();
 
+		enum class DeviceType : uint8 { MOUSE, GAMEPAD };
+		
+		void AddDevice(const DeviceType deviceType);
+		
 		enum class ProgressState
 		{
 			NONE,
