@@ -38,6 +38,7 @@
     <ClInclude Include="GTSL\FlipFlop.h" />
     <ClInclude Include="GTSL\FunctionPointer.hpp" />
     <ClInclude Include="GTSL\PagedVector.h" />
+    <ClInclude Include="GTSL\SlottedVector.hpp" />
     <ClInclude Include="GTSL\SparseVector.hpp" />
     <ClInclude Include="GTSL\Math\AxisAngle.h" />
     <ClInclude Include="GTSL\Math\Frustum.h" />

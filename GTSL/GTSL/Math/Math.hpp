@@ -54,6 +54,24 @@ namespace GTSL
 			auto y = FastImpreciseSqrt(x);
 			return (y * y + x) / (2.0f * y); //Newton-Rhapson iteration for increased precision
 		}
+
+		template<typename T>
+		static T SquareRoot(const T a)
+		{
+			constexpr T error = 0.000001; //define the precision of your result
+			float s = a;
+
+			T aS;
+
+			do
+			{
+				aS = a / s;
+				s = (s + aS) * 0.5;
+			}
+			while (s - aS > error); //loop until precision satisfied
+
+			return s;
+		}
 	
 	private:
 	};
@@ -243,6 +261,9 @@ namespace GTSL
 			if (x > 0.0f) { return AdvancedMath::FastSqrt(x); }
 			return 0.0f;
 		}
+
+		template<typename T>
+		static T Square(const T a) { return a * a; }
 		
 		//////////////////////////////////////////////////////////////
 		//						SCALAR MATH							//
@@ -333,14 +354,7 @@ namespace GTSL
 		{
 			if (a > 0.0f)
 			{
-				constexpr auto error = 0.00001; //define the precision of your result
-				float64 s = a;
-
-				while (s - a / s > error) { //loop until precision satisfied 
-					s = (s + a / s) / 2.0;
-				}
-
-				return static_cast<float32>(s);
+				return AdvancedMath::SquareRoot(a);
 			}
 
 			return 0.0f;
@@ -350,14 +364,7 @@ namespace GTSL
 		{
 			if (a > 0.0)
 			{
-				constexpr auto error = 0.00001; //define the precision of your result
-				float64 s = a;
-
-				while (s - a / s > error) { //loop until precision satisfied
-					s = (s + a / s) / 2.0;
-				}
-
-				return s;
+				return AdvancedMath::SquareRoot(a);
 			}
 
 			return 0.0;
@@ -425,15 +432,16 @@ namespace GTSL
 		static float32 Length(const Vector2 a) { return SquareRoot(LengthSquared(a)); }
 		static float32 Length(const Vector2 a, const Vector2 b) { return SquareRoot(LengthSquared(a, b)); }
 		static float32 Length(const Vector3 a) { return SquareRoot(LengthSquared(a)); }
-		static float32 Length(const Vector3 a, const Vector3 b) { return SquareRoot(LengthSquared(b - a)); }
-		static float32 Length(const Vector4& a) { return SquareRoot(LengthSquared(a)); }
-		static float32 Length(const Vector4& a, const Vector4& b)	{ return SquareRoot(LengthSquared(b - a)); }
+		static float32 Length(const Vector3 a, const Vector3 b) { return SquareRoot(LengthSquared(a, b)); }
+		static float32 Length(const Vector4 a) { return SquareRoot(LengthSquared(a)); }
+		static float32 Length(const Vector4 a, const Vector4 b)	{ return SquareRoot(LengthSquared(a, b)); }
 
 		static float32 LengthSquared(const Vector2 a) { return a.X() * a.X() + a.Y() * a.Y(); }
-		static float32 LengthSquared(const Vector3& a) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z(); }
-		static float32 LengthSquared(const Vector4& a) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z() + a.W() * a.W(); }
-		
 		static float32 LengthSquared(const Vector2 a, const Vector2 b) { return LengthSquared(b - a); }
+		static float32 LengthSquared(const Vector3 a) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z(); }
+		static float32 LengthSquared(const Vector3 a, const Vector3 b) { return LengthSquared(b - a); }
+		static float32 LengthSquared(const Vector4 a) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z() + a.W() * a.W(); }
+		static float32 LengthSquared(const Vector4 a, const Vector4 b) { return LengthSquared(b - a); }
 
 		static Vector2 Normalized(const Vector2& a)
 		{

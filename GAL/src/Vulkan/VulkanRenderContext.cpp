@@ -46,7 +46,7 @@ GAL::VulkanRenderContext::VulkanRenderContext(const CreateInfo& createInfo)
 	vkSwapchainCreateInfoKhr.imageExtent = Extent2DToVkExtent2D(createInfo.SurfaceArea);
 	//The imageArrayLayers specifies the amount of layers each image consists of. This is always 1 unless you are developing a stereoscopic 3D application.
 	vkSwapchainCreateInfoKhr.imageArrayLayers = 1;
-	vkSwapchainCreateInfoKhr.imageUsage = createInfo.TextureUses;
+	vkSwapchainCreateInfoKhr.imageUsage = static_cast<VkImageUsageFlags>(createInfo.TextureUses);
 	vkSwapchainCreateInfoKhr.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	vkSwapchainCreateInfoKhr.queueFamilyIndexCount = 0;
 	vkSwapchainCreateInfoKhr.pQueueFamilyIndices = nullptr;
@@ -76,7 +76,7 @@ void GAL::VulkanRenderContext::Recreate(const RecreateInfo& resizeInfo)
 	vkSwapchainCreateInfoKhr.imageExtent = Extent2DToVkExtent2D(resizeInfo.SurfaceArea);
 	//The imageArrayLayers specifies the amount of layers each image consists of. This is always 1 unless you are developing a stereoscopic 3D application.
 	vkSwapchainCreateInfoKhr.imageArrayLayers = 1;
-	vkSwapchainCreateInfoKhr.imageUsage = resizeInfo.TextureUses;
+	vkSwapchainCreateInfoKhr.imageUsage = static_cast<VkImageUsageFlags>(resizeInfo.TextureUses);
 	vkSwapchainCreateInfoKhr.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	vkSwapchainCreateInfoKhr.queueFamilyIndexCount = 0;
 	vkSwapchainCreateInfoKhr.pQueueFamilyIndices = nullptr;

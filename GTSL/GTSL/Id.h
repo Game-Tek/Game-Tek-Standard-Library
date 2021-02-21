@@ -48,7 +48,7 @@ namespace GTSL
 		[[nodiscard]] constexpr HashType GetID() noexcept { return hashValue; }
 		[[nodiscard]] constexpr HashType GetID() const noexcept { return hashValue; }
 
-		[[nodiscard]] constexpr operator HashType() const noexcept { return hashValue; }
+		HashType operator()() const { return hashValue; }
 	private:
 		HashType hashValue = 0;
 	};

@@ -7,6 +7,8 @@
 
 #include <GTSL/Pair.h>
 
+#include "GTSL/Array.hpp"
+
 namespace GAL
 {
 	class VulkanFence;
@@ -80,7 +82,7 @@ namespace GAL
 		struct FindSupportedImageFormat
 		{
 			GTSL::Range<VulkanTextureFormat*> Candidates;
-			VulkanTextureUses::value_type TextureUses;
+			VulkanTextureUses TextureUses;
 			VulkanTextureTiling TextureTiling;
 		};
 		[[nodiscard]] VulkanTextureFormat FindNearestSupportedImageFormat(const FindSupportedImageFormat& findSupportedImageFormat) const;
@@ -93,6 +95,8 @@ namespace GAL
 
 		[[nodiscard]] GTSL::uint32 GetuniformBufferBindingOffsetAlignment() const { return static_cast<GTSL::uint32>(deviceProperties.limits.minUniformBufferOffsetAlignment); }
 		[[nodiscard]] GTSL::uint32 GetStorageBufferBindingOffsetAlignment() const { return static_cast<GTSL::uint32>(deviceProperties.limits.minStorageBufferOffsetAlignment); }
+
+		GTSL::Array<MemoryTypes, 16> GetMemoryTypes() const;
 		
 		[[nodiscard]] const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const { return deviceProperties; }
 

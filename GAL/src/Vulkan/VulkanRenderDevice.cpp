@@ -51,6 +51,25 @@ uint32 GAL::VulkanRenderDevice::FindMemoryType(const uint32 typeFilter, const ui
 	return 0xffffffff;
 }
 
+GTSL::Array<GAL::MemoryTypes, 16> GAL::VulkanRenderDevice::GetMemoryTypes() const
+{
+	GTSL::Array<GAL::MemoryTypes, 16> memoryTypes;
+
+	for(uint8 i = 0; i < memoryProperties.memoryTypeCount; ++i)
+	{
+		GAL::MemoryTypes memoryType = 0;
+
+		TranslateMask<VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,	(uint32)MemoryType::GPU>			(memoryProperties.memoryTypes[i].propertyFlags, memoryType);
+		TranslateMask<VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,	(uint32)MemoryType::HOST_VISIBLE>	(memoryProperties.memoryTypes[i].propertyFlags, memoryType);
+		TranslateMask<VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,	(uint32)MemoryType::HOST_COHERENT>	(memoryProperties.memoryTypes[i].propertyFlags, memoryType);
+		TranslateMask<VK_MEMORY_PROPERTY_HOST_CACHED_BIT,	(uint32)MemoryType::HOST_CACHED>	(memoryProperties.memoryTypes[i].propertyFlags,	memoryType);
+
+		memoryTypes.EmplaceBack(memoryType);
+	}
+
+	return memoryTypes;
+}
+
 #undef ERROR
 
 #if (_DEBUG)
@@ -102,20 +121,18 @@ GAL::GPUInfo GAL::VulkanRenderDevice::GetGPUInfo()
 	return result;
 }
 
-#define TRANSLATE_MASK(toVal, fromVar, fromVal, toVar) GTSL::SetBitAs(GTSL::FindFirstSetBit(toVal), fromVar & (fromVal), toVar)
-
 GAL::VulkanTextureFormat GAL::VulkanRenderDevice::FindNearestSupportedImageFormat(const FindSupportedImageFormat& findSupportedImageFormat) const
 {
 	VkFormatProperties format_properties;
 
 	VkFormatFeatureFlags features{};
 
-	TRANSLATE_MASK(VK_FORMAT_FEATURE_TRANSFER_SRC_BIT, findSupportedImageFormat.TextureUses, VulkanTextureUses::TRANSFER_SOURCE, features);
-	TRANSLATE_MASK(VK_FORMAT_FEATURE_TRANSFER_DST_BIT, findSupportedImageFormat.TextureUses, VulkanTextureUses::TRANSFER_DESTINATION, features);
-	TRANSLATE_MASK(VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, findSupportedImageFormat.TextureUses, VulkanTextureUses::SAMPLE, features);
-	TRANSLATE_MASK(VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT, findSupportedImageFormat.TextureUses, VulkanTextureUses::STORAGE, features);
-	TRANSLATE_MASK(VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT, findSupportedImageFormat.TextureUses, VulkanTextureUses::COLOR_ATTACHMENT, features);
-	TRANSLATE_MASK(VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT, findSupportedImageFormat.TextureUses, VulkanTextureUses::DEPTH_STENCIL_ATTACHMENT, features);
+	TranslateMask<(uint32)VulkanTextureUse::TRANSFER_SOURCE,			VK_FORMAT_FEATURE_TRANSFER_SRC_BIT>					(findSupportedImageFormat.TextureUses, features);
+	TranslateMask<(uint32)VulkanTextureUse::TRANSFER_DESTINATION,		VK_FORMAT_FEATURE_TRANSFER_DST_BIT>					(findSupportedImageFormat.TextureUses, features);
+	TranslateMask<(uint32)VulkanTextureUse::SAMPLE,						VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT>				(findSupportedImageFormat.TextureUses, features);
+	TranslateMask<(uint32)VulkanTextureUse::STORAGE,					VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT>				(findSupportedImageFormat.TextureUses, features);
+	TranslateMask<(uint32)VulkanTextureUse::COLOR_ATTACHMENT,			VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT>				(findSupportedImageFormat.TextureUses, features);
+	TranslateMask<(uint32)VulkanTextureUse::DEPTH_STENCIL_ATTACHMENT,	VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT>		(findSupportedImageFormat.TextureUses, features);
 	
 	for (auto e : findSupportedImageFormat.Candidates)
 	{
@@ -324,6 +341,8 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 		features2.features.shaderStorageImageArrayDynamicIndexing = true;
 		features2.features.shaderUniformBufferArrayDynamicIndexing = true;
 		features2.features.shaderStorageBufferArrayDynamicIndexing = true;
+		features2.features.shaderInt16 = true;
+		features2.features.shaderInt64 = true;
 
 		void** next_property = &properties2.pNext;
 		void** next_feature = &features2.pNext;
@@ -433,7 +452,7 @@ GAL::VulkanRenderDevice::VulkanRenderDevice(const CreateInfo& createInfo) : Rend
 					}
 					
 					tryAddExtension("VK_KHR_ray_query");
-
+						
 					if(tryAddExtension("VK_KHR_ray_tracing_pipeline"))
 					{
 						VkPhysicalDeviceRayTracingPipelineFeaturesKHR features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR };

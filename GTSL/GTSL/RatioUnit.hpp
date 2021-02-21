@@ -4,12 +4,15 @@
 
 namespace GTSL
 {
-	template<typename ST, uint64 NUM, uint64 RATIO>
+	template<typename ST, uint64 NUM, uint64 DEN>
 	class RatioUnit
 	{
 	public:
 		using storing_type = ST;
 
+		static constexpr uint64 NUMERATOR = NUM;
+		static constexpr uint64 DENOMINATOR = DEN;
+		
 		RatioUnit() = default;
 
 		explicit constexpr RatioUnit(const storing_type time) : count(time) {}
@@ -17,7 +20,7 @@ namespace GTSL
 		template<storing_type N, storing_type R>
 		constexpr RatioUnit(const RatioUnit<ST, N, R>& other) : count(other.count * (N / R))
 		{
-			static_assert(N >= NUM && R <= RATIO, "Converting to a larger unit will yield a lossy transformation.");
+			static_assert(N >= NUM && R <= DENOMINATOR, "Converting to a larger unit will yield a lossy transformation.");
 		}
 
 		constexpr RatioUnit(const RatioUnit& other) : count(other.count) {}
@@ -29,8 +32,24 @@ namespace GTSL
 			return RatioUnit<S, N, R>(count * (N / R));
 		}
 
-		template<typename RET, typename S1, storing_type N1, storing_type R1, typename S2, storing_type N2, storing_type R2>
-		static constexpr RET As(const RatioUnit<S1, N1, R1>& a, const RatioUnit<S2, N2, R2>& b) { return static_cast<RET>(a.count) * static_cast<RET>((N2 / R2)); }
+		template<typename RET, class R>
+		RET As()
+		{
+			if constexpr ((NUM % DEN) == 0)
+			{
+				auto value = count;
+				value *= NUM / DEN;
+
+				if constexpr ((R::NUMERATOR % R::DENOMINATOR) == 0)
+				{
+					return RET(value * (R::NUMERATOR / R::DENOMINATOR));
+				}
+			}
+			
+			auto value = static_cast<RET>(count);
+			value *= (static_cast<RET>(NUM) / static_cast<RET>(DEN));
+			return value * (static_cast<RET>(R::NUMERATOR) / static_cast<RET>(R::DENOMINATOR));
+		}
 
 		operator storing_type() const { return count; }
 		

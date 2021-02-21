@@ -62,7 +62,7 @@ namespace GAL
 			PresentModes PresentMode;
 			VulkanTextureFormat Format;
 			VulkanColorSpace ColorSpace;
-			VulkanTextureUses::value_type TextureUses;
+			VulkanTextureUses TextureUses;
 			const Surface* Surface = nullptr;
 			const VulkanQueue* Queue = nullptr;
 		};
@@ -79,7 +79,7 @@ namespace GAL
 			PresentModes PresentMode;
 			VulkanTextureFormat Format;
 			VulkanColorSpace ColorSpace;
-			VulkanTextureUses::value_type TextureUses;
+			VulkanTextureUses TextureUses;
 			const VulkanSurface* Surface = nullptr;
 			const VulkanQueue* Queue = nullptr;
 		};

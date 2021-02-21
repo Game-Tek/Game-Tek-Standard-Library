@@ -36,12 +36,18 @@ namespace GTSL
 
 	template<typename U>
 	inline constexpr bool IsUnion = __is_union(U);
+
+	template<typename T>
+	inline constexpr bool IsPOD = __is_pod(T);
 	
 	template<typename E>
 	concept Enum = IsEnum<E>;
 
 	template<typename U>
 	concept Union = IsUnion<U>;
+
+	template<typename T>
+	concept POD = IsPOD<T>;
 
 	template<Enum E>
 	using UnderlyingType = __underlying_type(E);

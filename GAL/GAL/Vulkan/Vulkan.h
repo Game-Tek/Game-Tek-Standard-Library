@@ -91,6 +91,29 @@ namespace GAL
 	//	}
 	//}
 
+	inline VkFormat FormatToVkFomat(const Format format)
+	{
+		switch (format)
+		{
+		case Format::RGBA_I8: return VK_FORMAT_R8G8B8A8_UNORM;
+		case Format::RGBA_F16: return VK_FORMAT_R16G16B16A16_SFLOAT;
+		case Format::BGRA_I8: return VK_FORMAT_B8G8R8A8_UNORM;
+		case Format::RGBA_F32: return VK_FORMAT_R32G32B32A32_SFLOAT;
+		case Format::F32: return VK_FORMAT_D32_SFLOAT;
+		}
+
+		GAL_DEBUG_BREAK;
+	}
+
+	inline VkImageAspectFlags TextureAspectToVkImageAspectFlags(const TextureType textureType)
+	{
+		switch (textureType)
+		{
+		case TextureType::COLOR: return VK_IMAGE_ASPECT_COLOR_BIT;
+		case TextureType::DEPTH: return VK_IMAGE_ASPECT_DEPTH_BIT;
+		}
+	}
+	
 	enum class VulkanAccelerationStructureType : GTSL::uint8
 	{
 		TOP_LEVEL = 0, BOTTOM_LEVEL = 1
@@ -229,8 +252,6 @@ namespace GAL
 		{
 		case TextureType::COLOR: return VK_IMAGE_ASPECT_COLOR_BIT;
 		case TextureType::DEPTH: return VK_IMAGE_ASPECT_DEPTH_BIT;
-		case TextureType::STENCIL: return VK_IMAGE_ASPECT_STENCIL_BIT;
-		case TextureType::DEPTH_STENCIL: return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 		default: return VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM;
 		}
 	}
@@ -303,27 +324,40 @@ namespace GAL
 		OPTIMAL = 0,
 		LINEAR = 1,
 	};
-	
-	struct VulkanTextureUses : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, SAMPLE = 4, STORAGE = 8, COLOR_ATTACHMENT = 16, DEPTH_STENCIL_ATTACHMENT = 32, TRANSIENT_ATTACHMENT = 64, INPUT_ATTACHMENT = 128;
-	};
 
-	enum class VulkanDimensions
+	using VulkanTextureUses = GTSL::Flags<GTSL::uint32>;
+
+	namespace VulkanTextureUse
 	{
-		LINEAR = 0, SQUARE = 1, CUBE = 2
+		static constexpr VulkanTextureUses TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, SAMPLE = 4, STORAGE = 8, COLOR_ATTACHMENT = 16, DEPTH_STENCIL_ATTACHMENT = 32, TRANSIENT_ATTACHMENT = 64, INPUT_ATTACHMENT = 128;
+	}
+
+	enum class VulkanDimensions : GTSL::uint8
+	{
+		LINE = 0, SQUARE = 1, CUBE = 2
 	};
 
 	inline VulkanDimensions DimensionsToVulkanDimension(const Dimension dimension)
 	{
 		switch (dimension)
 		{
-		case Dimension::LINEAR: return VulkanDimensions::LINEAR;
+		case Dimension::LINEAR: return VulkanDimensions::LINE;
 		case Dimension::SQUARE: return VulkanDimensions::SQUARE;
 		case Dimension::CUBE: return VulkanDimensions::CUBE;
 		}
 
 		GAL_DEBUG_BREAK;
+	}
+
+	inline VulkanDimensions VulkanDimensionsFromExtent(const GTSL::Extent3D extent)
+	{
+		if(extent.Height != 1)
+		{
+			if (extent.Depth != 1) { return VulkanDimensions::CUBE; }
+			return VulkanDimensions::SQUARE;
+		}
+
+		return VulkanDimensions::LINE;
 	}
 	
 	enum class VulkanTextureLayout
@@ -397,7 +431,7 @@ namespace GAL
 	
 	struct VulkanShaderStage : GTSL::Flags<GTSL::uint32>
 	{
-		static constexpr value_type VERTEX = 1, TESSELLATION_CONTROL = 2;
+		static constexpr value_type VERTEX = 1, TESSELLATION_CONTROL = 2, TASK = 0x00000040, MESH = 0x00000080;
 		static constexpr value_type TESSELLATION_EVALUATION = 4, GEOMETRY = 8, FRAGMENT = 16, COMPUTE = 32, ALL = 0x7FFFFFFF;
 		static constexpr value_type RAY_GEN = 0x00000100, ANY_HIT = 0x00000200, CLOSEST_HIT = 0x00000400, MISS = 0x00000800, INTERSECTION = 0x00001000, CALLABLE = 0x00002000;
 	};
@@ -646,25 +680,33 @@ namespace GAL
 
 		return VulkanTextureFormat::UNDEFINED;
 	}
+
+	template<GTSL::uint32 FV, GTSL::uint32 TV, typename FVR, typename TVR>
+	void TranslateMask(const FVR fromVar, TVR& toVar)
+	{
+		GTSL::SetBitAs(GTSL::FindFirstSetBit(TV), static_cast<GTSL::uint32>(fromVar) & FV, static_cast<GTSL::uint32&>(toVar));
+	}
+	
+//#define TRANSLATE_MASK(toVal, fromVar, fromVal, toVar) GTSL::SetBitAs(GTSL::FindFirstSetBit(static_cast<GTSL::uint32>(toVal)), fromVar & (fromVal), static_cast<GTSL::uint32&>(toVar))
 	
 	inline VulkanShaderStage ShaderStageToVulkanShaderStage(const ShaderStage::value_type stage)
 	{
 		VulkanShaderStage shaderStage{};
-
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::VERTEX), stage & ShaderStage::VERTEX, shaderStage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::TESSELLATION_CONTROL), stage & ShaderStage::TESSELLATION_CONTROL, shaderStage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::TESSELLATION_EVALUATION), stage & ShaderStage::TESSELLATION_EVALUATION, shaderStage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::GEOMETRY), stage & ShaderStage::GEOMETRY, shaderStage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::FRAGMENT), stage & ShaderStage::FRAGMENT, shaderStage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::COMPUTE), stage & ShaderStage::COMPUTE, shaderStage);
-		//GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::TASK), stage & ShaderStage::TASK, stage);
-		//GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::MESH), stage & ShaderStage::MESH, stage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::RAY_GEN), stage & ShaderStage::RAY_GEN, shaderStage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::ANY_HIT), stage & ShaderStage::ANY_HIT, shaderStage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::CLOSEST_HIT), stage & ShaderStage::CLOSEST_HIT, shaderStage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::MISS), stage & ShaderStage::MISS, shaderStage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::INTERSECTION), stage & ShaderStage::INTERSECTION, shaderStage);
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(VulkanShaderStage::CALLABLE), stage & ShaderStage::CALLABLE, shaderStage);
+		
+		TranslateMask<ShaderStage::VERTEX,					VulkanShaderStage::VERTEX					>(stage, shaderStage);
+		TranslateMask<ShaderStage::TESSELLATION_CONTROL,	VulkanShaderStage::TESSELLATION_CONTROL		>(stage, shaderStage);
+		TranslateMask<ShaderStage::TESSELLATION_EVALUATION,	VulkanShaderStage::TESSELLATION_EVALUATION	>(stage, shaderStage);
+		TranslateMask<ShaderStage::GEOMETRY,				VulkanShaderStage::GEOMETRY					>(stage, shaderStage);
+		TranslateMask<ShaderStage::FRAGMENT,				VulkanShaderStage::FRAGMENT					>(stage, shaderStage);
+		TranslateMask<ShaderStage::COMPUTE,					VulkanShaderStage::COMPUTE					>(stage, shaderStage);
+		TranslateMask<ShaderStage::TASK,					VulkanShaderStage::TASK						>(stage, shaderStage);
+		TranslateMask<ShaderStage::MESH,					VulkanShaderStage::MESH						>(stage, shaderStage);
+		TranslateMask<ShaderStage::RAY_GEN,					VulkanShaderStage::RAY_GEN					>(stage, shaderStage);
+		TranslateMask<ShaderStage::ANY_HIT,					VulkanShaderStage::ANY_HIT					>(stage, shaderStage);
+		TranslateMask<ShaderStage::CLOSEST_HIT,				VulkanShaderStage::CLOSEST_HIT				>(stage, shaderStage);
+		TranslateMask<ShaderStage::MISS,					VulkanShaderStage::MISS						>(stage, shaderStage);
+		TranslateMask<ShaderStage::INTERSECTION,			VulkanShaderStage::INTERSECTION				>(stage, shaderStage);
+		TranslateMask<ShaderStage::CALLABLE,				VulkanShaderStage::CALLABLE					>(stage, shaderStage);
 
 		return shaderStage;
 	}
@@ -674,8 +716,6 @@ namespace GAL
 		switch (type) {
 		case TextureType::COLOR: return VulkanTextureType::COLOR;
 		case TextureType::DEPTH: return VulkanTextureType::DEPTH;
-		case TextureType::STENCIL: return VulkanTextureType::STENCIL;
-		case TextureType::DEPTH_STENCIL: return VulkanTextureType::DEPTH | VulkanTextureType::STENCIL;
 		}
 
 		return 0;

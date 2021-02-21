@@ -13,7 +13,7 @@ namespace GAL
 		struct CreateInfo final : VulkanCreateInfo
 		{
 			VulkanTextureLayout InitialLayout;
-			VulkanTextureUses::value_type Uses;
+			VulkanTextureUses Uses;
 			VulkanTextureFormat Format;
 			GTSL::Extent3D Extent{ 1280, 720, 1 };
 			VulkanTextureTiling Tiling;

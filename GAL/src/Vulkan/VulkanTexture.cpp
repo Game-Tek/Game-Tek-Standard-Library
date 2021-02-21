@@ -14,7 +14,7 @@ void GAL::VulkanTexture::GetMemoryRequirements(GetMemoryRequirementsInfo* info)
 	vkImageCreateInfo.format = static_cast<VkFormat>(info->CreateInfo->Format);
 	vkImageCreateInfo.tiling = static_cast<VkImageTiling>(info->CreateInfo->Tiling);
 	vkImageCreateInfo.initialLayout = static_cast<VkImageLayout>(info->CreateInfo->InitialLayout);
-	vkImageCreateInfo.usage = info->CreateInfo->Uses;
+	vkImageCreateInfo.usage = static_cast<VkImageUsageFlags>(info->CreateInfo->Uses);
 	vkImageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 	vkImageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 

@@ -9,6 +9,7 @@
 #include "Id.h"
 #include "Pair.h"
 #include "ShortString.hpp"
+#include "Math/Vector2.h"
 #include "Math/Vector3.h"
 
 namespace GTSL
@@ -127,6 +128,30 @@ namespace GTSL
 		buffer.ReadBytes(sizeof(T), reinterpret_cast<byte*>(&enu));
 	}
 
+	template<POD T, class ALLOCATOR>
+	void Insert(const T pod, Buffer<ALLOCATOR>& buffer)
+	{
+		buffer.CopyBytes(sizeof(T), reinterpret_cast<const byte*>(&pod));
+	}
+
+	template<POD T, class ALLOCATOR>
+	void Extract(T& pod, Buffer<ALLOCATOR>& buffer)
+	{
+		buffer.ReadBytes(sizeof(T), reinterpret_cast<byte*>(&pod));
+	}
+
+	template<class ALLOCATOR>
+	void Insert(const Vector2 vector2, Buffer<ALLOCATOR>& buffer)
+	{
+		buffer.CopyBytes(sizeof(float32) * 2, reinterpret_cast<const byte*>(&vector2));
+	}
+
+	template<class ALLOCATOR>
+	void Extract(Vector2& vector2, Buffer<ALLOCATOR>& buffer)
+	{
+		buffer.ReadBytes(sizeof(float32) * 2, reinterpret_cast<byte*>(&vector2));
+	}
+	
 	template<class ALLOCATOR>
 	void Insert(const Vector3 vector3, Buffer<ALLOCATOR>& buffer)
 	{
@@ -137,6 +162,18 @@ namespace GTSL
 	void Extract(Vector3& vector3, Buffer<ALLOCATOR>& buffer)
 	{
 		buffer.ReadBytes(sizeof(float32) * 3, reinterpret_cast<byte*>(&vector3));
+	}
+
+	template<class ALLOCATOR>
+	void Insert(const Vector4 vector4, Buffer<ALLOCATOR>& buffer)
+	{
+		buffer.CopyBytes(sizeof(float32) * 4, reinterpret_cast<const byte*>(&vector4));
+	}
+
+	template<class ALLOCATOR>
+	void Extract(Vector4& vector4, Buffer<ALLOCATOR>& buffer)
+	{
+		buffer.ReadBytes(sizeof(float32) * 4, reinterpret_cast<byte*>(&vector4));
 	}
 	
 	//template<Union U, class ALLOCATOR>

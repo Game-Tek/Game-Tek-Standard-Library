@@ -4,6 +4,8 @@
 
 #include <GTSL/Flags.h>
 
+#include <GTSL/Algorithm.h>
+
 namespace GAL
 {
 	template<typename T>
@@ -26,15 +28,69 @@ namespace GAL
 
 	constexpr GTSL::uint8 RAY_GEN_TABLE_INDEX = 0, HIT_TABLE_INDEX = 1, MISS_TABLE_INDEX = 2, CALLABLE_TABLE_INDEX = 3;
 
-#define MAKE_FORMAT_FLAG(compCount, compType, bitDepth, a, b, c, d) ((bitDepth) | (compType << 6) | (compCount << 10) | ((a | (b << 2) | (c << 4) | (d << 6)) << 14))
+	enum class ComponentType : GTSL::uint8 { INT, UINT, FLOAT };
+	enum class TextureType : GTSL::uint8 { COLOR, DEPTH };
+	
+	inline constexpr GTSL::uint32 MakeFormatFlag(GTSL::uint8 compCount, ComponentType compType, GTSL::uint8 bitDepth, TextureType type, GTSL::uint8 a, GTSL::uint8 b, GTSL::uint8 c, GTSL::uint8 d)
+	{
+		return ((bitDepth) | ((GTSL::UnderlyingType<ComponentType>(compType) << 6) | (compCount << 10) | ((a | (b << 2) | (c << 4) | (d << 6)) << 14)) | (GTSL::UnderlyingType<TextureType>(type) << 16));
+	}
 
+	struct FormatDescriptor
+	{
+		FormatDescriptor() = default;
+		
+		constexpr FormatDescriptor(ComponentType compType, GTSL::uint8 compCount, GTSL::uint8 bitDepth, TextureType type, GTSL::uint8 a, GTSL::uint8 b, GTSL::uint8 c, GTSL::uint8 d) :
+		ComponentType(compType), ComponentCount(compCount), A(a), B(b), C(c), D(d), BitDepth(bitDepth), Type(type)
+		{}
+		
+		ComponentType ComponentType : 4;
+		GTSL::uint8 ComponentCount : 4;
+		GTSL::uint8 A : 4;
+		GTSL::uint8 B : 4;
+		GTSL::uint8 C : 4;
+		GTSL::uint8 D : 4;
+		GTSL::uint8 BitDepth : 6;
+		TextureType Type : 2;
+	};
+
+	namespace FORMATS
+	{
+		static constexpr auto BGRA_I8 = FormatDescriptor(ComponentType::INT, 4, 8, TextureType::COLOR, 2, 1, 0, 3);
+		static constexpr auto RGBA_F16 = FormatDescriptor(ComponentType::FLOAT, 4, 16, TextureType::COLOR, 0, 1, 2, 3);
+		static constexpr auto RGBA_I8 = FormatDescriptor(ComponentType::INT, 4, 8, TextureType::COLOR, 0, 1, 2, 3);
+	}
+		
+	inline constexpr GTSL::uint32 MakeFormatFlag(FormatDescriptor formatDescriptor)
+	{
+		return  MakeFormatFlag(formatDescriptor.ComponentCount, formatDescriptor.ComponentType, formatDescriptor.BitDepth, formatDescriptor.Type, formatDescriptor.A, formatDescriptor.B, formatDescriptor.C, formatDescriptor.D);
+	}
+	
 	enum class Format
 	{
-		BGRA_I8 = MAKE_FORMAT_FLAG(4, 0, 8, 2, 1, 0, 3),
-		RGBA_F32 = MAKE_FORMAT_FLAG(4, 1, 32, 0, 1, 2, 3)
+		RGBA_I8 = MakeFormatFlag(FORMATS::RGBA_I8),
+		RGBA_F16 = MakeFormatFlag(FORMATS::RGBA_F16),
+		BGRA_I8 = MakeFormatFlag(FORMATS::BGRA_I8),
+		RGBA_F32 = MakeFormatFlag(4, ComponentType::FLOAT, 32, TextureType::COLOR, 0, 1, 2, 3),
+		F32 = MakeFormatFlag(1, ComponentType::FLOAT, 32, TextureType::DEPTH, 0, 0, 0, 0)
 	};
 	
+	inline constexpr Format MakeFormatFromFormatDescriptor(const FormatDescriptor formatDescriptor)
+	{
+		return Format(MakeFormatFlag(formatDescriptor));
+	}
+	
 	class RenderDevice;
+
+	using MemoryTypes = GTSL::Flags<GTSL::uint32>;
+
+	namespace MemoryType
+	{
+		static constexpr MemoryTypes GPU = 1;
+		static constexpr MemoryTypes HOST_VISIBLE = 2;
+		static constexpr MemoryTypes HOST_COHERENT = 4;
+		static constexpr MemoryTypes HOST_CACHED = 8;
+	}
 	
 	struct ShaderStage : GTSL::Flags<GTSL::uint32>
 	{
@@ -108,14 +164,6 @@ namespace GAL
 		LINEAR,
 		SQUARE,
 		CUBE
-	};
-
-	enum class TextureType : GTSL::uint8
-	{
-		COLOR,
-		DEPTH,
-		STENCIL,
-		DEPTH_STENCIL
 	};
 
 	// ATTACHMENTS
