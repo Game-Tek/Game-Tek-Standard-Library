@@ -314,11 +314,10 @@ namespace GTSL
 		 * \return Length of vector after inserting, also index At which the object was inserted.
 		 */
 		template <typename... ARGS>
-		length_type EmplaceBack(ARGS&&... args)
+		T& EmplaceBack(ARGS&&... args)
 		{
 			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
-			::new(static_cast<void*>(this->data + this->length)) T(GTSL::ForwardRef<ARGS>(args)...);
-			return this->length++;
+			return *::new(static_cast<void*>(this->data + this->length++)) T(GTSL::ForwardRef<ARGS>(args)...);
 		}
 
 		/**

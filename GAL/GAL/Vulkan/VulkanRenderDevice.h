@@ -7,7 +7,10 @@
 
 #include <GTSL/Pair.h>
 
+
+#include "VulkanSynchronization.h"
 #include "GTSL/Array.hpp"
+#include "GTSL/DataSizes.h"
 
 namespace GAL
 {
@@ -34,7 +37,7 @@ namespace GAL
 			 * \brief Pipeline stages at which each corresponding semaphore wait will occur.
 			 */
 			GTSL::Range<const GTSL::uint32*> WaitPipelineStages;
-			const VulkanFence* Fence{ nullptr };
+			VulkanFence Fence;
 		};
 		void Submit(const SubmitInfo& submitInfo);
 
@@ -53,8 +56,6 @@ namespace GAL
 	class VulkanRenderDevice final : public RenderDevice
 	{
 	public:
-		VulkanRenderDevice() = default;
-
 		struct RayTracingCapabilities
 		{
 			GTSL::uint32 RecursionDepth = 0, ShaderGroupAlignment = 0, ShaderGroupBaseAlignment = 0, ShaderGroupHandleSize = 0, ScratchBuildOffsetAlignment = 0;
@@ -70,10 +71,13 @@ namespace GAL
 			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
 			bool Debug = false;
 			bool PerformanceValidation = false;
+			bool SynchronizationValidation = false;
 			GTSL::Range<const GTSL::Pair<Extension, void*>*> Extensions;
 			AllocationInfo AllocationInfo;
 		};
-		explicit VulkanRenderDevice(const CreateInfo& createInfo);
+		VulkanRenderDevice() = default;
+
+		[[no_discard]] bool Initialize(const CreateInfo& createInfo);
 		
 		~VulkanRenderDevice();
 
@@ -93,66 +97,64 @@ namespace GAL
 		
 		[[nodiscard]] GTSL::uint32 FindMemoryType(GTSL::uint32 typeFilter, GTSL::uint32 memoryType) const;
 
-		[[nodiscard]] GTSL::uint32 GetuniformBufferBindingOffsetAlignment() const { return static_cast<GTSL::uint32>(deviceProperties.limits.minUniformBufferOffsetAlignment); }
-		[[nodiscard]] GTSL::uint32 GetStorageBufferBindingOffsetAlignment() const { return static_cast<GTSL::uint32>(deviceProperties.limits.minStorageBufferOffsetAlignment); }
+		[[nodiscard]] GTSL::uint32 GetUniformBufferBindingOffsetAlignment() const { return static_cast<GTSL::uint32>(uniformBufferMinOffset); }
+		[[nodiscard]] GTSL::uint32 GetStorageBufferBindingOffsetAlignment() const { return static_cast<GTSL::uint32>(storageBufferMinOffset); }
 
-		GTSL::Array<MemoryTypes, 16> GetMemoryTypes() const;
+		struct MemoryHeap
+		{
+			GTSL::Byte Size;
+			MemoryTypes MemoryTypes;
+		};
 		
-		[[nodiscard]] const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const { return deviceProperties; }
+		GTSL::Array<MemoryHeap, 16> GetMemoryHeaps() const;
+		GTSL::Array<MemoryTypes, 16> GetMemoryTypes() const;
+	
 
 		[[nodiscard]] const VkAllocationCallbacks* GetVkAllocationCallbacks() const { return nullptr; }
 
-		GTSL::uint32 GetLinearNonLinearGranularity() const { return deviceProperties.limits.bufferImageGranularity; }
+		GTSL::uint32 GetLinearNonLinearGranularity() const { return linearNonLinearAlignment; }
 		
-		PFN_vkCreateAccelerationStructureKHR vkCreateAccelerationStructureKHR;
-		PFN_vkDestroyAccelerationStructureKHR vkDestroyAccelerationStructureKHR;
-		
-		PFN_vkCreateRayTracingPipelinesKHR vkCreateRayTracingPipelinesKHR;
-
-		PFN_vkGetAccelerationStructureBuildSizesKHR vkGetAccelerationStructureBuildSizesKHR;
-		PFN_vkGetAccelerationStructureDeviceAddressKHR vkGetAccelerationStructureDeviceAddressKHR;
-		PFN_vkGetRayTracingShaderGroupHandlesKHR vkGetRayTracingShaderGroupHandlesKHR;
-		
-		PFN_vkBuildAccelerationStructuresKHR vkBuildAccelerationStructuresKHR;
-		PFN_vkCmdBuildAccelerationStructuresKHR vkCmdBuildAccelerationStructuresKHR;
-
-		PFN_vkCreateDeferredOperationKHR vkCreateDeferredOperationKHR;
-		PFN_vkDeferredOperationJoinKHR vkDeferredOperationJoinKHR;
-		PFN_vkGetDeferredOperationResultKHR vkGetDeferredOperationResultKHR;
-		PFN_vkGetDeferredOperationMaxConcurrencyKHR vkGetDeferredOperationMaxConcurrencyKHR;
-		PFN_vkDestroyDeferredOperationKHR vkDestroyDeferredOperationKHR;
-
-		PFN_vkCmdCopyAccelerationStructureKHR vkCmdCopyAccelerationStructureKHR;
-		PFN_vkCmdCopyAccelerationStructureToMemoryKHR vkCmdCopyAccelerationStructureToMemoryKHR;
-		PFN_vkCmdCopyMemoryToAccelerationStructureKHR vkCmdCopyMemoryToAccelerationStructureKHR;
-		PFN_vkCmdWriteAccelerationStructuresPropertiesKHR vkCmdWriteAccelerationStructuresPropertiesKHR;
-		PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR;
+		PFN_vkCreateAccelerationStructureKHR vkCreateAccelerationStructureKHR = nullptr;
+		PFN_vkDestroyAccelerationStructureKHR vkDestroyAccelerationStructureKHR = nullptr;
+		PFN_vkCreateRayTracingPipelinesKHR vkCreateRayTracingPipelinesKHR = nullptr;
+		PFN_vkGetAccelerationStructureBuildSizesKHR vkGetAccelerationStructureBuildSizesKHR = nullptr;
+		PFN_vkGetAccelerationStructureDeviceAddressKHR vkGetAccelerationStructureDeviceAddressKHR = nullptr;
+		PFN_vkGetRayTracingShaderGroupHandlesKHR vkGetRayTracingShaderGroupHandlesKHR = nullptr;
+		PFN_vkBuildAccelerationStructuresKHR vkBuildAccelerationStructuresKHR = nullptr;
+		PFN_vkCmdBuildAccelerationStructuresKHR vkCmdBuildAccelerationStructuresKHR = nullptr;
+		PFN_vkCreateDeferredOperationKHR vkCreateDeferredOperationKHR = nullptr;
+		PFN_vkDeferredOperationJoinKHR vkDeferredOperationJoinKHR = nullptr;
+		PFN_vkGetDeferredOperationResultKHR vkGetDeferredOperationResultKHR = nullptr;
+		PFN_vkGetDeferredOperationMaxConcurrencyKHR vkGetDeferredOperationMaxConcurrencyKHR = nullptr;
+		PFN_vkDestroyDeferredOperationKHR vkDestroyDeferredOperationKHR = nullptr;
+		PFN_vkCmdCopyAccelerationStructureKHR vkCmdCopyAccelerationStructureKHR = nullptr;
+		PFN_vkCmdCopyAccelerationStructureToMemoryKHR vkCmdCopyAccelerationStructureToMemoryKHR = nullptr;
+		PFN_vkCmdCopyMemoryToAccelerationStructureKHR vkCmdCopyMemoryToAccelerationStructureKHR = nullptr;
+		PFN_vkCmdWriteAccelerationStructuresPropertiesKHR vkCmdWriteAccelerationStructuresPropertiesKHR = nullptr;
+		PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR = nullptr;
 		
 #if (_DEBUG)
-		PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
-		PFN_vkCmdInsertDebugUtilsLabelEXT vkCmdInsertDebugUtilsLabelEXT;
-		PFN_vkCmdBeginDebugUtilsLabelEXT vkCmdBeginDebugUtilsLabelEXT;
-		PFN_vkCmdEndDebugUtilsLabelEXT vkCmdEndDebugUtilsLabelEXT;
+		PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT = nullptr;
+		PFN_vkCmdInsertDebugUtilsLabelEXT vkCmdInsertDebugUtilsLabelEXT = nullptr;
+		PFN_vkCmdBeginDebugUtilsLabelEXT vkCmdBeginDebugUtilsLabelEXT = nullptr;
+		PFN_vkCmdEndDebugUtilsLabelEXT vkCmdEndDebugUtilsLabelEXT = nullptr;
 #endif
 
 	private:
 #if (_DEBUG)
-		PFN_vkCreateDebugUtilsMessengerEXT createDebugUtilsFunction;
-		VkDebugUtilsMessengerEXT debugMessenger;
-		PFN_vkDestroyDebugUtilsMessengerEXT destroyDebugUtilsFunction;
-
+		VkDebugUtilsMessengerEXT debugMessenger = nullptr;
+		bool debug = false;
 #endif
 
-		VkInstance instance;
-		VkPhysicalDevice physicalDevice;
-		VkDevice device;
-
-		AllocationInfo allocationInfo;
+		GTSL::uint16 uniformBufferMinOffset, storageBufferMinOffset, linearNonLinearAlignment;
 		
+		VkInstance instance = nullptr;
+		VkPhysicalDevice physicalDevice = nullptr;
+		VkDevice device = nullptr;
+		AllocationInfo allocationInfo;
 		VkAllocationCallbacks allocationCallbacks;
-
-		VkPhysicalDeviceProperties deviceProperties;
 		VkPhysicalDeviceMemoryProperties memoryProperties;
+
 		
 		friend VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 	};

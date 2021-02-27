@@ -37,7 +37,7 @@ namespace GAL
 
 		enum class Extension
 		{
-			RAY_TRACING, PIPELINE_CACHE_EXTERNAL_SYNC, SCALAR_LAYOUT, BUFFER_REFERENCE
+			RAY_TRACING, PIPELINE_CACHE_EXTERNAL_SYNC, SCALAR_LAYOUT, SWAPCHAIN_RENDERING
 		};
 
 		struct AllocationInfo
@@ -78,9 +78,6 @@ namespace GAL
 		RenderDevice(GTSL::Delegate<void(const char*, MessageSeverity)> pDelegate) : debugPrintFunction(pDelegate)
 		{
 		}
-		
-		[[nodiscard]] GTSL::AllocatorReference* GetPersistentAllocationsAllocatorReference() const { return persistentAllocatorReference; }
-		[[nodiscard]] GTSL::AllocatorReference* GetTransientAllocationsAllocatorReference() const { return transientAllocatorReference; }
 
 		GTSL::Delegate<void(const char*, MessageSeverity)>& GetDebugPrintFunction() { return debugPrintFunction; }
 		
@@ -89,9 +86,5 @@ namespace GAL
 		~RenderDevice() = default;
 
 		GTSL::Delegate<void(const char*, MessageSeverity)> debugPrintFunction;
-		
-		GTSL::AllocatorReference* persistentAllocatorReference{ nullptr };
-		GTSL::AllocatorReference* transientAllocatorReference{ nullptr };
-
 	};
 }

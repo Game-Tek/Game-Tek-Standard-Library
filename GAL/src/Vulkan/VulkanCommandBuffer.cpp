@@ -68,7 +68,7 @@ void GAL::VulkanCommandBuffer::AdvanceSubPass(const AdvanceSubpassInfo& advanceS
 	vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void GAL::VulkanCommandBuffer::EndRenderPass(const EndRenderPassInfo& endRenderPassInfo)
+void GAL::VulkanCommandBuffer::EndRenderPass(const VulkanRenderDevice* renderDevice)
 {
 	vkCmdEndRenderPass(commandBuffer);
 }
@@ -81,96 +81,97 @@ void GAL::VulkanCommandBuffer::SetScissor(const SetScissorInfo& info)
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 }
 
-void GAL::VulkanCommandBuffer::BindPipeline(const BindPipelineInfo& bindPipelineInfo)
+void GAL::VulkanCommandBuffer::BindPipeline(const VulkanRenderDevice* renderDevice, VulkanPipeline pipeline, VulkanPipelineType pipelineType)
 {
-	vkCmdBindPipeline(commandBuffer, static_cast<VkPipelineBindPoint>(bindPipelineInfo.PipelineType), bindPipelineInfo.Pipeline.GetVkPipeline());
+	vkCmdBindPipeline(commandBuffer, static_cast<VkPipelineBindPoint>(pipelineType), pipeline.GetVkPipeline());
 }
 
-void GAL::VulkanCommandBuffer::BindIndexBuffer(const BindIndexBufferInfo& buffer) const
+void GAL::VulkanCommandBuffer::BindIndexBuffer(const VulkanRenderDevice* renderDevice, VulkanBuffer buffer, GTSL::uint32 offset, VulkanIndexType indexType) const
 {
-	vkCmdBindIndexBuffer(commandBuffer, buffer.Buffer.GetVkBuffer(), buffer.Offset, static_cast<VkIndexType>(buffer.IndexType));
+	vkCmdBindIndexBuffer(commandBuffer, buffer.GetVkBuffer(), offset, static_cast<VkIndexType>(indexType));
 }
 
-void GAL::VulkanCommandBuffer::BindVertexBuffer(const BindVertexBufferInfo& buffer) const
+void GAL::VulkanCommandBuffer::BindVertexBuffer(const VulkanRenderDevice* renderDevice, VulkanBuffer buffer, GTSL::uint32 offset) const
 {
-	auto vkBuffer = buffer.Buffer.GetVkBuffer();
-	GTSL::uint64 offset = buffer.Offset;
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vkBuffer, &offset);
+	auto vkBuffer = buffer.GetVkBuffer();
+	GTSL::uint64 bigOffset = offset;
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vkBuffer, &bigOffset);
 }
 
-void GAL::VulkanCommandBuffer::UpdatePushConstant(const UpdatePushConstantsInfo& info)
+void GAL::VulkanCommandBuffer::UpdatePushConstant(const VulkanRenderDevice* vulkanRenderDevice, VulkanPipelineLayout pipelineLayout, GTSL::uint32 offset, GTSL::Range<const byte*> data, VulkanShaderStage::value_type shaderStages)
 {
-	vkCmdPushConstants(commandBuffer, info.PipelineLayout.GetVkPipelineLayout(), info.ShaderStages, info.Offset, info.Size, info.Data);
+	vkCmdPushConstants(commandBuffer, pipelineLayout.GetVkPipelineLayout(), shaderStages, offset, data.Bytes(), data.begin());
 }
 
-void GAL::VulkanCommandBuffer::Draw(const DrawInfo& info) const
+void GAL::VulkanCommandBuffer::Draw(const VulkanRenderDevice* renderDevice, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const
 {
-	vkCmdDraw(commandBuffer, info.VertexCount, info.InstanceCount, info.FirstVertex, info.FirstInstance);
+	vkCmdDraw(commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
-void GAL::VulkanCommandBuffer::DrawIndexed(const DrawIndexedInfo& drawIndexedInfo) const
+void GAL::VulkanCommandBuffer::DrawIndexed(const VulkanRenderDevice* renderDevice, uint32_t indexCount, uint32_t instanceCount) const
 {
-	vkCmdDrawIndexed(commandBuffer, drawIndexedInfo.IndexCount, drawIndexedInfo.InstanceCount, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, indexCount, instanceCount, 0, 0, 0);
 }
 
-void GAL::VulkanCommandBuffer::TraceRays(const TraceRaysInfo& traceRaysInfo)
+void GAL::VulkanCommandBuffer::TraceRays(const VulkanRenderDevice* renderDevice, GTSL::Array<ShaderTableDescriptor, 4> shaderTableDescriptors, GTSL::Extent3D dispatchSize)
 {
 	VkStridedDeviceAddressRegionKHR raygenSBT, hitSBT, missSBT, callableSBT;
-	raygenSBT.deviceAddress = traceRaysInfo.ShaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].Address;
-	raygenSBT.size = traceRaysInfo.ShaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].Size;
-	raygenSBT.stride = traceRaysInfo.ShaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].Stride;
+	raygenSBT.deviceAddress = shaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].Address;
+	raygenSBT.size = shaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].Entries * shaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].EntrySize;
+	raygenSBT.stride = shaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].EntrySize;
 
-	hitSBT.deviceAddress = traceRaysInfo.ShaderTableDescriptors[GAL::HIT_TABLE_INDEX].Address;
-	hitSBT.size = traceRaysInfo.ShaderTableDescriptors[GAL::HIT_TABLE_INDEX].Size;
-	hitSBT.stride = traceRaysInfo.ShaderTableDescriptors[GAL::HIT_TABLE_INDEX].Stride;
+	hitSBT.deviceAddress = shaderTableDescriptors[GAL::HIT_TABLE_INDEX].Address;
+	hitSBT.size = shaderTableDescriptors[GAL::HIT_TABLE_INDEX].Entries * shaderTableDescriptors[GAL::HIT_TABLE_INDEX].EntrySize;
+	hitSBT.stride = shaderTableDescriptors[GAL::HIT_TABLE_INDEX].EntrySize;
 
-	missSBT.deviceAddress = traceRaysInfo.ShaderTableDescriptors[GAL::MISS_TABLE_INDEX].Address;
-	missSBT.size = traceRaysInfo.ShaderTableDescriptors[GAL::MISS_TABLE_INDEX].Size;
-	missSBT.stride = traceRaysInfo.ShaderTableDescriptors[GAL::MISS_TABLE_INDEX].Stride;
+	missSBT.deviceAddress = shaderTableDescriptors[GAL::MISS_TABLE_INDEX].Address;
+	missSBT.size = shaderTableDescriptors[GAL::MISS_TABLE_INDEX].Entries * shaderTableDescriptors[GAL::MISS_TABLE_INDEX].EntrySize;
+	missSBT.stride = shaderTableDescriptors[GAL::MISS_TABLE_INDEX].EntrySize;
 
-	callableSBT.deviceAddress = traceRaysInfo.ShaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].Address;
-	callableSBT.size = traceRaysInfo.ShaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].Size;
-	callableSBT.stride = traceRaysInfo.ShaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].Stride;
-	
-	traceRaysInfo.RenderDevice->vkCmdTraceRaysKHR(commandBuffer, &raygenSBT, &missSBT, &hitSBT, &callableSBT, traceRaysInfo.DispatchSize.Width, traceRaysInfo.DispatchSize.Height, traceRaysInfo.DispatchSize.Depth);
+	callableSBT.deviceAddress = shaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].Address;
+	callableSBT.size = shaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].Entries * shaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].EntrySize;
+	callableSBT.stride = shaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].EntrySize;
+
+	renderDevice->vkCmdTraceRaysKHR(commandBuffer, &raygenSBT, &missSBT, &hitSBT, &callableSBT, dispatchSize.Width, dispatchSize.Height, dispatchSize.Depth);
 }
 
-void GAL::VulkanCommandBuffer::AddLabel(const AddLabelInfo& info)
+void GAL::VulkanCommandBuffer::AddLabel(const VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::UTF8*> name)
 {
 	VkDebugUtilsLabelEXT vkLabelInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
-	vkLabelInfo.pLabelName = info.Name.begin();
-	
-	info.RenderDevice->vkCmdInsertDebugUtilsLabelEXT(commandBuffer, &vkLabelInfo);
+	vkLabelInfo.pLabelName = name.begin();
+	renderDevice->vkCmdInsertDebugUtilsLabelEXT(commandBuffer, &vkLabelInfo);
 }
 
-void GAL::VulkanCommandBuffer::BeginRegion(const BeginRegionInfo& info) const
+void GAL::VulkanCommandBuffer::BeginRegion(const VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::UTF8*> name) const
 {
 	VkDebugUtilsLabelEXT vkLabelInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
-	vkLabelInfo.pLabelName = info.Name.begin();
-	
-	info.RenderDevice->vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &vkLabelInfo);
+	vkLabelInfo.pLabelName = name.begin();
+
+	renderDevice->vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &vkLabelInfo);
 }
 
-void GAL::VulkanCommandBuffer::EndRegion(const EndRegionInfo& info) const
+void GAL::VulkanCommandBuffer::EndRegion(const VulkanRenderDevice* renderDevice) const
 {
-	info.RenderDevice->vkCmdEndDebugUtilsLabelEXT(commandBuffer);	
+	renderDevice->vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 }
 
-void GAL::VulkanCommandBuffer::Dispatch(const DispatchInfo& dispatchInfo)
+void GAL::VulkanCommandBuffer::Dispatch(const VulkanRenderDevice* renderDevice, GTSL::Extent3D workGroups)
 {
-	vkCmdDispatch(commandBuffer, dispatchInfo.WorkGroups.Width, dispatchInfo.WorkGroups.Height, dispatchInfo.WorkGroups.Depth);
+	vkCmdDispatch(commandBuffer, workGroups.Width, workGroups.Height, workGroups.Depth);
 }
 
-void GAL::VulkanCommandBuffer::BindBindingsSets(const BindBindingsSetInfo& info)
+void GAL::VulkanCommandBuffer::BindBindingsSets(const VulkanRenderDevice* renderDevice, VulkanPipelineType pipelineType,
+	GTSL::Range<const VulkanBindingsSet*> bindingsSets, GTSL::Range<const GTSL::uint32*> offsets,
+	VulkanPipelineLayout pipelineLayout, GTSL::uint32 firstSet)
 {
-	vkCmdBindDescriptorSets(commandBuffer, static_cast<VkPipelineBindPoint>(info.PipelineType), info.PipelineLayout.GetVkPipelineLayout(), info.FirstSet,
-	info.BoundSets, reinterpret_cast<const VkDescriptorSet*>(info.BindingsSets.begin()), info.Offsets.ElementCount(), info.Offsets.begin());
+	vkCmdBindDescriptorSets(commandBuffer, static_cast<VkPipelineBindPoint>(pipelineType), pipelineLayout.GetVkPipelineLayout(), firstSet,
+		bindingsSets.ElementCount(), reinterpret_cast<const VkDescriptorSet*>(bindingsSets.begin()), offsets.ElementCount(), offsets.begin());
 }
 
-void GAL::VulkanCommandBuffer::CopyTextureToTexture(const CopyTextureToTextureInfo& info)
+void GAL::VulkanCommandBuffer::CopyTextureToTexture(const VulkanRenderDevice* renderDevice, VulkanTexture sourceTexture, VulkanTexture destinationTexture, VulkanTextureLayout sourceLayout, VulkanTextureLayout destinationLayout, GTSL::Extent3D extent)
 {
 	VkImageCopy vkImageCopy;
-	vkImageCopy.extent = Extent3DToVkExtent3D(info.Extent);
+	vkImageCopy.extent = Extent3DToVkExtent3D(extent);
 	vkImageCopy.srcOffset = {};
 	vkImageCopy.dstOffset = {};
 	vkImageCopy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -183,8 +184,8 @@ void GAL::VulkanCommandBuffer::CopyTextureToTexture(const CopyTextureToTextureIn
 	vkImageCopy.dstSubresource.layerCount = 1;
 	vkImageCopy.dstSubresource.mipLevel = 0;
 
-	vkCmdCopyImage(commandBuffer, info.SourceTexture.GetVkImage(), static_cast<VkImageLayout>(info.SourceLayout),
-		info.DestinationTexture.GetVkImage(), static_cast<VkImageLayout>(info.DestinationLayout), 1, &vkImageCopy);
+	vkCmdCopyImage(commandBuffer, sourceTexture.GetVkImage(), static_cast<VkImageLayout>(sourceLayout),
+		destinationTexture.GetVkImage(), static_cast<VkImageLayout>(destinationLayout), 1, &vkImageCopy);
 }
 
 void GAL::VulkanCommandBuffer::CopyBufferToTexture(const CopyBufferToTextureInfo& copyBufferToImageInfo)
@@ -203,42 +204,6 @@ void GAL::VulkanCommandBuffer::CopyBufferToTexture(const CopyBufferToTextureInfo
 		static_cast<VkImageLayout>(copyBufferToImageInfo.TextureLayout), 1, &region);
 }
 
-void GAL::VulkanCommandBuffer::AddPipelineBarrier(const AddPipelineBarrierInfo& pipelineBarrier) const
-{
-	Array<VkImageMemoryBarrier, 32> imageMemoryBarriers(pipelineBarrier.TextureBarriers.ElementCount());
-	//GTSL::Array<VkBufferMemoryBarrier, 1024> bufferMemoryBarriers;
-	Array<VkMemoryBarrier, 32> memoryBarriers(pipelineBarrier.MemoryBarriers.ElementCount());
-
-	for (uint32 i = 0; i < pipelineBarrier.TextureBarriers.ElementCount(); ++i)
-	{
-		imageMemoryBarriers[i].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		imageMemoryBarriers[i].pNext = nullptr;
-		imageMemoryBarriers[i].oldLayout = static_cast<VkImageLayout>(pipelineBarrier.TextureBarriers[i].CurrentLayout);
-		imageMemoryBarriers[i].newLayout = static_cast<VkImageLayout>(pipelineBarrier.TextureBarriers[i].TargetLayout);
-		imageMemoryBarriers[i].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		imageMemoryBarriers[i].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		imageMemoryBarriers[i].image = pipelineBarrier.TextureBarriers[i].Texture.GetVkImage();
-		imageMemoryBarriers[i].subresourceRange.aspectMask = (VkImageAspectFlags)pipelineBarrier.TextureBarriers[i].TextureType;
-		imageMemoryBarriers[i].subresourceRange.baseMipLevel = 0;
-		imageMemoryBarriers[i].subresourceRange.levelCount = 1;
-		imageMemoryBarriers[i].subresourceRange.baseArrayLayer = 0;
-		imageMemoryBarriers[i].subresourceRange.layerCount = 1;
-		imageMemoryBarriers[i].srcAccessMask = static_cast<VkAccessFlags>(pipelineBarrier.TextureBarriers[i].SourceAccessFlags);
-		imageMemoryBarriers[i].dstAccessMask = static_cast<VkAccessFlags>(pipelineBarrier.TextureBarriers[i].DestinationAccessFlags);
-	}
-
-	for(uint32 i = 0; i < pipelineBarrier.MemoryBarriers.ElementCount(); ++i)
-	{
-		memoryBarriers[i].sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
-		memoryBarriers[i].pNext = nullptr;
-		memoryBarriers[i].srcAccessMask = static_cast<VkAccessFlags>(pipelineBarrier.MemoryBarriers[i].SourceAccessFlags);
-		memoryBarriers[i].dstAccessMask = static_cast<VkAccessFlags>(pipelineBarrier.MemoryBarriers[i].DestinationAccessFlags);
-	}
-	
-	vkCmdPipelineBarrier(commandBuffer, static_cast<VkPipelineStageFlags>(pipelineBarrier.InitialStage), static_cast<VkPipelineStageFlags>(pipelineBarrier.FinalStage), 0,
-		memoryBarriers.GetLength(), memoryBarriers.begin(), 0, nullptr, imageMemoryBarriers.GetLength(), imageMemoryBarriers.begin());
-}
-
 void GAL::VulkanCommandBuffer::CopyBuffers(const CopyBuffersInfo& copyBuffersInfo)
 {
 	VkBufferCopy vk_buffer_copy;
@@ -246,46 +211,6 @@ void GAL::VulkanCommandBuffer::CopyBuffers(const CopyBuffersInfo& copyBuffersInf
 	vk_buffer_copy.srcOffset = copyBuffersInfo.SourceOffset;
 	vk_buffer_copy.dstOffset = copyBuffersInfo.DestinationOffset;
 	vkCmdCopyBuffer(commandBuffer, copyBuffersInfo.Source.GetVkBuffer(), copyBuffersInfo.Destination.GetVkBuffer(), 1, &vk_buffer_copy);
-}
-
-void GAL::VulkanCommandBuffer::BuildAccelerationStructure(const BuildAccelerationStructuresInfo& info) const
-{	
-	GTSL::Array<VkAccelerationStructureBuildGeometryInfoKHR, 8> buildGeometryInfos;
-	GTSL::Array<GTSL::Array<VkAccelerationStructureGeometryKHR, 8>, 8> geometriesPerAccelerationStructure;
-	GTSL::Array<GTSL::Array<VkAccelerationStructureBuildRangeInfoKHR, 8>, 8> buildRangesPerAccelerationStructure;
-	GTSL::Array<VkAccelerationStructureBuildRangeInfoKHR*, 8> buildRangesRangePerAccelerationStructure;
-
-	for (GTSL::uint32 accStrInfoIndex = 0; accStrInfoIndex < info.BuildAccelerationStructureInfos.ElementCount(); ++accStrInfoIndex)
-	{
-		auto& source = info.BuildAccelerationStructureInfos[accStrInfoIndex];
-
-		geometriesPerAccelerationStructure.EmplaceBack();
-		buildRangesPerAccelerationStructure.EmplaceBack();
-		buildRangesRangePerAccelerationStructure.EmplaceBack(buildRangesPerAccelerationStructure[accStrInfoIndex].begin());
-		
-		for(uint32 i = 0; i < source.Geometries.ElementCount(); ++i)
-		{
-			VkAccelerationStructureGeometryKHR accelerationStructureGeometry; VkAccelerationStructureBuildRangeInfoKHR buildRange;
-			buildGeometryAndRange(source.Geometries[i], accelerationStructureGeometry, buildRange);
-			geometriesPerAccelerationStructure[accStrInfoIndex].EmplaceBack(accelerationStructureGeometry);
-			buildRangesPerAccelerationStructure[accStrInfoIndex].EmplaceBack(buildRange);
-		}
-
-		VkAccelerationStructureBuildGeometryInfoKHR buildGeometryInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR };
-		buildGeometryInfo.flags = source.Flags;
-		buildGeometryInfo.srcAccelerationStructure = source.SourceAccelerationStructure.GetVkAccelerationStructure();
-		buildGeometryInfo.dstAccelerationStructure = source.DestinationAccelerationStructure.GetVkAccelerationStructure();
-		buildGeometryInfo.type = source.Geometries[0].Type == VulkanGeometryType::INSTANCES ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-		buildGeometryInfo.pGeometries = geometriesPerAccelerationStructure[accStrInfoIndex].begin();
-		buildGeometryInfo.ppGeometries = nullptr;
-		buildGeometryInfo.geometryCount = geometriesPerAccelerationStructure[accStrInfoIndex].GetLength();
-		buildGeometryInfo.scratchData.deviceAddress = source.ScratchBufferAddress;
-		buildGeometryInfo.mode = source.SourceAccelerationStructure.GetVkAccelerationStructure() ? VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR : VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
-		buildGeometryInfos.EmplaceBack(buildGeometryInfo);
-	}
-	
-	info.RenderDevice->vkCmdBuildAccelerationStructuresKHR(commandBuffer, info.BuildAccelerationStructureInfos.ElementCount(),
-		buildGeometryInfos.begin(), buildRangesRangePerAccelerationStructure.begin());
 }
 
 GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)

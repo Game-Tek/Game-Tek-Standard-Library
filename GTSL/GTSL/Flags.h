@@ -19,8 +19,10 @@ namespace GTSL
 		using value_type = T;
 		using type = Flags;
 		
-		Flags operator| (const Flags flag) { return value | flag; }
-		Flags& operator|= (const Flags flag) { return value |= flag; }
+		constexpr Flags operator| (const Flags flag) const { return Flags(value | flag.value); }
+		constexpr Flags& operator|= (const Flags flag) { value |= flag.value; return *this; }
+
+		constexpr bool operator==(const Flags other) const { return value == other.value; }
 	private:
 		friend Flags;
 		T value = 0;

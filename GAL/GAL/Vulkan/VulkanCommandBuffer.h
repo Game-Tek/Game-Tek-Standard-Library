@@ -4,12 +4,14 @@
 
 #include "Vulkan.h"
 #include "VulkanTexture.h"
+#include "VulkanRenderDevice.h"
 #include "VulkanAccelerationStructures.h"
 #include "VulkanPipelines.h"
 #include <GTSL/RGB.h>
 
 #include "VulkanFramebuffer.h"
 #include "VulkanRenderPass.h"
+#include "GTSL/Vector.hpp"
 
 #undef MemoryBarrier
 
@@ -64,10 +66,7 @@ namespace GAL
 		};
 		void AdvanceSubPass(const AdvanceSubpassInfo& advanceSubpassInfo);
 
-		struct EndRenderPassInfo final : VulkanRenderInfo
-		{
-		};
-		void EndRenderPass(const EndRenderPassInfo& endRenderPassInfo);
+		void EndRenderPass(const VulkanRenderDevice* renderDevice);
 
 		struct SetScissorInfo final : VulkanRenderInfo
 		{
@@ -76,106 +75,77 @@ namespace GAL
 		};
 		void SetScissor(const SetScissorInfo& info);
 		
-		struct BindPipelineInfo final : VulkanRenderInfo
-		{
-			VulkanPipeline Pipeline;
-			VulkanPipelineType PipelineType;
-		};
-		void BindPipeline(const BindPipelineInfo& bindPipelineInfo);
+		void BindPipeline(const VulkanRenderDevice* renderDevice, VulkanPipeline pipeline, VulkanPipelineType pipelineType);
 
-		struct BindIndexBufferInfo final : VulkanRenderInfo
-		{
-			VulkanBuffer Buffer;
-			GTSL::uint32 Offset{ 0 };
-			VulkanIndexType IndexType;
-		};
-		void BindIndexBuffer(const BindIndexBufferInfo& buffer) const;
+		void BindIndexBuffer(const VulkanRenderDevice* renderDevice, VulkanBuffer buffer, GTSL::uint32 offset, VulkanIndexType indexType) const;
 
-		struct BindVertexBufferInfo final : VulkanRenderInfo
-		{
-			VulkanBuffer Buffer;
-			GTSL::uint32 Offset{ 0 };
-		};
-		void BindVertexBuffer(const BindVertexBufferInfo& buffer) const;
+		void BindVertexBuffer(const VulkanRenderDevice* renderDevice, VulkanBuffer buffer, GTSL::uint32 offset) const;
 
-		struct UpdatePushConstantsInfo : VulkanRenderInfo
-		{
-			VulkanPipelineLayout PipelineLayout;
-			size_t Offset = 0;
-			size_t Size = 0;
-			GTSL::byte* Data = nullptr;
-			VulkanShaderStage::value_type ShaderStages = 0;
-		};
-		void UpdatePushConstant(const UpdatePushConstantsInfo& info);
+		void UpdatePushConstant(const VulkanRenderDevice* vulkanRenderDevice, VulkanPipelineLayout pipelineLayout, GTSL::uint32 offset, GTSL::Range<const GTSL::byte*> data, VulkanShaderStage::value_type shaderStages);
 
-		struct DrawInfo final : VulkanRenderInfo
-		{
-			uint32_t VertexCount;
-			uint32_t InstanceCount;
-			uint32_t FirstVertex;
-			uint32_t FirstInstance;
-		};
-		void Draw(const DrawInfo& info) const;
+		void Draw(const VulkanRenderDevice* renderDevice, uint32_t vertexCount, uint32_t instanceCount = 0, uint32_t firstVertex = 0, uint32_t firstInstance = 0) const;
 		
-		struct DrawIndexedInfo final : VulkanRenderInfo
-		{
-			GTSL::uint32 InstanceCount = 0, IndexCount = 0;
-		};
-		void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo) const;
+		void DrawIndexed(const VulkanRenderDevice* renderDevice, uint32_t indexCount, uint32_t instanceCount = 0) const;
 
-		struct TraceRaysInfo : VulkanRenderInfo
+		struct ShaderTableDescriptor
 		{
-			struct ShaderTableDescriptor
-			{
-				VulkanDeviceAddress Address = 0;
-				GTSL::uint32 Size = 0, Stride = 0;
-			} ShaderTableDescriptors[4];
-			
-			GTSL::Extent3D DispatchSize;
-		};
-		void TraceRays(const TraceRaysInfo& traceRaysInfo);
+			VulkanDeviceAddress Address = 0;
 
-		struct AddLabelInfo : VulkanRenderInfo
-		{
-			GTSL::Range<const GTSL::UTF8*> Name;
-		};
-		void AddLabel(const AddLabelInfo& info);
+			/**
+			 * \brief Number of entries in the shader group.
+			 */
+			GTSL::uint32 Entries = 0;
 
-		struct BeginRegionInfo : VulkanRenderInfo
-		{
-			GTSL::Range<const GTSL::UTF8*> Name;
+			/**
+			 * \brief Size of each entry in the shader group.
+			 */
+			GTSL::uint32 EntrySize = 0;
 		};
-		void BeginRegion(const BeginRegionInfo& info) const;
-
-		struct EndRegionInfo : VulkanRenderInfo
-		{
-		};
-		void EndRegion(const EndRegionInfo& info) const;
 		
-		struct DispatchInfo : VulkanRenderInfo
-		{
-			GTSL::Extent3D WorkGroups;
-		};
-		void Dispatch(const DispatchInfo& dispatchInfo);
+		void TraceRays(const VulkanRenderDevice* renderDevice, GTSL::Array<ShaderTableDescriptor, 4> shaderTableDescriptors, GTSL::Extent3D dispatchSize);
+		
+		void AddLabel(const VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::UTF8*> name);
 
-		struct BindBindingsSetInfo : VulkanRenderInfo
-		{
-			VulkanPipelineType PipelineType;
-			GTSL::Range<const VulkanBindingsSet*> BindingsSets;
-			GTSL::Range<const GTSL::uint32*> Offsets;
-			VulkanPipelineLayout PipelineLayout;
-			GTSL::uint32 FirstSet = 0, BoundSets = 0;
-		};
-		void BindBindingsSets(const BindBindingsSetInfo& info);
+		void BeginRegion(const VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::UTF8*> name) const;
 
-		struct CopyTextureToTextureInfo final : VulkanRenderInfo
-		{
-			VulkanTexture SourceTexture, DestinationTexture;
-			VulkanTextureLayout SourceLayout, DestinationLayout;
+		void EndRegion(const VulkanRenderDevice* renderDevice) const;
+		
+		void Dispatch(const VulkanRenderDevice* renderDevice, GTSL::Extent3D workGroups);
 
+		void BindBindingsSets(const VulkanRenderDevice* renderDevice, VulkanPipelineType pipelineType, GTSL::Range<const VulkanBindingsSet*> bindingsSets, GTSL::Range<const GTSL::uint32*> offsets, VulkanPipelineLayout pipelineLayout, GTSL::uint32 firstSet);
+
+		void CopyTextureToTexture(const VulkanRenderDevice* renderDevice, VulkanTexture sourceTexture, VulkanTexture destinationTexture, VulkanTextureLayout sourceLayout, VulkanTextureLayout destinationLayout, GTSL::Extent3D extent);
+
+		struct TextureCopyInfo
+		{
 			GTSL::Extent3D Extent;
 		};
-		void CopyTextureToTexture(const CopyTextureToTextureInfo& info);
+
+		template<class ALLOCATOR>
+		void CopyTextureToTexture(const VulkanRenderDevice* renderDevice, const GTSL::Range<TextureCopyInfo*> textureCopyInfos, VulkanTexture sourceTexture, VulkanTexture destinationTexture, VulkanTextureLayout sourceLayout, VulkanTextureLayout destinationLayout, const ALLOCATOR& allocator)
+		{
+			GTSL::Vector<VkImageCopy, ALLOCATOR> vkImagesCopies;
+
+			for(auto& e : textureCopyInfos)
+			{
+				auto& vkImageCopy = vkImagesCopies.EmplaceBack();
+				vkImageCopy.extent = Extent3DToVkExtent3D(e.Extent);
+				vkImageCopy.srcOffset = {};
+				vkImageCopy.dstOffset = {};
+				vkImageCopy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				vkImageCopy.srcSubresource.baseArrayLayer = 0;
+				vkImageCopy.srcSubresource.layerCount = 1;
+				vkImageCopy.srcSubresource.mipLevel = 0;
+
+				vkImageCopy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				vkImageCopy.dstSubresource.baseArrayLayer = 0;
+				vkImageCopy.dstSubresource.layerCount = 1;
+				vkImageCopy.dstSubresource.mipLevel = 0;
+			}
+
+			vkCmdCopyImage(commandBuffer, sourceTexture.GetVkImage(), static_cast<VkImageLayout>(sourceLayout),
+				destinationTexture.GetVkImage(), static_cast<VkImageLayout>(destinationLayout), vkImagesCopies.GetLength(), vkImagesCopies.begin());
+		}
 
 		struct CopyBufferToTextureInfo : VulkanRenderInfo
 		{
@@ -198,22 +168,95 @@ namespace GAL
 		};
 
 		struct TextureBarrier
-		{
+		{			
 			VulkanTexture Texture;
-
 			VulkanTextureLayout CurrentLayout, TargetLayout;
 			VulkanAccessFlags::value_type SourceAccessFlags, DestinationAccessFlags;
-			VulkanTextureType::value_type TextureType = VulkanTextureType::COLOR;
+			VulkanTextureType::value_type TextureType;
 		};
 
-		struct AddPipelineBarrierInfo : VulkanRenderInfo
+		enum class BarrierType : GTSL::uint8
 		{
-			GTSL::Range<const MemoryBarrier*> MemoryBarriers;
-			GTSL::Range<const BufferBarrier*> BufferBarriers;
-			GTSL::Range<const TextureBarrier*> TextureBarriers;
-			VulkanPipelineStage::value_type InitialStage, FinalStage;
+			MEMORY, BUFFER, TEXTURE
 		};
-		void AddPipelineBarrier(const AddPipelineBarrierInfo& pipelineBarrier) const;
+		
+		struct BarrierData
+		{
+			BarrierData() = default;
+			BarrierData(const MemoryBarrier memoryBarrier) : Type(BarrierType::MEMORY), Barrier(memoryBarrier) {}
+			BarrierData(const BufferBarrier bufferBarrier) : Type(BarrierType::BUFFER), Barrier(bufferBarrier) {}
+			BarrierData(const TextureBarrier textureBarrier) : Type(BarrierType::TEXTURE), Barrier(textureBarrier) {}
+			
+			BarrierType Type;
+
+			union Barriers
+			{
+				Barriers() = default;
+				Barriers(const TextureBarrier& textureBarrier) : TextureBarrier(textureBarrier) {}
+				Barriers(const MemoryBarrier& memoryBarrier) : MemoryBarrier(memoryBarrier) {}
+				Barriers(const BufferBarrier& bufferBarrier) : BufferBarrier(bufferBarrier) {}
+				
+				MemoryBarrier MemoryBarrier;
+				BufferBarrier BufferBarrier;
+				TextureBarrier TextureBarrier;
+			} Barrier;
+
+			void SetMemoryBarrier(MemoryBarrier memoryBarrier) { Type = BarrierType::MEMORY; Barrier.MemoryBarrier = memoryBarrier; }
+			void SetTextureBarrier(TextureBarrier textureBarrier) { Type = BarrierType::TEXTURE; Barrier.TextureBarrier = textureBarrier; }
+			void SetBufferBarrier(BufferBarrier bufferBarrier) { Type = BarrierType::BUFFER; Barrier.BufferBarrier = bufferBarrier; }
+		};
+
+		template<class ALLOCATOR>
+		void AddPipelineBarrier(const VulkanRenderDevice* renderDevice, GTSL::Range<const BarrierData*> barriers, VulkanPipelineStage::value_type initialStage, VulkanPipelineStage::value_type finalStage, const ALLOCATOR& allocator) const
+		{
+			GTSL::Vector<VkImageMemoryBarrier, ALLOCATOR> imageMemoryBarriers(4, allocator);
+			GTSL::Vector<VkMemoryBarrier, ALLOCATOR> memoryBarriers(4, allocator);
+
+			for(auto& b : barriers)
+			{
+				switch (b.Type)
+				{
+				case BarrierType::MEMORY:
+				{
+					auto& barrier = b.Barrier.MemoryBarrier;
+					auto& memoryBarrier = memoryBarriers.EmplaceBack();
+
+					memoryBarrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER; memoryBarrier.pNext = nullptr;
+					memoryBarrier.srcAccessMask = static_cast<VkAccessFlags>(barrier.SourceAccessFlags);
+					memoryBarrier.dstAccessMask = static_cast<VkAccessFlags>(barrier.DestinationAccessFlags);
+						
+					break;
+				}
+				case BarrierType::BUFFER:
+				{
+					break;
+				}
+				case BarrierType::TEXTURE:
+				{
+					auto& barrier = b.Barrier.TextureBarrier;
+					auto& textureBarrier = imageMemoryBarriers.EmplaceBack();
+						
+					textureBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER; textureBarrier.pNext = nullptr;
+					textureBarrier.oldLayout = static_cast<VkImageLayout>(barrier.CurrentLayout);
+					textureBarrier.newLayout = static_cast<VkImageLayout>(barrier.TargetLayout);
+					textureBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+					textureBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+					textureBarrier.image = barrier.Texture.GetVkImage();
+					textureBarrier.subresourceRange.aspectMask = (VkImageAspectFlags)barrier.TextureType;
+					textureBarrier.subresourceRange.baseMipLevel = 0;
+					textureBarrier.subresourceRange.levelCount = 1;
+					textureBarrier.subresourceRange.baseArrayLayer = 0;
+					textureBarrier.subresourceRange.layerCount = 1;
+					textureBarrier.srcAccessMask = static_cast<VkAccessFlags>(barrier.SourceAccessFlags);
+					textureBarrier.dstAccessMask = static_cast<VkAccessFlags>(barrier.DestinationAccessFlags);
+					break;
+				}
+				}
+			}
+
+			vkCmdPipelineBarrier(commandBuffer, static_cast<VkPipelineStageFlags>(initialStage), static_cast<VkPipelineStageFlags>(finalStage), 0,
+				memoryBarriers.GetLength(), memoryBarriers.begin(), 0, nullptr, imageMemoryBarriers.GetLength(), imageMemoryBarriers.begin());
+		}
 
 		struct CopyBuffersInfo : VulkanRenderInfo
 		{
@@ -226,7 +269,46 @@ namespace GAL
 		};
 		void CopyBuffers(const CopyBuffersInfo& copyBuffersInfo);
 
-		void BuildAccelerationStructure(const BuildAccelerationStructuresInfo& info) const;
+		template<typename ALLOCATOR>
+		void BuildAccelerationStructure(const VulkanRenderDevice* renderDevice, GTSL::Range<BuildAccelerationStructureInfo*> infos, const ALLOCATOR& allocator) const
+		{
+			GTSL::Vector<VkAccelerationStructureBuildGeometryInfoKHR, ALLOCATOR> buildGeometryInfos(infos.ElementCount(), allocator);
+			GTSL::Vector<GTSL::Vector<VkAccelerationStructureGeometryKHR, ALLOCATOR>, ALLOCATOR> geoPerAccStructure(infos.ElementCount(), allocator);
+			GTSL::Vector<GTSL::Vector<VkAccelerationStructureBuildRangeInfoKHR, ALLOCATOR>, ALLOCATOR> buildRangesPerAccelerationStructure(infos.ElementCount(), allocator);
+			GTSL::Vector<VkAccelerationStructureBuildRangeInfoKHR*, ALLOCATOR> buildRangesRangePerAccelerationStructure(infos.ElementCount(), allocator);
+
+			for (GTSL::uint32 accStrInfoIndex = 0; accStrInfoIndex < infos.ElementCount(); ++accStrInfoIndex)
+			{
+				auto& source = infos[accStrInfoIndex];
+
+				geoPerAccStructure.EmplaceBack().Initialize(source.Geometries.ElementCount(), allocator);
+				buildRangesPerAccelerationStructure.EmplaceBack().Initialize(source.Geometries.ElementCount(), allocator);
+				buildRangesRangePerAccelerationStructure.EmplaceBack(buildRangesPerAccelerationStructure[accStrInfoIndex].begin());
+
+				for (GTSL::uint32 i = 0; i < source.Geometries.ElementCount(); ++i)
+				{
+					VkAccelerationStructureGeometryKHR accelerationStructureGeometry; VkAccelerationStructureBuildRangeInfoKHR buildRange;
+					buildGeometryAndRange(source.Geometries[i], accelerationStructureGeometry, buildRange);
+					geoPerAccStructure[accStrInfoIndex].EmplaceBack(accelerationStructureGeometry);
+					buildRangesPerAccelerationStructure[accStrInfoIndex].EmplaceBack(buildRange);
+				}
+
+				VkAccelerationStructureBuildGeometryInfoKHR buildGeometryInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR };
+				buildGeometryInfo.flags = source.Flags;
+				buildGeometryInfo.srcAccelerationStructure = source.SourceAccelerationStructure.GetVkAccelerationStructure();
+				buildGeometryInfo.dstAccelerationStructure = source.DestinationAccelerationStructure.GetVkAccelerationStructure();
+				buildGeometryInfo.type = source.Geometries[0].Type == VulkanGeometryType::INSTANCES ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+				buildGeometryInfo.pGeometries = geoPerAccStructure[accStrInfoIndex].begin();
+				buildGeometryInfo.ppGeometries = nullptr;
+				buildGeometryInfo.geometryCount = geoPerAccStructure[accStrInfoIndex].GetLength();
+				buildGeometryInfo.scratchData.deviceAddress = source.ScratchBufferAddress;
+				buildGeometryInfo.mode = source.SourceAccelerationStructure.GetVkAccelerationStructure() ? VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR : VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+				buildGeometryInfos.EmplaceBack(buildGeometryInfo);
+			}
+
+			renderDevice->vkCmdBuildAccelerationStructuresKHR(commandBuffer, buildGeometryInfos.GetLength(),
+				buildGeometryInfos.begin(), buildRangesRangePerAccelerationStructure.begin());
+		}
 		
 		[[nodiscard]] VkCommandBuffer GetVkCommandBuffer() const { return commandBuffer; }
 

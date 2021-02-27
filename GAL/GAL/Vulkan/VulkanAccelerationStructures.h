@@ -56,11 +56,11 @@ namespace GAL
 		struct Instance
 		{
 			GTSL::Matrix3x4 Transform;
-			uint32_t InstanceCustomIndex : 24;
+			uint32_t InstanceIndex : 24;
 			uint32_t Mask : 8;
 			uint32_t InstanceShaderBindingTableRecordOffset : 24;
 			VkGeometryInstanceFlagsKHR Flags : 8;
-			uint64_t AccelerationStructureReference;
+			VulkanDeviceAddress AccelerationStructureAddress;
 		};
 
 		static_assert(sizeof(Instance) == 64, "Size must be 64 bytes");
@@ -169,10 +169,11 @@ namespace GAL
 
 	struct BuildAccelerationStructureInfo
 	{
-		VulkanAccelerationStructure SourceAccelerationStructure;
-		VulkanAccelerationStructure DestinationAccelerationStructure;
+		VulkanAccelerationStructure SourceAccelerationStructure, DestinationAccelerationStructure;
 		GTSL::Range<const VulkanAccelerationStructure::Geometry*> Geometries;
 		VulkanDeviceAddress ScratchBufferAddress;
+
+		//VkBuildAccelerationStructureFlagsKHR
 		GTSL::uint32 Flags = 0;
 	};
 	

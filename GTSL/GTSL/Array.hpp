@@ -170,7 +170,7 @@ namespace GTSL
 		void Pop(const uint32 index)
 		{
 			GTSL_ASSERT(length != 0, "Length can't be 0");
-			popElement(GetRange(), index);
+			popElement(GetRange(), index); --length;
 		}
 		
 		//constexpr uint32 Insert(const uint32 index, const Range<const T*> ranger) noexcept

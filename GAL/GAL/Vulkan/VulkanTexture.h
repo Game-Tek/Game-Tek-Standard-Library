@@ -8,7 +8,7 @@ namespace GAL
 	class VulkanTexture final
 	{
 	public:
-		VulkanTexture() = default;
+		//VulkanTexture() = default;
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
@@ -38,7 +38,7 @@ namespace GAL
 		[[nodiscard]] VkImage GetVkImage() const { return image; }
 		
 	private:
-		VkImage image = nullptr;
+		VkImage image;// = nullptr;
 
 		friend class VulkanRenderContext;
 	};

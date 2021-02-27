@@ -58,15 +58,15 @@ namespace GTSL
 		template<typename T>
 		static T SquareRoot(const T a)
 		{
-			constexpr T error = 0.000001; //define the precision of your result
-			float s = a;
+			constexpr T error = static_cast<T>(0.00001); //define the precision of your result //an error level of 0.000001 has caused never ending loops
+			T s = a;
 
 			T aS;
 
 			do
 			{
 				aS = a / s;
-				s = (s + aS) * 0.5;
+				s = (s + aS) * static_cast<T>(0.5);
 			}
 			while (s - aS > error); //loop until precision satisfied
 

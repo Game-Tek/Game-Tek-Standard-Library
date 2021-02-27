@@ -116,17 +116,17 @@ namespace GTSL
 		}
 	}
 
-	template<Enum T, class ALLOCATOR>
-	void Insert(const T enu, Buffer<ALLOCATOR>& buffer)
-	{
-		buffer.CopyBytes(sizeof(T), reinterpret_cast<const byte*>(&enu));
-	}
-
-	template<Enum T, class ALLOCATOR>
-	void Extract(T& enu, Buffer<ALLOCATOR>& buffer)
-	{
-		buffer.ReadBytes(sizeof(T), reinterpret_cast<byte*>(&enu));
-	}
+	//template<Enum T, class ALLOCATOR>
+	//void Insert(const T enu, Buffer<ALLOCATOR>& buffer)
+	//{
+	//	buffer.CopyBytes(sizeof(T), reinterpret_cast<const byte*>(&enu));
+	//}
+	//
+	//template<Enum T, class ALLOCATOR>
+	//void Extract(T& enu, Buffer<ALLOCATOR>& buffer)
+	//{
+	//	buffer.ReadBytes(sizeof(T), reinterpret_cast<byte*>(&enu));
+	//}
 
 	template<POD T, class ALLOCATOR>
 	void Insert(const T pod, Buffer<ALLOCATOR>& buffer)
