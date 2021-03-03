@@ -262,6 +262,36 @@ namespace GTSL
 			return 0.0f;
 		}
 
+		static uint32 Mod(uint32 a, uint32 mod)
+		{
+			uint32 init = a / mod;
+			return a - mod * init;
+		}
+
+		static float32 Mod(float32 a, float32 mod)
+		{
+			if(a < 0.0f)
+			{
+				if (mod > 0.0f)
+				{
+					int32 init = -a / mod;
+					return mod - (-a - mod * init);
+				}
+			}
+			else
+			{
+				if (mod < 0.0f)
+				{
+					//normal mod
+					int32 init = a / -mod;
+					return mod + (a - (-mod) * init);
+				}
+			}
+			
+			int32 init = a / mod;
+			return a - mod * init;
+		}
+		
 		template<typename T>
 		static T Square(const T a) { return a * a; }
 		
@@ -302,16 +332,70 @@ namespace GTSL
 
 			return 0;
 		}
+		
+		static Quaternion Slerp(Quaternion a, Quaternion b, float32 alpha) {
+			//Implementation from assimp
+			
+			// quaternion to return
+			// Calculate angle between them.
+			
+			float32 cosom = a.X() * b.X() + a.Y() * b.Y() + a.Z() * b.Z() + a.W() * b.W();
+			
+			if (cosom < 0.0f) {
+				b.X() = -b.X(); b.Y() = -b.Y(); b.Z() = -b.Z(); b.W() = -b.W();
+				cosom = -cosom;
+			}
 
+			float32 sclp, sclq;
+			
+			// Calculate coefficients
+			if ((static_cast<float32>(1.0) - cosom) > static_cast<float32>(0.0001)) // 0.0001 -> some epsillon
+			{
+				// Standard case (slerp)
+				float32 omega, sinom;
+				omega = ArcCosine(cosom); // extract theta from dot product's cos theta
+				sinom = Sine(omega);
+				sclp = Sine((static_cast<float32>(1.0) - alpha) * omega) / sinom;
+				sclq = Sine(alpha * omega) / sinom;
+			}
+			else
+			{
+				// Very close, do linear interp (because it's faster)
+				sclp = static_cast<float32>(1.0) - alpha;
+				sclq = alpha;
+			}
+
+			Quaternion result;
+			result.X() = sclp * a.X() + sclq * b.X();
+			result.Y() = sclp * a.Y() + sclq * b.Y();
+			result.Z() = sclp * a.Z() + sclq * b.Z();
+			result.W() = sclp * a.W() + sclq * b.W();
+		}
+		
 		//Mixes A and B by the specified values, Where Alpha 0 returns A and Alpha 1 returns B.
-		static float32 Lerp(const float32 A, const float32 B, const float32 Alpha)
+		static float32 Lerp(const float32 a, const float32 b, const float32 alpha)
 		{
-			return A + Alpha * (B - A);
+			return a + alpha * (b - a);
 		}
 
 		static Vector2 Lerp(const Vector2 a, const Vector2 b, const float32 alpha)
 		{
 			return Vector2(Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha));
+		}
+
+		static Vector3 Lerp(const Vector3 a, const Vector3 b, const float32 alpha)
+		{
+			return Vector3(Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha), Lerp(a.Z(), b.Z(), alpha));
+		}
+
+		static Vector4 Lerp(const Vector4 a, const Vector4 b, const float32 alpha)
+		{
+			return Vector4(Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha), Lerp(a.Z(), b.Z(), alpha), Lerp(a.W(), b.W(), alpha));
+		}
+
+		static Quaternion Lerp(const Quaternion a, const Quaternion b, const float32 alpha)
+		{
+			return Normalized(Quaternion(Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha), Lerp(a.Z(), b.Z(), alpha), Lerp(a.W(), b.W(), alpha)));
 		}
 
 		static float32 Square(const float32 a) { return a * a; }
@@ -322,15 +406,9 @@ namespace GTSL
 			return (Target - Current) * DT * InterpSpeed + Current;
 		}
 
-		static uint32 InvertRange(const uint32 a, const uint32 max)
-		{
-			return max - a;
-		}
+		static uint32 InvertRange(const uint32 a, const uint32 max) { return max - a; }
 
-		static float32 InvertRange(const float32 a, const float32 max)
-		{
-			return max - a;
-		}
+		static float32 InvertRange(const float32 a, const float32 max) { return max - a; }
 		
 		static float32 MapToRange(const float32 x, const float32 inMin, const float32 inMax, const float32 outMin, const float32 outMax)
 		{
@@ -449,6 +527,7 @@ namespace GTSL
 			length = 1.0f / length;
 			return Vector2(a.X() * length, a.Y() * length);
 		}
+		
 		static void Normalize(Vector2& a)
 		{
 			auto length = Length(a);
@@ -456,12 +535,14 @@ namespace GTSL
 			length = 1.0f / length;
 			a.X() *= length; a.Y() *= length;
 		}
+		
 		static Vector3 Normalized(const Vector3& a)
 		{
 			auto length = Length(a); if (length == 0.0f) { return a; }
 			length = 1.0f / length;
 			return Vector3(a.X() * length, a.Y() * length, a.Z() * length);
 		}
+		
 		static void Normalize(Vector3& a)
 		{
 			auto length = Length(a);
@@ -469,12 +550,14 @@ namespace GTSL
 			length = 1.0f / length;
 			a.X() *= length; a.Y() *= length; a.Z() *= length;
 		}
+		
 		static Vector4 Normalized(const Vector4& a)
 		{
 			auto length = Length(a); if (length == 0.0f) { return a; }
 			length = 1.0f / length;
 			return Vector4(a.X() * length, a.Y() * length, a.Z() * length, a.W() * length);
 		}
+		
 		static void Normalize(Vector4& a)
 		{
 			auto length = Length(a);
@@ -482,12 +565,20 @@ namespace GTSL
 			length = 1.0f / length;
 			a.X() *= length; a.Y() *= length; a.Z() *= length; a.W() *= length;
 		}
+		
 		static void Normalize(Quaternion& a)
 		{
 			auto length = Length(a);
 			if (length == 0.0f) { a.X() = 1.0f; return; }
 			length = 1.0f / length;
 			a.X() *= length; a.Y() *= length; a.Z() *= length; a.W() *= length;
+		}
+
+		static Quaternion Normalized(const Quaternion& a)
+		{
+			auto length = Length(a); if (length == 0.0f) { return a; }
+			length = 1.0f / length;
+			return Quaternion(a.X() * length, a.Y() * length, a.Z() * length, a.W() * length);
 		}
 
 		static float32 DotProduct(const Vector2 a, const Vector2 b) { return a.X() * b.X() + a.Y() * b.Y(); }
@@ -568,12 +659,12 @@ namespace GTSL
 			return (A >= Min) && (A <= Max);
 		}
 
-		static bool IsVectorNearlyEqual(const Vector2& A, const Vector2& Target, const float32 Tolerance)
+		static bool IsNearlyEqual(const Vector2& A, const Vector2& Target, const float32 Tolerance)
 		{
 			return IsNearlyEqual(A.X(), Target.X(), Tolerance) && IsNearlyEqual(A.Y(), Target.Y(), Tolerance);
 		}
 
-		static bool IsVectorNearlyEqual(const Vector3& A, const Vector3& Target, const float32 Tolerance)
+		static bool IsNearlyEqual(const Vector3& A, const Vector3& Target, const float32 Tolerance)
 		{
 			if (IsNearlyEqual(A.X(), Target.X(), Tolerance))
 			{
@@ -589,7 +680,7 @@ namespace GTSL
 			return false;
 		}
 
-		static bool IsVectorNearlyEqual(const Vector4& a, const Vector4& b, const float32 tolerance)
+		static bool IsNearlyEqual(const Vector4& a, const Vector4& b, const float32 tolerance)
 		{
 			if (IsNearlyEqual(a.X(), b.X(), tolerance)) {
 				if (IsNearlyEqual(a.Y(), b.Y(), tolerance)) {

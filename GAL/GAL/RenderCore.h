@@ -33,7 +33,7 @@ namespace GAL
 	
 	inline constexpr GTSL::uint32 MakeFormatFlag(GTSL::uint8 compCount, ComponentType compType, GTSL::uint8 bitDepth, TextureType type, GTSL::uint8 a, GTSL::uint8 b, GTSL::uint8 c, GTSL::uint8 d)
 	{
-		return ((bitDepth) | ((GTSL::UnderlyingType<ComponentType>(compType) << 6) | (compCount << 10) | ((a | (b << 2) | (c << 4) | (d << 6)) << 14)) | (GTSL::UnderlyingType<TextureType>(type) << 16));
+		return GTSL::UnderlyingType<ComponentType>(compType) | compCount << 4 | (a | b << 2 | c << 4 | d << 6) << 8 | bitDepth << 16 | GTSL::UnderlyingType<TextureType>(type) << 22;
 	}
 
 	struct FormatDescriptor
@@ -44,18 +44,19 @@ namespace GAL
 		ComponentType(compType), ComponentCount(compCount), A(a), B(b), C(c), D(d), BitDepth(bitDepth), Type(type)
 		{}
 		
-		ComponentType ComponentType : 4;
-		GTSL::uint8 ComponentCount : 4;
-		GTSL::uint8 A : 4;
-		GTSL::uint8 B : 4;
-		GTSL::uint8 C : 4;
-		GTSL::uint8 D : 4;
-		GTSL::uint8 BitDepth : 6;
-		TextureType Type : 2;
+		ComponentType ComponentType : 4; //0
+		GTSL::uint8 ComponentCount : 4;  //4
+		GTSL::uint8 A : 2;               //8
+		GTSL::uint8 B : 2;               //10
+		GTSL::uint8 C : 2;               //12
+		GTSL::uint8 D : 2;               //14
+		GTSL::uint8 BitDepth : 6;        //16
+		TextureType Type : 2;            //22
 	};
 
 	namespace FORMATS
 	{
+		static constexpr auto RGB_I8 = FormatDescriptor(ComponentType::INT, 3, 8, TextureType::COLOR, 0, 1, 2, 3);
 		static constexpr auto BGRA_I8 = FormatDescriptor(ComponentType::INT, 4, 8, TextureType::COLOR, 2, 1, 0, 3);
 		static constexpr auto RGBA_F16 = FormatDescriptor(ComponentType::FLOAT, 4, 16, TextureType::COLOR, 0, 1, 2, 3);
 		static constexpr auto RGBA_I8 = FormatDescriptor(ComponentType::INT, 4, 8, TextureType::COLOR, 0, 1, 2, 3);
@@ -68,6 +69,7 @@ namespace GAL
 	
 	enum class Format
 	{
+		RGB_I8 = MakeFormatFlag(FORMATS::RGB_I8),
 		RGBA_I8 = MakeFormatFlag(FORMATS::RGBA_I8),
 		RGBA_F16 = MakeFormatFlag(FORMATS::RGBA_F16),
 		BGRA_I8 = MakeFormatFlag(FORMATS::BGRA_I8),
@@ -78,6 +80,11 @@ namespace GAL
 	inline constexpr Format MakeFormatFromFormatDescriptor(const FormatDescriptor formatDescriptor)
 	{
 		return Format(MakeFormatFlag(formatDescriptor));
+	}
+
+	inline FormatDescriptor MakeFormatDescriptorFromFormat(const Format format)
+	{
+		return *reinterpret_cast<const FormatDescriptor*>(&format);
 	}
 	
 	class RenderDevice;
@@ -294,51 +301,6 @@ namespace GAL
 		INPUT_ATTACHMENT = 10,
 		ACCELERATION_STRUCTURE = 11
 	};
-	
-	enum class TextureFormat
-	{
-		UNDEFINED = 0,
-
-		//INTEGER
-
-		//R
-		R_I8 = 9,
-		R_I16 = 70,
-		R_I32 = 98,
-		R_I64 = 110,
-		//RG
-		RG_I8 = 16,
-		RG_I16 = 77,
-		RG_I32 = 101,
-		RG_I64 = 113,
-		//RBG
-		RGB_I8 = 23,
-		RGB_I16 = 84,
-		RGB_I32 = 104,
-		RGB_I64 = 116,
-		//RGBA
-		RGBA_I8 = 37,
-		RGBA_I16 = 91,
-		RGBA_I32 = 107,
-		RGBA_I64 = 119,
-		//RGBA
-		BGRA_I8 = 44,
-
-		BGR_I8 = 30,
-
-		//  DEPTH STENCIL
-
-		//A depth-only format with a 16 bit (2 byte) size.
-		DEPTH16 = 124,
-		//A depth-only format with a 32 (4 byte) bit size.
-		DEPTH32 = 126,
-		//A depth/stencil format with a 16 bit (2 byte) size depth part and an 8 bit (1 byte) size stencil part.
-		DEPTH16_STENCIL8 = 128,
-		//A depth/stencil format with a 24 bit (3 byte) size depth part and an 8 bit (1 byte) size stencil part.
-		DEPTH24_STENCIL8 = 129,
-		//A depth/stencil format with a 32 bit (4 byte) size depth part and an 8 bit (1 byte) size stencil part.
-		DEPTH32_STENCIL8 = 130
-	};
 
 	enum class PresentModes : GTSL::uint8
 	{
@@ -371,60 +333,6 @@ namespace GAL
 			default: __debugbreak();
 		}
 		
-		return 0;
-	}
-
-	inline GTSL::uint8 ImageFormatChannelSize(const TextureFormat imageFormat)
-	{
-		switch (imageFormat)
-		{
-		case TextureFormat::RGBA_I8: return 1;
-		case TextureFormat::RGB_I8: return 1;
-		default: __debugbreak();
-		}
-		return 0;
-	}
-
-	inline GTSL::uint8 ImageFormatChannelCount(const TextureFormat imageFormat)
-	{
-		switch (imageFormat)
-		{
-		case TextureFormat::RGBA_I8: return 4;
-		case TextureFormat::RGB_I8: return 3;
-		default: __debugbreak();
-		}
-		return 0;
-	}
-
-	inline GTSL::uint8 ImageFormatSize(const  TextureFormat imageFormat)
-	{
-		switch (imageFormat)
-		{
-		case TextureFormat::R_I8: return 1;
-		case TextureFormat::R_I16: break;
-		case TextureFormat::R_I32: break;
-		case TextureFormat::R_I64: break;
-		case TextureFormat::RG_I8: return 2;
-		case TextureFormat::RG_I16: break;
-		case TextureFormat::RG_I32: break;
-		case TextureFormat::RG_I64: break;
-		case TextureFormat::RGB_I8: return 3;
-		case TextureFormat::RGB_I16: break;
-		case TextureFormat::RGB_I32: break;
-		case TextureFormat::RGB_I64: break;
-		case TextureFormat::RGBA_I8: return 4;
-		case TextureFormat::RGBA_I16: break;
-		case TextureFormat::RGBA_I32: break;
-		case TextureFormat::RGBA_I64: break;
-		case TextureFormat::BGRA_I8: return 4;
-		case TextureFormat::BGR_I8: break;
-		case TextureFormat::DEPTH16: break;
-		case TextureFormat::DEPTH32: break;
-		case TextureFormat::DEPTH16_STENCIL8: break;
-		case TextureFormat::DEPTH24_STENCIL8: break;
-		case TextureFormat::DEPTH32_STENCIL8: break;
-		default: __debugbreak();
-		}
 		return 0;
 	}
 

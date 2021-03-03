@@ -645,34 +645,34 @@ namespace GAL
 		return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
 	}
 
-	inline VulkanTextureFormat TextureFormatToVulkanTextureFormat(const TextureFormat format)
+	inline VulkanTextureFormat FormatToVulkanTextureFormat(const Format format)
 	{
 		switch (format)
 		{
-		case TextureFormat::UNDEFINED:		return VulkanTextureFormat::UNDEFINED;
-		case TextureFormat::R_I8: 		    return VulkanTextureFormat::R_I8;
-		case TextureFormat::R_I16: 		    return VulkanTextureFormat::R_I16;
-		case TextureFormat::R_I32: 		    return VulkanTextureFormat::R_I32;
-		case TextureFormat::R_I64: 		    return VulkanTextureFormat::R_I64;
-		case TextureFormat::RG_I8: 		    return VulkanTextureFormat::RG_I8;
-		case TextureFormat::RG_I16:		    return VulkanTextureFormat::RG_I16;
-		case TextureFormat::RG_I32:		    return VulkanTextureFormat::RG_I32;
-		case TextureFormat::RG_I64:		    return VulkanTextureFormat::RG_I64;
-		case TextureFormat::RGB_I8:		    return VulkanTextureFormat::RGB_I8;
-		case TextureFormat::RGB_I16:		return VulkanTextureFormat::RGB_I16;
-		case TextureFormat::RGB_I32:		return VulkanTextureFormat::RGB_I32;
-		case TextureFormat::RGB_I64:		return VulkanTextureFormat::RGB_I64;
-		case TextureFormat::RGBA_I8:		return VulkanTextureFormat::RGBA_I8;
-		case TextureFormat::RGBA_I16:		return VulkanTextureFormat::RGBA_I16;
-		case TextureFormat::RGBA_I32:		return VulkanTextureFormat::RGBA_I32;
-		case TextureFormat::RGBA_I64:		return VulkanTextureFormat::RGBA_I64;
-		case TextureFormat::BGRA_I8: 		return VulkanTextureFormat::BGRA_I8;
-		case TextureFormat::BGR_I8:		    return VulkanTextureFormat::BGR_I8;
-		case TextureFormat::DEPTH16: 		return VulkanTextureFormat::DEPTH16;
-		case TextureFormat::DEPTH32: 		return VulkanTextureFormat::DEPTH32;
-		case TextureFormat::DEPTH16_STENCIL8: return VulkanTextureFormat::DEPTH16_STENCIL8;
-		case TextureFormat::DEPTH24_STENCIL8: return VulkanTextureFormat::DEPTH24_STENCIL8;
-		case TextureFormat::DEPTH32_STENCIL8: return VulkanTextureFormat::DEPTH32_STENCIL8;
+		//case Format::UNDEFINED:		return VulkanTextureFormat::UNDEFINED;
+		//case Format::R_I8: 		    return VulkanTextureFormat::R_I8;
+		//case Format::R_I16: 		    return VulkanTextureFormat::R_I16;
+		//case Format::R_I32: 		    return VulkanTextureFormat::R_I32;
+		//case Format::R_I64: 		    return VulkanTextureFormat::R_I64;
+		//case Format::RG_I8: 		    return VulkanTextureFormat::RG_I8;
+		//case Format::RG_I16:		    return VulkanTextureFormat::RG_I16;
+		//case Format::RG_I32:		    return VulkanTextureFormat::RG_I32;
+		//case Format::RG_I64:		    return VulkanTextureFormat::RG_I64;
+		//case Format::RGB_I8:		    return VulkanTextureFormat::RGB_I8;
+		//case Format::RGB_I16:		return VulkanTextureFormat::RGB_I16;
+		//case Format::RGB_I32:		return VulkanTextureFormat::RGB_I32;
+		//case Format::RGB_I64:		return VulkanTextureFormat::RGB_I64;
+		case Format::RGBA_I8:		return VulkanTextureFormat::RGBA_I8;
+		//case Format::RGBA_I16:		return VulkanTextureFormat::RGBA_I16;
+		//case Format::RGBA_I32:		return VulkanTextureFormat::RGBA_I32;
+		//case Format::RGBA_I64:		return VulkanTextureFormat::RGBA_I64;
+		case Format::BGRA_I8: 		return VulkanTextureFormat::BGRA_I8;
+		//case Format::BGR_I8:		    return VulkanTextureFormat::BGR_I8;
+		//case Format::DEPTH16: 		return VulkanTextureFormat::DEPTH16;
+		//case Format::DEPTH32: 		return VulkanTextureFormat::DEPTH32;
+		//case Format::DEPTH16_STENCIL8: return VulkanTextureFormat::DEPTH16_STENCIL8;
+		//case Format::DEPTH24_STENCIL8: return VulkanTextureFormat::DEPTH24_STENCIL8;
+		//case Format::DEPTH32_STENCIL8: return VulkanTextureFormat::DEPTH32_STENCIL8;
 		default: break;
 		}
 

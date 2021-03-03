@@ -28,9 +28,9 @@ namespace GAL
 		 * \param imageExtent 
 		 * \param buffer 
 		 */
-		static void ConvertTextureFormat(const TextureFormat sourceImageFormat, const TextureFormat targetImageFormat, const GTSL::Extent2D imageExtent, GTSL::AlignedPointer<GTSL::byte, 16> buffer, GTSL::uint8 alphaValue)
+		static void ConvertTextureFormat(const FormatDescriptor sourceImageFormat, const FormatDescriptor targetImageFormat, const GTSL::Extent2D imageExtent, GTSL::AlignedPointer<GTSL::byte, 16> buffer, GTSL::uint8 alphaValue)
 		{
-			const GTSL::uint8 sourceFormatSize = ImageFormatSize(sourceImageFormat), targetFormatSize = ImageFormatSize(targetImageFormat);
+			const GTSL::uint8 sourceFormatSize = sourceImageFormat.BitDepth * sourceImageFormat.ComponentCount, targetFormatSize = targetImageFormat.BitDepth * targetImageFormat.ComponentCount;
 			const GTSL::uint32 targetTextureSize = GetImageSize(targetFormatSize, imageExtent), sourceTextureSize = GetImageSize(sourceFormatSize, imageExtent);
 
 			auto rgb_i8_to_rgba_i8 = [&]()
@@ -91,23 +91,23 @@ namespace GAL
 				}
 			};
 			
-			switch (sourceImageFormat)
+			switch (MakeFormatFromFormatDescriptor(sourceImageFormat))
 			{
-				case TextureFormat::RGB_I8:
+				case Format::RGB_I8:
 				{
-					switch (targetImageFormat)
+					switch (MakeFormatFromFormatDescriptor(targetImageFormat))
 					{
-						case TextureFormat::RGBA_I8: rgb_i8_to_rgba_i8(); return;
+						case Format::RGBA_I8: rgb_i8_to_rgba_i8(); return;
 						
 						default: break;
 					}
 				}
 
-				case TextureFormat::RGBA_I8:
+				case Format::RGBA_I8:
 				{
-					switch (targetImageFormat)
+					switch (MakeFormatFromFormatDescriptor(targetImageFormat))
 					{
-						case TextureFormat::RGBA_I8: return;
+						case Format::RGBA_I8: return;
 
 						default: break;
 					}
