@@ -122,6 +122,11 @@ namespace GTSL
 		{
 			return X() != other.X() || Y() != other.Y() || Z() != other.Z();
 		}
+
+		friend Vector3 operator*(const float32 lhs, const Vector3& rhs)
+		{
+			return Vector3(rhs.X() * lhs, rhs.Y() * lhs, rhs.Z() * lhs);
+		}
 		
 		float32& X() { return values[0]; }
 		float32& Y() { return values[1]; }

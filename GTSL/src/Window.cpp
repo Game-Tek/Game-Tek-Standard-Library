@@ -100,7 +100,6 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	}
 	case WM_SIZING:
 	{
-		//RECT rect = *reinterpret_cast<RECT*>(lParam);
 		RECT rect = *reinterpret_cast<RECT*>(lParam);
 		GetClientRect(static_cast<HWND>(hwnd), &rect);
 			
@@ -164,7 +163,7 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 			// Didn't happen before some minor changes in the code, doesn't seem to go away
 			// so it's going to have to be like this.
 			if (pRawInput->data.mouse.usButtonFlags & RI_MOUSE_WHEEL) {
-				window->onMouseWheelMove(static_cast<float32>(*reinterpret_cast<short*>(&pRawInput->data.mouse.usButtonData)) / static_cast<float32>(WHEEL_DELTA));
+				window->onMouseWheelMove(-static_cast<float32>(*reinterpret_cast<short*>(&pRawInput->data.mouse.usButtonData)) / static_cast<float32>(WHEEL_DELTA));
 			}
 				
 			break;

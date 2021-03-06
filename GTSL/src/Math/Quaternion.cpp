@@ -22,75 +22,34 @@ Quaternion::Quaternion(const Rotator& rotator)
 	W() = cy * cp * cr + sy * sp * sr;
 }
 
-Quaternion::Quaternion(const AxisAngle& axisAngle) : Vector4(axisAngle.X * Math::Sine(axisAngle.Angle / 2), axisAngle.Y * Math::Sine(axisAngle.Angle / 2), axisAngle.Z * Math::Sine(axisAngle.Angle / 2), Math::Cosine(axisAngle.Angle / 2))
+//Quaternion::Quaternion(const AxisAngle& axisAngle) : Vector4(axisAngle.X * Math::Sine(axisAngle.Angle / 2), axisAngle.Y * Math::Sine(axisAngle.Angle / 2), axisAngle.Z * Math::Sine(axisAngle.Angle / 2), Math::Cosine(axisAngle.Angle / 2))
+//{
+//}
+
+Quaternion::Quaternion(const AxisAngle& axisAngle)
 {
+	auto halfAngleSine = Math::Sine(axisAngle.Angle / 2);
+	X() = axisAngle.X * halfAngleSine;
+	Y() = axisAngle.Y * halfAngleSine;
+	Z() = axisAngle.Z * halfAngleSine;
+	W() = Math::Cosine(axisAngle.Angle / 2);
 }
 
 Quaternion Quaternion::operator*(const Quaternion& other) const
 {
-	//auto thi = float4::MakeFromUnaligned(&X);
-	//auto other = float4::MakeFromUnaligned(&other.X);
-	//
-	//float4 wzyx(float4::Shuffle<0, 1, 2, 3>(thi, thi));
-	//float4 baba(float4::Shuffle<0, 1, 0, 1>(other, other));
-	//float4 dcdc(float4::Shuffle<2, 3, 2, 3>(other, other));
-	//
-	//auto ZnXWY = float4::HorizontalSub(thi * baba, wzyx * dcdc);
-	//
-	//auto XZYnW = float4::HorizontalAdd(thi * dcdc, wzyx * baba);
-	//
-	//float4 XZWY(float4::Shuffle<3, 2, 1, 0>(XZYnW, ZnXWY));
-	//XZWY = float4::Add13Sub02(XZWY, float4::Shuffle<2, 3, 0, 1>(ZnXWY, XZYnW));
-	//
-	//float4 res(float4::Shuffle<2, 1, 3, 0>(XZWY, XZWY));
-	//
-	//alignas(16) Quaternion result;
-	//res.CopyToAlignedData(&result.X);
-	//
-	//return result;
-	//
 	Quaternion result;
 
 	return result *= other;
 }
 
+Vector3 Quaternion::operator*(const Vector3 other) const
+{
+	Vector3 u(X(), Y(), Z()); float32 s = W();
+	return u * 2.0f * Math::DotProduct(u, other) + other * (s * s - Math::DotProduct(u, u)) + Math::Cross(u, other) * 2.0f * s;
+}
+
 Quaternion& Quaternion::operator*=(const Quaternion& other)
 {
-	//auto thi = float4::MakeFromUnaligned(&X);
-	//auto other = float4::MakeFromUnaligned(&other.X);
-	//
-	//float4 wzyx(float4::Shuffle<0, 1, 2, 3>(thi, thi));
-	//float4 baba(float4::Shuffle<0, 1, 0, 1>(other, other));
-	//float4 dcdc(float4::Shuffle<2, 3, 2, 3>(other, other));
-	//
-	//float4 ZnXWY = float4::HorizontalSub(thi * baba,wzyx * dcdc);
-	//
-	//float4 XZYnW = float4::HorizontalAdd(thi * dcdc, wzyx * baba);
-	//
-	//float4 XZWY(float4::Shuffle<3, 2, 1, 0>(XZYnW, ZnXWY));
-	//XZWY = float4::Add13Sub02(XZWY, float4::Shuffle<2, 3, 0, 1>(ZnXWY, XZYnW));
-	//
-	//float4 res(float4::Shuffle<2, 1, 3, 0>(XZWY, XZWY));
-	//
-	//res.CopyToUnalignedData(&X);
-	//
-	//return *this;
-	//
-	//X = X * other.Q + Y * other.Z - Z * other.Y + Q * other.X;
-	//Y = -X * other.Z + Y * other.Q + Z * other.X + Q * other.Y;
-	//Z = X * other.Y - Y * other.X + Z * other.Q + Q * other.Z;
-	//Q = -X * other.X - Y * other.Y - Z * other.Z + Q * other.Q;
-
-	//((lhs.w * rhs.x) + (lhs.x * rhs.w) + (lhs.y * rhs.z) - (lhs.z * rhs.y),
-	//(lhs.w * rhs.y) + (lhs.y * rhs.w) + (lhs.z * rhs.x) - (lhs.x * rhs.z),
-	//(lhs.w * rhs.z) + (lhs.z * rhs.w) + (lhs.x * rhs.y) - (lhs.y * rhs.x),
-	//(lhs.w * rhs.w) - (lhs.x * rhs.x) - (lhs.y * rhs.y) - (lhs.z * rhs.z));
-
-	//X = Q * other.X + X * other.Q + Y * other.Z - Z * other.Y;
-	//Y = Q * other.Y + Y * other.Q + Z * other.X - X * other.Z;
-	//Z = Q * other.Z + Z * other.Q + X * other.Y - Y * other.X;
-	//Q = Q * other.Q - X * other.X - Y * other.Y - Z * other.Z;
-
 	X() = W() * other.X() + X() * other.W() + Y() * other.Z() - Z() * other.Y();
 	Y() = W() * other.Y() + Y() * other.W() + Z() * other.X() - X() * other.Z();
 	Z() = W() * other.Z() + Z() * other.W() + X() * other.Y() - Y() * other.X();

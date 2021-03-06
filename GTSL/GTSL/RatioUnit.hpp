@@ -10,49 +10,67 @@ namespace GTSL
 	public:
 		using storing_type = ST;
 
-		static constexpr uint64 NUMERATOR = NUM;
-		static constexpr uint64 DENOMINATOR = DEN;
-		
+		static constexpr ST NUMERATOR = NUM;
+		static constexpr ST DENOMINATOR = DEN;
+
 		RatioUnit() = default;
 
 		explicit constexpr RatioUnit(const storing_type time) : count(time) {}
 
-		template<storing_type N, storing_type R>
-		constexpr RatioUnit(const RatioUnit<ST, N, R>& other) : count(other.count * (N / R))
+		template<storing_type N, storing_type D>
+		constexpr RatioUnit(const RatioUnit<ST, N, D> other) : count(other.As<ST, RatioUnit<ST, NUM, DEN>>())
 		{
-			static_assert(N >= NUM && R <= DENOMINATOR, "Converting to a larger unit will yield a lossy transformation.");
+			static_assert(N >= NUMERATOR && D <= DENOMINATOR, "Converting to a larger unit will yield a lossy transformation.");
 		}
 
 		constexpr RatioUnit(const RatioUnit& other) : count(other.count) {}
 
 		template<typename S, storing_type N, storing_type R>
-		constexpr operator RatioUnit<S, N, R>() const
+		constexpr explicit operator RatioUnit<S, N, R>() const
 		{
-			static_assert(N >= NUM, "Converting to a larger unit will yield a lossy transformation.");
-			return RatioUnit<S, N, R>(count * (N / R));
+			return RatioUnit<S, N, R>(*this);
 		}
 
 		template<typename RET, class R>
-		RET As()
+		constexpr RET As() const
 		{
-			if constexpr ((NUM % DEN) == 0)
+			if constexpr (R::DENOMINATOR > DENOMINATOR)
 			{
-				auto value = count;
-				value *= NUM / DEN;
-
-				if constexpr ((R::NUMERATOR % R::DENOMINATOR) == 0)
+				if constexpr (NUMERATOR == R::NUMERATOR)
 				{
-					return RET(value * (R::NUMERATOR / R::DENOMINATOR));
+					return count * static_cast<RET>(R::DENOMINATOR);
+				}
+				else
+				{
+					return count * static_cast<RET>(R::NUMERATOR / R::DENOMINATOR);
 				}
 			}
-			
-			auto value = static_cast<RET>(count);
-			value *= (static_cast<RET>(NUM) / static_cast<RET>(DEN));
-			return value * (static_cast<RET>(R::NUMERATOR) / static_cast<RET>(R::DENOMINATOR));
+			else if constexpr (R::DENOMINATOR < DENOMINATOR)
+			{
+				if constexpr (NUMERATOR == R::NUMERATOR)
+				{
+					return count / static_cast<RET>(DENOMINATOR);
+				}
+				else
+				{
+					return count / static_cast<RET>(NUMERATOR / DENOMINATOR);
+				}
+			}
+			else
+			{
+				if constexpr (NUMERATOR > R::NUMERATOR)
+				{
+					return count * static_cast<RET>(NUMERATOR);
+				}
+			}
+
+			//auto value = static_cast<RET>(count);
+			//value *= (static_cast<RET>(NUM) / static_cast<RET>(DEN));
+			//return value / (static_cast<RET>(R::NUMERATOR) / static_cast<RET>(R::DENOMINATOR));
 		}
 
-		operator storing_type() const { return count; }
-		
+		constexpr operator storing_type() const { return count; }
+
 		constexpr storing_type GetCount() const { return count; }
 
 		constexpr RatioUnit operator+(const RatioUnit& other) const { return RatioUnit(this->count + other.count); }

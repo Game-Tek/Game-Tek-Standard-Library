@@ -26,6 +26,20 @@ namespace GTSL
 
 		float32 Float; int32 Int;
 	};
+
+	template<typename T>
+	class Radian
+	{
+	private:
+		T radians;
+	};
+
+	template<typename T>
+	class Degree
+	{
+	private:
+		T degrees;
+	};
 	
 	/**
 	 * \brief Provides most of the same methods of math but usually skips input checking for non valid inputs, NaN, etc. Useful when working in conditions which assure you certain
@@ -71,6 +85,16 @@ namespace GTSL
 			while (s - aS > error); //loop until precision satisfied
 
 			return s;
+		}
+
+		static float32 FInterp(const float32 target, const float32 current, const float32 factor)
+		{
+			return current + (target - current) * factor;
+		}
+
+		static float32 FInterpDelta(const float32 target, const float32 current, const float32 factor)
+		{
+			return (target - current) * factor;
 		}
 	
 	private:
@@ -176,6 +200,28 @@ namespace GTSL
 		 */
 		static float32 Log10(float32 x);
 
+		static float32 fast_sine(float32 x) {
+			x = Wrap(x, PI);
+			constexpr float32 B = 4.0f / PI;
+			constexpr float32 C = -4.0f / (PI * PI);
+			constexpr float32 P = 0.225f;
+
+			float y = B * x + C * x * (x < 0 ? -x : x);
+			return P * (y * (y < 0 ? -y : y) - y) + y;
+		}
+
+		// x range: [-PI, PI]
+		static float32 fast_cosine(float32 x) {
+			constexpr float32 B = 4.0f / PI;
+			constexpr float32 C = -4.0f / (PI * PI);
+			constexpr float32 P = 0.225f;
+
+			x = (x > 0) ? -x : x;
+			x += PI * 0.5f;
+
+			return fast_sine(x);
+		}
+		
 		/**
 		 * \brief Returns the sine of an angle.
 		 * \param radians Angle in radians.
@@ -265,9 +311,14 @@ namespace GTSL
 		static float32 Modulo(const float32 a, const float32 b)
 		{
 			const float32 c = a / b;
-			return (c - static_cast<float32>(static_cast<int32>(c))) * b;
+			return (c - static_cast<int32>(c)) * b;
 		}
 
+		static float32 Wrap(const float32 a, const float32 range)
+		{
+			return Modulo(a - range, range * 2) - range;
+		}
+		
 		static GTSL::Vector2 Modulo(const GTSL::Vector2 a, const GTSL::Vector2 b)
 		{
 			return GTSL::Vector2(Modulo(a.X(), b.X()), Modulo(a.Y(), b.Y()));
@@ -384,7 +435,27 @@ namespace GTSL
 		//Interpolates from Current to Target, returns Current + an amount determined by the InterpSpeed.
 		static float32 FInterp(const float32 Target, const float32 Current, const float32 DT, const float32 InterpSpeed)
 		{
-			return (Target - Current) * DT * InterpSpeed + Current;
+			return AdvancedMath::FInterp(Target, Current, DT * InterpSpeed);
+		}
+
+		static Vector2 FInterp(const Vector2 target, const Vector2 current, const float32 deltaTime, const float32 speed)
+		{
+			auto factor = deltaTime * speed;
+			return Vector2(AdvancedMath::FInterp(target.X(), current.X(), factor), AdvancedMath::FInterp(target.Y(), current.Y(), factor));
+		}
+
+		static Vector3 FInterp(const Vector3 target, const Vector3 current, const float32 deltaTime, const float32 speed)
+		{
+			auto factor = deltaTime * speed;
+			return Vector3(AdvancedMath::FInterp(target.X(), current.X(), factor), AdvancedMath::FInterp(target.Y(), current.Y(), factor),
+				AdvancedMath::FInterp(target.Z(), current.Z(), factor));
+		}
+
+		static Vector4 FInterp(const Vector4 target, const Vector4 current, const float32 deltaTime, const float32 speed)
+		{
+			auto factor = deltaTime * speed;
+			return Vector4(AdvancedMath::FInterp(target.X(), current.X(), factor), AdvancedMath::FInterp(target.Y(), current.Y(), factor),
+				AdvancedMath::FInterp(target.Z(), current.Z(), factor), AdvancedMath::FInterp(target.W(), current.W(), factor));
 		}
 
 		static uint32 InvertRange(const uint32 a, const uint32 max) { return max - a; }
@@ -563,8 +634,8 @@ namespace GTSL
 		}
 
 		static float32 DotProduct(const Vector2 a, const Vector2 b) { return a.X() * b.X() + a.Y() * b.Y(); }
-		static float32 DotProduct(const Vector3& a, const Vector3& b) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z(); }
-		static float32 DotProduct(const Vector4& a, const Vector4& b) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z() + a.W() * a.W(); }
+		static float32 DotProduct(const Vector3& a, const Vector3& b) { return a.X() * b.X() + a.Y() * b.Y() + a.Z() * b.Z(); }
+		static float32 DotProduct(const Vector4& a, const Vector4& b) { return a.X() * b.X() + a.Y() * b.Y() + a.Z() * b.Z() + a.W() * b.W(); }
 
 		static Vector3 Cross(const Vector3& a, const Vector3& b) { return Vector3(a.Y() * b.Z() - a.Z() * b.Y(), a.Z() * b.X() - a.X() * b.Z(), a.X() * b.Y() - a.Y() * b.X()); }
 
