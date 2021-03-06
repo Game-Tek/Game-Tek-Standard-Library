@@ -309,7 +309,14 @@ namespace GTSL
 		SIMD128(const AlignedPointer<const type, 16> data) : vector(_mm_load_ps(data)) {}
 		SIMD128(const UnalignedPointer<const type> data) : vector(_mm_loadu_ps(data)) {}
 
-		SIMD128(const type x, const type y, const type z, const type w) : vector(_mm_set_ps(x, y, z, w)) {}
+		/**
+		 * \brief Loads elements in to the vector, it stores in order from left to right, doen't use SSE native little-endian ordering
+		 * \param x 0th parameter in vector
+		 * \param y 1st parameter in vector
+		 * \param z 2nd parameter in vector
+		 * \param w 3rd parameter in vector
+		 */
+		SIMD128(const type x, const type y, const type z, const type w) : vector(_mm_setr_ps(x, y, z, w)) {}
 
 		SIMD128(const SIMD128 & other) = default;
 
@@ -393,7 +400,7 @@ namespace GTSL
 	private:
 		__m128 vector;
 
-		SIMD128(const __m128 & m128) : vector(m128) {}
+		SIMD128(const __m128 m128) : vector(m128) {}
 
 		operator __m128() const { return vector; }
 	};
@@ -426,7 +433,7 @@ namespace GTSL
 		 * \param a float to set all of this vector's components as.
 		 * \return Returns a reference to itself.
 		 */
-		SIMD128& operator=(const float a) { vector = _mm_set_pd1(a); return *this; }
+		SIMD128& operator=(const float a) { vector = _mm_set1_pd(a); return *this; }
 		SIMD128& operator=(const SIMD128& other) { vector = other.vector; return *this; }
 
 		SIMD128& operator=(const AlignedPointer<type, 16> data) { vector = _mm_load_pd(data); return *this; }

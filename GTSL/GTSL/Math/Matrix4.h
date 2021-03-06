@@ -227,16 +227,18 @@ namespace GTSL
 
 		Vector3 operator*(const Vector3& other) const
 		{
-			Vector3 Result;
+			Vector3 result;
 
-			Result.X() = array[0] * other.X() + array[1] * other.X() + array[2] * other.X() + array[3] * other.X();
-			Result.Y() = array[4] * other.Y() + array[5] * other.Y() + array[6] * other.Y() + array[7] * other.Y();
-			Result.Z() = array[8] * other.Z() + array[9] * other.Z() + array[10] * other.Z() + array[11] * other.Z();
+			result.X() = array[0] * other.X() + array[1] * other.Y() + array[2]  * other.Z() + array[3]  * 1/*W*/;
+			result.Y() = array[4] * other.X() + array[5] * other.Y() + array[6]  * other.Z() + array[7]  * 1/*W*/;
+			result.Z() = array[8] * other.X() + array[9] * other.Y() + array[10] * other.Z() + array[11] * 1/*W*/;
 
-			return Result;
+			return result;
 		}
 
 		Vector4 operator*(const Vector4& other) const;
+
+		friend Vector4 operator*(const Vector4& vector, const Matrix4& matrix);
 
 		Matrix4 operator*(const Matrix4& other) const;
 
@@ -244,11 +246,11 @@ namespace GTSL
 
 		Matrix4& operator*=(const Matrix4& other);
 
-		float& operator[](const uint8 index) { return array[index]; }
-		float operator[](const uint8 index) const { return array[index]; }
+		float32& operator[](const uint8 index) { return array[index]; }
+		float32 operator[](const uint8 index) const { return array[index]; }
 
-		float& operator()(const uint8 row, const uint8 column) { return array[row * 4 + column]; }
-		float operator()(const uint8 row, const uint8 column) const { return array[row * 4 + column]; }
+		float32& operator()(const uint8 row, const uint8 column) { return array[row * 4 + column]; }
+		float32 operator()(const uint8 row, const uint8 column) const { return array[row * 4 + column]; }
 
 	private:
 		float32 array[MATRIX_SIZE];

@@ -128,20 +128,26 @@ namespace GTSL
 		Vector& operator=(Vector&& other) noexcept
 		{
 			GTSL_ASSERT(this != &other, "Assigning to self is not allowed!");
+			TryFree();
 			capacity = other.capacity;
 			length = other.length;
 			data = other.data;
 			other.data = nullptr;
 			return *this;
 		}
-		
-		~Vector()
+
+		void TryFree()
 		{
-			if(this->data) [[likely]]
+			if (this->data) [[likely]]
 			{
 				for (auto& e : *this) { e.~T(); }
 				deallocate();
 			}
+		}
+		
+		~Vector()
+		{
+			TryFree();
 		}
 		
 		/**

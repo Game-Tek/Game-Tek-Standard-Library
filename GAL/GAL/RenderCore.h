@@ -52,6 +52,8 @@ namespace GAL
 		GTSL::uint8 D : 2;               //14
 		GTSL::uint8 BitDepth : 6;        //16
 		TextureType Type : 2;            //22
+
+		GTSL::uint8 GetSize() const { return BitDepth / 8 * ComponentCount; }
 	};
 
 	namespace FORMATS

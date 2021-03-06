@@ -118,12 +118,6 @@ namespace GTSL
 
 		static int32 Floor(const float32 A) { return static_cast<int32>(A - (static_cast<int32>(A) % 1)); }
 
-		static float32 Modulo(const float32 A, const float32 B)
-		{
-			const float32 C = A / B;
-			return (C - static_cast<float32>(static_cast<int32>(C))) * B;
-		}
-
 		static uint32 Fact(const int8 A)
 		{
 			uint8 result = 1;
@@ -268,28 +262,15 @@ namespace GTSL
 			return a - mod * init;
 		}
 
-		static float32 Mod(float32 a, float32 mod)
+		static float32 Modulo(const float32 a, const float32 b)
 		{
-			if(a < 0.0f)
-			{
-				if (mod > 0.0f)
-				{
-					int32 init = -a / mod;
-					return mod - (-a - mod * init);
-				}
-			}
-			else
-			{
-				if (mod < 0.0f)
-				{
-					//normal mod
-					int32 init = a / -mod;
-					return mod + (a - (-mod) * init);
-				}
-			}
-			
-			int32 init = a / mod;
-			return a - mod * init;
+			const float32 c = a / b;
+			return (c - static_cast<float32>(static_cast<int32>(c))) * b;
+		}
+
+		static GTSL::Vector2 Modulo(const GTSL::Vector2 a, const GTSL::Vector2 b)
+		{
+			return GTSL::Vector2(Modulo(a.X(), b.X()), Modulo(a.Y(), b.Y()));
 		}
 		
 		template<typename T>

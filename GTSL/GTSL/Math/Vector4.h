@@ -14,6 +14,7 @@ namespace GTSL
 		Vector4(const float32 x, const float32 y, const float32 z, const float32 w) : values{ x, y, z, w } {}
 
 		Vector4(const Vector3& vector3);
+		Vector4(const Vector3& vector3, const float32 w);
 		
 		~Vector4() = default;
 
@@ -29,20 +30,14 @@ namespace GTSL
 
 		Vector4& operator+=(float Other)
 		{
-			X() += Other;
-			Y() += Other;
-			Z() += Other;
-			W() += Other;
+			X() += Other; Y() += Other; Z() += Other; W() += Other;
 
 			return *this;
 		}
 
 		Vector4& operator+=(const Vector4& Other)
 		{
-			X() += Other.X();
-			Y() += Other.Y();
-			Z() += Other.Z();
-			W() += Other.W();
+			X() += Other.X(); Y() += Other.Y(); Z() += Other.Z(); W() += Other.W();
 
 			return *this;
 		}
@@ -59,50 +54,37 @@ namespace GTSL
 
 		Vector4& operator-=(float Other)
 		{
-			X() -= Other;
-			Y() -= Other;
-			Z() -= Other;
-			W() -= Other;
+			X() -= Other; Y() -= Other; Z() -= Other; W() -= Other;
 
 			return *this;
 		}
 
 		Vector4& operator-=(const Vector4& Other)
 		{
-			X() -= Other.X();
-			Y() -= Other.Y();
-			Z() -= Other.Z();
-			W() -= Other.W();
+			X() -= Other.X(); Y() -= Other.Y(); Z() -= Other.Z(); W() -= Other.W();
 
 			return *this;
 		}
 
-		Vector4 operator*(float Other) const
+		Vector4 operator*(float32 other) const
 		{
-			return { X() * Other, Y() * Other, Z() * Other, W() * Other };
+			return { X() * other, Y() * other, Z() * other, W() * other };
 		}
 
-		Vector4& operator*=(float Other)
+		Vector4& operator*=(float32 other)
 		{
-			X() *= Other;
-			Y() *= Other;
-			Z() *= Other;
-			W() *= Other;
-
+			X() *= other; Y() *= other; Z() *= other; W() *= other;
 			return *this;
 		}
 
-		Vector4 operator/(float Other) const
+		Vector4 operator/(float32 other) const
 		{
-			return { X() / Other, Y() / Other, Z() / Other, W() / Other };
+			return { X() / other, Y() / other, Z() / other, W() / other };
 		}
 
-		Vector4& operator/=(float Other)
+		Vector4& operator/=(float32 other)
 		{
-			X() /= Other;
-			Y() /= Other;
-			Z() /= Other;
-			W() /= Other;
+			X() /= other; Y() /= other; Z() /= other; W() /= other;
 
 			return *this;
 		}
@@ -126,6 +108,7 @@ namespace GTSL
 
 		float32 operator[](const uint8 i) const { return values[i]; }
 		float32& operator[](const uint8 i) { return values[i]; }
+		
 	private:
 		float32 values[4]{ 0.0f };
 	};

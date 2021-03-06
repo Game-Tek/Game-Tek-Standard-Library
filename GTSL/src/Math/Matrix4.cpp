@@ -105,16 +105,24 @@ void Matrix4::Transpose()
 
 Vector4 Matrix4::operator*(const Vector4& other) const
 {
-	alignas(16) Vector4 Result;
+	Vector4 result;
 
-	const auto P1(SIMD128<float32>(AlignedPointer<const float32, 16>(other.GetData())) * SIMD128<float32>(AlignedPointer<const float32, 16>(&array[0])));
-	const auto P2(SIMD128<float32>(AlignedPointer<const float32, 16>(other.GetData())) * SIMD128<float32>(AlignedPointer<const float32, 16>(&array[4])));
-	const auto P3(SIMD128<float32>(AlignedPointer<const float32, 16>(other.GetData())) * SIMD128<float32>(AlignedPointer<const float32, 16>(&array[8])));
-	const auto P4(SIMD128<float32>(AlignedPointer<const float32, 16>(other.GetData())) * SIMD128<float32>(AlignedPointer<const float32, 16>(&array[12])));
+	const auto xxxx = SIMD128<float32>(other.X()); const auto yyyy = SIMD128<float32>(other.Y());
+	const auto zzzz = SIMD128<float32>(other.Z()); const auto wwww = SIMD128<float32>(other.W());
 
-	SIMD128<float32>(P1 + P2 + P3 + P4).CopyTo(AlignedPointer<float32, 16>(Result.GetData()));
+	const auto p0 = xxxx * SIMD128<float32>(array[0], array[4], array[8], array[12]);
+	const auto p1 = yyyy * SIMD128<float32>(array[1], array[5], array[9], array[13]);
+	const auto p2 = zzzz * SIMD128<float32>(array[2], array[6], array[10], array[14]);
+	const auto p3 = wwww * SIMD128<float32>(array[3], array[7], array[11], array[15]);
 
-	return Result;
+	auto res = p0 + p1 + p2 + p3; res.CopyTo(AlignedPointer<float32, 16>(result.GetData()));
+
+	//result.X() = other.X() * array[0]  + other.Y() * array[1]  + other.Z() * array[2]  + other.W() * array[3];
+	//result.Y() = other.X() * array[4]  + other.Y() * array[5]  + other.Z() * array[6]  + other.W() * array[7];
+	//result.Z() = other.X() * array[8]  + other.Y() * array[9]  + other.Z() * array[10] + other.W() * array[11];
+	//result.W() = other.X() * array[12] + other.Y() * array[13] + other.Z() * array[14] + other.W() * array[15];
+	
+	return result;
 }
 
 //WORKS
@@ -159,7 +167,7 @@ Matrix4& Matrix4::operator*=(const float32 other)
 Matrix4& Matrix4::operator*=(const Matrix4& other)
 {
 	//https://codereview.stackexchange.com/questions/101144/simd-matrix-multiplication
-	
+
 	const auto other_row_1 = SIMD128<float32>(AlignedPointer<const float32, 16>(&other.array[0]));
 	const auto other_row_2 = SIMD128<float32>(AlignedPointer<const float32, 16>(&other.array[4]));
 	const auto other_row_3 = SIMD128<float32>(AlignedPointer<const float32, 16>(&other.array[8]));
@@ -177,4 +185,16 @@ Matrix4& Matrix4::operator*=(const Matrix4& other)
 	}
 
 	return *this;
+}
+
+Vector4 GTSL::operator*(const Vector4& vector, const Matrix4& matrix)
+{
+	GTSL::Vector4 result;
+	
+	result.X() = vector.X() * matrix.array[0] + vector.Y() * matrix.array[4] +  vector.Z() * matrix.array[8]  + vector.W() * matrix.array[12];
+	result.Y() = vector.X() * matrix.array[1] + vector.Y() * matrix.array[5] +  vector.Z() * matrix.array[8]  + vector.W() * matrix.array[13];
+	result.Z() = vector.X() * matrix.array[2] + vector.Y() * matrix.array[6] +  vector.Z() * matrix.array[10] + vector.W() * matrix.array[14];
+	result.W() = vector.X() * matrix.array[3] + vector.Y() * matrix.array[7] +  vector.Z() * matrix.array[11] + vector.W() * matrix.array[15];
+
+	return result;
 }

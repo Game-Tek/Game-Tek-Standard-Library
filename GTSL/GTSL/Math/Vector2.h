@@ -8,6 +8,10 @@ namespace GTSL
 	public:
 		Vector2() = default;
 
+		constexpr Vector2(float32 a) : values{ a, a }
+		{
+		}
+
 		constexpr Vector2(float32 x, float32 y) : values{ x, y }
 		{
 		}

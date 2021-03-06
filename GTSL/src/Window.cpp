@@ -6,6 +6,7 @@
 #include "GTSL/StaticString.hpp"
 
 #include "ShObjIdl_core.h"
+#include "GTSL/Array.hpp"
 #include "GTSL/Bitman.h"
 
 #if (_WIN32)
@@ -31,24 +32,24 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	{
 		window->onCloseDelegate();	return 0;
 	}
-	case WM_MOUSEMOVE: /*absolute pos*/
-	{
-		Vector2 mousePos;
-
-		RECT rect;
-		Extent2D clientSize;
-		GetClientRect(winHandle, &rect);
-		clientSize.Width = static_cast<uint16>(rect.right);
-		clientSize.Height = static_cast<uint16>(rect.bottom);
-			
-		Win32_calculateMousePos(LOWORD(lParam), HIWORD(lParam), clientSize, mousePos);
-			
-		window->onMouseMove(mousePos); return 0;
-	}
-	case WM_MOUSEWHEEL:
-	{
-		window->onMouseWheelMove(GET_WHEEL_DELTA_WPARAM(wParam)); return 0;
-	}
+	//case WM_MOUSEMOVE: /*absolute pos*/
+	//{
+	//	Vector2 mousePos;
+	//
+	//	RECT rect;
+	//	Extent2D clientSize;
+	//	GetClientRect(winHandle, &rect);
+	//	clientSize.Width = static_cast<uint16>(rect.right);
+	//	clientSize.Height = static_cast<uint16>(rect.bottom);
+	//		
+	//	Win32_calculateMousePos(LOWORD(lParam), HIWORD(lParam), clientSize, mousePos);
+	//		
+	//	window->onMouseMove(mousePos); return 0;
+	//}
+	//case WM_MOUSEWHEEL:
+	//{
+	//	window->onMouseWheelMove(GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA); return 0;
+	//}
 	case WM_LBUTTONDOWN:
 	{
 		window->onMouseButtonClick(MouseButton::LEFT_BUTTON, true);  return 0;
@@ -121,32 +122,71 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	}
 	case WM_INPUT:
 	{
-		PRAWINPUT pRawInput; UINT bufferSize; HANDLE hHeap = GetProcessHeap();
+		PRAWINPUT pRawInput; UINT dataSize; HANDLE hHeap = GetProcessHeap();
 
-		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, nullptr,	&bufferSize, sizeof(RAWINPUTHEADER));
+		GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, nullptr,	&dataSize, sizeof(RAWINPUTHEADER));
 
-		pRawInput = (PRAWINPUT)HeapAlloc(hHeap, 0, bufferSize);
+		pRawInput = (PRAWINPUT)HeapAlloc(hHeap, 0, dataSize);
 		if (!pRawInput)
 			return 0;
 
-		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, pRawInput, &bufferSize, sizeof(RAWINPUTHEADER));
-		
+		GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, pRawInput, &dataSize, sizeof(RAWINPUTHEADER));
+
+		switch (pRawInput->header.dwType)
 		{
-			GetRawInputDeviceInfoA(pRawInput->header.hDevice, RIDI_PREPARSEDDATA, nullptr, &bufferSize);
-			auto pPreparsedData = (PHIDP_PREPARSED_DATA)HeapAlloc(hHeap, 0, bufferSize);
-			GetRawInputDeviceInfoA(pRawInput->header.hDevice, RIDI_PREPARSEDDATA, pPreparsedData, &bufferSize);
+		case RIM_TYPEMOUSE: //mouse
+		{
+			GTSL::Vector2 result;
+			int32 x = pRawInput->data.mouse.lLastX, y = pRawInput->data.mouse.lLastY;
+				
+			if((pRawInput->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) == MOUSE_MOVE_ABSOLUTE)
+			{
+				bool isVirtualDesktop = (pRawInput->data.mouse.usFlags & MOUSE_VIRTUAL_DESKTOP) == MOUSE_VIRTUAL_DESKTOP;
+
+				int width = GetSystemMetrics(isVirtualDesktop ? SM_CXVIRTUALSCREEN : SM_CXSCREEN);
+				int height = GetSystemMetrics(isVirtualDesktop ? SM_CYVIRTUALSCREEN : SM_CYSCREEN);
+
+				int absoluteX = int((pRawInput->data.mouse.lLastX / 65535.0f) * width);
+				int absoluteY = int((pRawInput->data.mouse.lLastY / 65535.0f) * height);
+
+				result.X() = absoluteX; result.Y() = absoluteY;
+			}
+
+			if((pRawInput->data.mouse.usFlags & MOUSE_MOVE_RELATIVE) == MOUSE_MOVE_RELATIVE)
+			{
+				result.X() = x; result.Y() = -y;
+			}
+
+			window->onMouseMove(result);
+				
+			// Wheel data needs to be pointer casted to interpret an unsigned short as a short, with no conversion
+			// otherwise it'll overflow when going negative.
+			// Didn't happen before some minor changes in the code, doesn't seem to go away
+			// so it's going to have to be like this.
+			if (pRawInput->data.mouse.usButtonFlags & RI_MOUSE_WHEEL) {
+				window->onMouseWheelMove(static_cast<float32>(*reinterpret_cast<short*>(&pRawInput->data.mouse.usButtonData)) / static_cast<float32>(WHEEL_DELTA));
+			}
+				
+			break;
+		}
+			
+		case RIM_TYPEHID: //controller
+		{
+			GetRawInputDeviceInfoA(pRawInput->header.hDevice, RIDI_PREPARSEDDATA, nullptr, &dataSize);
+			auto pPreparsedData = (PHIDP_PREPARSED_DATA)HeapAlloc(hHeap, 0, dataSize);
+			GetRawInputDeviceInfoA(pRawInput->header.hDevice, RIDI_PREPARSEDDATA, pPreparsedData, &dataSize);
 
 			HIDP_CAPS caps;
 
 			HidP_GetCaps(pPreparsedData, &caps);
-			
+
 			auto pButtonCaps = (PHIDP_BUTTON_CAPS)HeapAlloc(hHeap, 0, sizeof(HIDP_BUTTON_CAPS) * caps.NumberInputButtonCaps);
-			
+
 			{
 				auto capsLength = caps.NumberInputButtonCaps;
 				HidP_GetButtonCaps(HidP_Input, pButtonCaps, &capsLength, pPreparsedData);
 			}
-			
+
 			auto g_NumberOfButtons = pButtonCaps->Range.UsageMax - pButtonCaps->Range.UsageMin + 1;
 
 			auto pValueCaps = (PHIDP_VALUE_CAPS)HeapAlloc(hHeap, 0, sizeof(HIDP_VALUE_CAPS) * caps.NumberInputValueCaps);
@@ -156,8 +196,8 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 				HidP_GetValueCaps(HidP_Input, pValueCaps, &capsLength, pPreparsedData);
 			}
 
-			USAGE usage[512];
-			
+			USAGE usage[512]; //TODO: ASSERT
+
 			ULONG usageLength = g_NumberOfButtons;
 			HidP_GetUsages(HidP_Input, pButtonCaps->UsagePage, 0, usage, &usageLength, pPreparsedData, (PCHAR)pRawInput->data.hid.bRawData, pRawInput->data.hid.dwSizeHid);
 
@@ -196,8 +236,11 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 					break;
 				}
 			}
-		}
 
+			break;
+		}
+		}
+			
 		HeapFree(hHeap, 0, pRawInput);
 		
 		return 0;
@@ -453,26 +496,37 @@ void GTSL::Window::HideWindow()
 
 void GTSL::Window::AddDevice(const DeviceType deviceType)
 {
+	Array<RAWINPUTDEVICE, 8> rawInputDevices;
+	
 	switch (deviceType)
 	{
 		case DeviceType::MOUSE:
 		{
-			return;
+			RAWINPUTDEVICE rid;
+			rid.usUsagePage = HID_USAGE_PAGE_GENERIC; //generic usage
+			rid.usUsage = HID_USAGE_GENERIC_MOUSE; // MOUSE
+			rid.dwFlags = RIDEV_INPUTSINK;
+			rid.hwndTarget = (HWND)windowHandle;
+			rawInputDevices.EmplaceBack(rid);
+			break;
 		}
 		
 		case DeviceType::GAMEPAD:
 		{
 			RAWINPUTDEVICE rid;
-
-			rid.usUsagePage = 1;
-			rid.usUsage = 4; // Joystick
+			rid.usUsagePage = HID_USAGE_PAGE_GENERIC;
+			rid.usUsage = HID_USAGE_GENERIC_JOYSTICK; // Joystick
 			rid.dwFlags = 0;
 			rid.hwndTarget = (HWND)windowHandle;
-
-			RegisterRawInputDevices(&rid, 1, sizeof(rid));
+			rawInputDevices.EmplaceBack(rid);
+			break;
 		}
-		
-	default: ;
+	}
+
+	if (!RegisterRawInputDevices(rawInputDevices.begin(), rawInputDevices.GetLength(), sizeof(RAWINPUTDEVICE)))
+	{
+		auto errorCode = GetLastError();
+		GTSL_ASSERT(false, "Failed to register devices");
 	}
 }
 
