@@ -12,7 +12,7 @@ namespace GTSL
 	public:
 		Vector3() = default;
 
-		Vector3(const float32 x, const float32 y, const float32 z) : values{ x, y, z, 0.0f }
+		constexpr Vector3(const float32 x, const float32 y, const float32 z) : values{ x, y, z, 0.0f }
 		{
 		}
 

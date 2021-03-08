@@ -5,29 +5,76 @@
 
 using namespace GTSL;
 
-float32 Math::Power(const float32 x, const float32 y) { return powf(x, y); }
+float32 Power(const float32 x, const float32 y) { return powf(x, y); }
 
-float32 Math::Log10(const float32 x) { return log10f(x); }
+float32 Log10(const float32 x) { return log10f(x); }
 
-float32 Math::Sine(const float32 radians) { return sinf(radians); }
+void Sine(GTSL::Range<float32*> n)
+{
+	using SIMD = SIMD128<float32>;
 
-float64 Math::Sine(const float64 radians) { return sin(radians); }
+	const auto VPI = SIMD(Math::PI); const auto VPI2 = SIMD(Math::PI * 2);
+	const auto B = SIMD(4.0f / Math::PI);
+	const auto C = SIMD(-4.0f / (Math::PI * Math::PI));
+	const auto P = SIMD(0.225f);
 
-float32 Math::Cosine(const float32 radians) { return cosf(radians); }
+	for(uint32 i = 0, t = 0; t < n.ElementCount(); ++i, t += 4)
+	{
+		auto x = SIMD(AlignedPointer<const float32, 16>(n.begin() + t));
 
-float64 Math::Cosine(const float64 radians) { return cos(radians); }
+		//wrap modulo PI
+		auto c = (x - VPI) / VPI2 - VPI;
+		x = (c - SIMD(SIMD128<int32>(c))) * VPI;
+		//wrap modulo PI
+		
+		auto y = B * x + C * x * SIMD::Abs(x);
+		(P * (y * SIMD::Abs(y) - y) + y).CopyTo(AlignedPointer<float32, 16>(n.begin() + t));
+	}
+}
 
-float32 Math::Tangent(const float32 radians) { return tanf(radians); }
+void Cosine(GTSL::Range<float32*> n)
+{
+	using SIMD = SIMD128<float32>;
 
-float64 Math::Tangent(const float64 radians) { return tan(radians); }
+	const auto VPI = SIMD(Math::PI); const auto VPI2 = SIMD(Math::PI * 2);
+	const auto B = SIMD(4.0f / Math::PI); const auto C = SIMD(-4.0f / Math::Square(Math::PI)); const auto P = SIMD(0.225f);
 
-float32 Math::ArcSine(const float32 A) {	return asin(A); }
+	for (uint32 i = 0, t = 0; t < n.ElementCount(); ++i, t += 4)
+	{
+		auto x = SIMD(AlignedPointer<const float32, 16>(n.begin() + t));
 
-float32 Math::ArcCosine(const float32 A) { return acos(A); }
+		x = SIMD::NotAbs(x); //-abs
+		x += SIMD(Math::PI * 0.5f); //cosine shift
+		
+		//wrap modulo PI
+		auto c = (x - VPI) / VPI2 - VPI;
+		x = (c - SIMD(SIMD128<int32>(c))) * VPI;
+		//wrap modulo PI
 
-float32 Math::ArcTangent(const float32 A) { return atan(A); }
+		auto y = B * x + C * x * SIMD::Abs(x);
+		(P * (y * SIMD::Abs(y) - y) + y).CopyTo(AlignedPointer<float32, 16>(n.begin() + t));
+	}
+}
 
-float32 Math::ArcTan2(const float32 X, const float32 Y) { return atan2(Y, X); }
+float32 Sine(const float32 radians) { return sinf(radians); }
+
+float64 Sine(const float64 radians) { return sin(radians); }
+
+float32 Cosine(const float32 radians) { return cosf(radians); }
+
+float64 Cosine(const float64 radians) { return cos(radians); }
+
+float32 Tangent(const float32 radians) { return tanf(radians); }
+
+float64 Tangent(const float64 radians) { return tan(radians); }
+
+float32 ArcSine(const float32 A) {	return asin(A); }
+
+float32 ArcCosine(const float32 A) { return acos(A); }
+
+float32 ArcTangent(const float32 A) { return atan(A); }
+
+float32 ArcTan2(const float32 X, const float32 Y) { return atan2(Y, X); }
 
 #define MakeShuffleMask(x,y,z,w)           (x | (y<<2) | (z<<4) | (w<<6))
 
@@ -71,7 +118,7 @@ __forceinline __m128 Mat2MulAdj(__m128 vec1, __m128 vec2)
 			_mm_mul_ps(VecSwizzle(vec1, 1, 0, 3, 2), VecSwizzle(vec2, 2, 1, 2, 1)));
 }
 
-Matrix4 Math::Inverse(const Matrix4& matrix)
+Matrix4 Inverse(const Matrix4& matrix)
 {
 	// use block matrix method
 	// A is a matrix, then i(A) or iA means inverse of A, A# (or A_ in code) means adjugate of A, |A| (or detA in code) is determinant, tr(A) is trace

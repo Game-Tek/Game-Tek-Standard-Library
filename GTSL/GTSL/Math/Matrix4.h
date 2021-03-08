@@ -11,8 +11,7 @@ namespace GTSL
 {
 	
 	/**
-	 * \brief Defines a 4x4 matrix with floating point precision.\n
-	 * vector is stored in row major order.
+	 * \brief Defines a 4x4 matrix with floating point precision in row major order. Is an identity matrix by default.\n
 	 * E.J:\n
 	 *
 	 * Matrix:\n
@@ -25,7 +24,7 @@ namespace GTSL
 	 *
 	 * Most operations are accelerated by SIMD code.
 	 *
-	 * Operation follow ordering convention.	
+	 * Operations follow ordering convention.	
 	 *
 	 */
 	class alignas(16) Matrix4
@@ -34,11 +33,9 @@ namespace GTSL
 		
 	public:
 		/**
-		 * \brief Default constructor. Sets all of the matrices' components as 0.
+		 * \brief Default constructor. Constructs and identity matrix.
 		 */
-		Matrix4() : array{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
-		{
-		}
+		Matrix4() = default;
 
 		Matrix4(const Rotator& rotator);
 		
@@ -92,7 +89,8 @@ namespace GTSL
 		~Matrix4() = default;
 
 		explicit Matrix4(const class Quaternion& quaternion);
-		Matrix4(const class AxisAngle& axisAngle);
+		explicit Matrix4(const class AxisAngle& axisAngle);
+		explicit Matrix4(const Vector3 position);
 
 		/**
 		 * \brief Sets all of this matrices' components to represent an Identity matrix.\n
@@ -113,10 +111,10 @@ namespace GTSL
 		 * \brief Returns a pointer to the matrices' data array.
 		 * \return const float* to the matrices' data.
 		 */
-		[[nodiscard]] const float* GetData() const { return array; }
+		[[nodiscard]] const float32* GetData() const { return array; }
 		
-		[[nodiscard]] const float* GetData(uint8 row, uint8 column) const { return &array[row * 4 + column]; }
-		[[nodiscard]] float* GetData(uint8 row, uint8 column) { return &array[row * 4 + column]; }
+		[[nodiscard]] const float32* GetData(uint8 row, uint8 column) const { return &array[row * 4 + column]; }
+		[[nodiscard]] float32* GetData(uint8 row, uint8 column) { return &array[row * 4 + column]; }
 
 		[[nodiscard]] Vector4 GetXBasisVector() const { return Vector4(array[0], array[1], array[2], array[3]); }
 		[[nodiscard]] Vector4 GetYBasisVector() const { return Vector4(array[4], array[5], array[6], array[7]); }
@@ -253,7 +251,7 @@ namespace GTSL
 		float32 operator()(const uint8 row, const uint8 column) const { return array[row * 4 + column]; }
 
 	private:
-		float32 array[MATRIX_SIZE];
+		float32 array[MATRIX_SIZE]{ 1.0f, 0, 0, 0, 0, 1.0f, 0, 0, 0, 0, 1.0f, 0, 0, 0, 0, 1.0f };
 	};
 
 	class Matrix3x4

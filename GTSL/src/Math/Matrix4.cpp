@@ -70,6 +70,11 @@ Matrix4::Matrix4(const AxisAngle& axisAngle) : Matrix4(1)
 	(*this)(1, 2) = tmp1 - tmp2;
 }
 
+Matrix4::Matrix4(const Vector3 position)
+{
+	(*this)(0, 3) = position.X(); (*this)(1, 3) = position.Y(); (*this)(2, 3) = position.Z();
+}
+
 
 //CODE IS CORRECT
 Matrix4::Matrix4(const Rotator& rotator) : Matrix4(1)
