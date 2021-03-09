@@ -11,14 +11,14 @@ using namespace GTSL;
 void System::GetRAMInfo(RamInfo& ramInfo)
 {
 #if (_WIN32)
-	MEMORYSTATUSEX memory_status{};
-	GlobalMemoryStatusEx(&memory_status);
+	MEMORYSTATUSEX memoryStatus{}; memoryStatus.dwLength = sizeof(MEMORYSTATUSEX);
+	GlobalMemoryStatusEx(&memoryStatus);
 
 	//GTSL_ASSERT(memory_status, "Failed to get Win32 memory status!");
 
-	ramInfo.FreePhysicalMemory = memory_status.ullAvailPhys;
-	ramInfo.TotalPhysicalMemory = memory_status.ullTotalPhys;
-	ramInfo.ProcessAvailableMemory = memory_status.ullAvailPageFile;
+	ramInfo.TotalPhysicalMemory = GTSL::Byte(memoryStatus.ullTotalPhys);
+	ramInfo.FreePhysicalMemory = GTSL::Byte(memoryStatus.ullAvailPhys);
+	ramInfo.ProcessAvailableMemory = GTSL::Byte(memoryStatus.ullAvailPageFile);
 #endif
 }
 

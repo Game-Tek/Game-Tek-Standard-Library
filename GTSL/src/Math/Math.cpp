@@ -5,11 +5,11 @@
 
 using namespace GTSL;
 
-float32 Power(const float32 x, const float32 y) { return powf(x, y); }
+float32 Math::Power(const float32 x, const float32 y) { return powf(x, y); }
 
-float32 Log10(const float32 x) { return log10f(x); }
+float32 Math::Log10(const float32 x) { return log10f(x); }
 
-void Sine(GTSL::Range<float32*> n)
+void Math::Sine(GTSL::Range<float32*> n)
 {
 	using SIMD = SIMD128<float32>;
 
@@ -32,7 +32,7 @@ void Sine(GTSL::Range<float32*> n)
 	}
 }
 
-void Cosine(GTSL::Range<float32*> n)
+void Math::Cosine(GTSL::Range<float32*> n)
 {
 	using SIMD = SIMD128<float32>;
 
@@ -56,25 +56,25 @@ void Cosine(GTSL::Range<float32*> n)
 	}
 }
 
-float32 Sine(const float32 radians) { return sinf(radians); }
+float32 Math::Sine(const float32 radians) { return sinf(radians); }
 
-float64 Sine(const float64 radians) { return sin(radians); }
+float64 Math::Sine(const float64 radians) { return sin(radians); }
 
-float32 Cosine(const float32 radians) { return cosf(radians); }
+float32 Math::Cosine(const float32 radians) { return cosf(radians); }
 
-float64 Cosine(const float64 radians) { return cos(radians); }
+float64 Math::Cosine(const float64 radians) { return cos(radians); }
 
-float32 Tangent(const float32 radians) { return tanf(radians); }
+float32 Math::Tangent(const float32 radians) { return tanf(radians); }
 
-float64 Tangent(const float64 radians) { return tan(radians); }
+float64 Math::Tangent(const float64 radians) { return tan(radians); }
 
-float32 ArcSine(const float32 A) {	return asin(A); }
+float32 Math::ArcSine(const float32 A) {	return asin(A); }
 
-float32 ArcCosine(const float32 A) { return acos(A); }
+float32 Math::ArcCosine(const float32 A) { return acos(A); }
 
-float32 ArcTangent(const float32 A) { return atan(A); }
+float32 Math::ArcTangent(const float32 A) { return atan(A); }
 
-float32 ArcTan2(const float32 X, const float32 Y) { return atan2(Y, X); }
+float32 Math::ArcTan2(const float32 X, const float32 Y) { return atan2(Y, X); }
 
 #define MakeShuffleMask(x,y,z,w)           (x | (y<<2) | (z<<4) | (w<<6))
 
@@ -118,7 +118,7 @@ __forceinline __m128 Mat2MulAdj(__m128 vec1, __m128 vec2)
 			_mm_mul_ps(VecSwizzle(vec1, 1, 0, 3, 2), VecSwizzle(vec2, 2, 1, 2, 1)));
 }
 
-Matrix4 Inverse(const Matrix4& matrix)
+Matrix4 Math::Inverse(const Matrix4& matrix)
 {
 	// use block matrix method
 	// A is a matrix, then i(A) or iA means inverse of A, A# (or A_ in code) means adjugate of A, |A| (or detA in code) is determinant, tr(A) is trace

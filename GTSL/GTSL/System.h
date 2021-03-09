@@ -1,14 +1,15 @@
 #pragma once
 #include "Core.h"
+#include "DataSizes.h"
 #include "Extent.h"
 
 namespace GTSL
 {
 	struct RamInfo
 	{
-		size_t TotalPhysicalMemory = 0;
-		size_t FreePhysicalMemory = 0;
-		size_t ProcessAvailableMemory = 0;
+		GTSL::Byte TotalPhysicalMemory;
+		GTSL::Byte FreePhysicalMemory;
+		GTSL::Byte ProcessAvailableMemory;
 	};
 
 	struct VectorInfo

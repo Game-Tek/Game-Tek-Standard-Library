@@ -189,14 +189,14 @@ namespace GTSL
 		 * \param y exponent
 		 * \return x ^ y
 		 */
-		inline float32 Power(float32 x, float32 y);
+		float32 Power(float32 x, float32 y);
 
 		/**
 		 * \brief Returns the base 10 logarithm of x.
 		 * \param x number
 		 * \return Base 10 logarithm of x
 		 */
-		inline float32 Log10(float32 x);
+		float32 Log10(float32 x);
 
 		//inline float32 fast_sine(float32 x) {
 		//	x = Wrap(x, PI);
@@ -229,77 +229,77 @@ namespace GTSL
 			return fast_sine(x);
 		}
 
-		inline void Sine(GTSL::Range<float32*> n);
-		inline void Cosine(GTSL::Range<float32*> n);
+		void Sine(GTSL::Range<float32*> n);
+		void Cosine(GTSL::Range<float32*> n);
 
 		/**
 		 * \brief Returns the sine of an angle.
 		 * \param radians Angle in radians.
 		 * \return Sine of radians
 		 */
-		inline float32 Sine(float32 radians);
+		float32 Sine(float32 radians);
 
 		/**
 		 * \brief Returns the sine of an angle.
 		 * \param radians Angle in radians.
 		 * \return Sine of radians
 		 */
-		inline float64 Sine(float64 radians);
+		float64 Sine(float64 radians);
 
 		/**
 		* \brief Returns the cosine of an angle.
 		* \param radians Angle in radians.
 		* \return Cosine of radians
 		*/
-		inline float32 Cosine(float32 radians);
+		float32 Cosine(float32 radians);
 
 		/**
 		* \brief Returns the cosine of an angle.
 		* \param radians Angle in radians.
 		* \return Cosine of radians
 		*/
-		inline float64 Cosine(float64 radians);
+		float64 Cosine(float64 radians);
 
 		/**
 		* \brief Returns the tangent of an angle.
 		* \param radians Angle in radians.
 		* \return Tangent of radians
 		*/
-		inline float32 Tangent(float32 radians);
+		float32 Tangent(float32 radians);
 
 		/**
 		* \brief Returns the tangent of an angle.
 		* \param radians Angle in radians.
 		* \return Tangent of radians
 		*/
-		inline float64 Tangent(float64 radians);
+		float64 Tangent(float64 radians);
 
 		/**
 		* \brief Returns the arcsine of A in radians.
 		* \param A value
 		* \return Radians of A
 		*/
-		inline float32 ArcSine(float32 A);
+		float32 ArcSine(float32 A);
 
 		/**
 		* \brief Returns the arccosine of A in radians.
 		* \param A value
 		* \return Radians of A
 		*/
-		inline float32 ArcCosine(float32 A);
+		float32 ArcCosine(float32 A);
 
 		/**
 		* \brief Returns the arctangent of A in radians.
 		* \param A value
 		* \return Radians of A
 		*/
-		inline float32 ArcTangent(float32 A);
+		float32 ArcTangent(float32 A);
 
 		/**
 		* \brief Returns the arctangent of Y / X in degrees.
 		* \return Degrees of Y / X
 		*/
-		inline float32 ArcTan2(float32 X, float32 Y);
+		float32 ArcTan2(float32 X, float32 Y);
 
 		inline float32 SquareRoot(const float32 a)
 		{
@@ -850,7 +850,7 @@ namespace GTSL
 		inline void BuildPerspectiveMatrix(Matrix4& matrix, const float32 fov, const float32 aspectRatio, const float32 nearPlane, const float32 farPlane)
 		{
 			//Tangent of half the vertical view angle.
-			const auto f = 1 / Tangent(fov * 0.5f);
+			const auto f = 1.0f / Tangent(fov * 0.5f);
 
 			const auto far_m_near = farPlane - nearPlane;
 
@@ -1076,14 +1076,8 @@ namespace GTSL
 			return ClosestPoint;
 		}
 
-		inline void SinCos(float32* sp, float32* cp, const float32 degrees)
-		{
-			*sp = Sine(degrees);
-			*cp = Cosine(degrees);
-		}
-
 		//https://lxjk.github.io/2017/09/03/Fast-4x4-Matrix-Inverse-with-SSE-SIMD-Explained.html
-		inline Matrix4 Inverse(const Matrix4& matrix);
+		Matrix4 Inverse(const Matrix4& matrix);
 
 		template<typename T1, typename T2, typename MF, typename SF>
 		inline void MultiplesFor(const Range<T1*> range1, const Range<T2*> range2, const uint64 multiple, const MF& multiplesFunction, const SF& singlesFunction)

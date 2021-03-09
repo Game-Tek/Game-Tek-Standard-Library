@@ -18,6 +18,13 @@ namespace GTSL
 			this->length = other.length;
 		}
 		
+		constexpr StaticString(const char character)
+		{
+			GTSL_ASSERT(1 <= N, "String larger than buffer capacity");
+			copy(1, &character); this->length = 1;
+			array[length] = '\0';
+		}
+
 		constexpr StaticString(const char* string)
 		{
 			const auto len = StringLength(string);

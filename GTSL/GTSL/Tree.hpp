@@ -19,16 +19,25 @@ namespace GTSL
 		void Initialize(const ALLOCATOR& allocator)
 		{
 			this->allocator = allocator;
-			root = New<Node>(allocator);
-			root->Nodes.Initialize(4, allocator);
+			nodes.Initialize(4, this->allocator);
 		}
 
 		Node* AddChild(Node* parent)
 		{
-			Node* newNode = New<Node>(allocator);
-			newNode->Nodes.Initialize(4, allocator);
-			parent->Nodes.EmplaceBack(newNode);
-			return newNode;
+			if (parent)
+			{
+				Node* newNode = New<Node>(allocator);
+				newNode->Nodes.Initialize(4, allocator);
+				parent->Nodes.EmplaceBack(newNode);
+				return newNode;
+			}
+			else
+			{
+				Node* newNode = New<Node>(allocator);
+				newNode->Nodes.Initialize(4, allocator);
+				nodes.EmplaceBack(newNode);
+				return newNode;
+			}
 		}
 
 		~Tree()
@@ -40,15 +49,13 @@ namespace GTSL
 				Delete(node, allocator);
 			};
 
-			freeNode(root, freeNode);
+			for(auto e : nodes) {
+				freeNode(e, freeNode);
+			}
 		}
 		
-		Node* GetRootNode() { return root; }
-
-		const Node* GetRootNode() const { return root; }
-		
 	private:
-		Node* root;
+		GTSL::Vector<Node*, ALLOCATOR> nodes;
 
 		ALLOCATOR allocator;
 	};
