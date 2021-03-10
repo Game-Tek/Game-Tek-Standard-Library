@@ -53,7 +53,10 @@ namespace GTSL
 				freeNode(e, freeNode);
 			}
 		}
-		
+
+		Node* operator[](const uint32 i) { return nodes[i]; }
+		const Node* operator[](const uint32 i) const { return nodes[i]; }
+	
 	private:
 		GTSL::Vector<Node*, ALLOCATOR> nodes;
 

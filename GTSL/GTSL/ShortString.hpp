@@ -29,6 +29,12 @@ namespace GTSL
 			(*this) += Range<const UTF8*>(StringLength(text), text);
 		}
 
+		constexpr ShortString(const GTSL::Range<const UTF8*> text)
+		{
+			array[SIZE - 1] = SIZE;
+			(*this) += text;
+		}
+
 		constexpr ShortString& operator+=(const Range<const UTF8*> text)
 		{
 			auto oldSize = array[SIZE - 1];

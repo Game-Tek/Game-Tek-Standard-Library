@@ -6,6 +6,9 @@
 
 namespace GTSL
 {
+	template<uint32 L>
+	class StaticString;
+	
 	void ToString(int8 num, Range<UTF8*>& buffer);
 	void ToString(uint8 num, Range<UTF8*>& buffer);
 	void ToString(int16 num, Range<UTF8*>& buffer);
@@ -16,6 +19,10 @@ namespace GTSL
 	void ToString(uint64 num, Range<UTF8*>& buffer);
 	void ToString(float32 num, Range<UTF8*>& buffer);
 	void ToString(float64 num, Range<UTF8*>& buffer);
+
+	void ToString(uint32 num, StaticString<32>& string);
+	void ToString(int32 num, StaticString<32>& string);
+	void ToString(float32 num, StaticString<32>& string);
 
 	/**
 	 * \brief Parses an string to return a number.

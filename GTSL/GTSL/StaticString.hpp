@@ -38,6 +38,12 @@ namespace GTSL
 			copy(ranger.ElementCount(), ranger.begin()); this->length = ranger.ElementCount() - 1;
 		}
 
+		StaticString& operator=(const StaticString& other) {
+			length = other.length;
+			for (uint32 i = 0; i < length + 1; ++i) { array[i] = other.array[i]; }
+			return *this;
+		}
+		
 		[[nodiscard]] UTF8* begin() { return this->array; }
 		[[nodiscard]] UTF8* end() { return this->array + this->length + 1; }
 		[[nodiscard]] const UTF8* begin() const { return this->array; }
@@ -83,13 +89,27 @@ namespace GTSL
 			for (auto& c : this->array) { if (c == a) { c = with; } }
 		}
 
-		[[nodiscard]] uint32 npos() const { return this->length + 2; }
+		bool Find(const char* string) const
+		{
+			auto stringLength = StringLength(string) - 1;
+			
+			for (uint32 i = 0, a = 0; i < length; ++i) {
+				while (array[i] == string[a]) {
+					if (++a == stringLength) { return true; }
+					++i;
+				}
 
-		[[nodiscard]] unsigned FindLast(UTF8 c) const
+				a = 0;
+			}
+
+			return false;
+		}
+		
+		[[nodiscard]] GTSL::Result<uint32> FindLast(UTF8 c) const
 		{
 			uint32 i{ this->GetLength() };
-			for (auto begin = this->end(); begin != this->begin(); --begin) { if (*begin == c) { return i; } --i; }
-			return npos();
+			for (auto begin = this->end(); begin != this->begin(); --begin) { if (*begin == c) { return GTSL::Result<uint32>(GTSL::MoveRef(i), true); } --i; }
+			return GTSL::Result<uint32>(0, false);
 		}
 
 		constexpr StaticString& operator+=(const char* cstring) noexcept
