@@ -243,4 +243,17 @@ namespace GTSL
 
 		return false;
 	}
+
+	inline bool IsSymbol(const UTF8 character)
+	{
+		switch (character)
+		{
+		case '!': case '\"': case '#': case '|': case '\'': case '$': case '%': case '&': case '/': case '(': case ')':
+		case '=': case '?': case '[': case ']': case '^': case '*': case '{': case '}': case ',': case '.': case ';':
+		case '<': case '>': case '_': case '~': case '-': case '+':
+			return true;
+		}
+
+		return false;
+	}
 }

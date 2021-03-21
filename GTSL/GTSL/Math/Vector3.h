@@ -12,13 +12,17 @@ namespace GTSL
 	public:
 		Vector3() = default;
 
+		constexpr Vector3(const float32 a) : values{ a, a, a, 0.0f }
+		{
+		}
+
 		constexpr Vector3(const float32 x, const float32 y, const float32 z) : values{ x, y, z, 0.0f }
 		{
 		}
 
 		explicit Vector3(const class Rotator& rotator);
 		
-		Vector3(const Vector4& vector4);
+		explicit Vector3(const Vector4& vector4);
 
 		Vector3(const Vector3& other) = default;
 

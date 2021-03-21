@@ -261,10 +261,14 @@ namespace GTSL
 
 		explicit Matrix3x4(const float32 i) : array{ i, 0.0f, 0.0f, 0.0f, 0.0f, i, 0.0f, 0.0f, 0.0f, 0.0f, i, 0.0f } {}
 		explicit Matrix3x4(const Matrix4& matrix4) : array{ matrix4[0], matrix4[1], matrix4[2], matrix4[3], matrix4[4], matrix4[5], matrix4[6], matrix4[7], matrix4[8], matrix4[9], matrix4[10], matrix4[11] } {}
+		explicit Matrix3x4(const Vector3 vector3) : array{ 0, 0, 0, vector3.X(), 0, 0, 0, vector3.Y(), 0, 0, 0, vector3.Z() } {}
 		
 		float32& operator[](const uint8 index) { return array[index]; }
 		float32 operator[](const uint8 index) const { return array[index]; }
+
+		float32& operator()(const uint8 row, const uint8 column) { return array[row * 4 + column]; }
+		float32 operator()(const uint8 row, const uint8 column) const { return array[row * 4 + column]; }
 	private:
-		float32 array[12]{ 0.0f };
+		float32 array[12]{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 };
 	};
 }

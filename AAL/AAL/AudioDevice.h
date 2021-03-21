@@ -13,12 +13,14 @@ namespace AAL
 		AudioDevice() = default;
 		~AudioDevice() = default;
 
+		enum class BufferSamplePlacement : GTSL::uint8 { BLOCKS, INTERLEAVED };
+		
 		struct MixFormat
 		{
 			GTSL::uint8 NumberOfChannels;
 			GTSL::uint32 SamplesPerSecond;
 			GTSL::uint8 BitsPerSample;
-
+			
 			GTSL::uint32 GetBytesPerSample() const { return BitsPerSample / 8; }
 			
 			/**

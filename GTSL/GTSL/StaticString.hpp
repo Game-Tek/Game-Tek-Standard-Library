@@ -57,10 +57,31 @@ namespace GTSL
 		bool operator==(const StaticString& other) const
 		{
 			if (this->length != other.length) { return false; }
-			
-			for(uint32 i = 0; i < this->length; ++i) { if (this->array[i] != other.array[i]) { return false; } }
-
+			for (uint32 i = 0; i < this->length; ++i) { if (this->array[i] != other.array[i]) { return false; } }
 			return true;
+		}
+
+		template<uint32 ON>
+		bool operator==(const StaticString<ON>& other) const
+		{
+			if (this->length != other.length) { return false; }
+			for (uint32 i = 0; i < this->length; ++i) { if (this->array[i] != other.array[i]) { return false; } }
+			return true;
+		}
+		
+		bool operator!=(const StaticString& other) const
+		{
+			if (this->length != other.length) { return true; }
+			for (uint32 i = 0; i < this->length; ++i) { if (this->array[i] != other.array[i]) { return true; } }
+			return false;
+		}
+
+		template<uint32 ON>
+		bool operator!=(const StaticString<ON>& other) const
+		{
+			if (this->length != other.length) { return true; }
+			for (uint32 i = 0; i < this->length; ++i) { if (this->array[i] != other.array[i]) { return true; } }
+			return false;
 		}
 		
 		
@@ -107,8 +128,7 @@ namespace GTSL
 		
 		[[nodiscard]] GTSL::Result<uint32> FindLast(UTF8 c) const
 		{
-			uint32 i{ this->GetLength() };
-			for (auto begin = this->end(); begin != this->begin(); --begin) { if (*begin == c) { return GTSL::Result<uint32>(GTSL::MoveRef(i), true); } --i; }
+			for (uint32 i = length, t = 0; t < length; --i, ++t) { if (array[i] == c) { return GTSL::Result<uint32>(GTSL::MoveRef(i), true); } }
 			return GTSL::Result<uint32>(0, false);
 		}
 

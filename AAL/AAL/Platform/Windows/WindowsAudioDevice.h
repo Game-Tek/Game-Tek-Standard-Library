@@ -25,6 +25,8 @@ namespace AAL
 		 * \return MixFormat supported by the audio device.
 		 */
 		MixFormat GetMixFormat() const;
+
+		BufferSamplePlacement GetBufferSamplePlacement() const { return BufferSamplePlacement::INTERLEAVED; }
 		
 		/**
 		 * \brief Queries the audio device for support of the specified format with the specified share mode.
@@ -85,6 +87,8 @@ namespace AAL
 		 */
 		void Destroy();
 
+		static constexpr GTSL::uint8 LEFT_CHANNEL = 0, RIGHT_CHANNEL = 1;
+	
 	private:
 		/**
 		 * \brief The IMMDeviceEnumerator interface provides methods for enumerating multimedia device resources.

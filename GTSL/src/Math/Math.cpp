@@ -9,62 +9,76 @@ float32 Math::Power(const float32 x, const float32 y) { return powf(x, y); }
 
 float32 Math::Log10(const float32 x) { return log10f(x); }
 
-void Math::Sine(GTSL::Range<float32*> n)
+void Math::Sine(Range<float32*> n)
 {
 	using SIMD = SIMD128<float32>;
 
+	uint32 i = 0;
+	
 	const auto VPI = SIMD(Math::PI); const auto VPI2 = SIMD(Math::PI * 2);
 	const auto B = SIMD(4.0f / Math::PI);
 	const auto C = SIMD(-4.0f / (Math::PI * Math::PI));
 	const auto P = SIMD(0.225f);
 
-	for(uint32 i = 0, t = 0; t < n.ElementCount(); ++i, t += 4)
+	for(uint32 t = 0; t < n.ElementCount() / SIMD::TypeElementsCount; ++t, i += SIMD::TypeElementsCount)
 	{
-		auto x = SIMD(AlignedPointer<const float32, 16>(n.begin() + t));
+		auto x = SIMD(AlignedPointer<const float32, 16>(n.begin() + i));
 
 		//wrap modulo PI
 		auto c = (x - VPI) / VPI2 - VPI;
-		x = (c - SIMD(SIMD128<int32>(c))) * VPI;
+		x = (c - SIMD::Floor(c)) * VPI;
 		//wrap modulo PI
 		
 		auto y = B * x + C * x * SIMD::Abs(x);
-		(P * (y * SIMD::Abs(y) - y) + y).CopyTo(AlignedPointer<float32, 16>(n.begin() + t));
+		(P * (y * SIMD::Abs(y) - y) + y).CopyTo(AlignedPointer<float32, 16>(n.begin() + i));
+	}
+
+	for (; i < n.ElementCount(); ++i) {
+		n[i] = Sine(n[i]);
 	}
 }
 
-void Math::Cosine(GTSL::Range<float32*> n)
+void Math::Cosine(Range<float32*> n)
 {
 	using SIMD = SIMD128<float32>;
 
 	const auto VPI = SIMD(Math::PI); const auto VPI2 = SIMD(Math::PI * 2);
 	const auto B = SIMD(4.0f / Math::PI); const auto C = SIMD(-4.0f / Math::Square(Math::PI)); const auto P = SIMD(0.225f);
 
-	for (uint32 i = 0, t = 0; t < n.ElementCount(); ++i, t += 4)
+	uint32 i = 0;
+	
+	for (uint32 t = 0; t < n.ElementCount() / SIMD::TypeElementsCount; ++t, i += SIMD::TypeElementsCount)
 	{
 		auto x = SIMD(AlignedPointer<const float32, 16>(n.begin() + t));
 
-		x = SIMD::NotAbs(x); //-abs
 		x += SIMD(Math::PI * 0.5f); //cosine shift
 		
 		//wrap modulo PI
 		auto c = (x - VPI) / VPI2 - VPI;
-		x = (c - SIMD(SIMD128<int32>(c))) * VPI;
+		x = (c - SIMD::Floor(c)) * VPI;
 		//wrap modulo PI
 
 		auto y = B * x + C * x * SIMD::Abs(x);
 		(P * (y * SIMD::Abs(y) - y) + y).CopyTo(AlignedPointer<float32, 16>(n.begin() + t));
 	}
+
+	for (; i < n.ElementCount(); ++i) {
+		n[i] = Cosine(n[i]);
+	}
 }
 
-float32 Math::Sine(const float32 radians) { return sinf(radians); }
-
+float32 Math::Sine(float32 x) { return sinf(x); }
+	
 float64 Math::Sine(const float64 radians) { return sin(radians); }
 
-float32 Math::Cosine(const float32 radians) { return cosf(radians); }
+float32 Math::Cosine(float32 x) { return cosf(x); }
 
 float64 Math::Cosine(const float64 radians) { return cos(radians); }
 
-float32 Math::Tangent(const float32 radians) { return tanf(radians); }
+float32 Math::Tangent(float32 x)
+{
+	return tanf(x);
+}
 
 float64 Math::Tangent(const float64 radians) { return tan(radians); }
 

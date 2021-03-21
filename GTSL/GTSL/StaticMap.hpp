@@ -4,10 +4,11 @@
 #include "GTSL/Array.hpp"
 #include "Result.h"
 #include "ArrayCommon.hpp"
+#include "Range.h"
 
 namespace GTSL
 {
-	template<typename T, uint32 X, uint32 Y = X / 2>
+	template<typename K, typename V, uint32 X, uint32 Y = X / 2>
 	class StaticMap
 	{
 	public:
@@ -16,56 +17,57 @@ namespace GTSL
 		static_assert((X & (X - 1)) == 0, "X must be power of two!");
 
 		template<typename... ARGS>
-		void Emplace(const uint64 key, ARGS&&... args)
+		V& Emplace(const K& key, ARGS&&... args)
 		{
 			auto bucketIndex = modulo(key);
-			::new(&values[bucketIndex] + keys[bucketIndex].GetLength()) T(ForwardRef<ARGS>(args)...);
-			keys[bucketIndex].EmplaceBack(key);
+			auto* res = ::new(&values[bucketIndex] + keys[bucketIndex].GetLength()) V(ForwardRef<ARGS>(args)...);
+			keys[bucketIndex].EmplaceBack(static_cast<uint64>(key));
+			return *res;
 		}
 
-		void Remove(const uint64 key)
+		void Remove(const K& key)
 		{
 			auto bucketIndex = modulo(key); auto index = findElementIndex(keys[bucketIndex], key);
-			popElement(Ranger<T>(keys[bucketIndex].GetLength(), values[bucketIndex]), index.Get());
+			popElement(Range<V*>(keys[bucketIndex].GetLength(), values[bucketIndex]), index.Get());
 			keys[bucketIndex].Pop(index.Get());
 		}
 
-		T& At(const uint64 key)
+		V& At(const K& key)
 		{
 			auto bucketIndex = modulo(key); auto index = findElementIndex(keys[bucketIndex], key);
 			GTSL_ASSERT(index.State(), "No entry by that name!");
 			return values[bucketIndex][index.Get()];
 		}
 
-		const T& At(const uint64 key) const
+		const V& At(const K& key) const
 		{
 			auto bucketIndex = modulo(key); auto index = findElementIndex(keys[bucketIndex], key);
 			GTSL_ASSERT(index.State(), "No entry by that name!");
 			return values[bucketIndex][index.Get()];
 		}
 
-		[[nodiscard]] bool Find(const uint64 key) const { return findElementIndex(keys[modulo(key)], key).State(); }
+		[[nodiscard]] bool Find(const K& key) const { return findElementIndex(keys[modulo(key)], key).State(); }
 
 	private:
 		using keys_bucket = Array<uint64, Y>;
 		keys_bucket keys[X];
-		T values[X][Y];
+		V values[X][Y];
 		
-		static Result<uint32> findElementIndex(const keys_bucket& keysBucket, const uint64 key)
+		static Result<uint32> findElementIndex(const keys_bucket& keysBucket, const K& key)
 		{
 			uint32 i = 0;
-			for (auto e : keysBucket) { if (e == key) return Result<uint32>(MoveRef(i), true); ++i; }
+			for (auto e : keysBucket) { if (e == static_cast<uint64>(key)) return Result<uint32>(MoveRef(i), true); ++i; }
 			return Result<uint32>(false);
 		}
 
-		static uint32 modulo(const uint64 key) { return key & (X - 1); }
+		static uint32 modulo(const K& key) { return static_cast<uint64>(key) & (X - 1); }
 
-		template<typename T, uint32 X, uint32 Y, typename L>
-		friend void ForEach(StaticMap<T, X, Y>& staticMap, L&& lambda);
+		template<typename KK, typename VV, uint32 X, uint32 Y, typename L>
+		friend void ForEach(StaticMap<KK, VV, X, Y>& staticMap, L&& lambda);
 	};
 
-	template<typename T, uint32 X, uint32 Y, typename L>
-	void ForEach(StaticMap<T, X, Y>& staticMap, L&& lambda)
+	template<typename K, typename V, uint32 X, uint32 Y, typename L>
+	void ForEach(StaticMap<K, V, X, Y>& staticMap, L&& lambda)
 	{
 		for (uint32 x = 0; x < X; ++x)
 		{

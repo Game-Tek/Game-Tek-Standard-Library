@@ -32,9 +32,10 @@ namespace GTSL
 		};
 
 		DLL() = default;
-		~DLL() = default;
+		~DLL() noexcept { TryUnload(); }
 		
 		void LoadLibrary(const Range<const char*> ranger);
+		void TryUnload();
 		void UnloadLibrary();
 		
 		[[nodiscard]] DynamicFunction LoadDynamicFunction(const Range<const char*> ranger) const;

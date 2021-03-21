@@ -103,11 +103,12 @@ namespace GAL
 		struct MemoryHeap
 		{
 			GTSL::Byte Size;
-			MemoryTypes MemoryTypes;
+			MemoryTypes HeapType;
+
+			GTSL::Array<MemoryTypes, 16> MemoryTypes;
 		};
 		
 		GTSL::Array<MemoryHeap, 16> GetMemoryHeaps() const;
-		GTSL::Array<MemoryTypes, 16> GetMemoryTypes() const;
 	
 
 		[[nodiscard]] const VkAllocationCallbacks* GetVkAllocationCallbacks() const { return nullptr; }

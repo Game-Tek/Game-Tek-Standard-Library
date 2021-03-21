@@ -15,7 +15,7 @@
 
 GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam)
 {
-	auto* window = reinterpret_cast<Window*>(GetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA));
+	auto* windowCallData = reinterpret_cast<WindowsCallData*>(GetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA));
 	const HWND winHandle = static_cast<HWND>(hwnd);
 	
 	switch (uMsg)
@@ -23,91 +23,95 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	case WM_CREATE:
 	{
 		auto* createStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
-		window = static_cast<Window*>(createStruct->lpCreateParams);
-		window->windowHandle = hwnd;
-		SetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
+		windowCallData = static_cast<WindowsCallData*>(createStruct->lpCreateParams);
+		SetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowCallData));
 		break;
 	}
 	case WM_CLOSE:
 	{
-		window->onCloseDelegate();	return 0;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::CLOSE, nullptr);	return 0;
 	}
-	//case WM_MOUSEMOVE: /*absolute pos*/
-	//{
-	//	Vector2 mousePos;
-	//
-	//	RECT rect;
-	//	Extent2D clientSize;
-	//	GetClientRect(winHandle, &rect);
-	//	clientSize.Width = static_cast<uint16>(rect.right);
-	//	clientSize.Height = static_cast<uint16>(rect.bottom);
-	//		
-	//	Win32_calculateMousePos(LOWORD(lParam), HIWORD(lParam), clientSize, mousePos);
-	//		
-	//	window->onMouseMove(mousePos); return 0;
-	//}
-	//case WM_MOUSEWHEEL:
-	//{
-	//	window->onMouseWheelMove(GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA); return 0;
-	//}
 	case WM_LBUTTONDOWN:
 	{
-		window->onMouseButtonClick(MouseButton::LEFT_BUTTON, true);  return 0;
+		MouseButtonEventData mouseButtonEventData;
+		mouseButtonEventData.State = true;
+		mouseButtonEventData.Button = MouseButton::LEFT_BUTTON;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData); return 0;
 	}
 	case WM_LBUTTONUP:
 	{
-		window->onMouseButtonClick(MouseButton::LEFT_BUTTON, false); return 0;
+		MouseButtonEventData mouseButtonEventData;
+		mouseButtonEventData.State = false;
+		mouseButtonEventData.Button = MouseButton::LEFT_BUTTON;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData); return 0;
 	}
 	case WM_RBUTTONDOWN:
 	{
-		window->onMouseButtonClick(MouseButton::RIGHT_BUTTON, true);  return 0;
+		MouseButtonEventData mouseButtonEventData;
+		mouseButtonEventData.State = true;
+		mouseButtonEventData.Button = MouseButton::RIGHT_BUTTON;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData); return 0;
 	}
 	case WM_RBUTTONUP:
 	{
-		window->onMouseButtonClick(MouseButton::RIGHT_BUTTON, false); return 0;
+		MouseButtonEventData mouseButtonEventData;
+		mouseButtonEventData.State = false;
+		mouseButtonEventData.Button = MouseButton::RIGHT_BUTTON;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData); return 0;
 	}
 	case WM_MBUTTONDOWN:
 	{
-		window->onMouseButtonClick(MouseButton::MIDDLE_BUTTON, true);  return 0;
+		MouseButtonEventData mouseButtonEventData;
+		mouseButtonEventData.State = true;
+		mouseButtonEventData.Button = MouseButton::MIDDLE_BUTTON;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData); return 0;
 	}
 	case WM_MBUTTONUP:
 	{
-		window->onMouseButtonClick(MouseButton::MIDDLE_BUTTON, false); return 0;
+		MouseButtonEventData mouseButtonEventData;
+		mouseButtonEventData.State = false;
+		mouseButtonEventData.Button = MouseButton::MIDDLE_BUTTON;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData); return 0;
 	}
 	case WM_KEYDOWN:
 	{
-		KeyboardKeys keyboard_keys;
-		Win32_translateKeys(wParam, lParam, keyboard_keys);
-		window->onKeyEvent(keyboard_keys, true, !((lParam >> 30) & 1));  return 0;
+		KeyboardKeyPressEventData keyboardKeyPressEventData;
+		Win32_translateKeys(wParam, lParam, keyboardKeyPressEventData.Key);
+		keyboardKeyPressEventData.State = true;
+		keyboardKeyPressEventData.IsFirstTime = !((lParam >> 30) & 1);
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::KEYBOARD_KEY_PRESS, &keyboardKeyPressEventData); return 0;
 	}
 	case WM_KEYUP:
 	{
-		KeyboardKeys keyboard_keys;
-		Win32_translateKeys(wParam, lParam, keyboard_keys);
-		window->onKeyEvent(keyboard_keys, false, true); return 0;
+		KeyboardKeyPressEventData keyboardKeyPressEventData;
+		Win32_translateKeys(wParam, lParam, keyboardKeyPressEventData.Key);
+		keyboardKeyPressEventData.State = false;
+		keyboardKeyPressEventData.IsFirstTime = false;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::KEYBOARD_KEY_PRESS, &keyboardKeyPressEventData); return 0;
 	}
 	case WM_CHAR:
 	{
-		window->onCharEvent(wParam); return 0;
+		CharEventData charEventData = wParam;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::CHAR, &charEventData); return 0;
 	}
 	case WM_SIZE:
 	{
-		Extent2D clientSize;
+		WindowSizeEventData clientSize;
 		clientSize.Width = LOWORD(lParam);
 		clientSize.Height = HIWORD(lParam);
 
-		window->onResizeDelegate(clientSize); return 0;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::SIZE, &clientSize); return 0;
 	}
 	case WM_SIZING:
 	{
 		RECT rect = *reinterpret_cast<RECT*>(lParam);
 		GetClientRect(static_cast<HWND>(hwnd), &rect);
 			
-		Extent2D clientSize;		
+		WindowSizeEventData clientSize;
 		clientSize.Width = static_cast<uint16>(rect.right);
 		clientSize.Height = static_cast<uint16>(rect.bottom);
 
-		window->onResizeDelegate(clientSize); return 0;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::SIZE, &clientSize); return 0;
 	}
 	case WM_MOVING:
 	{
@@ -116,14 +120,18 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 		GetWindowRect(winHandle, &rect);
 		windowSize.Width = static_cast<uint16>(rect.right);
 		windowSize.Height = static_cast<uint16>(rect.bottom);
+
+		WindowMoveEventData windowMoveEventData;
+		windowMoveEventData.X = reinterpret_cast<LPRECT>(lParam)->left + windowSize.Width / 2;
+		windowMoveEventData.Y = reinterpret_cast<LPRECT>(lParam)->top - windowSize.Height / 2;
 			
-		window->onWindowMove(reinterpret_cast<LPRECT>(lParam)->left + windowSize.Width / 2, reinterpret_cast<LPRECT>(lParam)->top - windowSize.Height / 2); return 0;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOVING, &windowMoveEventData); return 0;
 	}
 	case WM_INPUT:
 	{
 		PRAWINPUT pRawInput; UINT dataSize; HANDLE hHeap = GetProcessHeap();
 
-		GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, nullptr,	&dataSize, sizeof(RAWINPUTHEADER));
+		GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, nullptr, &dataSize, sizeof(RAWINPUTHEADER));
 
 		pRawInput = (PRAWINPUT)HeapAlloc(hHeap, 0, dataSize);
 		if (!pRawInput)
@@ -135,7 +143,7 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 		{
 		case RIM_TYPEMOUSE: //mouse
 		{
-			GTSL::Vector2 result;
+			MouseMoveEventData result;
 			int32 x = pRawInput->data.mouse.lLastX, y = pRawInput->data.mouse.lLastY;
 				
 			if((pRawInput->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) == MOUSE_MOVE_ABSOLUTE)
@@ -153,17 +161,18 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 
 			if((pRawInput->data.mouse.usFlags & MOUSE_MOVE_RELATIVE) == MOUSE_MOVE_RELATIVE)
 			{
-				result.X() = x; result.Y() = -y;
+				result.X() = static_cast<float32>(x); result.Y() = static_cast<float32>(-y);
 			}
 
-			window->onMouseMove(result);
+			windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_MOVE, &result);
 				
 			// Wheel data needs to be pointer casted to interpret an unsigned short as a short, with no conversion
 			// otherwise it'll overflow when going negative.
 			// Didn't happen before some minor changes in the code, doesn't seem to go away
 			// so it's going to have to be like this.
 			if (pRawInput->data.mouse.usButtonFlags & RI_MOUSE_WHEEL) {
-				window->onMouseWheelMove(-static_cast<float32>(*reinterpret_cast<short*>(&pRawInput->data.mouse.usButtonData)) / static_cast<float32>(WHEEL_DELTA));
+				MouseWheelEventData mouseWheelEventData = -static_cast<float32>(*reinterpret_cast<short*>(&pRawInput->data.mouse.usButtonData)) / static_cast<float32>(WHEEL_DELTA);
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_WHEEL, &mouseWheelEventData);
 			}
 				
 			break;
@@ -366,8 +375,13 @@ void GTSL::Window::BindToOS(const WindowCreateInfo& windowCreateInfo)
 	case WindowType::OS_WINDOW: style = WS_OVERLAPPEDWINDOW; break;
 	case WindowType::NO_ELEMENTS: style = WS_POPUP; break;
 	}
+
+	WindowsCallData windowsCallData;
+	windowsCallData.UserData = windowCreateInfo.UserData;
+	windowsCallData.WindowPointer = this;
+	windowsCallData.FunctionToCall = windowCreateInfo.Function;
 	
-	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), style, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), this);
+	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), style, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), &windowsCallData);
 
 	GTSL_ASSERT(windowHandle, "Window failed to create!");
 
@@ -380,6 +394,22 @@ void GTSL::Window::BindToOS(const WindowCreateInfo& windowCreateInfo)
 GTSL::Window::~Window()
 {
 	DestroyWindow(static_cast<HWND>(windowHandle));
+}
+
+void GTSL::Window::Update(void* userData, Delegate<void(void*, WindowEvents, void*)> function)
+{
+	Window::WindowsCallData windowsCallData;
+	windowsCallData.WindowPointer = this;
+	windowsCallData.UserData = userData;
+	windowsCallData.FunctionToCall = function;
+	SetWindowLongPtrA(static_cast<HWND>(windowHandle), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&windowsCallData));
+
+	MSG message;
+
+	while (PeekMessageA(&message, static_cast<HWND>(windowHandle), 0, 0, PM_REMOVE)) {
+		TranslateMessage(&message);
+		DispatchMessageA(&message);
+	}
 }
 
 void GTSL::Window::SetTitle(const char* title)
@@ -432,12 +462,8 @@ void GTSL::Window::SetState(const WindowState& windowState)
 	{
 	case WindowSizeState::MAXIMIZED:
 	{
-		//if(windowSizeState == WindowSizeState::FULLSCREEN)
-		//{
-		//	ChangeDisplaySettingsA(nullptr, CDS_FULLSCREEN);
-		//}
-
-		::ShowWindow(static_cast<HWND>(windowHandle), SW_SHOWMAXIMIZED);
+		SetWindowLongPtrA(static_cast<HWND>(windowHandle), GWL_STYLE, defaultWindowStyle);
+		::ShowWindowAsync(static_cast<HWND>(windowHandle), SW_SHOWMAXIMIZED);
 
 		windowSizeState = windowState.NewWindowSizeState;
 	}
@@ -449,15 +475,7 @@ void GTSL::Window::SetState(const WindowState& windowState)
 		const DWORD new_style = defaultWindowStyle & ~remove;
 		SetWindowLongPtrA(static_cast<HWND>(windowHandle), GWL_STYLE, new_style);
 		SetWindowPos(static_cast<HWND>(windowHandle), HWND_TOP, 0, 0, GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN), 0);
-		::ShowWindow(static_cast<HWND>(windowHandle), SW_SHOWMAXIMIZED);
-
-		//DEVMODEA devmodea;
-		//devmodea.dmDisplayFrequency = windowState.RefreshRate;
-		//devmodea.dmBitsPerPel = windowState.NewBitsPerPixel;
-		//devmodea.dmPelsWidth = windowState.NewResolution.Width;
-		//devmodea.dmPelsHeight = windowState.NewResolution.Height;
-		//devmodea.
-		//ChangeDisplaySettingsA(&devmodea, CDS_FULLSCREEN);
+		::ShowWindowAsync(static_cast<HWND>(windowHandle), SW_SHOWMAXIMIZED);
 
 		windowSizeState = windowState.NewWindowSizeState;
 	}
@@ -465,12 +483,8 @@ void GTSL::Window::SetState(const WindowState& windowState)
 
 	case WindowSizeState::MINIMIZED:
 	{
-		//if (windowSizeState == WindowSizeState::FULLSCREEN)
-		//{
-		//	ChangeDisplaySettingsA(nullptr, CDS_FULLSCREEN);
-		//}
-
-		::ShowWindow(static_cast<HWND>(windowHandle), SW_MINIMIZE);
+		SetWindowLongPtrA(static_cast<HWND>(windowHandle), GWL_STYLE, defaultWindowStyle);
+		::ShowWindowAsync(static_cast<HWND>(windowHandle), SW_MINIMIZE);
 
 		windowSizeState = windowState.NewWindowSizeState;
 	}
@@ -483,14 +497,16 @@ void GTSL::Window::GetNativeHandles(void* nativeHandlesStruct) const
 	static_cast<Win32NativeHandles*>(nativeHandlesStruct)->HWND = windowHandle;
 }
 
+// Call async version to ensure window proc does not get called at the moment this is called, as we will not have a valid window proc state set
+
 void GTSL::Window::ShowWindow()
 {
-	::ShowWindow(static_cast<HWND>(windowHandle), SW_SHOWNORMAL);
+	::ShowWindowAsync(static_cast<HWND>(windowHandle), SW_SHOWNORMAL);
 }
 
 void GTSL::Window::HideWindow()
 {
-	::ShowWindow(static_cast<HWND>(windowHandle), SW_HIDE);
+	::ShowWindowAsync(static_cast<HWND>(windowHandle), SW_HIDE);
 }
 
 void GTSL::Window::AddDevice(const DeviceType deviceType)

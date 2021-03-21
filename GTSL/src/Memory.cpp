@@ -4,6 +4,11 @@
 #include <cstdlib>
 #include <immintrin.h>
 
+#include <Windows.h>
+
+#include "GTSL/Bitman.h"
+#include "GTSL/Math/Math.hpp"
+
 using namespace GTSL;
 
 void GTSL::Allocate(const uint64 size, void** data)
@@ -78,6 +83,26 @@ void GTSL::ExpCopy(const uint64 size, const void* from, void* to)
 		const byte b = *static_cast<const byte*>(from);
 		*static_cast<byte*>(to) = b;
 	}
+}
+
+void GTSL::SysAlloc(uint64 size, void** data, uint64* allocatedSize)
+{
+	DWORD allocationInfo = 0;
+
+	allocationInfo |= MEM_COMMIT; allocationInfo |= MEM_RESERVE;
+	
+	auto* allocatedAddress = VirtualAlloc(nullptr, size, allocationInfo, 0);
+
+	SYSTEM_INFO systemInfo;
+	GetSystemInfo(&systemInfo);
+
+	*allocatedSize = GTSL::Math::RoundUpByPowerOf2(size, systemInfo.dwPageSize);
+	*data = allocatedAddress;
+}
+
+void GTSL::SysDealloc(uint64 size, void** data)
+{
+	VirtualFree(*data, 0, MEM_RELEASE);
 }
 
 void GTSL::Copy_M_32(uint64 size, const void* from, void* to)

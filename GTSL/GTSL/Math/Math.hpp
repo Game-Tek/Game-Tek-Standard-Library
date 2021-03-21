@@ -68,13 +68,13 @@ namespace GTSL
 		{
 			T s = a; T aS;
 
-			const uint32 iterations = a * 0.01 + 4;
+			const uint32 iterations = static_cast<uint32>(a * static_cast<T>(0.008));
+
+			auto loop = [&]() { aS = a / s;	s = (s + aS) * static_cast<T>(0.5); };
+
+			loop(); loop(); loop(); //3 fixed iterations
 			
-			for(uint32 i = 0; i < iterations; ++i)
-			{
-				aS = a / s;
-				s = (s + aS) * static_cast<T>(0.5);
-			}
+			for(uint32 i = 0; i < iterations; ++i) { loop(); } //variable iterations for extra precision on larger numbers
 
 			return s;
 		}
@@ -94,10 +94,25 @@ namespace GTSL
 			c = a / b; intC = static_cast<int32>(c);
 			return (c - intC) * b;
 		}
+
+		inline float32 Abs(const float32 a) { return a < 0.0f ? -a : a; }
 	}
 
 	namespace Math
 	{
+		struct float16
+		{
+			explicit float16(const float32 a) : float16(*((uint32*)&a))
+			{
+			}
+			
+			uint16 Sign : 1, Exponent : 5, Fraction : 10;
+
+		private:
+			float16(const uint32 x) : Sign((x >> 16) & 0x8000), Exponent((((x & 0x7f800000) - 0x38000000) >> 13) & 0x7c00), Fraction((x >> 13) & 0x03ff)
+			{}
+		};
+		
 		inline float32 StraightRaise(const float32 A, const uint8 Times)
 		{
 			float32 Result = A;
@@ -137,8 +152,6 @@ namespace GTSL
 		inline float64 RandomFloat() { return Random() * 0.8123495678; }
 
 		//inline
-
-		inline int32 Floor(const float32 A) { return static_cast<int32>(A - (static_cast<int32>(A) % 1)); }
 
 		inline uint32 Fact(const int8 A)
 		{
@@ -198,47 +211,61 @@ namespace GTSL
 		 */
 		float32 Log10(float32 x);
 
-		//inline float32 fast_sine(float32 x) {
-		//	x = Wrap(x, PI);
-		//	constexpr float32 B = 4.0f / PI;
-		//	constexpr float32 C = -4.0f / (PI * PI);
-		//	constexpr float32 P = 0.225f;
-		//
-		//	float32 y = B * x + C * x * Abs(x);
-		//	return P * (y * Abs(y) - y) + y;
-		//}
-
+		template<typename T>
+		inline constexpr T Square(const T a) { return a * a; }
+		
 		inline bool IsEven(int32 a) { return a & 1; }
 		
-		inline float32 fast_sine(float32 x) {
-			float32 c; int32 intC;
-			x = AdvancedMath::Modulo(x, PI, c, intC);
-			constexpr float32 B = 4.0f / PI;
-			constexpr float32 C = -4.0f / (PI * PI);
-			constexpr float32 P = 0.225f;
-
-			float32 y = B * x + C * x * x;
-			auto res = P * (y * y - y) + y;
-			return IsEven(intC) ? res: -res;
-		}
-
-		inline float32 fast_cosine(float32 x) {
-			x = (x > 0) ? -x : x;
-			x += PI * 0.5f;
-
-			return fast_sine(x);
-		}
-
 		void Sine(GTSL::Range<float32*> n);
 		void Cosine(GTSL::Range<float32*> n);
 
+		inline float32 Floor(const float32 a) {
+			return a > 0 ? float32(int32(a)) : float32(int32(a) - 1);
+		}
+		
+		inline float32 Modulo(const float32 a, const float32 b)
+		{
+			const float32 c = a / b;
+			return (c - Floor(c)) * b;
+		}
+
+		inline float32 Wrap(const float32 a, const float32 range)
+		{
+			return Modulo(a - range, range * 2) - range;
+		}
+		
 		/**
 		 * \brief Returns the sine of an angle.
 		 * \param radians Angle in radians.
 		 * \return Sine of radians
 		 */
-		float32 Sine(float32 radians);
+		//inline float32 Sine(float32 x) {
+		//	float32 c; int32 intC;
+		//	x = AdvancedMath::Modulo(x, static_cast<float32>(PI), c, intC);
+		//	constexpr float32 B = 4.0f / static_cast<float32>(PI);
+		//	constexpr float32 C = -4.0f / Square(static_cast<float32>(PI));
+		//	constexpr float32 P = 0.225f;
+		//
+		//	float32 y = B * x + C * x * x;
+		//	auto res = P * (y * y - y) + y;
+		//	return IsEven(intC) ? res : -res;
+		//}
 
+		inline uint32 Abs(const int32 a) { return uint32(a < 0.0f ? -a : a); }
+
+		inline uint64 Abs(const int64 a) { return uint64(a < 0.0f ? -a : a); }
+
+		inline float32 Abs(const float32 a) { return a < 0.0f ? -a : a; }
+		
+		float32 Sine(float32 x);
+		
+		//inline float32 Sine(float32 x) {
+		//	constexpr float32 B = 4.0f / PI, C = -4.0f / Square(PI), P = 0.225f;
+		//	x = Wrap(x, PI);
+		//	float32 y = B * x + C * Abs(x) * x;
+		//	return P * (y * Abs(y) - y) + y;
+		//}
+		
 		/**
 		 * \brief Returns the sine of an angle.
 		 * \param radians Angle in radians.
@@ -251,7 +278,11 @@ namespace GTSL
 		* \param radians Angle in radians.
 		* \return Cosine of radians
 		*/
-		float32 Cosine(float32 radians);
+		float32 Cosine(float32 x);
+		//inline float32 Cosine(float32 x) {
+		//	x = (x > 0) ? -x : x;
+		//	return Sine(x + static_cast<float32>(PI) * 0.5f);
+		//}
 
 		/**
 		* \brief Returns the cosine of an angle.
@@ -265,8 +296,12 @@ namespace GTSL
 		* \param radians Angle in radians.
 		* \return Tangent of radians
 		*/
-		float32 Tangent(float32 radians);
+		//inline float32 Tangent(float32 x) {
+			//return Sine(x) / Cosine(x);
+		//}
 
+		float32 Tangent(float32 x);
+		
 		/**
 		* \brief Returns the tangent of an angle.
 		* \param radians Angle in radians.
@@ -329,25 +364,11 @@ namespace GTSL
 			uint32 init = a / mod;
 			return a - mod * init;
 		}
-
-		inline float32 Modulo(const float32 a, const float32 b)
-		{
-			const float32 c = a / b;
-			return (c - static_cast<int32>(c)) * b;
-		}
-
-		inline float32 Wrap(const float32 a, const float32 range)
-		{
-			return Modulo(a - range, range * 2) - range;
-		}
 		
 		inline GTSL::Vector2 Modulo(const GTSL::Vector2 a, const GTSL::Vector2 b)
 		{
 			return GTSL::Vector2(Modulo(a.X(), b.X()), Modulo(a.Y(), b.Y()));
 		}
-		
-		template<typename T>
-		inline T Square(const T a) { return a * a; }
 		
 		//////////////////////////////////////////////////////////////
 		//						SCALAR MATH							//
@@ -602,12 +623,6 @@ namespace GTSL
 		inline float32 MapToRangeZeroToOne(const float32 a, const float32 inMax, const float32 outMax) { return a / (inMax / outMax); }
 
 		inline float32 Root(const float32 a, const float32 root) { return Power(a, 1.0f / root); }
-
-		inline uint32 Abs(const int32 a) { return uint32(a < 0.0f ? -a : a); }
-
-		inline uint64 Abs(const int64 a) { return uint64(a < 0.0f ? -a : a); }
-
-		inline float32 Abs(const float32 a) { return a < 0.0f ? -a : a; }
 
 		template<typename T>
 		inline T Limit(const T a, const T max) { return a > max ? max : a; }

@@ -22,20 +22,6 @@ void Application::Update()
 
 }
 
-void Application::UpdateWindow(Window* window)
-{
-	Window::Win32NativeHandles win32_native_handles;
-	window->GetNativeHandles(&win32_native_handles);
-
-	MSG message;
-
-	while (PeekMessageA(&message, static_cast<HWND>(win32_native_handles.HWND), 0, 0, PM_REMOVE))
-	{
-		TranslateMessage(&message);
-		DispatchMessageA(&message);
-	}
-}
-
 void Application::SetProcessPriority(const Priority priority) noexcept
 {
 	int32 priority_class{ NORMAL_PRIORITY_CLASS };

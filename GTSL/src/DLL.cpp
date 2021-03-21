@@ -11,6 +11,14 @@ void DLL::LoadLibrary(const Range<const char*> ranger)
 	handle = LoadLibraryA(ranger.begin());
 }
 
+void DLL::TryUnload()
+{
+	if (handle) {
+		FreeLibrary(static_cast<HMODULE>(handle));
+		handle = nullptr;
+	}
+}
+
 void DLL::UnloadLibrary()
 {
 	FreeLibrary(static_cast<HMODULE>(handle));

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "Delegate.hpp"
 
 namespace GTSL
 {
@@ -25,8 +26,6 @@ namespace GTSL
 		~Application();
 
 		void Update();
-
-		void UpdateWindow(Window* window);
 
 		enum class Priority : uint8
 		{

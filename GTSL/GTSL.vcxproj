@@ -37,6 +37,7 @@
     <ClInclude Include="GTSL\FlatHashMap.h" />
     <ClInclude Include="GTSL\FlipFlop.h" />
     <ClInclude Include="GTSL\FunctionPointer.hpp" />
+    <ClInclude Include="GTSL\GamepadQuery.h" />
     <ClInclude Include="GTSL\PagedVector.h" />
     <ClInclude Include="GTSL\SlottedVector.hpp" />
     <ClInclude Include="GTSL\SparseVector.hpp" />
@@ -58,7 +59,7 @@
     <ClInclude Include="GTSL\SIMD\SIMD.hpp" />
     <ClInclude Include="GTSL\StaticString.hpp" />
     <ClInclude Include="GTSL\String.hpp" />
-    <ClInclude Include="GTSL\GamepadQuery.h" />
+    <ClInclude Include="GTSL\Gamepad.h" />
     <ClInclude Include="GTSL\StringCommon.h" />
     <ClInclude Include="GTSL\Tree.hpp" />
     <ClInclude Include="GTSL\Tuple.h" />
@@ -106,6 +107,7 @@
     <ClCompile Include="src\Bitman.cpp" />
     <ClCompile Include="src\File.cpp" />
     <ClCompile Include="src\Filesystem.cpp" />
+    <ClCompile Include="src\Gamepad.cpp" />
     <ClCompile Include="src\Math\AxisAngle.cpp" />
     <ClCompile Include="src\Math\Math.cpp" />
     <ClCompile Include="src\Math\Matrix4.cpp" />
@@ -115,7 +117,6 @@
     <ClCompile Include="src\Math\Vector3.cpp" />
     <ClCompile Include="src\Math\Vector4.cpp" />
     <ClCompile Include="src\Memory.cpp" />
-    <ClCompile Include="src\GamepadQuery.cpp" />
     <ClCompile Include="src\Sockets.cpp" />
     <ClCompile Include="src\StringCommon.cpp" />
     <ClCompile Include="src\System.cpp" />

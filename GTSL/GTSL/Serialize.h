@@ -83,8 +83,8 @@ namespace GTSL
 		for (auto& e : vector) { Extract(e, buffer); }
 	}
 	
-	template<typename T, class ALLOCATOR1, class ALLOCATOR2>
-	void Insert(const FlatHashMap<T, ALLOCATOR1>& map, Buffer<ALLOCATOR2>& buffer)
+	template<typename V, typename K, class ALLOCATOR1, class ALLOCATOR2>
+	void Insert(const FlatHashMap<V, K, ALLOCATOR1>& map, Buffer<ALLOCATOR2>& buffer)
 	{
 		Insert(map.bucketCount, buffer);
 		Insert(map.maxBucketLength, buffer);
@@ -99,8 +99,8 @@ namespace GTSL
 		}
 	}
 
-	template<typename T, class ALLOCATOR1, class ALLOCATOR2>
-	void Extract(FlatHashMap<T, ALLOCATOR1>& map, Buffer<ALLOCATOR2>& buffer)
+	template<typename K, typename V, class ALLOCATOR1, class ALLOCATOR2>
+	void Extract(FlatHashMap<K, V, ALLOCATOR1>& map, Buffer<ALLOCATOR2>& buffer)
 	{
 		uint32 capacity{ 0 }, maxBucketLength = 0;
 		Extract(capacity, buffer);

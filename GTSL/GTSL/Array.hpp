@@ -204,7 +204,7 @@ namespace GTSL
 		constexpr void PopBack()
 		{
 			GTSL_ASSERT(this->length != 0, "Array's length is already 0. Cannot pop any more elements!");
-			reinterpret_cast<T&>(this->data[this->length]).~T();
+			this->data[this->length].~T();
 			--this->length;
 		}
 

@@ -78,6 +78,13 @@ namespace GTSL
 		};
 		
 		Window() = default;
+
+		enum class WindowEvents
+		{
+			CLOSE, KEYBOARD_KEY_PRESS, CHAR, SIZE, SIZING, MOVING, MOUSE_MOVE, MOUSE_WHEEL,
+			MOUSE_BUTTON
+		};
+		
 		struct WindowCreateInfo
 		{
 			Range<const UTF8*> Name;
@@ -85,10 +92,14 @@ namespace GTSL
 			Window* ParentWindow = nullptr;
 			class Application* Application = nullptr;
 			WindowType Type = WindowType::OS_WINDOW;
+			void* UserData;
+			Delegate<void(void*, WindowEvents, void*)> Function;
 		};
 		void BindToOS(const WindowCreateInfo & windowCreateInfo);
 		~Window();
 
+		void Update(void* userData, Delegate<void(void*, WindowEvents, void*)>);
+		
 		void SetTitle(const char* title);
 		void Notify();
 
@@ -141,6 +152,30 @@ namespace GTSL
 		};
 		void SetProgressState(ProgressState progressState) const;
 		void SetProgressValue(float32 value) const;
+
+		struct MouseButtonEventData
+		{
+			MouseButton Button; bool State;
+		};
+		
+		struct KeyboardKeyPressEventData
+		{
+			KeyboardKeys Key; bool State; bool IsFirstTime;
+		};
+		
+		using CharEventData = uint32;
+
+		struct WindowMoveEventData
+		{
+			uint16 X, Y;
+		};
+
+		/**
+		 * \brief Delegate called when mouse moves, the first two floats are the X;Y in the -1 <-> 1 range, and the other two floats are delta position in the same range in respect to the last update to the screen.
+		 */
+		using MouseMoveEventData = Vector2;
+		using WindowSizeEventData = Extent2D;
+		using MouseWheelEventData = float32;
 	protected:
 		WindowSizeState windowSizeState;
 
@@ -154,33 +189,14 @@ namespace GTSL
 		static void Win32_calculateMousePos(uint32 x, uint32 y, Extent2D windowExtent, Vector2& mousePos);
 		static void Win32_translateKeys(uint64 win32Key, uint64 context, KeyboardKeys& key);
 #endif
-		
-		Delegate<void()> onCloseDelegate;
-		Delegate<void(const Extent2D&)> onResizeDelegate;
-		Delegate<void(MouseButton, bool)> onMouseButtonClick;
-		/**
-		 * \brief Delegate called when mouse moves, the first two floats are the X;Y in the -1 <-> 1 range, and the other two floats are delta position in the same range in respect to the last update to the screen.
-		 */
-		Delegate<void(Vector2)> onMouseMove;
-		Delegate<void(float)> onMouseWheelMove;
-		Delegate<void(KeyboardKeys, bool, bool)> onKeyEvent;
-		Delegate<void(uint32)> onCharEvent;
-		Delegate<void(uint16, uint16)> onWindowMove;
 
-	public:
-		void SetOnCloseDelegate(const decltype(onCloseDelegate)& delegate) { onCloseDelegate = delegate; }
-		/**
-		 * \brief Sets the delegate to call when the mouse on this window is moved.
-		 * The first two floats are the X;Y in the -1 <-> 1 range, and the other two floats are delta position in the same range in respect to the last update to the window.
-		 * TOP = 1, BOTTOM = -1, LEFT = -1, RIGHT = 1
-		 * \param delegate Delegate to bind.
-		 */
-		void SetOnMouseMoveDelegate(const decltype(onMouseMove)& delegate) { onMouseMove = delegate; }
-		void SetOnMouseWheelMoveDelegate(const decltype(onMouseWheelMove)& delegate) { onMouseWheelMove = delegate; }
-		void SetOnMouseButtonClickDelegate(const decltype(onMouseButtonClick)& delegate) { onMouseButtonClick = delegate; }
-		void SetOnWindowResizeDelegate(const decltype(onResizeDelegate)& delegate) { onResizeDelegate = delegate; }
-		void SetOnCharEventDelegate(const decltype(onCharEvent)& delegate) { onCharEvent = delegate; }
-		void SetOnKeyEventDelegate(const decltype(onKeyEvent)& delegate) { onKeyEvent = delegate; }
-		void SetOnWindowMoveDelegate(const decltype(onWindowMove)& delegate) { onWindowMove = delegate; }
+		struct WindowsCallData
+		{
+			void* UserData;
+			Delegate<void(void*, WindowEvents, void*)> FunctionToCall;
+			Window* WindowPointer;
+		};
+
+		friend class Application;
 	};
 }

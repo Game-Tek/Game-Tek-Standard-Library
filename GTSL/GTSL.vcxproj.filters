@@ -81,7 +81,7 @@
     <ClInclude Include="GTSL\Vector.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\GamepadQuery.h">
+    <ClInclude Include="GTSL\Gamepad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\KeepVector.h">
@@ -264,12 +264,12 @@
     <ClInclude Include="GTSL\SlottedVector.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GTSL\GamepadQuery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\System.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GamepadQuery.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Memory.cpp">
@@ -335,5 +335,8 @@
     <ClCompile Include="GTSL\StaticMap.hpp" />
     <ClCompile Include="GTSL\ArrayCommon.hpp" />
     <ClCompile Include="GTSL\ShortString.hpp" />
+    <ClCompile Include="src\Gamepad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

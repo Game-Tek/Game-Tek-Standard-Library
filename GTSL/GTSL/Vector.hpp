@@ -8,6 +8,7 @@
 #include <initializer_list>
 #include <new>
 #include "Range.h"
+#include "Result.h"
 
 namespace GTSL
 {
@@ -415,9 +416,9 @@ namespace GTSL
 		 * \param obj Object to look for.
 		 * \return Iterator to element if it was found, iterator to end if object was not found.
 		 */
-		const_iterator Find(const T& obj) const noexcept
+		Result<uint32> Find(const T& obj) const noexcept
 		{
-			for (const auto& e : *this) { if (obj == e) { return &e; } } return this->end();
+			for (uint32 i = 0; i < GetLength(); ++i) { if (obj == data[i]) { return Result<uint32>(GTSL::MoveRef(i), true); } } return Result<uint32>(false);
 		}
 
 		/**

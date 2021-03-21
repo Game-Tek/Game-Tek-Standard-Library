@@ -1,77 +1,119 @@
 #pragma once
 
-#include "Core.h"
+#include "Gamepad.h"
 
-#include "Delegate.hpp"
-#include "Math/Vector2.h"
-
-#if (_WIN32)
+#if (_WIN64)
 #define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #include <Xinput.h>
 #endif
 
 namespace GTSL
 {
 	/**
-	 * \brief Represents a gamepad that might or might not be connected at the time, and allows querying for connection and setting it's vibration state.
+	 * \brief Checks state of gamepad to see what changed. During this call all parameters that changed will produce an event call.
+	 * \param connected Returns true if the gamepad is connected, false otherwise.
 	 */
-	class GamepadQuery
+	template<typename BF, typename FF, typename VF>
+	inline bool Update(Gamepad& gamepadQuery, BF&& buttonFunction, FF&& floatFunction, VF&& vectorFunction, uint8 controllerId) noexcept
 	{
-	protected:
-#if (_WIN32)
-		XINPUT_STATE input_state{};
-		uint8 controllerId{ 0 };
-#endif
+		XINPUT_STATE xinput_state;
 
-	public:
-		enum class GamepadButtonPosition : uint8
-		{
-			TOP, RIGHT, BOTTOM, LEFT
-		};
+		if (XInputGetState(controllerId, &xinput_state) != ERROR_SUCCESS) { return false; }
+		if (gamepadQuery.packetNumber == xinput_state.dwPacketNumber) { return true; }
 
-		enum class Side : uint8
-		{
-			RIGHT, LEFT
-		};
-		
-		/**
-		 * \brief This delegate is called when the right trigger of the gamepad changes it's state in respect to the last update to the gamepad query.
-		 * The first float represents the current value and the second float represents the delta from the last update to the gamepad query.
-		 */
-		Delegate<void(Side, float32)> OnTriggersChange;
-		/**
-		 * \brief This delegate is called when the right stick of the gamepad changes it's state in respect to the last update to the gamepad query.
-		 * The first two floats represent the current X; Y of the stick and the two other floats represent the delta X;Y in respect to
-		 * the last update to this gamepad query.
-		 */
-		Delegate<void(Side, Vector2)> OnSticksMove;
+		gamepadQuery.packetNumber = xinput_state.dwPacketNumber;
 
-		Delegate<void(Side, bool)> OnMenuButtonsChange;
-		
-		Delegate<void(Side, bool)> OnHatsChange;
+		if (xinput_state.Gamepad.bLeftTrigger != gamepadQuery.leftTrigger) {
+			floatFunction(Gamepad::Side::LEFT, static_cast<float>(xinput_state.Gamepad.bLeftTrigger) / 255.0f);
+			gamepadQuery.leftTrigger = xinput_state.Gamepad.bLeftTrigger;
+		}
 
-		Delegate<void(Side, bool)> OnSticksChange;
-		
-		Delegate<void(GamepadButtonPosition, bool)> OnDPadChange;
-		Delegate<void(GamepadButtonPosition, bool)> OnFrontButtonsChange;
+		if (xinput_state.Gamepad.bRightTrigger != gamepadQuery.rightTrigger) {
+			floatFunction(Gamepad::Side::RIGHT, static_cast<float>(xinput_state.Gamepad.bRightTrigger) / 255.0f);
+			gamepadQuery.rightTrigger = xinput_state.Gamepad.bRightTrigger;
+		}
 
-		/**
-		 * \brief Checks state of gamepad to see what changed. During this call all parameters that changed will produce an event call.
-		 * \param connected Returns true if the gamepad is connected, false otherwise.
-		 */
-		static void Update(GamepadQuery& gamepadQuery, bool& connected, uint8 controllerId) noexcept;
+		if (xinput_state.Gamepad.sThumbLX != gamepadQuery.thumbLX || xinput_state.Gamepad.sThumbLY != gamepadQuery.thumbLY) {
+			vectorFunction(Gamepad::Side::LEFT, { static_cast<float>(xinput_state.Gamepad.sThumbLX) / 32768.f, static_cast<float>(xinput_state.Gamepad.sThumbLY) / 32768.f });
+			gamepadQuery.thumbLX = xinput_state.Gamepad.sThumbLX; gamepadQuery.thumbLY = xinput_state.Gamepad.sThumbLY;
+		}
 
-		struct GamepadVibration
-		{
-			/**
-			 * \brief Amount of low frequency vibration, 0 is none, 1 is max.
-			 */
-			float LowFrequency{ 0 };
-			/**
-			 * \brief Amount of high frequency vibration, 0 is none, 1 is max.
-			 */
-			float HighFrequency{ 0 };
-		};
-		void SetVibration(const GamepadVibration& gamepadVibration) const noexcept;
-	};
+		if (xinput_state.Gamepad.sThumbRX != gamepadQuery.thumbRX || xinput_state.Gamepad.sThumbRY != gamepadQuery.thumbRY) {
+			vectorFunction(Gamepad::Side::RIGHT, { static_cast<float>(xinput_state.Gamepad.sThumbRX) / 32768.f, static_cast<float>(xinput_state.Gamepad.sThumbRY) / 32768.f });
+			gamepadQuery.thumbRX = xinput_state.Gamepad.sThumbRX; gamepadQuery.thumbRY = xinput_state.Gamepad.sThumbRY;
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != gamepadQuery.dpadUp) {
+			buttonFunction(Gamepad::GamepadButtonPosition::DPAD_UP, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP);
+			gamepadQuery.dpadUp = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != gamepadQuery.dpadDown) {
+			buttonFunction(Gamepad::GamepadButtonPosition::DPAD_DOWN, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
+			gamepadQuery.dpadUp = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) != gamepadQuery.dpadLeft) {
+			buttonFunction(Gamepad::GamepadButtonPosition::DPAD_LEFT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
+			gamepadQuery.dpadUp = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) != gamepadQuery.dpadRight) {
+			buttonFunction(Gamepad::GamepadButtonPosition::DPAD_RIGHT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
+			gamepadQuery.dpadUp = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START) != gamepadQuery.start) {
+			buttonFunction(Gamepad::GamepadButtonPosition::HOME, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START);
+			gamepadQuery.start = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK) != gamepadQuery.back) {
+			buttonFunction(Gamepad::GamepadButtonPosition::BACK, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK);
+			gamepadQuery.back = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB) != gamepadQuery.leftThumb) {
+			buttonFunction(Gamepad::GamepadButtonPosition::LEFT_STICK, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB);
+			gamepadQuery.leftThumb = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) != gamepadQuery.rightThumb) {
+			buttonFunction(Gamepad::GamepadButtonPosition::RIGHT_STICK, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB);
+			gamepadQuery.rightThumb = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) != gamepadQuery.leftShoulder) {
+			buttonFunction(Gamepad::GamepadButtonPosition::LEFT_SHOULDER, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
+			gamepadQuery.leftShoulder = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) != gamepadQuery.rightShoulder) {
+			buttonFunction(Gamepad::GamepadButtonPosition::RIGHT_SHOULDER, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
+			gamepadQuery.rightShoulder = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A) != gamepadQuery.a) {
+			buttonFunction(Gamepad::GamepadButtonPosition::BOTTOM, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A);
+			gamepadQuery.a = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B) != gamepadQuery.b) {
+			buttonFunction(Gamepad::GamepadButtonPosition::RIGHT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B);
+			gamepadQuery.b = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X) != gamepadQuery.x) {
+			buttonFunction(Gamepad::GamepadButtonPosition::LEFT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X);
+			gamepadQuery.x = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X);
+		}
+
+		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y) != gamepadQuery.y) {
+			buttonFunction(Gamepad::GamepadButtonPosition::TOP, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y);
+			gamepadQuery.y = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y);
+		}
+
+		return true;
+	}
 }

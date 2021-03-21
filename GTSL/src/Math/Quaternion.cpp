@@ -48,6 +48,21 @@ Vector3 Quaternion::operator*(const Vector3 other) const
 	return u * 2.0f * Math::DotProduct(u, other) + other * (s * s - Math::DotProduct(u, u)) + Math::Cross(u, other) * 2.0f * s;
 }
 
+Vector4 Quaternion::GetXBasisVector() const
+{
+	return (*this) * GTSL::Math::Right;
+}
+
+Vector4 Quaternion::GetYBasisVector() const
+{
+	return (*this) * GTSL::Math::Up;
+}
+
+Vector4 Quaternion::GetZBasisVector() const
+{
+	return (*this) * GTSL::Math::Forward;
+}
+
 Quaternion& Quaternion::operator*=(const Quaternion& other)
 {
 	X() = W() * other.X() + X() * other.W() + Y() * other.Z() - Z() * other.Y();

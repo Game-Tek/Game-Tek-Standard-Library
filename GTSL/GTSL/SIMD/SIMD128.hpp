@@ -72,6 +72,8 @@ namespace GTSL
 
 		//static void Transpose(SIMD128& a, SIMD128& b, SIMD128& c, SIMD128& d) { _MM_TRANSPOSE4_epi8(a, b, c, d); }
 
+		uint16 BitMask() const { return static_cast<uint16>(_mm_movemask_epi8(vector)); }
+		
 		template<uint8 I>
 		[[nodiscard]] type GetElement() const { return _mm_extract_epi8(vector, I); }
 
@@ -145,6 +147,8 @@ namespace GTSL
 		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
 		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
 
+		uint16 BitMask() const { return static_cast<uint16>(_mm_movemask_epi8(vector)); }
+		
 		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
 		template<uint8 A, uint8 B, uint8 C, uint8 D, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
 		[[nodiscard]] static SIMD128 Shuffle(const SIMD128& a) { return _mm_shuffle_epi8(a.vector, SIMD128(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)); }
@@ -263,6 +267,8 @@ namespace GTSL
 
 		//static void Transpose(SIMD128& a, SIMD128& b, SIMD128& c, SIMD128& d) { _MM_TRANSPOSE4_epi64(a, b, c, d); }
 
+		uint16 BitMask() const { return static_cast<uint16>(_mm_movemask_epi8(vector)); }
+		
 		template<uint8 I>
 		[[nodiscard]] type GetElement() const { return _mm_extract_epi64(vector, I); }
 
@@ -353,6 +359,8 @@ namespace GTSL
 		void Abs() { vector = _mm_andnot_ps(vector, SIMD128(1.0f)); }
 		static SIMD128 Abs(const SIMD128& a) { return _mm_andnot_ps(a, SIMD128(-0.0f)); }
 		static SIMD128 NotAbs(const SIMD128& a) { return _mm_andnot_ps(a, SIMD128(0.0f)); }
+		
+		static SIMD128 Floor(const SIMD128& a) { return _mm_floor_ps(a); }
 
 		static SIMD128 Min(const SIMD128 & a, const SIMD128 & b) { return _mm_min_ps(a, b); }
 		static SIMD128 Max(const SIMD128 & a, const SIMD128 & b) { return _mm_max_ps(a, b); }
@@ -372,6 +380,8 @@ namespace GTSL
 
 		[[nodiscard]] SIMD128 SquareRoot() const { return _mm_sqrt_ps(vector); }
 
+		uint8 BitMask() const { return static_cast<uint8>(_mm_movemask_ps(vector)); }
+		
 		/**
 		 * \brief Computes the square root of the lower single-precision (32-bit) floating-point element, stores the result in the lower element of the return, and copies the upper 3 elements from the vector to the upper elements of the return.
 		 * \return A vector containing the square root of the vector's first element in the lowest element and the vector upper 3 elements in the upper 3 elements.

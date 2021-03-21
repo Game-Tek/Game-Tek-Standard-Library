@@ -27,4 +27,7 @@ namespace GTSL
 	}
 
 	inline byte* AlignPointer(const uint64 alignment, const byte* data) { return reinterpret_cast<byte*>(reinterpret_cast<uint64>(data) + (alignment - 1) & ~(alignment - 1)); }
+
+	void SysAlloc(uint64 size, void** data, uint64* allocatedSize);
+	void SysDealloc(uint64 size, void** data);
 }

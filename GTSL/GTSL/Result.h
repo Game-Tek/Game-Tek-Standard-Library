@@ -6,13 +6,13 @@ namespace GTSL
 	class Result
 	{
 	public:
-		Result(R&& result, E err) : result(result), error(err) {}
-		Result(E err) : result(), error(err) {}
+		Result(R&& result, E err) : result(result), success(err) {}
+		explicit Result(E err) : result(), success(err) {}
 
-		E State() const { return error; }
+		E State() const { return success; }
 		const R& Get() const { return result; }
 	private:
 		R result;
-		E error;
+		E success;
 	};
 }

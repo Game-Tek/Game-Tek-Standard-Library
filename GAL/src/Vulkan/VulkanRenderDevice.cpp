@@ -55,37 +55,32 @@ GTSL::Array<GAL::VulkanRenderDevice::MemoryHeap, 16> GAL::VulkanRenderDevice::Ge
 {
 	GTSL::Array<MemoryHeap, 16> memoryHeaps;
 
-	for(uint8 i = 0; i < memoryProperties.memoryHeapCount; ++i)
+	for(uint8 heapIndex = 0; heapIndex < memoryProperties.memoryHeapCount; ++heapIndex)
 	{
 		MemoryHeap memoryHeap;
-		memoryHeap.Size = GTSL::Byte(memoryProperties.memoryHeaps[i].size);
-		memoryHeap.MemoryTypes = 0;
+		memoryHeap.Size = GTSL::Byte(memoryProperties.memoryHeaps[heapIndex].size);
+		memoryHeap.HeapType = 0;
 		
-		TranslateMask<VK_MEMORY_HEAP_DEVICE_LOCAL_BIT, (uint32)MemoryType::GPU>(memoryProperties.memoryHeaps[i].flags, memoryHeap.MemoryTypes);
+		TranslateMask<VK_MEMORY_HEAP_DEVICE_LOCAL_BIT, (uint32)MemoryType::GPU>(memoryProperties.memoryHeaps[heapIndex].flags, memoryHeap.HeapType);
 
+		for (uint8 memType = 0; memType < memoryProperties.memoryTypeCount; ++memType)
+		{
+			if (memoryProperties.memoryTypes[memType].heapIndex == heapIndex) {
+				GAL::MemoryTypes memoryType = 0;
+
+				TranslateMask<VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, (uint32)MemoryType::GPU>(memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
+				TranslateMask<VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, (uint32)MemoryType::HOST_VISIBLE>(memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
+				TranslateMask<VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, (uint32)MemoryType::HOST_COHERENT>(memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
+				TranslateMask<VK_MEMORY_PROPERTY_HOST_CACHED_BIT, (uint32)MemoryType::HOST_CACHED>(memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
+
+				memoryHeap.MemoryTypes.EmplaceBack(memoryType);
+			}
+		}
+		
 		memoryHeaps.EmplaceBack(memoryHeap);
 	}
 
 	return memoryHeaps;
-}
-
-GTSL::Array<GAL::MemoryTypes, 16> GAL::VulkanRenderDevice::GetMemoryTypes() const
-{
-	GTSL::Array<GAL::MemoryTypes, 16> memoryTypes;
-
-	for(uint8 i = 0; i < memoryProperties.memoryTypeCount; ++i)
-	{
-		GAL::MemoryTypes memoryType = 0;
-
-		TranslateMask<VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,	(uint32)MemoryType::GPU>			(memoryProperties.memoryTypes[i].propertyFlags, memoryType);
-		TranslateMask<VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,	(uint32)MemoryType::HOST_VISIBLE>	(memoryProperties.memoryTypes[i].propertyFlags, memoryType);
-		TranslateMask<VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,	(uint32)MemoryType::HOST_COHERENT>	(memoryProperties.memoryTypes[i].propertyFlags, memoryType);
-		TranslateMask<VK_MEMORY_PROPERTY_HOST_CACHED_BIT,	(uint32)MemoryType::HOST_CACHED>	(memoryProperties.memoryTypes[i].propertyFlags,	memoryType);
-
-		memoryTypes.EmplaceBack(memoryType);
-	}
-
-	return memoryTypes;
 }
 
 #undef ERROR

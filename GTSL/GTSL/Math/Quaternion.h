@@ -22,6 +22,10 @@ namespace GTSL
 		Quaternion operator*(const Quaternion& other) const;
 		Vector3 operator*(const Vector3 other) const;
 
+		Vector4 GetXBasisVector() const;
+		Vector4 GetYBasisVector() const;
+		Vector4 GetZBasisVector() const;
+		
 		operator Vector4() const { return *this; }
 		operator Vector4&() { return *this; }
 		operator const Vector4&() const { return *this; }
