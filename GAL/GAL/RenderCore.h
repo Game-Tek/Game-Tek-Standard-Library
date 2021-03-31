@@ -30,6 +30,13 @@ namespace GAL
 
 	enum class ComponentType : GTSL::uint8 { INT, UINT, FLOAT };
 	enum class TextureType : GTSL::uint8 { COLOR, DEPTH };
+
+	struct ShaderHandle
+	{
+		ShaderHandle() = default;
+		ShaderHandle(void* data, GTSL::uint32 size, GTSL::uint32 alignedSize) : Data(data), Size(size), AlignedSize(alignedSize) {}
+		void* Data; GTSL::uint32 Size, AlignedSize;
+	};
 	
 	inline constexpr GTSL::uint32 MakeFormatFlag(GTSL::uint8 compCount, ComponentType compType, GTSL::uint8 bitDepth, TextureType type, GTSL::uint8 a, GTSL::uint8 b, GTSL::uint8 c, GTSL::uint8 d)
 	{

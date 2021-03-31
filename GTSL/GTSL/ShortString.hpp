@@ -40,7 +40,7 @@ namespace GTSL
 			auto oldSize = array[SIZE - 1];
 			const auto toCopy = GetLength() + text.ElementCount() <= array[SIZE - 1] ? text.ElementCount() : oldSize;
 			for (uint8 s = GetLength(), i = 0; i < toCopy; ++i, ++s) { array[s] = text[i]; }
-			array[SIZE - 1] = oldSize - toCopy;
+			array[SIZE - 1] = static_cast<uint8>(oldSize - toCopy);
 			return *this;
 		}
 		

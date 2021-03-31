@@ -213,6 +213,16 @@ void GAL::VulkanCommandBuffer::CopyBuffers(const CopyBuffersInfo& copyBuffersInf
 	vkCmdCopyBuffer(commandBuffer, copyBuffersInfo.Source.GetVkBuffer(), copyBuffersInfo.Destination.GetVkBuffer(), 1, &vk_buffer_copy);
 }
 
+void GAL::VulkanCommandBuffer::SetEvent(GAL::VulkanEvent event, GAL::VulkanPipelineStage pipelineStage)
+{
+	vkCmdSetEvent(commandBuffer, event.GetVkEvent(), pipelineStage);
+}
+
+void GAL::VulkanCommandBuffer::ResetEvent(GAL::VulkanEvent event, GAL::VulkanPipelineStage pipelineStage)
+{
+	vkCmdResetEvent(commandBuffer, event.GetVkEvent(), pipelineStage);
+}
+
 GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)
 {
 	VkCommandPoolCreateInfo vkCommandPoolCreateInfo{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };

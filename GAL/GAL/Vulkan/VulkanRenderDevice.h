@@ -58,7 +58,7 @@ namespace GAL
 	public:
 		struct RayTracingCapabilities
 		{
-			GTSL::uint32 RecursionDepth = 0, ShaderGroupAlignment = 0, ShaderGroupBaseAlignment = 0, ShaderGroupHandleSize = 0, ScratchBuildOffsetAlignment = 0;
+			GTSL::uint32 RecursionDepth = 0, ShaderGroupHandleAlignment = 0, ShaderGroupBaseAlignment = 0, ShaderGroupHandleSize = 0, ScratchBuildOffsetAlignment = 0;
 			bool CanBuildOnHost = false;
 		};
 
@@ -77,7 +77,7 @@ namespace GAL
 		};
 		VulkanRenderDevice() = default;
 
-		[[no_discard]] bool Initialize(const CreateInfo& createInfo);
+		[[nodiscard]] bool Initialize(const CreateInfo& createInfo);
 		
 		~VulkanRenderDevice();
 

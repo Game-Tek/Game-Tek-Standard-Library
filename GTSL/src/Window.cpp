@@ -5,18 +5,18 @@
 #include "GTSL/Assert.h"
 #include "GTSL/StaticString.hpp"
 
-#include "ShObjIdl_core.h"
 #include "GTSL/Array.hpp"
 #include "GTSL/Bitman.h"
 
 #if (_WIN32)
-
-#include <hidsdi.h>	
+#include "ShObjIdl_core.h"
+#include <hidsdi.h>
 
 GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam)
-{
+{	
 	auto* windowCallData = reinterpret_cast<WindowsCallData*>(GetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA));
 	const HWND winHandle = static_cast<HWND>(hwnd);
+	if (!windowCallData) { return DefWindowProcA(winHandle, uMsg, wParam, lParam); }
 	
 	switch (uMsg)
 	{
@@ -75,24 +75,25 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 	}
 	case WM_KEYDOWN:
 	{
-		KeyboardKeyPressEventData keyboardKeyPressEventData;
+		KeyboardKeyEventData keyboardKeyPressEventData;
 		Win32_translateKeys(wParam, lParam, keyboardKeyPressEventData.Key);
 		keyboardKeyPressEventData.State = true;
 		keyboardKeyPressEventData.IsFirstTime = !((lParam >> 30) & 1);
-		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::KEYBOARD_KEY_PRESS, &keyboardKeyPressEventData); return 0;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::KEYBOARD_KEY, &keyboardKeyPressEventData); return 0;
 	}
 	case WM_KEYUP:
 	{
-		KeyboardKeyPressEventData keyboardKeyPressEventData;
+		KeyboardKeyEventData keyboardKeyPressEventData;
 		Win32_translateKeys(wParam, lParam, keyboardKeyPressEventData.Key);
 		keyboardKeyPressEventData.State = false;
-		keyboardKeyPressEventData.IsFirstTime = false;
-		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::KEYBOARD_KEY_PRESS, &keyboardKeyPressEventData); return 0;
+		keyboardKeyPressEventData.IsFirstTime = true;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::KEYBOARD_KEY, &keyboardKeyPressEventData); return 0;
 	}
-	case WM_CHAR:
+	case WM_UNICHAR:
 	{
 		CharEventData charEventData = wParam;
-		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::CHAR, &charEventData); return 0;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::CHAR, &charEventData);
+		return 0;
 	}
 	case WM_SIZE:
 	{
@@ -100,18 +101,25 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 		clientSize.Width = LOWORD(lParam);
 		clientSize.Height = HIWORD(lParam);
 
-		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::SIZE, &clientSize); return 0;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::SIZE, &clientSize);
+		return 0;
 	}
 	case WM_SIZING:
 	{
 		RECT rect = *reinterpret_cast<RECT*>(lParam);
-		GetClientRect(static_cast<HWND>(hwnd), &rect);
-			
-		WindowSizeEventData clientSize;
-		clientSize.Width = static_cast<uint16>(rect.right);
-		clientSize.Height = static_cast<uint16>(rect.bottom);
 
-		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::SIZE, &clientSize); return 0;
+		if (!windowCallData->hadResize)
+		{
+			WindowSizeEventData clientSize;
+			clientSize.Width = static_cast<uint16>(rect.right);
+			clientSize.Height = static_cast<uint16>(rect.bottom);
+
+			windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::SIZE, &clientSize);
+			
+			windowCallData->hadResize = true;
+		}
+			
+		return true; //An application should return TRUE if it processes this message.
 	}
 	case WM_MOVING:
 	{
@@ -125,7 +133,36 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 		windowMoveEventData.X = reinterpret_cast<LPRECT>(lParam)->left + windowSize.Width / 2;
 		windowMoveEventData.Y = reinterpret_cast<LPRECT>(lParam)->top - windowSize.Height / 2;
 			
-		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOVING, &windowMoveEventData); return 0;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOVING, &windowMoveEventData);
+		return true; //An application should return TRUE if it processes this message.
+	}
+	case WM_ACTIVATE:
+	{
+		auto hasFocus = static_cast<bool>(LOWORD(wParam));
+		FocusEventData focus;
+		focus.Focus = hasFocus;
+		focus.HadFocus = windowCallData->WindowPointer->focus;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::FOCUS, static_cast<FocusEventData*>(&focus));
+		windowCallData->WindowPointer->focus = hasFocus;
+		return 0;
+	}
+	case WM_SETFOCUS:
+	{
+		FocusEventData focus;
+		focus.Focus = true;
+		focus.HadFocus = windowCallData->WindowPointer->focus;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::FOCUS, static_cast<FocusEventData*>(&focus));
+		windowCallData->WindowPointer->focus = true;
+		return 0;
+	}
+	case WM_KILLFOCUS:
+	{
+		FocusEventData focus;
+		focus.Focus = false;
+		focus.HadFocus = windowCallData->WindowPointer->focus;
+		windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::FOCUS, static_cast<FocusEventData*>(&focus));
+		windowCallData->WindowPointer->focus = false;
+		return 0;
 	}
 	case WM_INPUT:
 	{
@@ -253,10 +290,9 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 		
 		return 0;
 	}
-	default: return DefWindowProcA(winHandle, uMsg, wParam, lParam);
 	}
 
-	return 0;
+	return DefWindowProcA(winHandle, uMsg, wParam, lParam);
 }
 
 void GTSL::Window::Win32_calculateMousePos(const uint32 x, const uint32 y, GTSL::Extent2D clientSize, GTSL::Vector2& mousePos)
@@ -380,8 +416,12 @@ void GTSL::Window::BindToOS(const WindowCreateInfo& windowCreateInfo)
 	windowsCallData.UserData = windowCreateInfo.UserData;
 	windowsCallData.WindowPointer = this;
 	windowsCallData.FunctionToCall = windowCreateInfo.Function;
-	
-	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), style, CW_USEDEFAULT, CW_USEDEFAULT, windowCreateInfo.Extent.Width, windowCreateInfo.Extent.Height, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), &windowsCallData);
+
+	RECT windowRect;
+	windowRect.top = 0; windowRect.left = 0;
+	windowRect.bottom = windowCreateInfo.Extent.Height; windowRect.right = windowCreateInfo.Extent.Width;
+	AdjustWindowRect(&windowRect, style, false);
+	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right, windowRect.bottom, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), &windowsCallData);
 
 	GTSL_ASSERT(windowHandle, "Window failed to create!");
 
@@ -410,6 +450,8 @@ void GTSL::Window::Update(void* userData, Delegate<void(void*, WindowEvents, voi
 		TranslateMessage(&message);
 		DispatchMessageA(&message);
 	}
+	
+	SetWindowLongPtrA(static_cast<HWND>(windowHandle), GWLP_USERDATA, 0);
 }
 
 void GTSL::Window::SetTitle(const char* title)
@@ -426,20 +468,22 @@ void GTSL::Window::SetIcon(const WindowIconInfo& windowIconInfo)
 {
 }
 
-void GTSL::Window::GetFramebufferExtent(Extent2D& extent) const
+GTSL::Extent2D GTSL::Window::GetFramebufferExtent() const
 {
-	RECT rect;
+	RECT rect; GTSL::Extent2D extent;
 	GetClientRect(static_cast<HWND>(windowHandle), &rect);
 	extent.Width = static_cast<uint16>(rect.right);
 	extent.Height = static_cast<uint16>(rect.bottom);
+	return extent;
 }
 
-void GTSL::Window::GetWindowExtent(Extent2D& windowExtent) const
+GTSL::Extent2D GTSL::Window::GetWindowExtent() const
 {
-	RECT rect;
+	RECT rect; GTSL::Extent2D extent;
 	GetWindowRect(static_cast<HWND>(windowHandle), &rect);
-	windowExtent.Width = static_cast<uint16>(rect.right - rect.left);
-	windowExtent.Height = static_cast<uint16>(rect.bottom - rect.top);
+	extent.Width = static_cast<uint16>(rect.right - rect.left);
+	extent.Height = static_cast<uint16>(rect.bottom - rect.top);
+	return extent;
 }
 
 void GTSL::Window::SetMousePosition(const Extent2D position)
@@ -501,7 +545,7 @@ void GTSL::Window::GetNativeHandles(void* nativeHandlesStruct) const
 
 void GTSL::Window::ShowWindow()
 {
-	::ShowWindowAsync(static_cast<HWND>(windowHandle), SW_SHOWNORMAL);
+	::ShowWindowAsync(static_cast<HWND>(windowHandle), SW_SHOW);
 }
 
 void GTSL::Window::HideWindow()

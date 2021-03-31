@@ -25,6 +25,8 @@ namespace GAL
 			MemoryRequirements* MemoryRequirements;
 		};
 		void GetMemoryRequirements(const GetMemoryRequirementsInfo& info);
+
+		GTSL::uint64 GetAddress() const { return static_cast<GTSL::uint64>(resource->GetGPUVirtualAddress()); }
 		
 		void Initialize(const CreateInfo& info);
 

@@ -5,6 +5,8 @@
 #include "VulkanTexture.h"
 #include <GTSL/Pair.h>
 
+
+#include "VulkanSynchronization.h"
 #include "GTSL/Array.hpp"
 
 namespace GAL
@@ -85,17 +87,16 @@ namespace GAL
 		};
 		void Recreate(const RecreateInfo& resizeInfo);
 
-		struct AcquireNextImageInfo : VulkanRenderInfo
-		{
-			VulkanSemaphore* SignalSemaphore{ nullptr };
-			const class VulkanFence* Fence{ nullptr };
-		};
+
+		enum class AcquireState { OK, SUBOPTIMAL, BAD };
+		
 		/**
 		 * \brief  Acquires the next image in the swapchain queue to present to.
 		 * \param acquireNextImageInfo Information to perform image acquisition.
 		 * \return Returns true if the contexts needs to be recreated.
 		 */
-		[[nodiscard]] GTSL::uint8 AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo);
+		[[nodiscard]] GTSL::Result<GTSL::uint8, AcquireState> AcquireNextImage(const VulkanRenderDevice* renderDevice, VulkanSemaphore semaphore, VulkanFence fence);
+		[[nodiscard]] GTSL::Result<GTSL::uint8, AcquireState> AcquireNextImage(const VulkanRenderDevice* renderDevice, VulkanSemaphore semaphore);
 
 		struct PresentInfo final : VulkanRenderInfo
 		{

@@ -81,8 +81,8 @@ namespace GTSL
 
 		enum class WindowEvents
 		{
-			CLOSE, KEYBOARD_KEY_PRESS, CHAR, SIZE, SIZING, MOVING, MOUSE_MOVE, MOUSE_WHEEL,
-			MOUSE_BUTTON
+			CLOSE, KEYBOARD_KEY, CHAR, SIZE, MOVING, MOUSE_MOVE, MOUSE_WHEEL,
+			MOUSE_BUTTON, FOCUS
 		};
 		
 		struct WindowCreateInfo
@@ -110,8 +110,8 @@ namespace GTSL
 		};
 		void SetIcon(const WindowIconInfo & windowIconInfo);
 
-		void GetFramebufferExtent(Extent2D & extent) const;
-		void GetWindowExtent(Extent2D& windowExtent) const;
+		Extent2D GetFramebufferExtent() const;
+		Extent2D GetWindowExtent() const;
 
 		void SetMousePosition(Extent2D position);
 		void LimitMousePosition(Extent2D range);
@@ -157,14 +157,11 @@ namespace GTSL
 		{
 			MouseButton Button; bool State;
 		};
-		
-		struct KeyboardKeyPressEventData
+		struct KeyboardKeyEventData
 		{
 			KeyboardKeys Key; bool State; bool IsFirstTime;
 		};
-		
 		using CharEventData = uint32;
-
 		struct WindowMoveEventData
 		{
 			uint16 X, Y;
@@ -176,12 +173,19 @@ namespace GTSL
 		using MouseMoveEventData = Vector2;
 		using WindowSizeEventData = Extent2D;
 		using MouseWheelEventData = float32;
+		
+		struct FocusEventData
+		{
+			bool Focus, HadFocus;
+		};
+	
 	protected:
 		WindowSizeState windowSizeState;
 
 		void* windowHandle = nullptr;
 		uint32 defaultWindowStyle{ 0 };
 
+		bool focus : 1 = false;
 		//void* iTaskbarList;
 
 #if (_WIN32)
@@ -195,6 +199,7 @@ namespace GTSL
 			void* UserData;
 			Delegate<void(void*, WindowEvents, void*)> FunctionToCall;
 			Window* WindowPointer;
+			bool hadResize = false;
 		};
 
 		friend class Application;

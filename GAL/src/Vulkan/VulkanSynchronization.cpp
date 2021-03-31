@@ -62,3 +62,37 @@ void GAL::VulkanSemaphore::Destroy(const VulkanRenderDevice* renderDevice)
 	vkDestroySemaphore(renderDevice->GetVkDevice(), semaphore, renderDevice->GetVkAllocationCallbacks());
 	debugClear(semaphore);
 }
+
+GAL::VulkanEvent::VulkanEvent(const VulkanRenderDevice* renderDevice)
+{
+	VkEventCreateInfo vkEventCreateInfo{ VK_STRUCTURE_TYPE_EVENT_CREATE_INFO };
+	vkCreateEvent(renderDevice->GetVkDevice(), &vkEventCreateInfo, renderDevice->GetVkAllocationCallbacks(), &event);
+}
+
+GAL::VulkanEvent::VulkanEvent(const VulkanRenderDevice* renderDevice, const GTSL::Range<const GTSL::UTF8*> name)
+{
+	VkEventCreateInfo vkEventCreateInfo{ VK_STRUCTURE_TYPE_EVENT_CREATE_INFO };
+	vkCreateEvent(renderDevice->GetVkDevice(), &vkEventCreateInfo, renderDevice->GetVkAllocationCallbacks(), &event);
+
+	VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
+	debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(event);
+	debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_EVENT;
+	debug_utils_object_name_info_ext.pObjectName = name.begin();
+	renderDevice->vkSetDebugUtilsObjectNameEXT(renderDevice->GetVkDevice(), &debug_utils_object_name_info_ext);
+}
+
+void GAL::VulkanEvent::Set(const VulkanRenderDevice* renderDevice)
+{
+	vkSetEvent(renderDevice->GetVkDevice(), event);
+}
+
+void GAL::VulkanEvent::Reset(const VulkanRenderDevice* renderDevice)
+{
+	vkResetEvent(renderDevice->GetVkDevice(), event);
+}
+
+void GAL::VulkanEvent::Destroy(const VulkanRenderDevice* renderDevice)
+{
+	vkDestroyEvent(renderDevice->GetVkDevice(), event, renderDevice->GetVkAllocationCallbacks());
+	debugClear(event);
+}

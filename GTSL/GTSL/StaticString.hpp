@@ -84,7 +84,6 @@ namespace GTSL
 			return false;
 		}
 		
-		
 		void Resize(uint32 newLength)
 		{
 			GTSL_ASSERT(newLength <= N, "New size larger tnah capacity")
@@ -146,7 +145,7 @@ namespace GTSL
 			GTSL_ASSERT(range.ElementCount() <= N, "String larger than buffer capacity")
 			const auto len = range.ElementCount();
 			copy(len, range.begin());
-			this->length += len - 1;
+			this->length += static_cast<uint32>(len - 1);
 			return *this;
 		}
 		
@@ -163,7 +162,7 @@ namespace GTSL
 		{
 			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
-			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
+			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
 		}
 
@@ -171,7 +170,7 @@ namespace GTSL
 		{
 			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
-			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
+			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
 		}
 
@@ -179,7 +178,7 @@ namespace GTSL
 		{
 			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
-			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
+			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
 		}
 
@@ -187,7 +186,7 @@ namespace GTSL
 		{
 			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
-			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
+			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
 		}
 
@@ -195,7 +194,7 @@ namespace GTSL
 		{
 			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
-			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
+			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
 		}
 
@@ -203,7 +202,7 @@ namespace GTSL
 		{
 			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
-			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
+			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
 		}
 
@@ -211,7 +210,7 @@ namespace GTSL
 		{
 			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
-			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
+			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
 		}
 
@@ -219,7 +218,7 @@ namespace GTSL
 		{
 			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
-			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
+			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
 		}
 
@@ -227,7 +226,7 @@ namespace GTSL
 		{
 			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
 			ToString(num, range);
-			this->length += range.ElementCount() - 1; //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
+			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
 			return *this;
 		}
 
@@ -238,9 +237,9 @@ namespace GTSL
 		uint32 length = 0;
 		friend class StaticString;
 
-		constexpr void copy(const uint32 size, const UTF8* data)
+		constexpr void copy(const uint64 size, const UTF8* data)
 		{
-			for(uint32 i = this->length, iD = 0; iD < size; ++i, ++iD) { this->array[i] = data[iD]; }
+			for(uint64 i = this->length, iD = 0; iD < size; ++i, ++iD) { this->array[i] = data[iD]; }
 		}
 	};
 }

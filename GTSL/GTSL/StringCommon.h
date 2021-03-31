@@ -38,7 +38,7 @@ namespace GTSL
 	{
 		uint32 value = 0, mult = 1;
 
-		for (uint32 j = 0, c = numberString.ElementCount() - 1; j < numberString.ElementCount(); ++j, --c)
+		for (uint64 j = 0, c = numberString.ElementCount() - 1; j < numberString.ElementCount(); ++j, --c)
 		{
 			uint8 num;
 
@@ -71,7 +71,7 @@ namespace GTSL
 	{
 		int32 value = 0, mult = 1;
 
-		for (uint32 j = 0, c = numberString.ElementCount() - 1; j < numberString.ElementCount(); ++j, --c)
+		for (uint64 j = 0, c = numberString.ElementCount() - 1; j < numberString.ElementCount(); ++j, --c)
 		{
 			uint8 num;
 
@@ -103,7 +103,7 @@ namespace GTSL
 	template<>
 	inline Result<float32> ToNumber(Range<const UTF8*> numberString)
 	{
-		float32 value = 0; uint32 c = numberString.ElementCount() - 1/*because of inverse parse*/; uint32 dot = 0;
+		float32 value = 0; uint64 c = numberString.ElementCount() - 1/*because of inverse parse*/; uint64 dot = 0;
 
 		{
 			float32 div = 1.0f;
@@ -138,7 +138,7 @@ namespace GTSL
 
 		float32 mult = 1;
 
-		for (uint32 i = 0; i < dot; ++i, --c)
+		for (uint64 i = 0; i < dot; ++i, --c)
 		{
 			uint8 num;
 

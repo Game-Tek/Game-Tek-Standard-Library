@@ -58,4 +58,22 @@ namespace GAL
 	private:
 		VkSemaphore semaphore{ nullptr };
 	};
+
+	class VulkanEvent final : public Fence
+	{
+	public:
+		VulkanEvent() = default;
+		explicit VulkanEvent(const VulkanRenderDevice* renderDevice);
+		explicit VulkanEvent(const VulkanRenderDevice* renderDevice, const GTSL::Range<const GTSL::UTF8*> name);
+
+		void Set(const class VulkanRenderDevice* renderDevice);
+		void Reset(const class VulkanRenderDevice* renderDevice);
+		
+		void Destroy(const class VulkanRenderDevice* renderDevice);
+		VkEvent GetVkEvent() const { return event; }
+
+		GTSL::uint64 GetHandle() const { return reinterpret_cast<GTSL::uint64>(event); }
+	private:
+		VkEvent event = nullptr;
+	};
 }

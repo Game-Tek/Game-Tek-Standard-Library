@@ -309,6 +309,9 @@ namespace GAL
 			renderDevice->vkCmdBuildAccelerationStructuresKHR(commandBuffer, buildGeometryInfos.GetLength(),
 				buildGeometryInfos.begin(), buildRangesRangePerAccelerationStructure.begin());
 		}
+
+		void SetEvent(VulkanEvent event, VulkanPipelineStage pipelineStage);
+		void ResetEvent(VulkanEvent event, VulkanPipelineStage pipelineStage);
 		
 		[[nodiscard]] VkCommandBuffer GetVkCommandBuffer() const { return commandBuffer; }
 

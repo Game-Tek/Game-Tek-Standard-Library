@@ -90,13 +90,26 @@ void GAL::VulkanRenderContext::Recreate(const RecreateInfo& resizeInfo)
 	SET_NAME(swapchain, VK_OBJECT_TYPE_SWAPCHAIN_KHR, resizeInfo);
 }
 
-GTSL::uint8 GAL::VulkanRenderContext::AcquireNextImage(const AcquireNextImageInfo& acquireNextImageInfo)
+GTSL::Result<GTSL::uint8, GAL::VulkanRenderContext::AcquireState> GAL::VulkanRenderContext::AcquireNextImage(const VulkanRenderDevice* renderDevice, VulkanSemaphore semaphore, VulkanFence fence)
 {
 	GTSL::uint32 image_index = 0;
 
-	VK_CHECK(vkAcquireNextImageKHR(acquireNextImageInfo.RenderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain),	~0ULL, acquireNextImageInfo.SignalSemaphore->GetVkSemaphore(), acquireNextImageInfo.Fence ? acquireNextImageInfo.Fence->GetVkFence() : nullptr, &image_index));
+	auto result = vkAcquireNextImageKHR(renderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), ~0ULL, semaphore.GetVkSemaphore(), fence.GetVkFence(), &image_index);
 
-	return static_cast<GTSL::uint8>(image_index);
+	auto state = result == VK_SUCCESS ? AcquireState::OK : result == VK_SUBOPTIMAL_KHR ? AcquireState::SUBOPTIMAL : AcquireState::BAD;
+	
+	return GTSL::Result<GTSL::uint8, GAL::VulkanRenderContext::AcquireState>(static_cast<GTSL::uint8>(image_index), state);
+}
+
+GTSL::Result<GTSL::uint8, GAL::VulkanRenderContext::AcquireState> GAL::VulkanRenderContext::AcquireNextImage(const VulkanRenderDevice* renderDevice, VulkanSemaphore semaphore)
+{
+	GTSL::uint32 image_index = 0;
+
+	auto result = vkAcquireNextImageKHR(renderDevice->GetVkDevice(), static_cast<VkSwapchainKHR>(swapchain), ~0ULL, semaphore.GetVkSemaphore(), nullptr, &image_index);
+
+	auto state = result == VK_SUCCESS ? AcquireState::OK : result == VK_SUBOPTIMAL_KHR ? AcquireState::SUBOPTIMAL : AcquireState::BAD;
+
+	return GTSL::Result<GTSL::uint8, GAL::VulkanRenderContext::AcquireState>(static_cast<GTSL::uint8>(image_index), state);
 }
 
 void GAL::VulkanRenderContext::Present(const PresentInfo& presentInfo)

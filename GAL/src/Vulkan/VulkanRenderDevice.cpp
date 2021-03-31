@@ -354,7 +354,7 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 
 		VkPhysicalDeviceProperties2 properties2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
 		VkPhysicalDeviceFeatures2 features2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
-
+		
 		features2.features.samplerAnisotropy = true;
 		features2.features.shaderSampledImageArrayDynamicIndexing = true;
 		features2.features.shaderStorageImageArrayDynamicIndexing = true;
@@ -362,26 +362,31 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 		features2.features.shaderStorageBufferArrayDynamicIndexing = true;
 		features2.features.shaderInt16 = true;
 		features2.features.shaderInt64 = true;
+		features2.features.robustBufferAccess = createInfo.Debug;
 		features2.features.shaderStorageImageReadWithoutFormat = true;
 		features2.features.shaderStorageImageWriteWithoutFormat = true;
 
 		void** lastProperty = &properties2.pNext; void** lastFeature = &features2.pNext;
 
 		{
-			Array<byte, 24 * 256> structsBuffer; Array<StaticString<32>, 32> deviceExtensions;
+			Array<byte, 26 * 256> structsBuffer; Array<StaticString<32>, 32> deviceExtensions;
 
-			auto placePropertiesStructure = [&]<typename T>(T structure) {
-				structsBuffer.Resize(structsBuffer.GetLength() + static_cast<uint32>(sizeof(structure)));
-				MemCopy(sizeof(structure), &structure, structsBuffer.end() - sizeof(structure));
-				*lastProperty = structsBuffer.end() - sizeof(structure);
-				lastProperty = &static_cast<T*>(*lastProperty)->pNext;
+			auto placePropertiesStructure = [&]<typename T>(T** structure, VkStructureType structureType) {
+				structsBuffer.Resize(structsBuffer.GetLength() + static_cast<uint32>(sizeof(T)));
+				*lastProperty = structsBuffer.end() - sizeof(T);
+				*structure = static_cast<T*>(*lastProperty);
+				GTSL::SetMemory(sizeof(T), *lastProperty);
+				(*structure)->sType = structureType;
+				lastProperty = &(*structure)->pNext;
 			};
 
-			auto placeFeaturesStructure = [&]<typename T>(T structure) {
-				structsBuffer.Resize(structsBuffer.GetLength() + static_cast<uint32>(sizeof(structure)));
-				MemCopy(sizeof(structure), &structure, structsBuffer.end() - sizeof(structure));
-				*lastFeature = structsBuffer.end() - sizeof(structure);
-				lastFeature = &static_cast<T*>(*lastFeature)->pNext;
+			auto placeFeaturesStructure = [&]<typename T>(T** structure, VkStructureType structureType) {
+				structsBuffer.Resize(structsBuffer.GetLength() + static_cast<uint32>(sizeof(T)));
+				*lastFeature = structsBuffer.end() - sizeof(T);
+				*structure = static_cast<T*>(*lastFeature);
+				GTSL::SetMemory(sizeof(T), *lastFeature);
+				(*structure)->sType = structureType;
+				lastFeature = &(*structure)->pNext;
 			};
 
 			auto getProperties = [&](void* prop) {
@@ -404,36 +409,31 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 			};
 
 			{
-				VkPhysicalDeviceTimelineSemaphoreFeatures vkPhysicalDeviceTimelineSemaphoreFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES };
-				vkPhysicalDeviceTimelineSemaphoreFeatures.timelineSemaphore = true;
-				placeFeaturesStructure(vkPhysicalDeviceTimelineSemaphoreFeatures);
+				VkPhysicalDeviceVulkan11Features* structure;
+				placeFeaturesStructure(&structure, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES);
+				structure->storageBuffer16BitAccess = true;
+				structure->storagePushConstant16 = true;
+			}
+
+			{
+				VkPhysicalDeviceVulkan12Features* structure;
+				placeFeaturesStructure(&structure, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES);
+				structure->separateDepthStencilLayouts = true;
+				structure->timelineSemaphore = true;
+				structure->bufferDeviceAddress = true;
+				structure->descriptorIndexing = true;
+				structure->scalarBlockLayout = true;
+				structure->shaderInt8 = true;
+				structure->storageBuffer8BitAccess = true;
+				structure->runtimeDescriptorArray = true;
+				structure->descriptorBindingPartiallyBound = true;
+				structure->shaderSampledImageArrayNonUniformIndexing = true;
+				structure->shaderStorageBufferArrayNonUniformIndexing = true;
+				structure->shaderStorageImageArrayNonUniformIndexing = true;
+				structure->shaderUniformBufferArrayNonUniformIndexing = true;
 			}
 
 			tryAddExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-
-			{
-				VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures vkPhysicalDeviceSeparateDepthStencilLayoutsFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SEPARATE_DEPTH_STENCIL_LAYOUTS_FEATURES };
-				vkPhysicalDeviceSeparateDepthStencilLayoutsFeatures.separateDepthStencilLayouts = true;
-				placeFeaturesStructure(vkPhysicalDeviceSeparateDepthStencilLayoutsFeatures);
-			}
-
-			{
-				VkPhysicalDeviceDescriptorIndexingFeatures vkPhysicalDeviceDescriptorIndexingFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES };
-				vkPhysicalDeviceDescriptorIndexingFeatures.runtimeDescriptorArray = true;
-				vkPhysicalDeviceDescriptorIndexingFeatures.descriptorBindingPartiallyBound = true;
-				vkPhysicalDeviceDescriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing = true;
-				vkPhysicalDeviceDescriptorIndexingFeatures.shaderStorageBufferArrayNonUniformIndexing = true;
-				vkPhysicalDeviceDescriptorIndexingFeatures.shaderStorageImageArrayNonUniformIndexing = true;
-				vkPhysicalDeviceDescriptorIndexingFeatures.shaderUniformBufferArrayNonUniformIndexing = true;
-
-				placeFeaturesStructure(vkPhysicalDeviceDescriptorIndexingFeatures);
-			}
-
-			{
-				VkPhysicalDeviceBufferDeviceAddressFeatures vkBufferAddressFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES };
-				vkBufferAddressFeatures.bufferDeviceAddress = true;
-				placeFeaturesStructure(vkBufferAddressFeatures);
-			}
 
 			for (uint32 extension = 0; extension < createInfo.Extensions.ElementCount(); ++extension)
 			{
@@ -442,15 +442,20 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 				case Extension::RAY_TRACING:
 				{
 					if (tryAddExtension("VK_KHR_acceleration_structure")) {
+						{
+							VkPhysicalDeviceAccelerationStructureFeaturesKHR* features;
+							VkPhysicalDeviceAccelerationStructurePropertiesKHR* properties;
+
+							placePropertiesStructure(&properties, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR);
+							placeFeaturesStructure(&features, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR);
+
+							features->accelerationStructure = true;
+							features->accelerationStructureHostCommands;
+						}
+
 						VkPhysicalDeviceAccelerationStructureFeaturesKHR features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR };
 						VkPhysicalDeviceAccelerationStructurePropertiesKHR properties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR };
-
-						features.accelerationStructure = true;
-						features.accelerationStructureHostCommands;
-
-						placePropertiesStructure(properties);
-						placeFeaturesStructure(features);
-
+						
 						getProperties(&properties);
 						getFeatures(&features);
 
@@ -462,20 +467,25 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 					tryAddExtension("VK_KHR_ray_query");
 
 					if (tryAddExtension("VK_KHR_ray_tracing_pipeline")) {
+						{
+							VkPhysicalDeviceRayTracingPipelineFeaturesKHR* features;
+							VkPhysicalDeviceRayTracingPipelinePropertiesKHR* properties;
+
+							placePropertiesStructure(&properties, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR);
+							placeFeaturesStructure(&features, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR);
+							
+							features->rayTracingPipeline = true;
+						}
+
 						VkPhysicalDeviceRayTracingPipelineFeaturesKHR features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR };
 						VkPhysicalDeviceRayTracingPipelinePropertiesKHR properties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR };
-
-						features.rayTracingPipeline = true;
-
-						placePropertiesStructure(properties);
-						placeFeaturesStructure(features);
-
+						
 						getProperties(&properties);
 						getFeatures(&features);
 
 						auto* capabilities = static_cast<RayTracingCapabilities*>(createInfo.Extensions[extension].Second);
 						capabilities->RecursionDepth = properties.maxRayRecursionDepth;
-						capabilities->ShaderGroupAlignment = properties.shaderGroupHandleAlignment;
+						capabilities->ShaderGroupHandleAlignment = properties.shaderGroupHandleAlignment;
 						capabilities->ShaderGroupBaseAlignment = properties.shaderGroupBaseAlignment;
 						capabilities->ShaderGroupHandleSize = properties.shaderGroupHandleSize;
 					}
@@ -488,21 +498,13 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 				}
 				case Extension::PIPELINE_CACHE_EXTERNAL_SYNC:
 				{
-					VkPhysicalDevicePipelineCreationCacheControlFeaturesEXT pipelineCacheSyncControl{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT };
-					pipelineCacheSyncControl.pipelineCreationCacheControl = true;
-					placeFeaturesStructure(pipelineCacheSyncControl);
+					VkPhysicalDevicePipelineCreationCacheControlFeaturesEXT* pipelineCacheSyncControl;
+					placeFeaturesStructure(&pipelineCacheSyncControl, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT);
+					pipelineCacheSyncControl->pipelineCreationCacheControl = true;
 
 					break;
 				}
-				case Extension::SCALAR_LAYOUT:
-				{
-					VkPhysicalDeviceScalarBlockLayoutFeatures scalarBlockLayoutFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES };
-					scalarBlockLayoutFeatures.scalarBlockLayout = true;
-					placeFeaturesStructure(scalarBlockLayoutFeatures);
-					break;
-				}
 				case Extension::SWAPCHAIN_RENDERING: break;
-				default: __debugbreak();
 				}
 			}
 
