@@ -15,7 +15,7 @@ namespace GAL
 		{
 			bool IsSignaled{ true };
 		};
-		VulkanFence(const CreateInfo& createInfo);
+		void Initialize(const CreateInfo& createInfo);
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		[[nodiscard]] VkFence GetVkFence() const { return fence; }
@@ -49,9 +49,9 @@ namespace GAL
 
 		struct CreateInfo : VulkanCreateInfo
 		{
-			GTSL::uint64 InitialValue{ 0 };
+			GTSL::uint64 InitialValue = 0xFFFFFFFFFFFFFFFF;
 		};
-		VulkanSemaphore(const CreateInfo& createInfo);
+		void Initialize(const CreateInfo& createInfo);
 
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		[[nodiscard]] VkSemaphore GetVkSemaphore() const { return semaphore; }

@@ -327,10 +327,10 @@ namespace GAL
 
 		struct CreateInfo final : VulkanCreateInfo
 		{
-			const VulkanQueue* Queue = nullptr;
+			VulkanQueue Queue;
 			bool IsPrimary = true;
 		};
-		VulkanCommandPool(const CreateInfo& createInfo);
+		void Initialize(const CreateInfo& createInfo);
 
 		void ResetPool(RenderDevice* renderDevice) const;
 

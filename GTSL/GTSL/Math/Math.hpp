@@ -105,24 +105,32 @@ namespace GTSL
 			explicit float16(const float32 a) : float16(*((uint32*)&a))
 			{
 			}
-			
-			uint16 Sign : 1, Exponent : 5, Fraction : 10;
 
+			explicit operator float32() const
+			{
+				//auto tt = (Sign << 16) | ((Exponent + 0x1C000) << 13) | (Fraction << 13);
+				auto tt = ((halfFloat & 0x8000) << 16) | (((halfFloat & 0x7c00) + 0x1C000) << 13) | ((halfFloat & 0x03FF) << 13);
+				return *reinterpret_cast<float32*>(&tt);
+			}
+			
+			//uint16 Sign : 1, Exponent : 5, Fraction : 10;
+			uint16 halfFloat;
 		private:
-			float16(const uint32 x) : Sign((x >> 16) & 0x8000), Exponent((((x & 0x7f800000) - 0x38000000) >> 13) & 0x7c00), Fraction((x >> 13) & 0x03ff)
+			//float16(const uint32 x) : Sign((x >> 16) & 0x8000), Exponent((((x & 0x7f800000) - 0x38000000) >> 13) & 0x7c00), Fraction((x >> 13) & 0x03ff)
+			//{}
+
+			float16(const uint32 x) : halfFloat(((x >> 16) & 0x8000) | ((((x & 0x7f800000) - 0x38000000) >> 13) & 0x7c00) | ((x >> 13) & 0x03ff))
 			{}
 		};
 		
-		inline float32 StraightRaise(const float32 A, const uint8 Times)
+		inline float32 Power(float32 a, const uint32 times)
 		{
-			float32 Result = A;
+			if (!times) { return 1.0f; }
 
-			for (uint8 i = 0; i < Times - 1; i++)
-			{
-				Result *= A;
-			}
+			for (uint32 i = 0; i < times - 1; i++)
+				a *= a;
 
-			return Result;
+			return a;
 		}
 
 		inline constexpr float64 PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286;

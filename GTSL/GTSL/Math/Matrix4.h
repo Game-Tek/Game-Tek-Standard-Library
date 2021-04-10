@@ -92,6 +92,8 @@ namespace GTSL
 		explicit Matrix4(const class AxisAngle& axisAngle);
 		explicit Matrix4(const Vector3 position);
 
+		explicit Matrix4(const class Matrix3x4& matrix);
+
 		/**
 		 * \brief Sets all of this matrices' components to represent an Identity matrix.\n
 		 *
@@ -270,5 +272,17 @@ namespace GTSL
 		float32 operator()(const uint8 row, const uint8 column) const { return array[row * 4 + column]; }
 	private:
 		float32 array[12]{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 };
+
+		friend Matrix4;
 	};
+
+
+	inline Matrix4::Matrix4(const Matrix3x4& matrix) : array{
+		matrix.array[0], matrix.array[1], matrix.array[2], matrix.array[3],
+		matrix.array[4], matrix.array[5], matrix.array[6], matrix.array[7],
+		matrix.array[8], matrix.array[9],  matrix.array[10], matrix.array[11],
+		0, 0, 0, 1 }
+	{
+
+	}
 }

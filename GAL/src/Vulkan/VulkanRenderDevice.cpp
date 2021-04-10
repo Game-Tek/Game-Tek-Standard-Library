@@ -216,6 +216,8 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 
 	debug = createInfo.Debug;
 
+	VkDeviceCreateInfo vkDeviceCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+	
 	{
 		VkApplicationInfo vkApplicationInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
 		//vkEnumerateInstanceVersion(&vkApplicationInfo.apiVersion);
@@ -225,6 +227,24 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 		vkApplicationInfo.pApplicationName = createInfo.ApplicationName.begin();
 		vkApplicationInfo.pEngineName = "Game-Tek | GAL";
 
+		VkInstanceCreateInfo vkInstanceCreateInfo{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
+
+		auto setInstancepNext = [&](void* newPointer)
+		{
+			if (vkInstanceCreateInfo.pNext)
+			{
+				//pointer to last structure now extending vkInstanceCreateInfo
+				auto* str = static_cast<byte*>(const_cast<void*>(vkInstanceCreateInfo.pNext)); //constness is only there to guarantee VK will not touch it, WE can do it with no problem
+				void** strpNext = reinterpret_cast<void**>(str + sizeof(VkStructureType));
+				*strpNext = newPointer;
+				return;
+			}
+			else
+			{
+				vkInstanceCreateInfo.pNext = newPointer;
+			}
+		};
+		
 		Array<const char*, 8> instanceLayers;
 
 		if constexpr (_DEBUG) {
@@ -266,15 +286,16 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 		features.enabledValidationFeatureCount = enables.GetLength();
 		features.pEnabledValidationFeatures = enables.begin();
 
+		setInstancepNext(&features);
+		
 		VkDebugUtilsMessengerCreateInfoEXT vkDebugUtilsMessengerCreateInfoExt{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
-		vkDebugUtilsMessengerCreateInfoExt.pNext = debug ? &features : nullptr;
+		vkDebugUtilsMessengerCreateInfoExt.pNext = nullptr;
 		vkDebugUtilsMessengerCreateInfoExt.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 		vkDebugUtilsMessengerCreateInfoExt.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 		vkDebugUtilsMessengerCreateInfoExt.pfnUserCallback = debugCallback;
 		vkDebugUtilsMessengerCreateInfoExt.pUserData = this;
 #endif
 
-		VkInstanceCreateInfo vkInstanceCreateInfo{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
 		vkInstanceCreateInfo.pNext = debug ? &vkDebugUtilsMessengerCreateInfoExt : nullptr;
 		vkInstanceCreateInfo.pApplicationInfo = &vkApplicationInfo;
 		vkInstanceCreateInfo.enabledLayerCount = instanceLayers.GetLength();
@@ -407,7 +428,7 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 				if (!searchResult.State()) { deviceExtensions.EmplaceBack(name); return true; }
 				return false;
 			};
-
+			
 			{
 				VkPhysicalDeviceVulkan11Features* structure;
 				placeFeaturesStructure(&structure, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES);
@@ -508,7 +529,6 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 				}
 			}
 
-			VkDeviceCreateInfo vkDeviceCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
 			vkDeviceCreateInfo.pNext = &features2; //extended features
 			vkDeviceCreateInfo.queueCreateInfoCount = vkDeviceQueueCreateInfos.GetLength();
 			vkDeviceCreateInfo.pQueueCreateInfos = vkDeviceQueueCreateInfos.begin();

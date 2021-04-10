@@ -421,7 +421,7 @@ void GTSL::Window::BindToOS(const WindowCreateInfo& windowCreateInfo)
 	windowRect.top = 0; windowRect.left = 0;
 	windowRect.bottom = windowCreateInfo.Extent.Height; windowRect.right = windowCreateInfo.Extent.Width;
 	AdjustWindowRect(&windowRect, style, false);
-	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right, windowRect.bottom, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), &windowsCallData);
+	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), &windowsCallData);
 
 	GTSL_ASSERT(windowHandle, "Window failed to create!");
 

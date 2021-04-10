@@ -10,8 +10,11 @@ namespace GTSL
 	{
 		Range(I b, I e) : from(b), to(e) {}
 
-		I begin() { return from; }
-		I end() { return to; }
+		I& begin() { return from; }
+		I& end() { return to; }
+
+		const I& begin() const { return from; }
+		const I& end() const { return to; }
 
 		Range Reverse() const { return Range(end(), begin()); }
 		

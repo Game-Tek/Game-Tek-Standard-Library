@@ -418,9 +418,16 @@ namespace GTSL
 		 */
 		Result<uint32> Find(const T& obj) const noexcept
 		{
-			for (uint32 i = 0; i < GetLength(); ++i) { if (obj == data[i]) { return Result<uint32>(GTSL::MoveRef(i), true); } } return Result<uint32>(false);
+			for (uint32 i = 0; i < GetLength(); ++i) { if (obj == data[i]) { return Result<uint32>(MoveRef(i), true); } } return Result<uint32>(false);
 		}
 
+		template<typename F>
+		Result<uint32> LookFor(F&& function) const
+		{
+			for (uint32 i = 0; i < GetLength(); ++i) { if (function(data[i])) { return Result<uint32>(MoveRef(i), true); } }
+			return Result<uint32>(false);
+		}
+		
 		/**
 		 * \brief Returns a reference to the element at index.
 		 * \param index Index to element.

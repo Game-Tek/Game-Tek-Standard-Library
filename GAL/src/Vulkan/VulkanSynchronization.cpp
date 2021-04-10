@@ -2,7 +2,7 @@
 
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 
-GAL::VulkanFence::VulkanFence(const CreateInfo& createInfo)
+void GAL::VulkanFence::Initialize(const CreateInfo& createInfo)
 {
 	VkFenceCreateInfo vk_fence_create_info{ VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
 	vk_fence_create_info.flags = createInfo.IsSignaled;
@@ -42,18 +42,16 @@ void GAL::VulkanFence::ResetFences(const ResetFencesInfo& resetFencesInfo)
 	VK_CHECK(vkResetFences(resetFencesInfo.RenderDevice->GetVkDevice(), resetFencesInfo.Fences.ElementCount(), reinterpret_cast<const VkFence*>(resetFencesInfo.Fences.begin())))
 }
 
-GAL::VulkanSemaphore::VulkanSemaphore(const CreateInfo& createInfo)
+void GAL::VulkanSemaphore::Initialize(const CreateInfo& createInfo)
 {
-	//VkSemaphoreCreateInfo vk_semaphore_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-	//VkSemaphoreTypeCreateInfo vk_semaphore_type_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO };
-	//vk_semaphore_type_create_info.semaphoreType = VK_SEMAPHORE_TYPE_;
-	//vk_semaphore_type_create_info.initialValue = createInfo.InitialValue;
-	//vk_semaphore_create_info.pNext = &vk_semaphore_type_create_info;
+	VkSemaphoreCreateInfo vkSemaphoreCreateInfo{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+	VkSemaphoreTypeCreateInfo vkSemaphoreTypeCreateInfo{ VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO };
+	vkSemaphoreTypeCreateInfo.semaphoreType = createInfo.InitialValue == 0xFFFFFFFFFFFFFFFF ? VK_SEMAPHORE_TYPE_BINARY : VK_SEMAPHORE_TYPE_TIMELINE;
+	vkSemaphoreTypeCreateInfo.initialValue = createInfo.InitialValue == 0xFFFFFFFFFFFFFFFF ? 0 : createInfo.InitialValue;
+	vkSemaphoreCreateInfo.pNext = &vkSemaphoreTypeCreateInfo;
 
-	VkSemaphoreCreateInfo vk_semaphore_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-	//VkSemaphoreTypeCreateInfo vk_semaphore_type_create_info{ VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO };
-
-	VK_CHECK(vkCreateSemaphore(createInfo.RenderDevice->GetVkDevice(), &vk_semaphore_create_info, createInfo.RenderDevice->GetVkAllocationCallbacks(), &semaphore))
+	VK_CHECK(vkCreateSemaphore(createInfo.RenderDevice->GetVkDevice(), &vkSemaphoreCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &semaphore))
+	
 	SET_NAME(semaphore, VK_OBJECT_TYPE_SEMAPHORE, createInfo)
 }
 

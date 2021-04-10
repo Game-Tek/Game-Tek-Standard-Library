@@ -118,7 +118,7 @@ void GTSL::ToString(float32 num, StaticString<32>& string)
 		// Get the value of fraction part upto given no. 
 		// of points after dot. The third parameter  
 		// is needed to handle cases like 233.007 
-		fpart = fpart * Math::Power(10, 6);
+		fpart = fpart * Math::Power(10.0f, 6.0f);
 
 		intToStr((int32)fpart);
 

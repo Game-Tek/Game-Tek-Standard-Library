@@ -223,10 +223,10 @@ void GAL::VulkanCommandBuffer::ResetEvent(GAL::VulkanEvent event, GAL::VulkanPip
 	vkCmdResetEvent(commandBuffer, event.GetVkEvent(), pipelineStage);
 }
 
-GAL::VulkanCommandPool::VulkanCommandPool(const CreateInfo& createInfo)
+void GAL::VulkanCommandPool::Initialize(const CreateInfo& createInfo)
 {
 	VkCommandPoolCreateInfo vkCommandPoolCreateInfo{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
-	vkCommandPoolCreateInfo.queueFamilyIndex = createInfo.Queue->GetFamilyIndex();
+	vkCommandPoolCreateInfo.queueFamilyIndex = createInfo.Queue.GetFamilyIndex();
 	VK_CHECK(vkCreateCommandPool(createInfo.RenderDevice->GetVkDevice(), &vkCommandPoolCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &commandPool))
 
 	SET_NAME(commandPool, VK_OBJECT_TYPE_COMMAND_POOL, createInfo)

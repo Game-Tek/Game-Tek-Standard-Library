@@ -4,33 +4,51 @@
 
 #include "GAL/Vulkan/VulkanMemory.h"
 
-void GAL::VulkanTexture::GetMemoryRequirements(GetMemoryRequirementsInfo* info)
-{	
+void GAL::VulkanTexture::GetMemoryRequirements(const VulkanRenderDevice* renderDevice, MemoryRequirements* memoryRequirements,
+	VulkanTextureLayout initialLayout, VulkanTextureUses uses, VulkanTextureFormat format, GTSL::Extent3D extent,
+	VulkanTextureTiling tiling, GTSL::uint8 mipLevels)
+{
+	auto selectType = [](GTSL::Extent3D extent) -> VkImageType
+	{
+		if (extent.Width != 1) {
+			if (extent.Height != 1) {
+				if (extent.Depth != 1) {
+					return VK_IMAGE_TYPE_3D;
+				}
+
+				return VK_IMAGE_TYPE_2D;
+			}
+		}
+
+		return VK_IMAGE_TYPE_1D;
+	};
+	
 	VkImageCreateInfo vkImageCreateInfo{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	vkImageCreateInfo.imageType = static_cast<VkImageType>(info->CreateInfo->Dimensions);
-	vkImageCreateInfo.extent = Extent3DToVkExtent3D(info->CreateInfo->Extent);
-	vkImageCreateInfo.mipLevels = info->CreateInfo->MipLevels;
+	vkImageCreateInfo.imageType = selectType(extent);
+	vkImageCreateInfo.extent = Extent3DToVkExtent3D(extent);
+	vkImageCreateInfo.mipLevels = mipLevels;
 	vkImageCreateInfo.arrayLayers = 1;
-	vkImageCreateInfo.format = static_cast<VkFormat>(info->CreateInfo->Format);
-	vkImageCreateInfo.tiling = static_cast<VkImageTiling>(info->CreateInfo->Tiling);
-	vkImageCreateInfo.initialLayout = static_cast<VkImageLayout>(info->CreateInfo->InitialLayout);
-	vkImageCreateInfo.usage = static_cast<VkImageUsageFlags>(info->CreateInfo->Uses);
+	vkImageCreateInfo.format = static_cast<VkFormat>(format);
+	vkImageCreateInfo.tiling = static_cast<VkImageTiling>(tiling);
+	vkImageCreateInfo.initialLayout = static_cast<VkImageLayout>(initialLayout);
+	vkImageCreateInfo.usage = static_cast<VkImageUsageFlags>(uses);
 	vkImageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 	vkImageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	VK_CHECK(vkCreateImage(info->RenderDevice->GetVkDevice(), &vkImageCreateInfo, info->RenderDevice->GetVkAllocationCallbacks(), &image))
-	
+	VK_CHECK(vkCreateImage(renderDevice->GetVkDevice(), &vkImageCreateInfo, renderDevice->GetVkAllocationCallbacks(), &image))
+
 	VkMemoryRequirements vkMemoryRequirements;
-	vkGetImageMemoryRequirements(info->RenderDevice->GetVkDevice(), image, &vkMemoryRequirements);
-	info->MemoryRequirements.Size = static_cast<GTSL::uint32>(vkMemoryRequirements.size);
-	info->MemoryRequirements.Alignment = static_cast<GTSL::uint32>(vkMemoryRequirements.alignment);
-	info->MemoryRequirements.MemoryTypes = vkMemoryRequirements.memoryTypeBits;
+	vkGetImageMemoryRequirements(renderDevice->GetVkDevice(), image, &vkMemoryRequirements);
+	memoryRequirements->Size = static_cast<GTSL::uint32>(vkMemoryRequirements.size);
+	memoryRequirements->Alignment = static_cast<GTSL::uint32>(vkMemoryRequirements.alignment);
+	memoryRequirements->MemoryTypes = vkMemoryRequirements.memoryTypeBits;
 }
 
-void GAL::VulkanTexture::Initialize(const CreateInfo& createInfo)
+void GAL::VulkanTexture::Initialize(const VulkanRenderDevice* renderDevice, VulkanDeviceMemory deviceMemory,
+	GTSL::uint32 offset)
 {
-	SET_NAME(image, VK_OBJECT_TYPE_IMAGE, createInfo)
-	VK_CHECK(vkBindImageMemory(createInfo.RenderDevice->GetVkDevice(), image, static_cast<VkDeviceMemory>(createInfo.Memory.GetVkDeviceMemory()), createInfo.Offset))
+	//SET_NAME(image, VK_OBJECT_TYPE_IMAGE, createInfo);
+	VK_CHECK(vkBindImageMemory(renderDevice->GetVkDevice(), image, static_cast<VkDeviceMemory>(deviceMemory.GetVkDeviceMemory()), offset))
 }
 
 void GAL::VulkanTexture::Destroy(const VulkanRenderDevice* renderDevice)

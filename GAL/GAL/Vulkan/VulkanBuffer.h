@@ -7,27 +7,16 @@
 
 namespace GAL
 {
+	class VulkanRenderDevice;
+	
 	class VulkanBuffer final : public Buffer
 	{
 	public:
 		VulkanBuffer() = default;
-
-		struct CreateInfo final : VulkanCreateInfo
-		{
-			GTSL::uint32 Size = 0, Offset = 0;
-			VulkanBufferType::value_type BufferType = 0;
-			VulkanDeviceMemory Memory;
-		};
-		//VulkanBuffer(const CreateInfo& createInfo);
-
-		struct GetMemoryRequirementsInfo final : VulkanRenderInfo
-		{
-			const CreateInfo* CreateInfo;
-			MemoryRequirements MemoryRequirements;
-		};
-		void GetMemoryRequirements(GetMemoryRequirementsInfo* info);
 		
-		void Initialize(const CreateInfo& info);
+		void GetMemoryRequirements(const VulkanRenderDevice* renderDevice, GTSL::uint32 size, VulkanBufferType::value_type bufferType, MemoryRequirements* memoryRequirements);
+		
+		void Initialize(const VulkanRenderDevice* renderDevice, const MemoryRequirements& memoryRequirements, VulkanDeviceMemory memory, GTSL::uint32 offset);
 		
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		

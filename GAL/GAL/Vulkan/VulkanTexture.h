@@ -5,33 +5,17 @@
 
 namespace GAL
 {
+	class VulkanRenderDevice;
+	
 	class VulkanTexture final
 	{
 	public:
 		//VulkanTexture() = default;
 
-		struct CreateInfo final : VulkanCreateInfo
-		{
-			VulkanTextureLayout InitialLayout;
-			VulkanTextureUses Uses;
-			VulkanTextureFormat Format;
-			GTSL::Extent3D Extent{ 1280, 720, 1 };
-			VulkanTextureTiling Tiling;
-			VulkanDimensions Dimensions;
-			GTSL::uint8 MipLevels = 1;
-			GTSL::uint32 Offset = 0;
-			VulkanDeviceMemory Memory;
-		};
-		//explicit VulkanTexture(const CreateInfo& createInfo);
-
-		struct GetMemoryRequirementsInfo final : VulkanRenderInfo
-		{
-			const CreateInfo* CreateInfo;
-			MemoryRequirements MemoryRequirements;
-		};
-		void GetMemoryRequirements(GetMemoryRequirementsInfo* info);
+		void GetMemoryRequirements(const VulkanRenderDevice* renderDevice, MemoryRequirements* memoryRequirements, VulkanTextureLayout initialLayout, VulkanTextureUses uses,
+			VulkanTextureFormat format, GTSL::Extent3D extent, VulkanTextureTiling tiling, GTSL::uint8 mipLevels);
 		
-		void Initialize(const CreateInfo& createInfo);
+		void Initialize(const VulkanRenderDevice* renderDevice, VulkanDeviceMemory deviceMemory, GTSL::uint32 offset);
 		
 		void Destroy(const class VulkanRenderDevice* renderDevice);
 		

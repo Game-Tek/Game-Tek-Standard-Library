@@ -51,4 +51,15 @@ namespace GTSL
 
 	template<Enum E>
 	using UnderlyingType = __underlying_type(E);
+
+	template<typename F, typename... ARGS>
+	void MultiFor(F&& function, uint32 length, ARGS&&... iterators)
+	{
+		auto add = [](auto& n) { ++n; };
+		
+		for (uint32 i = 0; i < length; ++i) {
+			function(i, *(iterators.begin())...);
+			add(iterators.begin()...);
+		}
+	}
 }

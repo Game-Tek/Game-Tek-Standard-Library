@@ -188,11 +188,10 @@ namespace GTSL
 		}
 
 		template<typename... ARGS>
-		constexpr uint32 EmplaceBack(ARGS&&... args)
+		constexpr T& EmplaceBack(ARGS&&... args)
 		{
 			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
-			::new(this->data + this->length) T(GTSL::ForwardRef<ARGS>(args)...);
-			return this->length++;
+			return *::new(this->data + this->length++) T(GTSL::ForwardRef<ARGS>(args)...);
 		}
 
 		constexpr void Resize(uint32 size)
@@ -204,8 +203,7 @@ namespace GTSL
 		constexpr void PopBack()
 		{
 			GTSL_ASSERT(this->length != 0, "Array's length is already 0. Cannot pop any more elements!");
-			this->data[this->length].~T();
-			--this->length;
+			this->data[this->length--].~T();
 		}
 
 		Result<uint32> Find(const T& obj) const
