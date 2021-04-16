@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Assert.h"
+#include "Pair.h"
 #include "StringCommon.h"
 
 namespace GTSL
@@ -125,10 +126,10 @@ namespace GTSL
 			return false;
 		}
 		
-		[[nodiscard]] GTSL::Result<uint32> FindLast(UTF8 c) const
+		[[nodiscard]] GTSL::Result<Pair<uint32, uint32>> FindLast(UTF8 c) const
 		{
-			for (uint32 i = length, t = 0; t < length; --i, ++t) { if (array[i] == c) { return GTSL::Result<uint32>(GTSL::MoveRef(i), true); } }
-			return GTSL::Result<uint32>(0, false);
+			for (uint32 i = length, t = 0; t < length; --i, ++t) { if (array[i] == c) { return GTSL::Result<Pair<uint32, uint32>>(Pair<uint32, uint32>(t, i), true); } }
+			return GTSL::Result<Pair<uint32, uint32>>(false);
 		}
 
 		constexpr StaticString& operator+=(const char* cstring) noexcept

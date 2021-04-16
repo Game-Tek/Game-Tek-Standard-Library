@@ -64,13 +64,21 @@ namespace GTSL
 			return this->from[i];
 		}
 
-		operator Range<const I*>() const { return Range<const I*>(static_cast<const I*>(this->from), static_cast<const I*>(this->to)); }
+		constexpr operator Range<const I*>() const { return Range<const I*>(static_cast<const I*>(this->from), static_cast<const I*>(this->to)); }
 		
 	private:
 		I* from = nullptr,* to = nullptr;
 
 		friend struct Range;
 	};
+
+	template<typename A, typename B>
+	inline bool CompareContents(const GTSL::Range<const A*> a, const Range<const B*> b)
+	{
+		if (a.ElementCount() != b.ElementCount()) { return false; }
+		for (uint64 i = 0; i < a.ElementCount(); ++i) { if (a[i] != b[i]) { return false; } }
+		return true;
+	}
 	
 	//template<typename T>
 	//class Ranger

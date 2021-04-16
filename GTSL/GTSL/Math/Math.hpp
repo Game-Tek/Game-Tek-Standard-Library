@@ -10,7 +10,6 @@
 #include "Quaternion.h"
 #include "Matrix4.h"
 
-#include "Transform3.h"
 #include "Plane.h"
 #include "Rotator.h"
 #include "GTSL/Assert.h"
@@ -800,11 +799,70 @@ namespace GTSL
 		inline Vector4 GetTranslation(const Matrix4& matrix) { return Vector4(matrix(0, 3), matrix(1, 3), matrix(2, 3), matrix(3, 3)); }
 		
 		//Modifies the given matrix to make it a translation matrix.
-		inline void Translate(Matrix4& matrix, const Vector3& vector)
+		inline void AddTranslation(Matrix4& matrix, const Vector3 vector)
 		{
-			matrix *= Matrix4(vector);
+			matrix(0, 3) += vector[0]; matrix(1, 3) += vector[1]; matrix(2, 3) += vector[2];
 		}
 
+		//Modifies the given matrix to make it a translation matrix.
+		inline void SetTranslation(Matrix4& matrix, const Vector3 vector)
+		{
+			matrix(0, 3) = vector[0]; matrix(1, 3) = vector[1]; matrix(2, 3) = vector[2];
+		}
+
+		inline void SetTranslation(Matrix3x4& matrix, const Vector3 vector)
+		{
+			matrix[0][3] = vector[0]; matrix[1][3] = vector[1]; matrix[2][3] = vector[2];
+		}
+
+		inline void AddRotation(Matrix4& matrix, const Quaternion quaternion) {
+			matrix *= Matrix4(quaternion);
+		}
+
+		inline void SetRotation(Matrix4& matrix, const Quaternion quaternion) {
+			const auto xx = quaternion.X() * quaternion.X();
+			const auto xy = quaternion.X() * quaternion.Y();
+			const auto xz = quaternion.X() * quaternion.Z();
+			const auto xw = quaternion.X() * quaternion.W();
+			const auto yy = quaternion.Y() * quaternion.Y();
+			const auto yz = quaternion.Y() * quaternion.Z();
+			const auto yw = quaternion.Y() * quaternion.W();
+			const auto zz = quaternion.Z() * quaternion.Z();
+			const auto zw = quaternion.Z() * quaternion.W();
+
+			matrix[0][0] = 1 - 2 * (yy + zz);
+			matrix[0][1] = 2 * (xy - zw);
+			matrix[0][2] = 2 * (xz + yw);
+			matrix[1][0] = 2 * (xy + zw);
+			matrix[1][1] = 1 - 2 * (xx + zz);
+			matrix[1][2] = 2 * (yz - xw);
+			matrix[2][0] = 2 * (xz - yw);
+			matrix[2][1] = 2 * (yz + xw);
+			matrix[2][2] = 1 - 2 * (xx + yy);
+		}
+		
+		inline void AddRotation(Matrix3x4& matrix, const Quaternion quaternion) {
+			matrix *= Matrix3x4(quaternion);
+		}
+
+		inline void SetRotation(Matrix3x4& matrix, const Quaternion quaternion) {
+			matrix *= Matrix3x4(quaternion);
+		}
+
+		//Modifies the given matrix to make it a translation matrix.
+		inline void AddScale(Matrix4& matrix, const Vector3 vector)
+		{
+			matrix(0, 0) *= vector[0]; matrix(0, 1) *= vector[0]; matrix(0, 2) *= vector[0]; matrix(0, 3) *= vector[0];
+			matrix(1, 0) *= vector[1]; matrix(1, 1) *= vector[1]; matrix(1, 2) *= vector[1]; matrix(1, 3) *= vector[1];
+			matrix(2, 0) *= vector[2]; matrix(2, 1) *= vector[2]; matrix(2, 2) *= vector[2]; matrix(2, 3) *= vector[2];
+		}
+
+		//Modifies the given matrix to make it a translation matrix.
+		inline void SetScale(Matrix4& matrix, const Vector3 vector)
+		{
+			matrix(0, 0) = vector[0]; matrix(1, 1) = vector[1]; matrix(2, 2) = vector[2];
+		}
+		
 		inline Matrix4 NormalToRotation(Vector3 normal)
 		{
 			// Find a vector in the plane
@@ -842,9 +900,9 @@ namespace GTSL
 		{
 			Matrix4 Result(1.0f);
 
-			Result[0] = A.X();
-			Result[5] = A.Y();
-			Result[10] = A.Z();
+			Result[0][0] = A.X();
+			Result[1][1] = A.Y();
+			Result[2][2] = A.Z();
 
 			return Result;
 		}
@@ -852,22 +910,6 @@ namespace GTSL
 		inline void Scale(Matrix4& matrix, const Vector3& scale)
 		{
 			matrix *= Scaling(scale);
-		}
-
-		inline Matrix4 Transformation(const Transform3& _A)
-		{
-			Matrix4 Return;
-			Translate(Return, _A.Position);
-			//Rotate(Return, _A.Rotation);
-			Scale(Return, _A.Scale);
-			return Return;
-		}
-
-		inline void Transform(Matrix4& _A, Transform3& _B)
-		{
-			Translate(_A, _B.Position);
-			//Rotate(_A, _B.Rotation);
-			Scale(_A, _B.Scale);
 		}
 
 		inline void BuildPerspectiveMatrix(Matrix4& matrix, const float32 fov, const float32 aspectRatio, const float32 nearPlane, const float32 farPlane)

@@ -13,36 +13,14 @@ namespace GTSL
 		FileQuery(const StaticString<Application::MAX_PATH_LENGTH>& query) : query(query)
 		{
 		}
+		
+		bool DoQuery();
 
-		struct QueryResult
-		{
-			StaticString<Application::MAX_PATH_LENGTH> FileNameWithExtension;
-		};
-		
-		bool StartQuery(QueryResult& query);
-		bool NextQuery(QueryResult& query) const;
-		void EndQuery() const;
-		
+		auto GetFileNameWithExtension() const { return fileNameWithExtension; }
+	
 	private:
 		StaticString<Application::MAX_PATH_LENGTH> query;
+		StaticString<Application::MAX_PATH_LENGTH> fileNameWithExtension;
 		handle_type handle = nullptr;
 	};
-	
-	template<typename FT>
-	void ForEach(FileQuery& fileQuery, FT&& function)
-	{
-		FileQuery::QueryResult query_result;
-		
-		if(fileQuery.StartQuery(query_result))
-		{
-			function(query_result);
-			while(fileQuery.NextQuery(query_result)) { function(query_result); }
-		}
-		else
-		{
-			return;
-		}
-		
-		fileQuery.EndQuery();
-	}
 }

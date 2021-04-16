@@ -75,8 +75,8 @@ namespace GTSL
 		//	return true;
 		//}
 
-		operator Range<UTF8*>() const { return Range<UTF8*>(data); }
-		operator Range<const UTF8*>() const { return Range<const UTF8*>(data); }
+		operator Range<UTF8*>() const { return Range<UTF8*>(begin(), end()); }
+		operator Range<const UTF8*>() const { return Range<const UTF8*>(begin(), end()); }
 
 		[[nodiscard]] const char* c_str() const { return data; }
 
@@ -173,6 +173,21 @@ namespace GTSL
 			length += stringLength - 1;
 			return *this;
 		}
+
+		String& operator+=(Range<const UTF8*> range)
+		{
+			auto stringLength = range.ElementCount();
+			copy(stringLength, range.begin());
+			length += stringLength - 1;
+			return *this;
+		}
+
+		String& operator+=(UTF8 character)
+		{
+			data[length] = character;
+			++length;
+			return *this;
+		}
 		
 		/**
 		* \brief Returns an index to the first char in the string that is equal to c. If no such character is found npos() is returned.
@@ -191,11 +206,11 @@ namespace GTSL
 		 * \param c Char to Find.
 		 * \return Index to found char.
 		 */
-		[[nodiscard]] Result<length_type> FindLast(char c) const
+		[[nodiscard]] Result<Pair<length_type, uint32>> FindLast(char c) const
 		{
-			length_type i = 0;
-			for (const auto& e : data) { if (e == c) { return Result<length_type>(MoveRef(i), true); } ++i; }
-			return Result<length_type>(false);
+			length_type i = 1, t = GetLength();
+			for (const auto& e : data) { if (e == c) { return Result<Pair<length_type, uint32>>(Pair<length_type, uint32>(i, t), true); } ++i; --t; }
+			return Result<Pair<length_type, uint32>>(false);
 		}
 
 		/**

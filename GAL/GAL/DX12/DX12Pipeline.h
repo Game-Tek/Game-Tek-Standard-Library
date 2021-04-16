@@ -73,7 +73,7 @@ namespace GAL
 		ID3D12RootSignature* rootSignature = nullptr;
 	};
 
-	class DX12Pipeline
+	class DX12Pipeline : public Pipeline
 	{};
 	
 	class DX12RasterPipeline final : public DX12Pipeline
@@ -85,7 +85,7 @@ namespace GAL
 		{
 			const class VulkanRenderPass* RenderPass = nullptr;
 			GTSL::Extent2D SurfaceExtent;
-			GTSL::Range<const DX12ShaderDataType*> VertexDescriptor;
+			GTSL::Range<const VertexElement*> VertexDescriptor;
 			DX12PipelineDescriptor PipelineDescriptor;
 			GTSL::Range<const DX12ShaderInfo*> Stages;
 			bool IsInheritable = false;

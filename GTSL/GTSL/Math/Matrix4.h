@@ -102,114 +102,60 @@ namespace GTSL
 		 * 0 0 1 0\n
 		 * 0 0 0 1\n
 		 */
-		void MakeIdentity()
-		{
-			for (auto& element : array) { element = 0.0f; }
-
-			array[0] = 1.0f; array[5] = 1.0f; array[10] = 1.0f; array[15] = 1.0f;
+		void MakeIdentity() {
+			(*this) = Matrix4();
 		}
 
 		/**
 		 * \brief Returns a pointer to the matrices' data array.
 		 * \return const float* to the matrices' data.
 		 */
-		[[nodiscard]] const float32* GetData() const { return array; }
-		
-		[[nodiscard]] const float32* GetData(uint8 row, uint8 column) const { return &array[row * 4 + column]; }
-		[[nodiscard]] float32* GetData(uint8 row, uint8 column) { return &array[row * 4 + column]; }
+		[[nodiscard]] const float32* GetData() const { return array[0]; }
 
-		[[nodiscard]] Vector4 GetXBasisVector() const { return Vector4(array[0], array[1], array[2], array[3]); }
-		[[nodiscard]] Vector4 GetYBasisVector() const { return Vector4(array[4], array[5], array[6], array[7]); }
-		[[nodiscard]] Vector4 GetZBasisVector() const { return Vector4(array[8], array[9], array[10], array[11]); }
-		[[nodiscard]] Vector4 GetWBasisVector() const { return Vector4(array[12], array[13], array[14], array[15]); }
+		[[nodiscard]] Vector4 GetXBasisVector() const { return Vector4(array[0][0], array[0][1], array[0][2], array[0][3]); }
+		[[nodiscard]] Vector4 GetYBasisVector() const { return Vector4(array[1][0], array[1][1], array[1][2], array[1][3]); }
+		[[nodiscard]] Vector4 GetZBasisVector() const { return Vector4(array[2][0], array[2][1], array[2][2], array[2][3]); }
+		[[nodiscard]] Vector4 GetWBasisVector() const { return Vector4(array[3][0], array[3][1], array[3][2], array[3][3]); }
 		
 		void Transpose();
 
-		Matrix4 operator+(const float other) const
+		Matrix4& operator+=(const float32 other)
 		{
-			Matrix4 Result;
-
-			for (uint8 i = 0; i < MATRIX_SIZE; i++)
-			{
-				Result[i] += other;
-			}
-
-			return Result;
-		}
-
-		Matrix4 operator+(const Matrix4& other) const
-		{
-			Matrix4 Result;
-
-			for (uint8 i = 0; i < MATRIX_SIZE; i++)
-			{
-				Result[i] += other[i];
-			}
-
-			return Result;
-		}
-
-		Matrix4& operator+=(const float other)
-		{
-			for (float& i : array)
-			{
-				i += other;
-			}
+			array[0][0] -= other; array[0][1] -= other; array[0][2] -= other; array[0][3] -= other;
+			array[1][0] -= other; array[1][1] -= other; array[1][2] -= other; array[1][3] -= other;
+			array[2][0] -= other; array[2][1] -= other; array[2][2] -= other; array[2][3] -= other;
+			array[3][0] -= other; array[3][1] -= other; array[3][2] -= other; array[3][3] -= other;
 
 			return *this;
 		}
 
 		Matrix4& operator+=(const Matrix4& other)
 		{
-			for (uint8 i = 0; i < MATRIX_SIZE; i++)
-			{
-				array[i] += other[i];
-			}
+			array[0][0] += other[0][0]; array[0][1] += other[0][1]; array[0][2] += other[0][2]; array[0][3] += other[0][3];
+			array[1][0] += other[1][0]; array[1][1] += other[1][1]; array[1][2] += other[1][2]; array[1][3] += other[1][3];
+			array[2][0] += other[2][0]; array[2][1] += other[2][1]; array[2][2] += other[2][2]; array[2][3] += other[2][3];
+			array[3][0] += other[3][0]; array[3][1] += other[3][1]; array[3][2] += other[3][2]; array[3][3] += other[3][3];
 
 			return *this;
 		}
 
-		Matrix4 operator-(const float other) const
-		{
-			Matrix4 Result;
-
-			for (uint8 i = 0; i < MATRIX_SIZE; i++)
-			{
-				Result[i] -= other;
-			}
-
-			return Result;
-		}
-
-		Matrix4 operator-(const Matrix4& other) const
-		{
-			Matrix4 Result;
-
-			for (uint8 i = 0; i < MATRIX_SIZE; i++)
-			{
-				Result[i] -= other[i];
-			}
-
-			return Result;
-		}
-
 		Matrix4& operator-=(const float other)
 		{
-			for (uint8 i = 0; i < MATRIX_SIZE; i++)
-			{
-				array[i] -= other;
-			}
+			array[0][0] -= other; array[0][1] -= other; array[0][2] -= other; array[0][3] -= other;
+			array[1][0] -= other; array[1][1] -= other; array[1][2] -= other; array[1][3] -= other;
+			array[2][0] -= other; array[2][1] -= other; array[2][2] -= other; array[2][3] -= other;
+			array[3][0] -= other; array[3][1] -= other; array[3][2] -= other; array[3][3] -= other;
 
 			return *this;
 		}
 
 		Matrix4& operator-=(const Matrix4& other)
 		{
-			for (uint8 i = 0; i < MATRIX_SIZE; i++)
-			{
-				array[i] -= other[i];
-			}
-
+			array[0][0] -= other[0][0]; array[0][1] -= other[0][1]; array[0][2] -= other[0][2]; array[0][3] -= other[0][3];
+			array[1][0] -= other[1][0]; array[1][1] -= other[1][1]; array[1][2] -= other[1][2]; array[1][3] -= other[1][3];
+			array[2][0] -= other[2][0]; array[2][1] -= other[2][1]; array[2][2] -= other[2][2]; array[2][3] -= other[2][3];
+			array[3][0] -= other[3][0]; array[3][1] -= other[3][1]; array[3][2] -= other[3][2]; array[3][3] -= other[3][3];
+			
 			return *this;
 		}
 
@@ -217,10 +163,10 @@ namespace GTSL
 		{
 			Matrix4 Result;
 
-			for (uint8 i = 0; i < MATRIX_SIZE; i++)
-			{
-				Result[i] *= other;
-			}
+			Result[0][0] *= other; Result[0][1] *= other; Result[0][2] *= other; Result[0][3] *= other;
+			Result[1][0] *= other; Result[1][1] *= other; Result[1][2] *= other; Result[1][3] *= other;
+			Result[2][0] *= other; Result[2][1] *= other; Result[2][2] *= other; Result[2][3] *= other;
+			Result[3][0] *= other; Result[3][1] *= other; Result[3][2] *= other; Result[3][3] *= other;
 
 			return Result;
 		}
@@ -229,9 +175,9 @@ namespace GTSL
 		{
 			Vector3 result;
 
-			result.X() = array[0] * other.X() + array[1] * other.Y() + array[2]  * other.Z() + array[3]  * 1/*W*/;
-			result.Y() = array[4] * other.X() + array[5] * other.Y() + array[6]  * other.Z() + array[7]  * 1/*W*/;
-			result.Z() = array[8] * other.X() + array[9] * other.Y() + array[10] * other.Z() + array[11] * 1/*W*/;
+			result.X() = array[0][0] * other.X() + array[0][1] * other.Y() + array[0][2] * other.Z() + array[0][3] * 1/*W*/;
+			result.Y() = array[1][0] * other.X() + array[1][1] * other.Y() + array[1][2] * other.Z() + array[1][3] * 1/*W*/;
+			result.Z() = array[2][0] * other.X() + array[2][1] * other.Y() + array[2][2] * other.Z() + array[2][3] * 1/*W*/;
 
 			return result;
 		}
@@ -246,14 +192,14 @@ namespace GTSL
 
 		Matrix4& operator*=(const Matrix4& other);
 
-		float32& operator[](const uint8 index) { return array[index]; }
-		float32 operator[](const uint8 index) const { return array[index]; }
+		float32& operator()(const uint8 row, const uint8 column) { return array[row][column]; }
+		float32 operator()(const uint8 row, const uint8 column) const { return array[row][column]; }
 
-		float32& operator()(const uint8 row, const uint8 column) { return array[row * 4 + column]; }
-		float32 operator()(const uint8 row, const uint8 column) const { return array[row * 4 + column]; }
-
+		float32* operator[](const uint8 row) { return array[row]; }
+		const float32* operator[](const uint8 row) const { return array[row]; }
+		
 	private:
-		float32 array[MATRIX_SIZE]{ 1.0f, 0, 0, 0, 0, 1.0f, 0, 0, 0, 0, 1.0f, 0, 0, 0, 0, 1.0f };
+		float32 array[4][4]{ { 1.0f, 0, 0, 0 }, { 0, 1.0f, 0, 0 }, { 0, 0, 1.0f, 0 }, { 0, 0, 0, 1.0f } };
 	};
 
 	class Matrix3x4
@@ -262,25 +208,28 @@ namespace GTSL
 		Matrix3x4() = default;
 
 		explicit Matrix3x4(const float32 i) : array{ i, 0.0f, 0.0f, 0.0f, 0.0f, i, 0.0f, 0.0f, 0.0f, 0.0f, i, 0.0f } {}
-		explicit Matrix3x4(const Matrix4& matrix4) : array{ matrix4[0], matrix4[1], matrix4[2], matrix4[3], matrix4[4], matrix4[5], matrix4[6], matrix4[7], matrix4[8], matrix4[9], matrix4[10], matrix4[11] } {}
+		explicit Matrix3x4(const Matrix4& matrix4) : array{ matrix4[0][0], matrix4[0][1], matrix4[0][2], matrix4[0][3],
+			matrix4[1][0], matrix4[1][1], matrix4[1][2], matrix4[1][3],
+			matrix4[2][0], matrix4[2][1], matrix4[2][2], matrix4[2][3] }
+		{}
 		explicit Matrix3x4(const Vector3 vector3) : array{ 0, 0, 0, vector3.X(), 0, 0, 0, vector3.Y(), 0, 0, 0, vector3.Z() } {}
+		explicit Matrix3x4(const class Quaternion& quaternion);
 		
-		float32& operator[](const uint8 index) { return array[index]; }
-		float32 operator[](const uint8 index) const { return array[index]; }
+		float32* operator[](const uint8 index) { return array[index]; }
+		const float32* operator[](const uint8 index) const { return array[index]; }
 
-		float32& operator()(const uint8 row, const uint8 column) { return array[row * 4 + column]; }
-		float32 operator()(const uint8 row, const uint8 column) const { return array[row * 4 + column]; }
+		Matrix3x4& operator*=(const Matrix3x4& other);
 	private:
-		float32 array[12]{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 };
+		float32 array[3][4]{ { 1, 0, 0, 0 }, { 0, 1, 0, 0 }, { 0, 0, 1, 0 } };
 
 		friend Matrix4;
 	};
 
 
 	inline Matrix4::Matrix4(const Matrix3x4& matrix) : array{
-		matrix.array[0], matrix.array[1], matrix.array[2], matrix.array[3],
-		matrix.array[4], matrix.array[5], matrix.array[6], matrix.array[7],
-		matrix.array[8], matrix.array[9],  matrix.array[10], matrix.array[11],
+		matrix.array[0][0], matrix.array[0][1], matrix.array[0][2], matrix.array[0][3],
+		matrix.array[1][0], matrix.array[1][1], matrix.array[1][2], matrix.array[1][3],
+		matrix.array[2][0], matrix.array[2][1], matrix.array[2][2], matrix.array[2][3],
 		0, 0, 0, 1 }
 	{
 

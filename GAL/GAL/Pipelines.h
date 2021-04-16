@@ -4,6 +4,8 @@
 #include <GTSL/Extent.h>
 #include <GTSL/Range.h>
 
+#include "GTSL/ShortString.hpp"
+
 namespace GAL
 {
 	struct StencilState
@@ -41,6 +43,19 @@ namespace GAL
 	public:
 
 		static constexpr GTSL::uint8 MAX_VERTEX_ELEMENTS = 20;
+
+		struct VertexElement {
+			GTSL::ShortString<64> Identifier;
+			GTSL::uint8 Index = 0;
+			bool Enabled; ShaderDataType Type;
+		};
+
+		static constexpr auto POSITION = GTSL::ShortString<64>("POSITION");
+		static constexpr auto NORMAL = GTSL::ShortString<64>("NORMAL");
+		static constexpr auto TANGENT = GTSL::ShortString<64>("TANGENT");
+		static constexpr auto BITANGENT = GTSL::ShortString<64>("BITANGENT");
+		static constexpr auto TEXTURE_COORDINATES = GTSL::ShortString<64>("TEXTURE_COORDINATES");
+		static constexpr auto COLOR = GTSL::ShortString<64>("COLOR");
 		
 		//struct ShaderInfo
 		//{

@@ -138,10 +138,10 @@ Matrix4 Math::Inverse(const Matrix4& matrix)
 	// A is a matrix, then i(A) or iA means inverse of A, A# (or A_ in code) means adjugate of A, |A| (or detA in code) is determinant, tr(A) is trace
 
 	// sub matrices
-	auto vec0 = _mm_load_ps(matrix.GetData(0, 0));
-	auto vec1 = _mm_load_ps(matrix.GetData(1, 0));
-	auto vec2 = _mm_load_ps(matrix.GetData(2, 0));
-	auto vec3 = _mm_load_ps(matrix.GetData(3, 0));
+	auto vec0 = _mm_load_ps(matrix[0]);
+	auto vec1 = _mm_load_ps(matrix[1]);
+	auto vec2 = _mm_load_ps(matrix[2]);
+	auto vec3 = _mm_load_ps(matrix[3]);
 	
 	__m128 A = VecShuffle_0101(vec0, vec1);
 	__m128 B = VecShuffle_2323(vec0, vec1);
@@ -200,10 +200,10 @@ Matrix4 Math::Inverse(const Matrix4& matrix)
 	Matrix4 result;
 	
 	// apply adjugate and store, here we combine adjugate shuffle and store shuffle
-	_mm_store_ps(result.GetData(0, 0), VecShuffle(X_, Y_, 3, 1, 3, 1));
-	_mm_store_ps(result.GetData(1, 0), VecShuffle(X_, Y_, 2, 0, 2, 0));
-	_mm_store_ps(result.GetData(2, 0), VecShuffle(Z_, W_, 3, 1, 3, 1));
-	_mm_store_ps(result.GetData(3, 0), VecShuffle(Z_, W_, 2, 0, 2, 0));
+	_mm_store_ps(result[0], VecShuffle(X_, Y_, 3, 1, 3, 1));
+	_mm_store_ps(result[1], VecShuffle(X_, Y_, 2, 0, 2, 0));
+	_mm_store_ps(result[2], VecShuffle(Z_, W_, 3, 1, 3, 1));
+	_mm_store_ps(result[3], VecShuffle(Z_, W_, 2, 0, 2, 0));
 
 	return result;
 }

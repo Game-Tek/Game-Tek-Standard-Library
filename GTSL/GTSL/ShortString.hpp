@@ -20,18 +20,31 @@ namespace GTSL
 			array[SIZE - 1] = SIZE;
 		}
 
-		operator Range<UTF8*>() { return Range<UTF8*>(GetLength(), array); }
-		operator Range<const UTF8*>() const { return Range<const UTF8*>(GetLength(), array); }
-
-		constexpr ShortString(const UTF8* text)
+		template<uint8 N>
+		constexpr ShortString(const ShortString<N>& other) : ShortString()
 		{
-			array[SIZE - 1] = SIZE;
+			(*this) += other;
+		}
+
+		template<uint64 N>
+		constexpr ShortString(const char(&string)[N]) : ShortString()
+		{
+			(*this) += string;
+		}
+		
+		constexpr operator Range<UTF8*>() { return Range<UTF8*>(GetLength(), array); }
+		constexpr operator Range<const UTF8*>() const { return Range<const UTF8*>(GetLength(), array); }
+
+		constexpr const UTF8* begin() const { return array; }
+		constexpr const UTF8* end() const { return array + GetLength(); }
+		
+		constexpr ShortString(const UTF8* text) : ShortString()
+		{
 			(*this) += Range<const UTF8*>(StringLength(text), text);
 		}
 
-		constexpr ShortString(const GTSL::Range<const UTF8*> text)
+		constexpr ShortString(const GTSL::Range<const UTF8*> text) : ShortString()
 		{
-			array[SIZE - 1] = SIZE;
 			(*this) += text;
 		}
 
@@ -43,11 +56,20 @@ namespace GTSL
 			array[SIZE - 1] = static_cast<uint8>(oldSize - toCopy);
 			return *this;
 		}
+
+		template<uint8 N>
+		constexpr bool operator==(const ShortString<N>& other) const {
+			if (GetLength() != other.GetLength()) { return false; }
+			for (uint8 i = 0; i < GetLength(); ++i) { if (array[i] != other.array[i]) { return false; } }
+			return true;
+		}
 		
 		//WITH NULL
 		[[nodiscard]] constexpr uint8 GetLength() const { return SIZE - array[SIZE - 1]; }
 		
 	private:
 		UTF8 array[SIZE]{ 0 };
+
+		friend class ShortString;
 	};
 }

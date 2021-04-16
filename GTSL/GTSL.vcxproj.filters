@@ -162,9 +162,6 @@
     <ClInclude Include="GTSL\Math\Rotator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\Math\Transform3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Math\Vector2.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -6,6 +6,7 @@
 #include "Vulkan.h"
 #include "VulkanRenderPass.h"
 #include "GTSL/Array.hpp"
+#include "GTSL/ShortString.hpp"
 
 namespace GTSL {
 	class BufferInterface;
@@ -44,6 +45,20 @@ namespace GAL
 		VkPipelineCache pipelineCache = nullptr;
 	};
 
+	class VulkanShader final : public Shader
+	{
+	public:
+		VulkanShader() = default;
+		void Initialize(const VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::byte*> blob);
+		
+		void Destroy(const VulkanRenderDevice* renderDevice);
+
+		VkShaderModule GetVkShaderModule() const { return vkShaderModule; }
+	
+	private:
+		VkShaderModule vkShaderModule;
+	};
+	
 	struct VulkanPipelineDescriptor
 	{
 		CullMode CullMode = CullMode::CULL_NONE;
@@ -87,16 +102,17 @@ namespace GAL
 	class VulkanPipeline : public Pipeline
 	{
 	public:
-		struct ShaderInfo
-		{
-			VulkanShaderType Type = VulkanShaderType::VERTEX;
-			GTSL::Range<const GTSL::byte*> Blob;
-		};
 
 		struct CreateInfo : VulkanCreateInfo
 		{
 			VulkanPipelineLayout PipelineLayout;
 			VulkanPipelineCache PipelineCache;
+		};
+
+		struct ShaderInfo
+		{
+			VulkanShader Shader; VulkanShaderType Type;
+			GTSL::Range<const GTSL::byte*> Blob;
 		};
 		
 		[[nodiscard]] VkPipeline GetVkPipeline() const { return pipeline; }
@@ -115,28 +131,20 @@ namespace GAL
 			VulkanRenderPass RenderPass;
 			uint32_t SubPass;
 			GTSL::Extent2D SurfaceExtent;
-			GTSL::Range<const VulkanShaderDataType*> VertexDescriptor;
+			GTSL::Range<const VertexElement*> VertexDescriptor;
 			VulkanPipelineDescriptor PipelineDescriptor;
 			GTSL::uint8 AttachmentCount = 0;
 			GTSL::Range<const ShaderInfo*> Stages;
+			VulkanPipeline Parent;
 		};
+
+		void Initialize(const CreateInfo& createInfo);
 		
-		VulkanRasterizationPipeline(const CreateInfo& createInfo);
 		~VulkanRasterizationPipeline() = default;
 
 		void Destroy(const VulkanRenderDevice* renderDevice);
 
 	private:
-		static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Range<const VulkanShaderDataType*> vertex, GTSL::Array<GTSL::uint8, 20>& offsets)
-		{
-			GTSL::uint32 size = 0;
-			for (const auto& e : vertex)
-			{
-				offsets.EmplaceBack(size);
-				size += VulkanShaderDataTypeSize(e);
-			}
-			return size;
-		}
 	};
 
 	class VulkanComputePipeline final : public VulkanPipeline

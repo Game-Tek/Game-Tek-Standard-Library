@@ -61,13 +61,12 @@ void GTSL::ToString(uint32 num, StaticString<32>& string)
 
 	UTF8 str[32]; str[31] = '\0';
 
-	// Process individual digits 
-	while (num != 0) {
-		//uint8 rem = num % 10;
+	do {
+		// Process individual digits 
 		str[i--] = (num % 10) + '0';
 		num /= 10;
 		++len;
-	}
+	} while (num);
 
 	string += GTSL::Range<const UTF8*>(len + 1, str + i + 1);
 }
@@ -78,13 +77,12 @@ void GTSL::ToString(int32 num, StaticString<32>& string)
 
 	UTF8 str[32]; str[31] = '\0';
 
-	// Process individual digits 
-	while (num != 0) {
-		//uint8 rem = num % 10;
+	do {
+		// Process individual digits 
 		str[i--] = (num % 10) + '0';
 		num /= 10;
 		++len;
-	}
+	} while (num);
 
 	if (num < 0) { str[i--] = '-'; ++len; }
 
@@ -106,11 +104,12 @@ void GTSL::ToString(float32 num, StaticString<32>& string)
 
 	auto intToStr = [&](int32 integer)
 	{
-		while (integer) {
+		do {
+			// Process individual digits 
 			str[i--] = (integer % 10) + '0';
-			integer /= 10;
+			num /= 10;
 			++len;
-		}
+		} while (num);
 	};
 
 	// check for display option after point 

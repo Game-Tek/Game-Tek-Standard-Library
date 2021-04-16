@@ -144,6 +144,17 @@ namespace GTSL
 			return true;
 		}
 
+		constexpr bool operator==(const Range<const T*> other) const
+		{
+			if (other.ElementCount() != this->length) { return false; }
+			
+			for (uint32 i = 0; i < this->length; ++i) {
+				if (data[i] != other[i]) { return false; }
+			}
+			
+			return true;
+		}
+
 		constexpr uint32 PushBack(const T& obj) noexcept
 		{
 			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");

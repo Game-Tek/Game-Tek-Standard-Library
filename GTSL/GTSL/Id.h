@@ -27,12 +27,31 @@ namespace GTSL
 
 			return (primary_hash & 0xFF00FF00FF00FF00ull) ^ (secondary_hash & 0x00FF00FF00FF00FFull);
 		}
+
+		//template<UTF8... str>
+		//static constexpr HashType hashString() noexcept
+		//{
+		//	HashType primary_hash(525201411107845655ull);
+		//	HashType secondary_hash(0xAAAAAAAAAAAAAAAAull);
+		//
+		//	for (uint32 i = 0; i < ranger.ElementCount() - 1; ++i)
+		//	{
+		//		primary_hash ^= ranger[i];			secondary_hash ^= ranger[i];
+		//		primary_hash *= 0x5bd1e9955bd1e995; secondary_hash *= 0x80638e;
+		//		primary_hash ^= primary_hash >> 47; secondary_hash ^= secondary_hash >> 35;
+		//	}
+		//
+		//	return (primary_hash & 0xFF00FF00FF00FF00ull) ^ (secondary_hash & 0x00FF00FF00FF00FFull);
+		//}
 		
 	public:
 		constexpr Id64() = default;
 
 		template<uint64 N>
 		constexpr Id64(const char(&string)[N]) noexcept : hashValue(hashString(GTSL::Range<const UTF8*>(N, string))) {}
+
+		//template<UTF8... str>
+		//constexpr Id64() noexcept : hashValue(hashString<str...>()) {}
 		
 		constexpr Id64(const Range<const UTF8*>& ranger) noexcept : hashValue(hashString(ranger)) {}
 		constexpr Id64(const char* text) noexcept : hashValue(hashString(GTSL::Range<const UTF8*>(StringLength(text), text))) {}
@@ -48,7 +67,8 @@ namespace GTSL
 		[[nodiscard]] constexpr HashType GetID() noexcept { return hashValue; }
 		[[nodiscard]] constexpr HashType GetID() const noexcept { return hashValue; }
 
-		HashType operator()() const { return hashValue; }
+		constexpr HashType operator()() const { return hashValue; }
+		explicit constexpr operator HashType() const { return hashValue; }
 	private:
 		HashType hashValue = 0;
 	};
@@ -63,4 +83,15 @@ namespace GTSL
 
 		constexpr operator uint32() const noexcept { return hash; }
 	};
+
+	inline constexpr uint64 operator"" _hash(char const* text, size_t length) { return Id64(Range<const UTF8*>(length, text)).GetID(); }
+
+	//template<char... str>
+	//inline constexpr uint64 operator"" _hash() { return Id64<str...>().GetID(); }
+	
+	template<uint64 N>
+	inline constexpr uint64 Hash(char const(&string)[N]) { return Id64(string).GetID(); }
+
+	inline constexpr uint64 Hash(const Range<const UTF8*> string) { return Id64(string)(); }
+	inline constexpr uint64 Hash(Id64 id) { return id(); }
 }

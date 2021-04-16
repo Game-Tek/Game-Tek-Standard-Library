@@ -38,7 +38,7 @@ namespace GTSL
 			{
 				if constexpr (NUMERATOR == R::NUMERATOR)
 				{
-					return count * static_cast<RET>(R::DENOMINATOR);
+					return count * (static_cast<RET>(R::DENOMINATOR) / static_cast<RET>(DENOMINATOR));
 				}
 				else
 				{

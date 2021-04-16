@@ -37,6 +37,25 @@ void GAL::DX12PipelineLayout::Destroy(const DX12RenderDevice* renderDevice)
 	debugClear(rootSignature);
 }
 
+DXGI_FORMAT ShaderDataTypeToDXGI_FORMAT(GAL::ShaderDataType type)
+{
+	switch (type)
+	{
+		case GAL::ShaderDataType::FLOAT:  break;
+		case GAL::ShaderDataType::FLOAT2: break;
+		case GAL::ShaderDataType::FLOAT3: return DXGI_FORMAT_R32G32B32_FLOAT;
+		case GAL::ShaderDataType::FLOAT4: break;
+		case GAL::ShaderDataType::INT:	break;
+		case GAL::ShaderDataType::INT2: break;
+		case GAL::ShaderDataType::INT3: break;
+		case GAL::ShaderDataType::INT4: break;
+		case GAL::ShaderDataType::BOOL: break;
+		case GAL::ShaderDataType::MAT3: break;
+		case GAL::ShaderDataType::MAT4: break;
+	default: ;
+	}
+}
+
 void GAL::DX12RasterPipeline::Initialize(const CreateInfo& info)
 {	
 	GTSL::Buffer<GTSL::StackAllocator<1024>> buffer;
@@ -80,29 +99,18 @@ void GAL::DX12RasterPipeline::Initialize(const CreateInfo& info)
 
 			for (GTSL::uint32 i = 0; i < inputLayoutDesc.NumElements; ++i)
 			{
+				
 				D3D12_INPUT_ELEMENT_DESC elementDesc;
-				elementDesc.Format = static_cast<DXGI_FORMAT>(info.VertexDescriptor[i]);
+				elementDesc.Format = ShaderDataTypeToDXGI_FORMAT(info.VertexDescriptor[i].Type);
 				elementDesc.AlignedByteOffset = offset;
 				elementDesc.SemanticIndex = 0;
 				elementDesc.InputSlot = i;
 				elementDesc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 				elementDesc.InstanceDataStepRate = 0;
 
-				switch (info.VertexDescriptor[i])
-				{
-				case DX12ShaderDataType::FLOAT:  offset += 4; break;
-				case DX12ShaderDataType::FLOAT2: offset += 8; break;
-				case DX12ShaderDataType::FLOAT3: offset += 12; break;
-				case DX12ShaderDataType::FLOAT4: offset += 16; break;
-				case DX12ShaderDataType::INT: offset += 4; break;
-				case DX12ShaderDataType::INT2: offset += 8; break;
-				case DX12ShaderDataType::INT3: offset += 12; break;
-				case DX12ShaderDataType::INT4: offset += 16; break;
-				case DX12ShaderDataType::BOOL: offset += 1; break;
-				default:;
-				}
+				offset += ShaderDataTypesSize(info.VertexDescriptor[i].Type);
 
-				elementDesc.SemanticName = "POSITION";
+				elementDesc.SemanticName = info.VertexDescriptor[i].Identifier.begin();
 				vertexElements.EmplaceBack(elementDesc);
 			}
 

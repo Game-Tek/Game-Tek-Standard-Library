@@ -50,14 +50,13 @@ bool GAL::CompileShader(GTSL::Range<const GTSL::UTF8*> code, GTSL::Range<const G
 
 	if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		stringResult.CopyBytes(shaderc_module.GetErrorMessage().size(), reinterpret_cast<const GTSL::byte*>(shaderc_module.GetErrorMessage().c_str()));
+		auto errorString = shaderc_module.GetErrorMessage();
+		stringResult.CopyBytes(errorString.size() + 1, reinterpret_cast<const GTSL::byte*>(errorString.c_str()));
+		*(stringResult.end() - 1) = '\0';
 		return false;
 	}
 
 	result.CopyBytes((shaderc_module.end() - shaderc_module.begin()) * sizeof(GTSL::uint32), reinterpret_cast<const GTSL::byte*>(shaderc_module.begin()));
-
-	auto test = shaderc_module.end() - shaderc_module.begin();
-	auto test2 = (shaderc_module.end() - shaderc_module.begin()) * sizeof(GTSL::uint32);
 	
 	return true;
 }
@@ -186,6 +185,20 @@ void GAL::VulkanPipelineCache::GetCache(const VulkanRenderDevice* renderDevice, 
 	buffer.Resize(data_size);
 }
 
+void GAL::VulkanShader::Initialize(const VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::byte*> blob)
+{
+	VkShaderModuleCreateInfo shaderModuleCreateInfo{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
+	shaderModuleCreateInfo.codeSize = blob.Bytes();
+	shaderModuleCreateInfo.pCode = reinterpret_cast<const GTSL::uint32*>(blob.begin());
+	vkCreateShaderModule(renderDevice->GetVkDevice(), &shaderModuleCreateInfo, renderDevice->GetVkAllocationCallbacks(), &vkShaderModule);
+}
+
+void GAL::VulkanShader::Destroy(const VulkanRenderDevice* renderDevice)
+{
+	vkDestroyShaderModule(renderDevice->GetVkDevice(), vkShaderModule, renderDevice->GetVkAllocationCallbacks());
+	debugClear(vkShaderModule);
+}
+
 void GAL::VulkanPipelineLayout::Initialize(const CreateInfo& createInfo)
 {
 	VkPipelineLayoutCreateInfo vkPipelineLayoutCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
@@ -236,24 +249,27 @@ VkStencilOp StencilCompareOperationToVkStencilCompareOp(const GAL::StencilCompar
 	}
 }
 
-GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& createInfo)
+void GAL::VulkanRasterizationPipeline::Initialize(const CreateInfo& createInfo)
 {
-	//  VERTEX INPUT STATE
-
 	GTSL::Array<GTSL::uint8, MAX_VERTEX_ELEMENTS> offsets;
-	
-	GTSL::Array<VkVertexInputBindingDescription, 4> vkVertexInputBindingDescriptions(1);
-	vkVertexInputBindingDescriptions[0].binding = 0;
-	vkVertexInputBindingDescriptions[0].stride = GetVertexSizeAndOffsetsToMembers(createInfo.VertexDescriptor, offsets);
-	vkVertexInputBindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	GTSL::Array<VkVertexInputAttributeDescription, MAX_VERTEX_ELEMENTS> vkVertexInputAttributeDescriptions(static_cast<GTSL::uint32>(createInfo.VertexDescriptor.ElementCount()));
-	for (GTSL::uint8 i = 0; i < vkVertexInputAttributeDescriptions.GetLength(); ++i)
-	{
-		vkVertexInputAttributeDescriptions[i].binding = 0;
-		vkVertexInputAttributeDescriptions[i].location = i;
-		vkVertexInputAttributeDescriptions[i].format = static_cast<VkFormat>(createInfo.VertexDescriptor[i]);
-		vkVertexInputAttributeDescriptions[i].offset = offsets[i];
+	GTSL::Array<VkVertexInputBindingDescription, 4> vkVertexInputBindingDescriptions;
+	auto& vertexBinding = vkVertexInputBindingDescriptions.EmplaceBack();
+
+	GTSL::Array<VkVertexInputAttributeDescription, MAX_VERTEX_ELEMENTS> vkVertexInputAttributeDescriptions;
+
+	GTSL::uint16 offset = 0;
+	
+	for (GTSL::uint8 i = 0; i < createInfo.VertexDescriptor.ElementCount(); ++i) {
+		auto size = ShaderDataTypesSize(createInfo.VertexDescriptor[i].Type);
+		
+		if (createInfo.VertexDescriptor[i].Enabled) {
+			auto& vertex = vkVertexInputAttributeDescriptions.EmplaceBack();
+			vertex.binding = 0; vertex.location = i; vertex.format = ShaderDataTypesToVkFormat(createInfo.VertexDescriptor[i].Type);
+			vertex.offset = offset;
+			offset += size;
+			vertexBinding.stride += size;
+		}
 	}
 
 	VkPipelineVertexInputStateCreateInfo vkPipelineVertexInputStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
@@ -262,15 +278,12 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkPipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = vkVertexInputAttributeDescriptions.GetLength();
 	vkPipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = vkVertexInputAttributeDescriptions.begin();
 
-	//  INPUT ASSEMBLY STATE
 	VkPipelineInputAssemblyStateCreateInfo vkPipelineInputAssemblyStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
 	vkPipelineInputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	vkPipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
+	
+	VkPipelineTessellationStateCreateInfo vkPipelineTessellationStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO };
 
-	//  TESSELLATION STATE
-	VkPipelineTessellationStateCreateInfo vkPipelineTessellationStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO	};
-
-	//  VIEWPORT STATE
 	VkViewport vkViewport;
 	vkViewport.x = 0;
 	vkViewport.y = 0;
@@ -288,7 +301,6 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkPipelineViewportStateCreateInfo.scissorCount = 1;
 	vkPipelineViewportStateCreateInfo.pScissors = &vkScissor;
 
-	//  RASTERIZATION STATE
 	VkPipelineRasterizationStateCreateInfo vkPipelineRasterizationStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
 	vkPipelineRasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
 	vkPipelineRasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
@@ -301,7 +313,6 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkPipelineRasterizationStateCreateInfo.depthBiasClamp = 0.0f; // Optional
 	vkPipelineRasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f; // Optional
 
-	//  MULTISAMPLE STATE
 	VkPipelineMultisampleStateCreateInfo vkPipelineMultisampleStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
 	vkPipelineMultisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
 	vkPipelineMultisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
@@ -310,7 +321,6 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkPipelineMultisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE; // Optional
 	vkPipelineMultisampleStateCreateInfo.alphaToOneEnable = VK_FALSE; // Optional
 
-	//  DEPTH STENCIL STATE
 	VkPipelineDepthStencilStateCreateInfo vkPipelineDepthStencilStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
 	vkPipelineDepthStencilStateCreateInfo.depthTestEnable = createInfo.PipelineDescriptor.DepthTest;
 	vkPipelineDepthStencilStateCreateInfo.depthWriteEnable = createInfo.PipelineDescriptor.DepthWrite;
@@ -319,6 +329,7 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkPipelineDepthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
 	vkPipelineDepthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
 	vkPipelineDepthStencilStateCreateInfo.stencilTestEnable = createInfo.PipelineDescriptor.StencilTest;
+	
 	{
 		vkPipelineDepthStencilStateCreateInfo.front.failOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Front.FailOperation);
 		vkPipelineDepthStencilStateCreateInfo.front.passOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Front.PassOperation);
@@ -328,6 +339,7 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 		vkPipelineDepthStencilStateCreateInfo.front.writeMask = createInfo.PipelineDescriptor.StencilOperations.Front.WriteMask;
 		vkPipelineDepthStencilStateCreateInfo.front.reference = createInfo.PipelineDescriptor.StencilOperations.Front.Reference;
 	}
+	
 	{
 		vkPipelineDepthStencilStateCreateInfo.back.failOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Back.FailOperation);
 		vkPipelineDepthStencilStateCreateInfo.back.passOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Back.PassOperation);
@@ -338,10 +350,8 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 		vkPipelineDepthStencilStateCreateInfo.back.reference = createInfo.PipelineDescriptor.StencilOperations.Back.Reference;
 	}
 
-	//  COLOR BLEND STATE
-
 	GTSL::Array<VkPipelineColorBlendAttachmentState, 12> colorBlendAttachmentStates;
-	for(GTSL::uint8 i = 0; i < createInfo.AttachmentCount; ++i)
+	for (GTSL::uint8 i = 0; i < createInfo.AttachmentCount; ++i)
 	{
 		VkPipelineColorBlendAttachmentState vkPipelineColorblendAttachmentState;
 		vkPipelineColorblendAttachmentState.blendEnable = createInfo.PipelineDescriptor.BlendEnable;
@@ -365,31 +375,26 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkPipelineColorblendStateCreateInfo.blendConstants[2] = 0.0f; // Optional
 	vkPipelineColorblendStateCreateInfo.blendConstants[3] = 0.0f; // Optional
 
-	//  DYNAMIC STATE
 	VkPipelineDynamicStateCreateInfo vkPipelineDynamicStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
 	GTSL::Array<VkDynamicState, 4> vkDynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 	vkPipelineDynamicStateCreateInfo.dynamicStateCount = vkDynamicStates.GetLength();
 	vkPipelineDynamicStateCreateInfo.pDynamicStates = vkDynamicStates.begin();
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vkPipelineShaderStageCreateInfos(createInfo.Stages.ElementCount());
+	GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vkPipelineShaderStageCreateInfos;
 
 	for (GTSL::uint8 i = 0; i < createInfo.Stages.ElementCount(); ++i)
-	{		
-		vkPipelineShaderStageCreateInfos[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vkPipelineShaderStageCreateInfos[i].pNext = nullptr;
-		vkPipelineShaderStageCreateInfos[i].flags = 0;
-		vkPipelineShaderStageCreateInfos[i].stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
-		vkPipelineShaderStageCreateInfos[i].pName = "main";
-		vkPipelineShaderStageCreateInfos[i].pSpecializationInfo = nullptr;
-
-		VkShaderModuleCreateInfo shaderModuleCreateInfo{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-		shaderModuleCreateInfo.codeSize = createInfo.Stages[i].Blob.Bytes();
-		shaderModuleCreateInfo.pCode = reinterpret_cast<const GTSL::uint32*>(createInfo.Stages[i].Blob.begin());
-		vkCreateShaderModule(createInfo.RenderDevice->GetVkDevice(), &shaderModuleCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &vkPipelineShaderStageCreateInfos[i].module);
+	{
+		auto& stage = vkPipelineShaderStageCreateInfos.EmplaceBack();
+		
+		stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		stage.pNext = nullptr;
+		stage.flags = 0;
+		stage.stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
+		stage.pName = "main";
+		stage.module = createInfo.Stages[i].Shader.GetVkShaderModule();
+		stage.pSpecializationInfo = nullptr;
 	}
-	
+
 	VkGraphicsPipelineCreateInfo vkGraphicsPipelineCreateInfo{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 	vkGraphicsPipelineCreateInfo.stageCount = vkPipelineShaderStageCreateInfos.GetLength();
 	vkGraphicsPipelineCreateInfo.pStages = vkPipelineShaderStageCreateInfos.begin();
@@ -405,12 +410,11 @@ GAL::VulkanRasterizationPipeline::VulkanRasterizationPipeline(const CreateInfo& 
 	vkGraphicsPipelineCreateInfo.layout = createInfo.PipelineLayout.GetVkPipelineLayout();
 	vkGraphicsPipelineCreateInfo.renderPass = createInfo.RenderPass.GetVkRenderPass();
 	vkGraphicsPipelineCreateInfo.subpass = createInfo.SubPass;
-	vkGraphicsPipelineCreateInfo.basePipelineIndex = -1;
-	
+	vkGraphicsPipelineCreateInfo.basePipelineIndex = createInfo.Parent.GetVkPipeline() ? 0 : -1;
+	vkGraphicsPipelineCreateInfo.basePipelineHandle = createInfo.Parent.GetVkPipeline();
+
 	VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), createInfo.PipelineCache.GetVkPipelineCache(), 1, &vkGraphicsPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
 	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
-
-	for (auto& e : vkPipelineShaderStageCreateInfos) { vkDestroyShaderModule(createInfo.RenderDevice->GetVkDevice(), e.module, createInfo.RenderDevice->GetVkAllocationCallbacks()); }
 }
 
 void GAL::VulkanRasterizationPipeline::Destroy(const VulkanRenderDevice* renderDevice)
@@ -427,15 +431,9 @@ void GAL::VulkanComputePipeline::Initialize(const CreateInfo& createInfo)
 	computePipelineCreateInfo.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	computePipelineCreateInfo.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
 	computePipelineCreateInfo.stage.pName = "main";
-
-	VkShaderModuleCreateInfo shaderModuleCreateInfo{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-	shaderModuleCreateInfo.codeSize = createInfo.ShaderInfo.Blob.Bytes();
-	shaderModuleCreateInfo.pCode = reinterpret_cast<const GTSL::uint32*>(createInfo.ShaderInfo.Blob.begin());
-	vkCreateShaderModule(createInfo.RenderDevice->GetVkDevice(), &shaderModuleCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &computePipelineCreateInfo.stage.module);
+	computePipelineCreateInfo.stage.module = createInfo.ShaderInfo.Shader.GetVkShaderModule();
 	
 	vkCreateComputePipelines(createInfo.RenderDevice->GetVkDevice(), createInfo.PipelineCache.GetVkPipelineCache(), 1, &computePipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
-
-	vkDestroyShaderModule(createInfo.RenderDevice->GetVkDevice(), computePipelineCreateInfo.stage.module, createInfo.RenderDevice->GetVkAllocationCallbacks());
 }
 
 void GAL::VulkanComputePipeline::Destroy(const VulkanRenderDevice* renderDevice)
@@ -462,11 +460,7 @@ void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 		vkPipelineShaderStageCreateInfos[i].stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
 		vkPipelineShaderStageCreateInfos[i].pName = "main";
 		vkPipelineShaderStageCreateInfos[i].pSpecializationInfo = nullptr;
-
-		VkShaderModuleCreateInfo shaderModuleCreateInfo{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-		shaderModuleCreateInfo.codeSize = createInfo.Stages[i].Blob.Bytes();
-		shaderModuleCreateInfo.pCode = reinterpret_cast<const GTSL::uint32*>(createInfo.Stages[i].Blob.begin());
-		vkCreateShaderModule(createInfo.RenderDevice->GetVkDevice(), &shaderModuleCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &vkPipelineShaderStageCreateInfos[i].module);
+		vkPipelineShaderStageCreateInfos[i].module = createInfo.Stages[i].Shader.GetVkShaderModule();
 	}
 
 	for(auto& e : createInfo.Groups)
@@ -486,8 +480,6 @@ void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 	
 	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, createInfo.PipelineCache.GetVkPipelineCache(), 1, &vkRayTracingPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
 	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo)
-
-	for (auto& e : vkPipelineShaderStageCreateInfos) { vkDestroyShaderModule(createInfo.RenderDevice->GetVkDevice(), e.module, createInfo.RenderDevice->GetVkAllocationCallbacks()); }
 }
 
 void GAL::VulkanRayTracingPipeline::Destroy(const VulkanRenderDevice* renderDevice)
