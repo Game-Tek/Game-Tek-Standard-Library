@@ -12,7 +12,7 @@ namespace GTSL
 	class Quaternion : public Vector4
 	{
 	public:
-		Quaternion() = default;
+		Quaternion() : Vector4(0, 0, 0, 1) {}
 		Quaternion(const float32 x, const float32 y, const float32 z, const float32 w) : Vector4(x, y, z, w) {}
 
 		explicit Quaternion(const Rotator& rotator);

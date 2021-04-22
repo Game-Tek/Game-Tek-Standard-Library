@@ -30,7 +30,7 @@ Matrix4::Matrix4(const Quaternion& quaternion)
 	array[2][0] = 2 * (xz - yw);
 	array[2][1] = 2 * (yz + xw);
 	array[2][2] = 1 - 2 * (xx + yy);
-	array[0][3] = array[1][3] = array[2][3] = array[3][1] = array[3][1] = array[3][2] = 0;
+	array[0][3] = array[1][3] = array[2][3] = array[3][0] = array[3][1] = array[3][2] = 0;
 	array[3][3] = 1;
 }
 
@@ -47,27 +47,27 @@ Matrix4::Matrix4(const AxisAngle& axisAngle) : Matrix4(1)
 	const float32 zz = axisAngle.Z * axisAngle.Z;
 
 	// build rotation matrix
-	(*this)(0, 0) = c + xx * t;
-	(*this)(1, 1) = c + yy * t;
-	(*this)(2, 2) = c + zz * t;
+	array[0][0] = c + xx * t;
+	array[1][1] = c + yy * t;
+	array[2][2] = c + zz * t;
 
 	auto tmp1 = xy * t;
 	auto tmp2 = axisAngle.Z * s;
 
-	(*this)(1, 0) = tmp1 + tmp2;
-	(*this)(0, 1) = tmp1 - tmp2;
+	array[1][0] = tmp1 + tmp2;
+	array[0][1] = tmp1 - tmp2;
 
 	tmp1 = xz * t;
 	tmp2 = axisAngle.Y * s;
 
-	(*this)(2, 0) = tmp1 - tmp2;
-	(*this)(0, 2) = tmp1 + tmp2;
+	array[2][0] = tmp1 - tmp2;
+	array[0][2] = tmp1 + tmp2;
 
 	tmp1 = yz * t;
 	tmp2 = axisAngle.X * s;
 
-	(*this)(2, 1) = tmp1 + tmp2;
-	(*this)(1, 2) = tmp1 - tmp2;
+	array[2][1] = tmp1 + tmp2;
+	array[1][2] = tmp1 - tmp2;
 }
 
 Matrix4::Matrix4(const Vector3 position)

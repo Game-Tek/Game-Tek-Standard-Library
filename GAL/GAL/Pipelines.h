@@ -8,21 +8,18 @@
 
 namespace GAL
 {
-	struct StencilState
-	{
-		StencilCompareOperation FailOperation = StencilCompareOperation::ZERO;
-		StencilCompareOperation PassOperation = StencilCompareOperation::ZERO;
-		StencilCompareOperation DepthFailOperation = StencilCompareOperation::ZERO;
-		CompareOperation CompareOperation = CompareOperation::NEVER;
-		GTSL::uint32 CompareMask;
-		GTSL::uint32 WriteMask;
-		GTSL::uint32 Reference;
-	};
-
 	struct StencilOperations
 	{
-		StencilState Front;
-		StencilState Back;
+		struct StencilState
+		{
+			StencilCompareOperation FailOperation = StencilCompareOperation::ZERO;
+			StencilCompareOperation PassOperation = StencilCompareOperation::ZERO;
+			StencilCompareOperation DepthFailOperation = StencilCompareOperation::ZERO;
+			CompareOperation CompareOperation = CompareOperation::NEVER;
+			GTSL::uint32 CompareMask;
+			GTSL::uint32 WriteMask;
+			GTSL::uint32 Reference;
+		} Front, Back;
 	};
 
 	class Shader : public GALObject

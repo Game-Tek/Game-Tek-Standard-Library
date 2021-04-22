@@ -262,6 +262,12 @@ namespace GAL
 		CULL_BACK
 	};
 
+	enum class WindingOrder : GTSL::uint8
+	{
+		CLOCKWISE,
+		COUNTER_CLOCKWISE
+	};
+
 	enum class BlendOperation : GTSL::uint8
 	{
 		ADD,

@@ -2,6 +2,8 @@
 
 #include <immintrin.h>
 
+
+#include "AxisAngle.h"
 #include "GTSL/Core.h"
 
 #include "Vector2.h"
@@ -795,23 +797,18 @@ namespace GTSL
 		//////////////////////////////////////////////////////////////
 		//						MATRIX MATH							//
 		//////////////////////////////////////////////////////////////
-
-		inline Vector4 GetTranslation(const Matrix4& matrix) { return Vector4(matrix(0, 3), matrix(1, 3), matrix(2, 3), matrix(3, 3)); }
 		
 		//Modifies the given matrix to make it a translation matrix.
-		inline void AddTranslation(Matrix4& matrix, const Vector3 vector)
-		{
+		inline void AddTranslation(Matrix4& matrix, const Vector3 vector) {
 			matrix(0, 3) += vector[0]; matrix(1, 3) += vector[1]; matrix(2, 3) += vector[2];
 		}
 
 		//Modifies the given matrix to make it a translation matrix.
-		inline void SetTranslation(Matrix4& matrix, const Vector3 vector)
-		{
+		inline void SetTranslation(Matrix4& matrix, const Vector3 vector) {
 			matrix(0, 3) = vector[0]; matrix(1, 3) = vector[1]; matrix(2, 3) = vector[2];
 		}
 
-		inline void SetTranslation(Matrix3x4& matrix, const Vector3 vector)
-		{
+		inline void SetTranslation(Matrix3x4& matrix, const Vector3 vector) {
 			matrix[0][3] = vector[0]; matrix[1][3] = vector[1]; matrix[2][3] = vector[2];
 		}
 
@@ -849,22 +846,35 @@ namespace GTSL
 			matrix *= Matrix3x4(quaternion);
 		}
 
+		inline void AddRotation(Matrix4& matrix, const AxisAngle axisAngle) {
+			matrix *= Matrix4(axisAngle);
+		}
+
+		inline void SetRotation(Matrix4& matrix, const AxisAngle axisAngle) {
+			matrix *= Matrix4(axisAngle);
+		}
+
+		inline void AddRotation(Matrix4& matrix, const Rotator rotator) {
+			matrix *= Matrix4(rotator);
+		}
+
+		inline void SetRotation(Matrix4& matrix, const Rotator rotator) {
+			matrix *= Matrix4(rotator);
+		}
+		
 		//Modifies the given matrix to make it a translation matrix.
-		inline void AddScale(Matrix4& matrix, const Vector3 vector)
-		{
+		inline void AddScale(Matrix4& matrix, const Vector3 vector) {
 			matrix(0, 0) *= vector[0]; matrix(0, 1) *= vector[0]; matrix(0, 2) *= vector[0]; matrix(0, 3) *= vector[0];
 			matrix(1, 0) *= vector[1]; matrix(1, 1) *= vector[1]; matrix(1, 2) *= vector[1]; matrix(1, 3) *= vector[1];
 			matrix(2, 0) *= vector[2]; matrix(2, 1) *= vector[2]; matrix(2, 2) *= vector[2]; matrix(2, 3) *= vector[2];
 		}
 
 		//Modifies the given matrix to make it a translation matrix.
-		inline void SetScale(Matrix4& matrix, const Vector3 vector)
-		{
+		inline void SetScale(Matrix4& matrix, const Vector3 vector) {
 			matrix(0, 0) = vector[0]; matrix(1, 1) = vector[1]; matrix(2, 2) = vector[2];
 		}
 		
-		inline Matrix4 NormalToRotation(Vector3 normal)
-		{
+		inline Matrix4 NormalToRotation(Vector3 normal) {
 			// Find a vector in the plane
 			Vector3 tangent0 = Cross(normal, Vector3(1, 0, 0));
 			if (DotProduct(tangent0, tangent0) < 0.001)
@@ -875,11 +885,12 @@ namespace GTSL
 			return Matrix4(tangent0.X(), tangent0.Y(), tangent0.Z(), 0.0f, tangent1.X(), tangent1.Y(), tangent1.Z(), 0.0f, normal.X(), normal.Y(), normal.Z(), 0.0f, 0, 0, 0, 0);
 		}
 
-		inline void Rotate(Matrix4& matrix, const Quaternion& quaternion)
-		{
+		inline void Rotate(Matrix4& matrix, const Quaternion& quaternion) {
 			matrix *= Matrix4(quaternion);
 		}
 
+		inline Vector3 GetTranslation(const Matrix4& matrix4) { return Vector3(matrix4[0][3], matrix4[1][3], matrix4[2][3]); }
+		
 		//Returns point colinearity to a line defined by two points.
 		// +0 indicates point is to the right
 		// 0 indicates point is on the line
@@ -907,44 +918,53 @@ namespace GTSL
 			return Result;
 		}
 		
-		inline void Scale(Matrix4& matrix, const Vector3& scale)
-		{
+		inline void Scale(Matrix4& matrix, const Vector3& scale) {
 			matrix *= Scaling(scale);
 		}
 
-		inline void BuildPerspectiveMatrix(Matrix4& matrix, const float32 fov, const float32 aspectRatio, const float32 nearPlane, const float32 farPlane)
-		{
+		/**
+		 * \brief Builds a left handed, 0 to 1 perspective projection matrix based on some camera and screen parameters.
+		 * \param fov Camera vertical field of view.
+		 * \param aspectRatio Screen aspect ratio.
+		 * \param nearPlane Distance between the near clipping plane and the origin of the camera.
+		 * \param farPlane Distance between the far clipping plane and the origin of the camera.
+		 * \return Perspective projection matrix.
+		 */
+		inline Matrix4 BuildPerspectiveMatrix(const float32 fov, const float32 aspectRatio, const float32 nearPlane, const float32 farPlane) {
+			Matrix4 matrix;
+			
 			//Tangent of half the vertical view angle.
-			const auto f = 1.0f / Tangent(fov * 0.5f);
+			const auto yScale = 1.0f / Tangent(fov * 0.5f);
+			const auto xScale = yScale / aspectRatio;
 
-			const auto far_m_near = farPlane - nearPlane;
-
-			//Zero to one
-			//Left handed
-
-			matrix(0, 0) = f / aspectRatio;
-
-			matrix(1, 1) = -f;
-
-			matrix(2, 2) = -((farPlane + nearPlane) / far_m_near);
-			matrix(2, 3) = -((2.f * farPlane * nearPlane) / far_m_near);
-
-			matrix(3, 2) = -1.0f;
+			matrix[0][0] = xScale;
+			matrix[1][1] = yScale;
+			matrix[2][2] = farPlane / (farPlane - nearPlane);
+			matrix[2][3] = (nearPlane * farPlane) / (nearPlane - farPlane);
+			matrix[3][2] = 1.0f;
+			matrix[3][3] = 0.0f;
+			
+			return matrix;
 		}
 
-		inline void MakeOrthoMatrix(Matrix4& matrix, const float32 right, const float32 left, const float32 top, const float32 bottom, const float32 nearPlane, const float32 farPlane)
-		{
-			//Zero to one
-			//Left handed
+		inline Matrix4 MakeOrthoMatrix(const float32 right, const float32 left, const float32 top, const float32 bottom, const float32 nearPlane, const float32 farPlane) {
+			Matrix4 matrix;
 
-			matrix(0, 0) = static_cast<float32>(2) / (right - left);
-			matrix(1, 1) = static_cast<float32>(2) / (top - bottom);
-			matrix(2, 2) = static_cast<float32>(1) / (farPlane - nearPlane);
-			matrix(3, 0) = -(right + left) / (right - left);
-			matrix(3, 1) = -(top + bottom) / (top - bottom);
-			matrix(3, 2) = -nearPlane / (farPlane - nearPlane);
+			matrix[0][0] = static_cast<float32>(2) / (right - left);
+			matrix[1][1] = static_cast<float32>(2) / (top - bottom);
+			matrix[2][2] = static_cast<float32>(1) / (farPlane - nearPlane);
+			matrix[3][0] = -(right + left) / (right - left);
+			matrix[3][1] = -(top + bottom) / (top - bottom);
+			matrix[3][2] = -nearPlane / (farPlane - nearPlane);
+
+			return matrix;
 		}
 
+		inline Matrix4 MakeOrthoMatrix(const Extent2D extent, const float32 nearPlane, const float32 farPlane) {
+			Vector2 xy(extent.Width, extent.Height); xy / 2.0f;
+			return MakeOrthoMatrix(xy.X(), -xy.X(), xy.Y(), -xy.X(), nearPlane, farPlane);
+		}
+		
 		template<typename T>
 		inline T Clamp(T a, T min, T max) { return a > max ? max : (a < min ? min : a); }
 

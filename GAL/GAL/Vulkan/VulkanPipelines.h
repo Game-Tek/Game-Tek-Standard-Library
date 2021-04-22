@@ -62,6 +62,7 @@ namespace GAL
 	struct VulkanPipelineDescriptor
 	{
 		CullMode CullMode = CullMode::CULL_NONE;
+		WindingOrder WindingOrder = WindingOrder::CLOCKWISE;
 		bool DepthClampEnable = false;
 		bool BlendEnable = false;
 		BlendOperation ColorBlendOperation = BlendOperation::ADD;
@@ -130,7 +131,6 @@ namespace GAL
 		{
 			VulkanRenderPass RenderPass;
 			uint32_t SubPass;
-			GTSL::Extent2D SurfaceExtent;
 			GTSL::Range<const VertexElement*> VertexDescriptor;
 			VulkanPipelineDescriptor PipelineDescriptor;
 			GTSL::uint8 AttachmentCount = 0;

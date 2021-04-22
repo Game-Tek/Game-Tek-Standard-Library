@@ -233,22 +233,6 @@ void GAL::VulkanPipelineLayout::Destroy(const VulkanRenderDevice* renderDevice)
 	debugClear(pipelineLayout);
 }
 
-VkStencilOp StencilCompareOperationToVkStencilCompareOp(const GAL::StencilCompareOperation stencilCompareOperation)
-{
-	switch (stencilCompareOperation)
-	{
-	case GAL::StencilCompareOperation::KEEP: return VK_STENCIL_OP_KEEP;
-	case GAL::StencilCompareOperation::ZERO: return VK_STENCIL_OP_ZERO;
-	case GAL::StencilCompareOperation::REPLACE: return VK_STENCIL_OP_REPLACE;
-	case GAL::StencilCompareOperation::INCREMENT_AND_CLAMP: return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
-	case GAL::StencilCompareOperation::DECREMENT_AND_CLAMP: return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
-	case GAL::StencilCompareOperation::INVERT: return VK_STENCIL_OP_INVERT;
-	case GAL::StencilCompareOperation::INCREMENT_AND_WRAP: return VK_STENCIL_OP_INCREMENT_AND_WRAP;
-	case GAL::StencilCompareOperation::DECREMENT_AND_WRAP: return VK_STENCIL_OP_DECREMENT_AND_WRAP;
-	default: return VK_STENCIL_OP_MAX_ENUM;
-	}
-}
-
 void GAL::VulkanRasterizationPipeline::Initialize(const CreateInfo& createInfo)
 {
 	GTSL::Array<GTSL::uint8, MAX_VERTEX_ELEMENTS> offsets;
@@ -265,7 +249,7 @@ void GAL::VulkanRasterizationPipeline::Initialize(const CreateInfo& createInfo)
 		
 		if (createInfo.VertexDescriptor[i].Enabled) {
 			auto& vertex = vkVertexInputAttributeDescriptions.EmplaceBack();
-			vertex.binding = 0; vertex.location = i; vertex.format = ShaderDataTypesToVkFormat(createInfo.VertexDescriptor[i].Type);
+			vertex.binding = 0; vertex.location = i; vertex.format = ToVulkan(createInfo.VertexDescriptor[i].Type);
 			vertex.offset = offset;
 			offset += size;
 			vertexBinding.stride += size;
@@ -286,14 +270,13 @@ void GAL::VulkanRasterizationPipeline::Initialize(const CreateInfo& createInfo)
 
 	VkViewport vkViewport;
 	vkViewport.x = 0;
-	vkViewport.y = 0;
-	auto windowExtent = createInfo.SurfaceExtent;
-	vkViewport.width = windowExtent.Width;
-	vkViewport.height = windowExtent.Height;
+	vkViewport.y = 1;
+	vkViewport.width = 1.0f;
+	vkViewport.height = -1.0f;
 	vkViewport.minDepth = 0.0f;
 	vkViewport.maxDepth = 1.0f;
 
-	VkRect2D vkScissor = { { 0, 0 }, { windowExtent.Width, windowExtent.Height } };
+	VkRect2D vkScissor = { { 0, 0 }, { 1, 1 } };
 
 	VkPipelineViewportStateCreateInfo vkPipelineViewportStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
 	vkPipelineViewportStateCreateInfo.viewportCount = 1;
@@ -306,8 +289,8 @@ void GAL::VulkanRasterizationPipeline::Initialize(const CreateInfo& createInfo)
 	vkPipelineRasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
 	vkPipelineRasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
 	vkPipelineRasterizationStateCreateInfo.lineWidth = 1.0f;
-	vkPipelineRasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-	vkPipelineRasterizationStateCreateInfo.cullMode = CullModeToVkCullModeFlagBits(createInfo.PipelineDescriptor.CullMode);
+	vkPipelineRasterizationStateCreateInfo.frontFace = ToVulkan(createInfo.PipelineDescriptor.WindingOrder);
+	vkPipelineRasterizationStateCreateInfo.cullMode = ToVulkan(createInfo.PipelineDescriptor.CullMode);
 	vkPipelineRasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
 	vkPipelineRasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f; // Optional
 	vkPipelineRasterizationStateCreateInfo.depthBiasClamp = 0.0f; // Optional
@@ -324,31 +307,27 @@ void GAL::VulkanRasterizationPipeline::Initialize(const CreateInfo& createInfo)
 	VkPipelineDepthStencilStateCreateInfo vkPipelineDepthStencilStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
 	vkPipelineDepthStencilStateCreateInfo.depthTestEnable = createInfo.PipelineDescriptor.DepthTest;
 	vkPipelineDepthStencilStateCreateInfo.depthWriteEnable = createInfo.PipelineDescriptor.DepthWrite;
-	vkPipelineDepthStencilStateCreateInfo.depthCompareOp = CompareOperationToVkCompareOp(createInfo.PipelineDescriptor.DepthCompareOperation);
+	vkPipelineDepthStencilStateCreateInfo.depthCompareOp = ToVulkan(createInfo.PipelineDescriptor.DepthCompareOperation);
 	vkPipelineDepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
 	vkPipelineDepthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
 	vkPipelineDepthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
 	vkPipelineDepthStencilStateCreateInfo.stencilTestEnable = createInfo.PipelineDescriptor.StencilTest;
 	
-	{
-		vkPipelineDepthStencilStateCreateInfo.front.failOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Front.FailOperation);
-		vkPipelineDepthStencilStateCreateInfo.front.passOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Front.PassOperation);
-		vkPipelineDepthStencilStateCreateInfo.front.depthFailOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Front.DepthFailOperation);
-		vkPipelineDepthStencilStateCreateInfo.front.compareOp = CompareOperationToVkCompareOp(createInfo.PipelineDescriptor.StencilOperations.Front.CompareOperation);
-		vkPipelineDepthStencilStateCreateInfo.front.compareMask = createInfo.PipelineDescriptor.StencilOperations.Front.CompareMask;
-		vkPipelineDepthStencilStateCreateInfo.front.writeMask = createInfo.PipelineDescriptor.StencilOperations.Front.WriteMask;
-		vkPipelineDepthStencilStateCreateInfo.front.reference = createInfo.PipelineDescriptor.StencilOperations.Front.Reference;
-	}
-	
-	{
-		vkPipelineDepthStencilStateCreateInfo.back.failOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Back.FailOperation);
-		vkPipelineDepthStencilStateCreateInfo.back.passOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Back.PassOperation);
-		vkPipelineDepthStencilStateCreateInfo.back.depthFailOp = StencilCompareOperationToVkStencilCompareOp(createInfo.PipelineDescriptor.StencilOperations.Back.DepthFailOperation);
-		vkPipelineDepthStencilStateCreateInfo.back.compareOp = CompareOperationToVkCompareOp(createInfo.PipelineDescriptor.StencilOperations.Back.CompareOperation);
-		vkPipelineDepthStencilStateCreateInfo.back.compareMask = createInfo.PipelineDescriptor.StencilOperations.Back.CompareMask;
-		vkPipelineDepthStencilStateCreateInfo.back.writeMask = createInfo.PipelineDescriptor.StencilOperations.Back.WriteMask;
-		vkPipelineDepthStencilStateCreateInfo.back.reference = createInfo.PipelineDescriptor.StencilOperations.Back.Reference;
-	}
+	vkPipelineDepthStencilStateCreateInfo.front.failOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Front.FailOperation);
+	vkPipelineDepthStencilStateCreateInfo.front.passOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Front.PassOperation);
+	vkPipelineDepthStencilStateCreateInfo.front.depthFailOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Front.DepthFailOperation);
+	vkPipelineDepthStencilStateCreateInfo.front.compareOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Front.CompareOperation);
+	vkPipelineDepthStencilStateCreateInfo.front.compareMask = createInfo.PipelineDescriptor.StencilOperations.Front.CompareMask;
+	vkPipelineDepthStencilStateCreateInfo.front.writeMask = createInfo.PipelineDescriptor.StencilOperations.Front.WriteMask;
+	vkPipelineDepthStencilStateCreateInfo.front.reference = createInfo.PipelineDescriptor.StencilOperations.Front.Reference;
+
+	vkPipelineDepthStencilStateCreateInfo.back.failOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Back.FailOperation);
+	vkPipelineDepthStencilStateCreateInfo.back.passOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Back.PassOperation);
+	vkPipelineDepthStencilStateCreateInfo.back.depthFailOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Back.DepthFailOperation);
+	vkPipelineDepthStencilStateCreateInfo.back.compareOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Back.CompareOperation);
+	vkPipelineDepthStencilStateCreateInfo.back.compareMask = createInfo.PipelineDescriptor.StencilOperations.Back.CompareMask;
+	vkPipelineDepthStencilStateCreateInfo.back.writeMask = createInfo.PipelineDescriptor.StencilOperations.Back.WriteMask;
+	vkPipelineDepthStencilStateCreateInfo.back.reference = createInfo.PipelineDescriptor.StencilOperations.Back.Reference;
 
 	GTSL::Array<VkPipelineColorBlendAttachmentState, 12> colorBlendAttachmentStates;
 	for (GTSL::uint8 i = 0; i < createInfo.AttachmentCount; ++i)

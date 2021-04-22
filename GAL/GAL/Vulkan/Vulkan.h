@@ -256,7 +256,7 @@ namespace GAL
 		}
 	}
 
-	inline VkFormat ShaderDataTypesToVkFormat(const ShaderDataType shaderDataTypes)
+	inline VkFormat ToVulkan(const ShaderDataType shaderDataTypes)
 	{
 		switch (shaderDataTypes)
 		{
@@ -292,7 +292,7 @@ namespace GAL
 		}
 	};
 
-	inline VkCullModeFlagBits CullModeToVkCullModeFlagBits(const CullMode cullMode)
+	inline VkCullModeFlagBits ToVulkan(const CullMode cullMode)
 	{
 		switch (cullMode)
 		{
@@ -301,9 +301,19 @@ namespace GAL
 		case CullMode::CULL_NONE: return VK_CULL_MODE_NONE;
 		default: return VK_CULL_MODE_FLAG_BITS_MAX_ENUM;
 		}
+	}	
+	
+	inline VkFrontFace ToVulkan(const WindingOrder windingOrder)
+	{
+		switch (windingOrder)
+		{
+		case WindingOrder::CLOCKWISE: return VK_FRONT_FACE_CLOCKWISE;
+		case WindingOrder::COUNTER_CLOCKWISE: return VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		default: return VK_FRONT_FACE_MAX_ENUM;
+		}
 	}
 
-	inline VkCompareOp CompareOperationToVkCompareOp(const CompareOperation compareOperation)
+	inline VkCompareOp ToVulkan(const CompareOperation compareOperation)
 	{
 		switch (compareOperation)
 		{
@@ -719,5 +729,21 @@ namespace GAL
 		}
 
 		return 0;
+	}
+
+	inline VkStencilOp ToVulkan(const StencilCompareOperation stencilCompareOperation)
+	{
+		switch (stencilCompareOperation)
+		{
+		case StencilCompareOperation::KEEP: return VK_STENCIL_OP_KEEP;
+		case StencilCompareOperation::ZERO: return VK_STENCIL_OP_ZERO;
+		case StencilCompareOperation::REPLACE: return VK_STENCIL_OP_REPLACE;
+		case StencilCompareOperation::INCREMENT_AND_CLAMP: return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+		case StencilCompareOperation::DECREMENT_AND_CLAMP: return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+		case StencilCompareOperation::INVERT: return VK_STENCIL_OP_INVERT;
+		case StencilCompareOperation::INCREMENT_AND_WRAP: return VK_STENCIL_OP_INCREMENT_AND_WRAP;
+		case StencilCompareOperation::DECREMENT_AND_WRAP: return VK_STENCIL_OP_DECREMENT_AND_WRAP;
+		default: return VK_STENCIL_OP_MAX_ENUM;
+		}
 	}
 }
