@@ -313,10 +313,8 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 	}
 
 	{
-		uint32_t physicalDeviceCount{ 0 }; vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
-		Array<VkPhysicalDevice, 8> vkPhysicalDevices(physicalDeviceCount);
-		vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, vkPhysicalDevices.begin());
-
+		uint32_t physicalDeviceCount{ 16 }; VkPhysicalDevice vkPhysicalDevices[16];
+		vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, vkPhysicalDevices);
 		physicalDevice = vkPhysicalDevices[0];
 	}
 
@@ -324,24 +322,22 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 		Array<VkDeviceQueueCreateInfo, 8> vkDeviceQueueCreateInfos; Array<Array<uint16, 8>, 8> familiesIndices;
 
 		{
-			uint32 queueFamiliesCount = 0;
-			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamiliesCount, nullptr);
+			uint32 queueFamiliesCount = 32; VkQueueFamilyProperties vkQueueFamiliesProperties[32];
 			//Get the amount of queue families there are in the physical device.
-			Array<VkQueueFamilyProperties, 32> vkQueueFamilyPropertieses(queueFamiliesCount);
-			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamiliesCount, vkQueueFamilyPropertieses.begin());
+			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamiliesCount, vkQueueFamiliesProperties);
 
-			Array<bool, 8> usedFamilies(queueFamiliesCount); for (auto& e : usedFamilies) { e = false; }
+			bool usedFamilies[32]; for (uint8 i = 0; i < queueFamiliesCount; ++i) { usedFamilies[i] = false; }
 
-			Array<VkQueueFlags, 16> vkQueuesFlagBits(createInfo.QueueCreateInfos.ElementCount());
-			for (auto& e : vkQueuesFlagBits) {
-				e = createInfo.QueueCreateInfos[&e - vkQueuesFlagBits.begin()].Capabilities;
+			VkQueueFlags vkQueuesFlagBits[16];
+			for (uint8 i = 0; i < createInfo.QueueCreateInfos.ElementCount(); ++i) {
+				vkQueuesFlagBits[i] = createInfo.QueueCreateInfos[i].Capabilities;
 			}
 
 			Array<Array<float32, 8>, 8> familiesPriorities;
 
 			for (uint8 QUEUE = 0; QUEUE < createInfo.QueueCreateInfos.ElementCount(); ++QUEUE) {
 				for (uint8 FAMILY = 0; FAMILY < queueFamiliesCount; ++FAMILY) {
-					if (vkQueueFamilyPropertieses[FAMILY].queueCount > 0 && vkQueueFamilyPropertieses[FAMILY].queueFlags & vkQueuesFlagBits[QUEUE]) //if family has vk_queue_flags_bits[FAMILY] create queue from this family
+					if (vkQueueFamiliesProperties[FAMILY].queueCount > 0 && vkQueueFamiliesProperties[FAMILY].queueFlags & vkQueuesFlagBits[QUEUE]) //if family has vk_queue_flags_bits[FAMILY] create queue from this family
 					{
 						if (usedFamilies[FAMILY]) //if a queue is already being used from this family add another
 						{
@@ -535,8 +531,8 @@ bool GAL::VulkanRenderDevice::Initialize(const CreateInfo& createInfo)
 			vkDeviceCreateInfo.pEnabledFeatures = nullptr;
 			vkDeviceCreateInfo.enabledExtensionCount = deviceExtensions.GetLength();
 
-			Array<const char*, 32> strings(deviceExtensions.GetLength()); {
-				for (uint32 i = 0; i < deviceExtensions.GetLength(); ++i) { strings[i] = deviceExtensions[i].begin(); }
+			Array<const char*, 32> strings; {
+				for (uint32 i = 0; i < deviceExtensions.GetLength(); ++i) { strings.EmplaceBack(deviceExtensions[i].begin()); }
 			}
 
 			vkDeviceCreateInfo.ppEnabledExtensionNames = strings.begin();

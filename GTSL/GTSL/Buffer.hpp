@@ -49,6 +49,10 @@ namespace GTSL
 	{
 	public:
 		Buffer() = default;
+
+		Buffer(uint32 size, uint32 alignment, const ALLOCATOR& allocator) {
+			Allocate(size, alignment, allocator);
+		}
 		
 		~Buffer()
 		{
@@ -56,6 +60,19 @@ namespace GTSL
 			{
 				allocator.Deallocate(capacity, alignment, data); data = nullptr;
 			}
+		}
+
+		void* PushBytes(uint64 size) {
+			void* ret = data + length;
+			length += size;
+			return ret;
+		}
+
+		template<typename T>
+		T* AllocateStructure() {
+			void* ret = data + length;
+			length += sizeof(T);
+			return reinterpret_cast<T*>(ret);
 		}
 
 		Buffer(Buffer&& buffer) noexcept : data(buffer.data), capacity(buffer.capacity), length(buffer.length), readPos(buffer.readPos)

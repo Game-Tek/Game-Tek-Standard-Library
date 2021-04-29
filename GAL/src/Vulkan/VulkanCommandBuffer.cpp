@@ -31,16 +31,15 @@ void GAL::VulkanCommandBuffer::BeginRenderPass(const BeginRenderPassInfo& beginR
 	VkRenderPassBeginInfo vkRenderPassBeginInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 	vkRenderPassBeginInfo.renderPass = beginRenderPassInfo.RenderPass.GetVkRenderPass();
 
-	Array<VkClearValue, 32> vkClearValues(static_cast<uint32>(beginRenderPassInfo.ClearValues.ElementCount()));
+	VkClearValue vkClearValues[32];
 	
-	for(uint8 i = 0; i < static_cast<uint8>(beginRenderPassInfo.ClearValues.ElementCount()); ++i)
-	{
+	for(uint8 i = 0; i < static_cast<uint8>(beginRenderPassInfo.ClearValues.ElementCount()); ++i) {
 		const auto& color = beginRenderPassInfo.ClearValues[i];
 		vkClearValues[i] = VkClearValue{ color.R(), color.G(), color.B(), color.A() };
 	}
 	
-	vkRenderPassBeginInfo.pClearValues = vkClearValues.begin();
-	vkRenderPassBeginInfo.clearValueCount = vkClearValues.GetLength();
+	vkRenderPassBeginInfo.pClearValues = vkClearValues;
+	vkRenderPassBeginInfo.clearValueCount = beginRenderPassInfo.ClearValues.ElementCount();
 	vkRenderPassBeginInfo.framebuffer = beginRenderPassInfo.Framebuffer.GetVkFramebuffer();
 	vkRenderPassBeginInfo.renderArea.extent = Extent2DToVkExtent2D(beginRenderPassInfo.RenderArea);
 	vkRenderPassBeginInfo.renderArea.offset = { 0, 0 };
@@ -244,16 +243,17 @@ void GAL::VulkanCommandPool::AllocateCommandBuffer(const AllocateCommandBuffersI
 	vkCommandBufferAllocateInfo.level = allocateCommandBuffersInfo.IsPrimary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 	vkCommandBufferAllocateInfo.commandBufferCount = allocateCommandBuffersInfo.CommandBuffers.ElementCount();
 
-	Array<VkCommandBuffer, 16> command_buffers(allocateCommandBuffersInfo.CommandBuffers.ElementCount());
+	GTSL_ASSERT(allocateCommandBuffersInfo.CommandBuffers.ElementCount() < 32, "");
+	VkCommandBuffer vkCommandBuffer[32];
 
-	VK_CHECK(vkAllocateCommandBuffers(allocateCommandBuffersInfo.RenderDevice->GetVkDevice(), &vkCommandBufferAllocateInfo, command_buffers.begin()));
+	VK_CHECK(vkAllocateCommandBuffers(allocateCommandBuffersInfo.RenderDevice->GetVkDevice(), &vkCommandBufferAllocateInfo, vkCommandBuffer));
 
 	if constexpr (_DEBUG)
 	{
 		for (uint32 i = 0; i < allocateCommandBuffersInfo.CommandBuffers.ElementCount(); ++i)
 		{
-			allocateCommandBuffersInfo.CommandBuffers[i].commandBuffer = command_buffers[i];
-			SET_NAME(command_buffers[i], VK_OBJECT_TYPE_COMMAND_BUFFER, allocateCommandBuffersInfo.CommandBufferCreateInfos[i])
+			allocateCommandBuffersInfo.CommandBuffers[i].commandBuffer = vkCommandBuffer[i];
+			SET_NAME(vkCommandBuffer[i], VK_OBJECT_TYPE_COMMAND_BUFFER, allocateCommandBuffersInfo.CommandBufferCreateInfos[i])
 		}
 	}
 }

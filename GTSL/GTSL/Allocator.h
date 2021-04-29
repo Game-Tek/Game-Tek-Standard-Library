@@ -136,7 +136,7 @@ namespace GTSL
 		void Deallocate(const uint64 size, uint64 alignment, void* data)
 		{
 			GTSL_ASSERT(size <= BYTES, "Freed more bytes than could be given")
-			GTSL_ASSERT(size + usedBytes <= BYTES, "Freed more bytes than could be given")
+			GTSL_ASSERT(size <= usedBytes, "Freed more bytes than could be given")
 			usedBytes -= size;
 		}
 		

@@ -233,126 +233,169 @@ void GAL::VulkanPipelineLayout::Destroy(const VulkanRenderDevice* renderDevice)
 	debugClear(pipelineLayout);
 }
 
-void GAL::VulkanRasterizationPipeline::Initialize(const CreateInfo& createInfo)
+void GAL::VulkanPipeline::InitializeRasterPipeline(const VulkanRenderDevice* renderDevice, const GTSL::Range<const PipelineStateBlock*> pipelineStates, GTSL::Range<const ShaderInfo*> stages, const VulkanPipelineLayout pipelineLayout, const VulkanPipelineCache pipelineCache)
 {
-	GTSL::Array<GTSL::uint8, MAX_VERTEX_ELEMENTS> offsets;
-
-	GTSL::Array<VkVertexInputBindingDescription, 4> vkVertexInputBindingDescriptions;
-	auto& vertexBinding = vkVertexInputBindingDescriptions.EmplaceBack();
-
-	GTSL::Array<VkVertexInputAttributeDescription, MAX_VERTEX_ELEMENTS> vkVertexInputAttributeDescriptions;
-
-	GTSL::uint16 offset = 0;
+	VkGraphicsPipelineCreateInfo vkGraphicsPipelineCreateInfo{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
+	vkGraphicsPipelineCreateInfo.pTessellationState = nullptr; vkGraphicsPipelineCreateInfo.pColorBlendState = nullptr;
+	vkGraphicsPipelineCreateInfo.pVertexInputState = nullptr; vkGraphicsPipelineCreateInfo.pInputAssemblyState = nullptr;
+	vkGraphicsPipelineCreateInfo.pViewportState = nullptr; vkGraphicsPipelineCreateInfo.pRasterizationState = nullptr;
+	vkGraphicsPipelineCreateInfo.pDepthStencilState = nullptr; vkGraphicsPipelineCreateInfo.pMultisampleState = nullptr;
+	vkGraphicsPipelineCreateInfo.layout = pipelineLayout.GetVkPipelineLayout();
 	
-	for (GTSL::uint8 i = 0; i < createInfo.VertexDescriptor.ElementCount(); ++i) {
-		auto size = ShaderDataTypesSize(createInfo.VertexDescriptor[i].Type);
-		
-		if (createInfo.VertexDescriptor[i].Enabled) {
-			auto& vertex = vkVertexInputAttributeDescriptions.EmplaceBack();
-			vertex.binding = 0; vertex.location = i; vertex.format = ToVulkan(createInfo.VertexDescriptor[i].Type);
-			vertex.offset = offset;
-			offset += size;
-			vertexBinding.stride += size;
+	GTSL::Buffer<GTSL::StackAllocator<8192>> buffer(8192, 8, GTSL::StackAllocator<8192>());
+
+	for (GTSL::uint8 i = 0; i < pipelineStates.ElementCount(); ++i)
+	{
+		auto& pipelineState = pipelineStates[i];
+
+		switch (pipelineState.Type)
+		{
+		case PipelineStateBlock::StateType::VIEWPORT_STATE:
+		{
+			auto* vkViewport = buffer.AllocateStructure<VkViewport>();
+			vkViewport->x = 0;
+			vkViewport->y = 1;
+			vkViewport->width = 1.0f;
+			vkViewport->height = 1.0f;
+			vkViewport->minDepth = 0.0f;
+			vkViewport->maxDepth = 1.0f;
+
+			auto* vkScissor = buffer.AllocateStructure<VkRect2D>();
+			*vkScissor = { { 0, 0 }, { 1, 1 } };
+
+			auto* pointer = buffer.AllocateStructure<VkPipelineViewportStateCreateInfo>();
+
+			VkPipelineViewportStateCreateInfo& vkPipelineViewportStateCreateInfo = *pointer;
+			vkPipelineViewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+			vkPipelineViewportStateCreateInfo.pNext = nullptr;
+			vkPipelineViewportStateCreateInfo.viewportCount = pipelineState.Block.Viewport.ViewportCount;
+			vkPipelineViewportStateCreateInfo.pViewports = vkViewport;
+			vkPipelineViewportStateCreateInfo.scissorCount = 1;
+			vkPipelineViewportStateCreateInfo.pScissors = vkScissor;
+
+			vkGraphicsPipelineCreateInfo.pViewportState = pointer;
+
+			break;
+		}
+		case PipelineStateBlock::StateType::RASTER_STATE:
+		{
+			VkPipelineRasterizationStateCreateInfo* pointer = buffer.AllocateStructure<VkPipelineRasterizationStateCreateInfo>();
+
+			VkPipelineRasterizationStateCreateInfo& vkPipelineRasterizationStateCreateInfo = *pointer;
+			vkPipelineRasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+			vkPipelineRasterizationStateCreateInfo.pNext = nullptr;
+			vkPipelineRasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
+			vkPipelineRasterizationStateCreateInfo.rasterizerDiscardEnable = VK_TRUE;
+			vkPipelineRasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+			vkPipelineRasterizationStateCreateInfo.lineWidth = 1.0f;
+			vkPipelineRasterizationStateCreateInfo.frontFace = ToVulkan(pipelineState.Block.Raster.WindingOrder);
+			vkPipelineRasterizationStateCreateInfo.cullMode = ToVulkan(pipelineState.Block.Raster.CullMode);
+			vkPipelineRasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
+			vkPipelineRasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f; // Optional
+			vkPipelineRasterizationStateCreateInfo.depthBiasClamp = 0.0f; // Optional
+			vkPipelineRasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f; // Optional
+
+			vkGraphicsPipelineCreateInfo.pRasterizationState = pointer;
+
+			break;
+		}
+		case PipelineStateBlock::StateType::DEPTH_STATE:
+		{
+			auto* pointer = buffer.AllocateStructure<VkPipelineDepthStencilStateCreateInfo>();
+
+			auto& vkPipelineDepthStencilStateCreateInfo = *pointer;
+			vkPipelineDepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+			vkPipelineDepthStencilStateCreateInfo.pNext = nullptr;
+			vkPipelineDepthStencilStateCreateInfo.depthTestEnable = true;
+			vkPipelineDepthStencilStateCreateInfo.depthWriteEnable = true;
+			vkPipelineDepthStencilStateCreateInfo.depthCompareOp = ToVulkan(pipelineState.Block.Depth.CompareOperation);
+			vkPipelineDepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+			vkPipelineDepthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
+			vkPipelineDepthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
+			vkPipelineDepthStencilStateCreateInfo.stencilTestEnable = false;
+
+			vkGraphicsPipelineCreateInfo.pDepthStencilState = pointer;
+
+			break;
+		}
+		case PipelineStateBlock::StateType::COLOR_BLEND_STATE:
+		{
+			auto* pointer = buffer.AllocateStructure<VkPipelineColorBlendStateCreateInfo>();
+
+			auto& vkPipelineColorblendStateCreateInfo = *pointer;
+			vkPipelineColorblendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+			vkPipelineColorblendStateCreateInfo.pNext = nullptr;
+			vkPipelineColorblendStateCreateInfo.logicOpEnable = VK_FALSE;
+			vkPipelineColorblendStateCreateInfo.logicOp = VK_LOGIC_OP_COPY; // Optional
+			vkPipelineColorblendStateCreateInfo.pAttachments = reinterpret_cast<const VkPipelineColorBlendAttachmentState*>(buffer.GetData() + buffer.GetLength());
+
+			GTSL::uint8 attachmentCount = 0;
+			for (; attachmentCount < pipelineState.Block.Context.Attachments.ElementCount(); ++attachmentCount) {
+				auto* state = buffer.AllocateStructure<VkPipelineColorBlendAttachmentState>();
+				state->blendEnable = pipelineState.Block.Context.Attachments[attachmentCount].BlendEnable;
+				state->colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+				state->srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+				state->dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+				state->colorBlendOp = VK_BLEND_OP_ADD;
+				state->srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+				state->dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+				state->alphaBlendOp = VK_BLEND_OP_ADD;
+			}
+
+			vkPipelineColorblendStateCreateInfo.attachmentCount = attachmentCount;
+			vkPipelineColorblendStateCreateInfo.blendConstants[0] = 0.0f; // Optional
+			vkPipelineColorblendStateCreateInfo.blendConstants[1] = 0.0f; // Optional
+			vkPipelineColorblendStateCreateInfo.blendConstants[2] = 0.0f; // Optional
+			vkPipelineColorblendStateCreateInfo.blendConstants[3] = 0.0f; // Optional
+
+			vkGraphicsPipelineCreateInfo.pColorBlendState = pointer;
+
+			vkGraphicsPipelineCreateInfo.renderPass = static_cast<const VulkanRenderPass*>(pipelineState.Block.Context.RenderPass)->GetVkRenderPass();
+			vkGraphicsPipelineCreateInfo.subpass = pipelineState.Block.Context.SubPassIndex;
+
+			break;
+		}
+		case PipelineStateBlock::StateType::VERTEX_STATE:
+		{
+			auto* pointer = buffer.AllocateStructure<VkPipelineVertexInputStateCreateInfo>();
+			auto* binding = buffer.AllocateStructure<VkVertexInputBindingDescription>();
+
+			binding->binding = 0; binding->inputRate = VK_VERTEX_INPUT_RATE_VERTEX; binding->stride = 0;
+
+			pointer->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO; pointer->pNext = nullptr;
+			pointer->vertexBindingDescriptionCount = 1;
+			pointer->pVertexBindingDescriptions = binding;
+			pointer->vertexAttributeDescriptionCount = 0;
+			pointer->pVertexAttributeDescriptions = reinterpret_cast<const VkVertexInputAttributeDescription*>(buffer.GetData() + buffer.GetLength());;
+
+			GTSL::uint16 offset = 0;
+
+			for (GTSL::uint8 i = 0; i < pipelineState.Block.Vertex.VertexDescriptor.ElementCount(); ++i) {
+				auto size = ShaderDataTypesSize(pipelineState.Block.Vertex.VertexDescriptor[i].Type);
+
+				if (pipelineState.Block.Vertex.VertexDescriptor[i].Enabled) {
+					auto& vertex = *buffer.AllocateStructure<VkVertexInputAttributeDescription>();
+					vertex.binding = 0; vertex.location = i; vertex.format = ToVulkan(pipelineState.Block.Vertex.VertexDescriptor[i].Type);
+					vertex.offset = offset;
+					offset += size;
+					binding->stride += size;
+				}
+
+				++pointer->vertexAttributeDescriptionCount;
+			}
+
+			vkGraphicsPipelineCreateInfo.pVertexInputState = pointer;
+
+			auto* inputAssemblyState = buffer.AllocateStructure<VkPipelineInputAssemblyStateCreateInfo>();
+			inputAssemblyState->sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO; inputAssemblyState->pNext = nullptr;
+			inputAssemblyState->flags = 0; inputAssemblyState->primitiveRestartEnable = false; inputAssemblyState->topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+			vkGraphicsPipelineCreateInfo.pInputAssemblyState = inputAssemblyState;
+
+			break;
+		}
+		default:;
 		}
 	}
-
-	VkPipelineVertexInputStateCreateInfo vkPipelineVertexInputStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-	vkPipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = vkVertexInputBindingDescriptions.GetLength();
-	vkPipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = vkVertexInputBindingDescriptions.begin();
-	vkPipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = vkVertexInputAttributeDescriptions.GetLength();
-	vkPipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = vkVertexInputAttributeDescriptions.begin();
-
-	VkPipelineInputAssemblyStateCreateInfo vkPipelineInputAssemblyStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
-	vkPipelineInputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-	vkPipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
-	
-	VkPipelineTessellationStateCreateInfo vkPipelineTessellationStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO };
-
-	VkViewport vkViewport;
-	vkViewport.x = 0;
-	vkViewport.y = 1;
-	vkViewport.width = 1.0f;
-	vkViewport.height = -1.0f;
-	vkViewport.minDepth = 0.0f;
-	vkViewport.maxDepth = 1.0f;
-
-	VkRect2D vkScissor = { { 0, 0 }, { 1, 1 } };
-
-	VkPipelineViewportStateCreateInfo vkPipelineViewportStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
-	vkPipelineViewportStateCreateInfo.viewportCount = 1;
-	vkPipelineViewportStateCreateInfo.pViewports = &vkViewport;
-	vkPipelineViewportStateCreateInfo.scissorCount = 1;
-	vkPipelineViewportStateCreateInfo.pScissors = &vkScissor;
-
-	VkPipelineRasterizationStateCreateInfo vkPipelineRasterizationStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-	vkPipelineRasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
-	vkPipelineRasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-	vkPipelineRasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
-	vkPipelineRasterizationStateCreateInfo.lineWidth = 1.0f;
-	vkPipelineRasterizationStateCreateInfo.frontFace = ToVulkan(createInfo.PipelineDescriptor.WindingOrder);
-	vkPipelineRasterizationStateCreateInfo.cullMode = ToVulkan(createInfo.PipelineDescriptor.CullMode);
-	vkPipelineRasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
-	vkPipelineRasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f; // Optional
-	vkPipelineRasterizationStateCreateInfo.depthBiasClamp = 0.0f; // Optional
-	vkPipelineRasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f; // Optional
-
-	VkPipelineMultisampleStateCreateInfo vkPipelineMultisampleStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-	vkPipelineMultisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
-	vkPipelineMultisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-	vkPipelineMultisampleStateCreateInfo.minSampleShading = 1.0f; // Optional
-	vkPipelineMultisampleStateCreateInfo.pSampleMask = nullptr; // Optional
-	vkPipelineMultisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE; // Optional
-	vkPipelineMultisampleStateCreateInfo.alphaToOneEnable = VK_FALSE; // Optional
-
-	VkPipelineDepthStencilStateCreateInfo vkPipelineDepthStencilStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-	vkPipelineDepthStencilStateCreateInfo.depthTestEnable = createInfo.PipelineDescriptor.DepthTest;
-	vkPipelineDepthStencilStateCreateInfo.depthWriteEnable = createInfo.PipelineDescriptor.DepthWrite;
-	vkPipelineDepthStencilStateCreateInfo.depthCompareOp = ToVulkan(createInfo.PipelineDescriptor.DepthCompareOperation);
-	vkPipelineDepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
-	vkPipelineDepthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
-	vkPipelineDepthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
-	vkPipelineDepthStencilStateCreateInfo.stencilTestEnable = createInfo.PipelineDescriptor.StencilTest;
-	
-	vkPipelineDepthStencilStateCreateInfo.front.failOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Front.FailOperation);
-	vkPipelineDepthStencilStateCreateInfo.front.passOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Front.PassOperation);
-	vkPipelineDepthStencilStateCreateInfo.front.depthFailOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Front.DepthFailOperation);
-	vkPipelineDepthStencilStateCreateInfo.front.compareOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Front.CompareOperation);
-	vkPipelineDepthStencilStateCreateInfo.front.compareMask = createInfo.PipelineDescriptor.StencilOperations.Front.CompareMask;
-	vkPipelineDepthStencilStateCreateInfo.front.writeMask = createInfo.PipelineDescriptor.StencilOperations.Front.WriteMask;
-	vkPipelineDepthStencilStateCreateInfo.front.reference = createInfo.PipelineDescriptor.StencilOperations.Front.Reference;
-
-	vkPipelineDepthStencilStateCreateInfo.back.failOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Back.FailOperation);
-	vkPipelineDepthStencilStateCreateInfo.back.passOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Back.PassOperation);
-	vkPipelineDepthStencilStateCreateInfo.back.depthFailOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Back.DepthFailOperation);
-	vkPipelineDepthStencilStateCreateInfo.back.compareOp = ToVulkan(createInfo.PipelineDescriptor.StencilOperations.Back.CompareOperation);
-	vkPipelineDepthStencilStateCreateInfo.back.compareMask = createInfo.PipelineDescriptor.StencilOperations.Back.CompareMask;
-	vkPipelineDepthStencilStateCreateInfo.back.writeMask = createInfo.PipelineDescriptor.StencilOperations.Back.WriteMask;
-	vkPipelineDepthStencilStateCreateInfo.back.reference = createInfo.PipelineDescriptor.StencilOperations.Back.Reference;
-
-	GTSL::Array<VkPipelineColorBlendAttachmentState, 12> colorBlendAttachmentStates;
-	for (GTSL::uint8 i = 0; i < createInfo.AttachmentCount; ++i)
-	{
-		VkPipelineColorBlendAttachmentState vkPipelineColorblendAttachmentState;
-		vkPipelineColorblendAttachmentState.blendEnable = createInfo.PipelineDescriptor.BlendEnable;
-		vkPipelineColorblendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		vkPipelineColorblendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-		vkPipelineColorblendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-		vkPipelineColorblendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
-		vkPipelineColorblendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-		vkPipelineColorblendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-		vkPipelineColorblendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
-		colorBlendAttachmentStates.EmplaceBack(vkPipelineColorblendAttachmentState);
-	}
-
-	VkPipelineColorBlendStateCreateInfo vkPipelineColorblendStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
-	vkPipelineColorblendStateCreateInfo.logicOpEnable = VK_FALSE;
-	vkPipelineColorblendStateCreateInfo.logicOp = VK_LOGIC_OP_COPY; // Optional
-	vkPipelineColorblendStateCreateInfo.attachmentCount = colorBlendAttachmentStates.GetLength();
-	vkPipelineColorblendStateCreateInfo.pAttachments = colorBlendAttachmentStates.begin();
-	vkPipelineColorblendStateCreateInfo.blendConstants[0] = 0.0f; // Optional
-	vkPipelineColorblendStateCreateInfo.blendConstants[1] = 0.0f; // Optional
-	vkPipelineColorblendStateCreateInfo.blendConstants[2] = 0.0f; // Optional
-	vkPipelineColorblendStateCreateInfo.blendConstants[3] = 0.0f; // Optional
 
 	VkPipelineDynamicStateCreateInfo vkPipelineDynamicStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
 	GTSL::Array<VkDynamicState, 4> vkDynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
@@ -361,42 +404,30 @@ void GAL::VulkanRasterizationPipeline::Initialize(const CreateInfo& createInfo)
 
 	GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vkPipelineShaderStageCreateInfos;
 
-	for (GTSL::uint8 i = 0; i < createInfo.Stages.ElementCount(); ++i)
+	for (GTSL::uint8 i = 0; i < stages.ElementCount(); ++i)
 	{
 		auto& stage = vkPipelineShaderStageCreateInfos.EmplaceBack();
-		
+
 		stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		stage.pNext = nullptr;
 		stage.flags = 0;
-		stage.stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
+		stage.stage = static_cast<VkShaderStageFlagBits>(stages[i].Type);
 		stage.pName = "main";
-		stage.module = createInfo.Stages[i].Shader.GetVkShaderModule();
+		stage.module = stages[i].Shader.GetVkShaderModule();
 		stage.pSpecializationInfo = nullptr;
 	}
 
-	VkGraphicsPipelineCreateInfo vkGraphicsPipelineCreateInfo{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 	vkGraphicsPipelineCreateInfo.stageCount = vkPipelineShaderStageCreateInfos.GetLength();
 	vkGraphicsPipelineCreateInfo.pStages = vkPipelineShaderStageCreateInfos.begin();
-	vkGraphicsPipelineCreateInfo.pVertexInputState = &vkPipelineVertexInputStateCreateInfo;
-	vkGraphicsPipelineCreateInfo.pInputAssemblyState = &vkPipelineInputAssemblyStateCreateInfo;
-	vkGraphicsPipelineCreateInfo.pTessellationState = &vkPipelineTessellationStateCreateInfo;
-	vkGraphicsPipelineCreateInfo.pViewportState = &vkPipelineViewportStateCreateInfo;
-	vkGraphicsPipelineCreateInfo.pRasterizationState = &vkPipelineRasterizationStateCreateInfo;
-	vkGraphicsPipelineCreateInfo.pMultisampleState = &vkPipelineMultisampleStateCreateInfo;
-	vkGraphicsPipelineCreateInfo.pDepthStencilState = &vkPipelineDepthStencilStateCreateInfo;
-	vkGraphicsPipelineCreateInfo.pColorBlendState = &vkPipelineColorblendStateCreateInfo;
 	vkGraphicsPipelineCreateInfo.pDynamicState = &vkPipelineDynamicStateCreateInfo;
-	vkGraphicsPipelineCreateInfo.layout = createInfo.PipelineLayout.GetVkPipelineLayout();
-	vkGraphicsPipelineCreateInfo.renderPass = createInfo.RenderPass.GetVkRenderPass();
-	vkGraphicsPipelineCreateInfo.subpass = createInfo.SubPass;
-	vkGraphicsPipelineCreateInfo.basePipelineIndex = createInfo.Parent.GetVkPipeline() ? 0 : -1;
-	vkGraphicsPipelineCreateInfo.basePipelineHandle = createInfo.Parent.GetVkPipeline();
+	vkGraphicsPipelineCreateInfo.basePipelineIndex = -1;
+	vkGraphicsPipelineCreateInfo.basePipelineHandle = nullptr;
 
-	VK_CHECK(vkCreateGraphicsPipelines(createInfo.RenderDevice->GetVkDevice(), createInfo.PipelineCache.GetVkPipelineCache(), 1, &vkGraphicsPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline));
-	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
+	VK_CHECK(vkCreateGraphicsPipelines(renderDevice->GetVkDevice(), pipelineCache.GetVkPipelineCache(), 1, &vkGraphicsPipelineCreateInfo, renderDevice->GetVkAllocationCallbacks(), &pipeline));
+	//SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
 }
 
-void GAL::VulkanRasterizationPipeline::Destroy(const VulkanRenderDevice* renderDevice)
+void GAL::VulkanPipeline::Destroy(const VulkanRenderDevice* renderDevice)
 {
 	vkDestroyPipeline(renderDevice->GetVkDevice(), pipeline, renderDevice->GetVkAllocationCallbacks());
 	debugClear(pipeline);
@@ -415,12 +446,6 @@ void GAL::VulkanComputePipeline::Initialize(const CreateInfo& createInfo)
 	vkCreateComputePipelines(createInfo.RenderDevice->GetVkDevice(), createInfo.PipelineCache.GetVkPipelineCache(), 1, &computePipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
 }
 
-void GAL::VulkanComputePipeline::Destroy(const VulkanRenderDevice* renderDevice)
-{
-	vkDestroyPipeline(renderDevice->GetVkDevice(), pipeline, renderDevice->GetVkAllocationCallbacks());
-	debugClear(pipeline);
-}
-
 static_assert(sizeof(GAL::VulkanRayTracingPipeline::Group) == sizeof(VkRayTracingShaderGroupCreateInfoKHR), "Size doesn't match!");
 
 void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
@@ -429,17 +454,18 @@ void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 	vkRayTracingPipelineCreateInfo.basePipelineIndex = -1;
 	vkRayTracingPipelineCreateInfo.maxPipelineRayRecursionDepth = createInfo.MaxRecursionDepth;
 
-	GTSL::Array<VkPipelineShaderStageCreateInfo, 32> vkPipelineShaderStageCreateInfos(static_cast<GTSL::uint32>(createInfo.Stages.ElementCount()));
+	GTSL::Array<VkPipelineShaderStageCreateInfo, 32> vkPipelineShaderStageCreateInfos;
 
-	for (GTSL::uint32 i = 0; i < vkPipelineShaderStageCreateInfos.GetLength(); ++i)
+	for (GTSL::uint32 i = 0; i < static_cast<GTSL::uint32>(createInfo.Stages.ElementCount()); ++i)
 	{
-		vkPipelineShaderStageCreateInfos[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vkPipelineShaderStageCreateInfos[i].pNext = nullptr;
-		vkPipelineShaderStageCreateInfos[i].flags = 0;
-		vkPipelineShaderStageCreateInfos[i].stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
-		vkPipelineShaderStageCreateInfos[i].pName = "main";
-		vkPipelineShaderStageCreateInfos[i].pSpecializationInfo = nullptr;
-		vkPipelineShaderStageCreateInfos[i].module = createInfo.Stages[i].Shader.GetVkShaderModule();
+		auto& stageCreateInfo = vkPipelineShaderStageCreateInfos.EmplaceBack();
+		stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		stageCreateInfo.pNext = nullptr;
+		stageCreateInfo.flags = 0;
+		stageCreateInfo.stage = static_cast<VkShaderStageFlagBits>(createInfo.Stages[i].Type);
+		stageCreateInfo.pName = "main";
+		stageCreateInfo.pSpecializationInfo = nullptr;
+		stageCreateInfo.module = createInfo.Stages[i].Shader.GetVkShaderModule();
 	}
 
 	for(auto& e : createInfo.Groups)
@@ -459,12 +485,6 @@ void GAL::VulkanRayTracingPipeline::Initialize(const CreateInfo& createInfo)
 	
 	createInfo.RenderDevice->vkCreateRayTracingPipelinesKHR(createInfo.RenderDevice->GetVkDevice(), nullptr, createInfo.PipelineCache.GetVkPipelineCache(), 1, &vkRayTracingPipelineCreateInfo, createInfo.RenderDevice->GetVkAllocationCallbacks(), &pipeline);
 	SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo)
-}
-
-void GAL::VulkanRayTracingPipeline::Destroy(const VulkanRenderDevice* renderDevice)
-{
-	vkDestroyPipeline(renderDevice->GetVkDevice(), pipeline, renderDevice->GetVkAllocationCallbacks());
-	debugClear(pipeline);
 }
 
 void GAL::VulkanRayTracingPipeline::GetShaderGroupHandles(VulkanRenderDevice* renderDevice, GTSL::uint32 firstGroup, GTSL::uint32 groupCount, GTSL::Range<GTSL::byte*> buffer)

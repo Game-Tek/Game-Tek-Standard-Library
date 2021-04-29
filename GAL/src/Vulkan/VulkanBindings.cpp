@@ -4,10 +4,12 @@
 
 GAL::VulkanBindingsPool::VulkanBindingsPool(const CreateInfo& createInfo)
 {
-	GTSL::Array<VkDescriptorPoolSize, MAX_BINDINGS_PER_SET> vkDescriptorPoolSizes(createInfo.BindingsPoolSizes.ElementCount());
-	for (auto& descriptorPoolSize : vkDescriptorPoolSizes)
+	GTSL::Array<VkDescriptorPoolSize, MAX_BINDINGS_PER_SET> vkDescriptorPoolSizes;
+
+	for(GTSL::uint8 i = 0; i < createInfo.BindingsPoolSizes.ElementCount(); ++i)
 	{
-		descriptorPoolSize.type = static_cast<VkDescriptorType>(createInfo.BindingsPoolSizes[&descriptorPoolSize - vkDescriptorPoolSizes.begin()].BindingType);
+		auto& descriptorPoolSize = vkDescriptorPoolSizes.EmplaceBack();
+		descriptorPoolSize.type = static_cast<VkDescriptorType>(createInfo.BindingsPoolSizes[i].BindingType);
 		//Max number of descriptors of VkDescriptorPoolSize::type we can allocate.
 		descriptorPoolSize.descriptorCount = createInfo.BindingsPoolSizes[&descriptorPoolSize - vkDescriptorPoolSizes.begin()].Count;
 	}
@@ -34,14 +36,15 @@ void GAL::VulkanBindingsPool::AllocateBindingsSets(const AllocateBindingsSetsInf
 	//vkDescriptorSetVariableDescriptorCountAllocateInfo.descriptorSetCount = static_cast<GTSL::uint32>(allocateBindingsSetsInfo.BindingsSetDynamicBindingsCounts.ElementCount());
 	//vkDescriptorSetVariableDescriptorCountAllocateInfo.pDescriptorCounts = allocateBindingsSetsInfo.BindingsSetDynamicBindingsCounts.begin();
 
-	GTSL::Array<VkDescriptorSet, 32> descriptorSets(allocateBindingsSetsInfo.BindingsSets.ElementCount());
+	GTSL_ASSERT(allocateBindingsSetsInfo.BindingsSets.ElementCount() < 32, "");
+	VkDescriptorSet descriptorSets[32];
 	
 	VkDescriptorSetAllocateInfo vkDescriptorSetAllocateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
 	//vkDescriptorSetAllocateInfo.pNext = &vkDescriptorSetVariableDescriptorCountAllocateInfo;
 	vkDescriptorSetAllocateInfo.descriptorPool = descriptorPool;
 	vkDescriptorSetAllocateInfo.descriptorSetCount = allocateBindingsSetsInfo.BindingsSets.ElementCount();
 	vkDescriptorSetAllocateInfo.pSetLayouts = reinterpret_cast<const VkDescriptorSetLayout*>(allocateBindingsSetsInfo.BindingsSetLayouts.begin());
-	VK_CHECK(vkAllocateDescriptorSets(allocateBindingsSetsInfo.RenderDevice->GetVkDevice(), &vkDescriptorSetAllocateInfo, descriptorSets.begin()));
+	VK_CHECK(vkAllocateDescriptorSets(allocateBindingsSetsInfo.RenderDevice->GetVkDevice(), &vkDescriptorSetAllocateInfo, descriptorSets));
 
 	for(GTSL::uint32 i = 0; i < allocateBindingsSetsInfo.BindingsSets.ElementCount(); ++i) {
 		allocateBindingsSetsInfo.BindingsSets[i]->descriptorSet = descriptorSets[i];
@@ -63,7 +66,7 @@ void GAL::VulkanBindingsPool::FreeBindingsSet(const FreeBindingsSetInfo& freeBin
 
 GAL::VulkanBindingsSetLayout::VulkanBindingsSetLayout(const CreateInfo& createInfo)
 {
-	GTSL::Array<VkDescriptorBindingFlags, 16> vkDescriptorBindingFlags(createInfo.BindingsDescriptors.ElementCount());
+	GTSL::Array<VkDescriptorBindingFlags, 16> vkDescriptorBindingFlags;
 	VkDescriptorSetLayoutBindingFlagsCreateInfo vkDescriptorSetLayoutBindingFlagsCreateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO };
 	vkDescriptorSetLayoutBindingFlagsCreateInfo.bindingCount = static_cast<GTSL::uint32>(createInfo.BindingsDescriptors.ElementCount());
 	vkDescriptorSetLayoutBindingFlagsCreateInfo.pBindingFlags = vkDescriptorBindingFlags.begin();
@@ -71,7 +74,13 @@ GAL::VulkanBindingsSetLayout::VulkanBindingsSetLayout(const CreateInfo& createIn
 	VkDescriptorSetLayoutCreateInfo vkDescriptorSetLayoutCreateInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
 	vkDescriptorSetLayoutCreateInfo.pNext = &vkDescriptorSetLayoutBindingFlagsCreateInfo;
 	
-	GTSL::Array<VkDescriptorSetLayoutBinding, MAX_BINDINGS_PER_SET> vkDescriptorSetLayoutBindings(createInfo.BindingsDescriptors.ElementCount());
+	GTSL::Array<VkDescriptorSetLayoutBinding, MAX_BINDINGS_PER_SET> vkDescriptorSetLayoutBindings;
+
+	for (GTSL::uint32 i = 0; i < createInfo.BindingsDescriptors.ElementCount(); ++i) {
+		vkDescriptorBindingFlags.EmplaceBack();
+		vkDescriptorSetLayoutBindings.EmplaceBack();
+	}
+	
 	{
 		GTSL::uint8 i = 0;
 

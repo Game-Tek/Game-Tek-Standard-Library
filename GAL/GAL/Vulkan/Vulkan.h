@@ -52,7 +52,7 @@ namespace GAL
 		VulkanCreateInfo() = default;
 	};
 	
-	inline VkAttachmentLoadOp RenderTargetLoadOperationsToVkAttachmentLoadOp(const RenderTargetLoadOperations renderTargetLoadOperations)
+	inline VkAttachmentLoadOp ToVulkan(const RenderTargetLoadOperations renderTargetLoadOperations)
 	{
 		switch (renderTargetLoadOperations)
 		{
@@ -63,7 +63,7 @@ namespace GAL
 		}
 	}
 
-	inline VkAttachmentStoreOp RenderTargetStoreOperationsToVkAttachmentStoreOp(const RenderTargetStoreOperations renderTargetStoreOperations)
+	inline VkAttachmentStoreOp ToVulkan(const RenderTargetStoreOperations renderTargetStoreOperations)
 	{
 		switch (renderTargetStoreOperations)
 		{

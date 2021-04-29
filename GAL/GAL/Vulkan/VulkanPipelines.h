@@ -115,6 +115,9 @@ namespace GAL
 			VulkanShader Shader; VulkanShaderType Type;
 			GTSL::Range<const GTSL::byte*> Blob;
 		};
+
+		void InitializeRasterPipeline(const VulkanRenderDevice* renderDevice, const GTSL::Range<const PipelineStateBlock*> pipelineStates, GTSL::Range<const ShaderInfo*> stages, const VulkanPipelineLayout pipelineLayout, const VulkanPipelineCache pipelineCache);
+		void Destroy(const VulkanRenderDevice* renderDevice);
 		
 		[[nodiscard]] VkPipeline GetVkPipeline() const { return pipeline; }
 		[[nodiscard]] GTSL::uint64 GetHandle() const { return reinterpret_cast<uint64_t>(pipeline); }
@@ -126,23 +129,10 @@ namespace GAL
 	{
 	public:
 		VulkanRasterizationPipeline() = default;
-		
-		struct CreateInfo : VulkanPipeline::CreateInfo
-		{
-			VulkanRenderPass RenderPass;
-			uint32_t SubPass;
-			GTSL::Range<const VertexElement*> VertexDescriptor;
-			VulkanPipelineDescriptor PipelineDescriptor;
-			GTSL::uint8 AttachmentCount = 0;
-			GTSL::Range<const ShaderInfo*> Stages;
-			VulkanPipeline Parent;
-		};
 
 		void Initialize(const CreateInfo& createInfo);
 		
 		~VulkanRasterizationPipeline() = default;
-
-		void Destroy(const VulkanRenderDevice* renderDevice);
 
 	private:
 	};
@@ -159,8 +149,6 @@ namespace GAL
 		~VulkanComputePipeline() = default;
 
 		void Initialize(const CreateInfo& createInfo);
-
-		void Destroy(const VulkanRenderDevice* renderDevice);
 	};
 
 	class VulkanRayTracingPipeline final : public VulkanPipeline
@@ -192,7 +180,6 @@ namespace GAL
 
 		explicit VulkanRayTracingPipeline() = default;
 		void Initialize(const CreateInfo& createInfo);
-		void Destroy(const VulkanRenderDevice* renderDevice);
 
 		void GetShaderGroupHandles(VulkanRenderDevice* renderDevice, GTSL::uint32 firstGroup, GTSL::uint32 groupCount, GTSL::Range<GTSL::byte*> buffer);
 	};

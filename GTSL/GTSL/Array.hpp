@@ -22,23 +22,22 @@ namespace GTSL
 
 		[[nodiscard]] constexpr iterator begin() noexcept { return reinterpret_cast<iterator>(this->data); }
 
-		[[nodiscard]] constexpr iterator end() noexcept { return reinterpret_cast<iterator>(this->data + this->length); }
+		[[nodiscard]] constexpr iterator end() noexcept { return reinterpret_cast<iterator>(this->data) + this->length; }
 
 		[[nodiscard]] constexpr const_iterator begin() const noexcept { return reinterpret_cast<const_iterator>(this->data); }
 
-		[[nodiscard]] constexpr const_iterator end() const noexcept { return reinterpret_cast<const_iterator>(this->data + this->length); }
+		[[nodiscard]] constexpr const_iterator end() const noexcept { return reinterpret_cast<const_iterator>(this->data) + this->length; }
 
-		constexpr T& front() noexcept { return this->data[0]; }
+		constexpr T& front() noexcept { return *begin(); }
 
-		constexpr T& back() noexcept { return this->data[this->length - 1]; }
+		constexpr T& back() noexcept { return *(end() - 1); }
 
-		[[nodiscard]] constexpr const T& front() const noexcept { return this->data[0]; }
+		[[nodiscard]] constexpr const T& front() const noexcept { return *begin(); }
 
-		[[nodiscard]] constexpr const T& back() const noexcept { return this->data[this->length - 1]; }
+		[[nodiscard]] constexpr const T& back() const noexcept { return *(end() - 1); }
 
 		operator GTSL::Range<T*>() { return Range<T*>(this->length, this->begin()); }
 		operator GTSL::Range<const T*>() const { return Range<const T*>(this->length, this->begin()); }
-
 
 		auto GetRange() { return Range<T*>(this->length, this->begin()); }
 		
@@ -47,39 +46,34 @@ namespace GTSL
 		constexpr Array(const std::initializer_list<T> list) noexcept : length(static_cast<uint32>(list.size()))
 		{
 			GTSL_ASSERT(list.size() <= CAPACITY, "Initializer list is bigger than array capacity!")
-			for (uint32 i = 0; i < list.size(); ++i) { this->data[i] = MoveRef(*(list.begin() + i)); }
-		}
-
-		constexpr explicit Array(const uint32 length) noexcept : length(length)
-		{
-			GTSL_ASSERT(length <= CAPACITY, "Array is not big enough to insert the elements requested!")
+			for (uint32 i = 0; i < list.size(); ++i) { begin()[i] = MoveRef(*(list.begin() + i)); }
 		}
 
 		constexpr Array(const Range<const T*> ranger) noexcept : length(static_cast<uint32>(ranger.ElementCount()))
 		{
 			GTSL_ASSERT(ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!");
-			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { this->data[i] = ranger[i]; }
+			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { begin()[i] = ranger[i]; }
 		}
 
-		constexpr Array(const Array& other) noexcept : length(other.length) { for (uint32 i = 0; i < other.length; ++i) { this->data[i] = other[i]; } }
+		constexpr Array(const Array& other) noexcept : length(other.length) { for (uint32 i = 0; i < other.length; ++i) { begin()[i] = other[i]; } }
 
 		template<uint32 N>
 		constexpr Array(const Array<T, N>& other) noexcept : length(other.GetLength())
 		{
 			GTSL_ASSERT(other.GetLength() <= CAPACITY, "Other array has more elements than this can handle.")
-			for (uint32 i = 0; i < other.length; ++i) { this->data[i] = other[i]; }
+			for (uint32 i = 0; i < other.length; ++i) { begin()[i] = other[i]; }
 		}
 
 		constexpr Array(Array&& other) noexcept : length(other.length)
 		{
-			for (uint32 i = 0; i < other.length; ++i) { this->data[i] = MoveRef(other[i]); }
+			for (uint32 i = 0; i < other.length; ++i) { begin()[i] = MoveRef(other[i]); }
 			for (auto& e : other) { e.~T(); }
 			other.length = 0;
 		}
 
 		constexpr Array& operator=(const Array& other) noexcept
 		{
-			for (uint32 i = 0; i < other.length; ++i) { this->data[i] = other[i]; }
+			for (uint32 i = 0; i < other.length; ++i) { begin()[i] = other[i]; }
 			length = other.length;
 			return *this;
 		}
@@ -87,14 +81,14 @@ namespace GTSL
 		template<uint32 CAP>
 		constexpr Array& operator=(const Array<T, CAP>& other) noexcept
 		{
-			for (uint32 i = 0; i < other.length; ++i) { this->data[i] = other[i]; }
+			for (uint32 i = 0; i < other.length; ++i) { begin()[i] = other[i]; }
 			length = other.length;
 			return *this;
 		}
 
 		constexpr Array& operator=(Array&& other) noexcept
 		{
-			for (uint32 i = 0; i < other.length; ++i) { this->data[i] = MoveRef(other[i]); }
+			for (uint32 i = 0; i < other.length; ++i) { begin()[i] = MoveRef(other[i]); }
 			length = other.length;
 			for (auto& e : other) { e.~T(); }
 			other.length = 0;
@@ -104,7 +98,7 @@ namespace GTSL
 		template<uint32 CAP>
 		constexpr Array& operator=(Array<T, CAP>&& other) noexcept
 		{
-			for (uint32 i = 0; i < other.length; ++i) { this->data[i] = MoveRef(other[i]); }
+			for (uint32 i = 0; i < other.length; ++i) { begin()[i] = MoveRef(other[i]); }
 			length = other.length;
 			for (auto& e : other) { e.~T(); }
 			other.length = 0;
@@ -113,7 +107,7 @@ namespace GTSL
 
 		constexpr Array& operator=(const Range<const T*> ranger) noexcept
 		{
-			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { this->data[i] = ranger[i]; }
+			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { begin()[i] = ranger[i]; }
 			length = ranger.ElementCount();
 			return *this;
 		}
@@ -123,20 +117,17 @@ namespace GTSL
 			for (auto& e : *this) { e.~T(); }
 		}
 
-		constexpr T& operator[](const uint32 i) noexcept
-		{
+		constexpr T& operator[](const uint32 i) noexcept {
 			GTSL_ASSERT(i < CAPACITY && i < this->length, "Out of Bounds! Requested index is greater than the Array's size!");
-			return this->data[i];
+			return begin()[i];
 		}
 
-		constexpr const T& operator[](const uint32 i) const noexcept
-		{
+		constexpr const T& operator[](const uint32 i) const noexcept {
 			GTSL_ASSERT(i < CAPACITY && i < this->length, "Out of Bounds! Requested index is greater than the Array's size!");
-			return this->data[i];
+			return begin()[i];
 		}
 
-		constexpr bool operator==(const Array& other) const
-		{
+		constexpr bool operator==(const Array& other) const {
 			for (iterator begin = this->begin(), begin_other = other.begin(); begin != this->end(); ++begin)
 			{
 				if (*begin != *begin_other) { return false; }
@@ -144,35 +135,33 @@ namespace GTSL
 			return true;
 		}
 
-		constexpr bool operator==(const Range<const T*> other) const
-		{
+		constexpr bool operator==(const Range<const T*> other) const {
 			if (other.ElementCount() != this->length) { return false; }
 			
 			for (uint32 i = 0; i < this->length; ++i) {
-				if (data[i] != other[i]) { return false; }
+				if (begin()[i] != other[i]) { return false; }
 			}
 			
 			return true;
 		}
 
-		constexpr uint32 PushBack(const T& obj) noexcept
-		{
+		constexpr T& PushBack(const T& obj) noexcept {
 			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
-			::new(static_cast<void*>(this->data + this->length)) T(obj);
-			return this->length++;
+			auto* newObject = ::new(end()) T(obj); this->length++;
+			return *newObject;
 		}
 
-		constexpr uint32 PushBack(T&& obj) noexcept
+		constexpr T& PushBack(T&& obj) noexcept
 		{
 			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
-			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MoveRef(obj));
-			return this->length++;
+			auto* newObject = ::new(end()) T(GTSL::MoveRef(obj)); this->length++;
+			return *newObject;
 		}
 
 		constexpr uint32 PushBack(const Range<const T*> ranger) noexcept
 		{
 			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
-			for (uint32 i = 0, p = length; i < ranger.ElementCount(); ++i, ++p) { this->data[p] = ranger[i]; }
+			for (uint32 i = 0, p = length; i < ranger.ElementCount(); ++i, ++p) { begin()[p] = ranger[i]; }
 			auto ret = this->length;
 			this->length += static_cast<uint32>(ranger.ElementCount());
 			return ret;
@@ -198,11 +187,20 @@ namespace GTSL
 			this->length -= to - from;
 		}
 
+		
+		constexpr T& EmplaceBack()
+		{
+			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
+			auto* newObject = ::new(end()) T(); ++length;
+			return *newObject;
+		}
+
 		template<typename... ARGS>
 		constexpr T& EmplaceBack(ARGS&&... args)
 		{
 			GTSL_ASSERT((this->length + 1) <= CAPACITY, "Array is not long enough to insert any more elements!");
-			return *::new(this->data + this->length++) T(GTSL::ForwardRef<ARGS>(args)...);
+			auto* newObject = ::new(end()) T(GTSL::ForwardRef<ARGS>(args)...); ++length;
+			return *newObject;
 		}
 
 		constexpr void Resize(uint32 size)
@@ -214,19 +212,19 @@ namespace GTSL
 		constexpr void PopBack()
 		{
 			GTSL_ASSERT(this->length != 0, "Array's length is already 0. Cannot pop any more elements!");
-			this->data[this->length--].~T();
+			--length; back().~T();
 		}
 
 		Result<uint32> Find(const T& obj) const
 		{
-			for (uint32 i = 0; i < GetLength(); ++i) { if (data[i] == obj) { return Result<uint32>(MoveRef(i), true); } }
+			for (uint32 i = 0; i < GetLength(); ++i) { if (begin()[i] == obj) { return Result<uint32>(MoveRef(i), true); } }
 			return Result<uint32>(false);
 		}
 
 		template<typename F>
 		Result<uint32> LookFor(F&& function) const
 		{
-			for (uint32 i = 0; i < GetLength(); ++i) { if (function(data[i])) { return Result<uint32>(MoveRef(i), true); } }
+			for (uint32 i = 0; i < GetLength(); ++i) { if (function(begin()[i])) { return Result<uint32>(MoveRef(i), true); } }
 			return Result<uint32>(false);
 		}
 		
@@ -236,7 +234,7 @@ namespace GTSL
 
 	private:
 		uint32 length = 0;
-		T data[CAPACITY];
+		alignas(T) byte data[CAPACITY * sizeof(T)];
 
 		constexpr void copyToData(const void* from, const uint64 length) noexcept
 		{

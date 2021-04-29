@@ -6,28 +6,33 @@
 
 GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 {
-	GTSL::Array<VkAttachmentDescription, 32> vkAttachmentDescriptions(createInfo.RenderPassAttachments.ElementCount());
+	GTSL::Array<VkAttachmentDescription, 32> vkAttachmentDescriptions;
 
-	for (GTSL::uint32 i = 0; i < vkAttachmentDescriptions.GetLength(); ++i)
+	for (GTSL::uint32 i = 0; i < createInfo.RenderPassAttachments.ElementCount(); ++i)
 	{
-		vkAttachmentDescriptions[i].flags = 0;
-		vkAttachmentDescriptions[i].format = static_cast<VkFormat>(createInfo.RenderPassAttachments[i].Format);
-		vkAttachmentDescriptions[i].samples = VK_SAMPLE_COUNT_1_BIT; //TODO: Should match that of the SwapChain images.
-		vkAttachmentDescriptions[i].loadOp = RenderTargetLoadOperationsToVkAttachmentLoadOp(createInfo.RenderPassAttachments[i].LoadOperation);
-		vkAttachmentDescriptions[i].storeOp = RenderTargetStoreOperationsToVkAttachmentStoreOp(createInfo.RenderPassAttachments[i].StoreOperation);
-		vkAttachmentDescriptions[i].stencilLoadOp = vkAttachmentDescriptions[i].loadOp;
-		vkAttachmentDescriptions[i].stencilStoreOp = vkAttachmentDescriptions[i].storeOp;
-		vkAttachmentDescriptions[i].initialLayout = static_cast<VkImageLayout>(createInfo.RenderPassAttachments[i].InitialLayout);
-		vkAttachmentDescriptions[i].finalLayout = static_cast<VkImageLayout>(createInfo.RenderPassAttachments[i].FinalLayout);
+		auto& attachmentDescription = vkAttachmentDescriptions.EmplaceBack();
+		
+		attachmentDescription.flags = 0;
+		attachmentDescription.format = static_cast<VkFormat>(createInfo.RenderPassAttachments[i].Format);
+		attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT; //TODO: Should match that of the SwapChain images.
+		attachmentDescription.loadOp = ToVulkan(createInfo.RenderPassAttachments[i].LoadOperation);
+		attachmentDescription.storeOp = ToVulkan(createInfo.RenderPassAttachments[i].StoreOperation);
+		attachmentDescription.stencilLoadOp = vkAttachmentDescriptions[i].loadOp;
+		attachmentDescription.stencilStoreOp = vkAttachmentDescriptions[i].storeOp;
+		attachmentDescription.initialLayout = static_cast<VkImageLayout>(createInfo.RenderPassAttachments[i].InitialLayout);
+		attachmentDescription.finalLayout = static_cast<VkImageLayout>(createInfo.RenderPassAttachments[i].FinalLayout);
 	}
 
-	GTSL::Array<GTSL::Array<VkAttachmentReference, 16>, 16> writeAttachmentsReferences(createInfo.SubPasses.ElementCount());
-	GTSL::Array<GTSL::Array<VkAttachmentReference, 16>, 16> readAttachmentsReferences(createInfo.SubPasses.ElementCount());
-	GTSL::Array<GTSL::Array<GTSL::uint32, 16>, 16> preserveAttachmentsIndices(createInfo.SubPasses.ElementCount());
-	GTSL::Array<VkAttachmentReference, 16> vkDepthAttachmentReferences(createInfo.SubPasses.ElementCount());
+	GTSL::Array<GTSL::Array<VkAttachmentReference, 16>, 16> writeAttachmentsReferences;
+	GTSL::Array<GTSL::Array<VkAttachmentReference, 16>, 16> readAttachmentsReferences;
+	GTSL::Array<GTSL::Array<GTSL::uint32, 16>, 16> preserveAttachmentsIndices;
+	GTSL::Array<VkAttachmentReference, 16> vkDepthAttachmentReferences;
 
 	for (GTSL::uint32 SUBPASS = 0; SUBPASS < createInfo.SubPasses.ElementCount(); ++SUBPASS)
 	{
+		writeAttachmentsReferences.EmplaceBack(); readAttachmentsReferences.EmplaceBack();
+		preserveAttachmentsIndices.EmplaceBack(); vkDepthAttachmentReferences.EmplaceBack();
+		
 		for (GTSL::uint32 ATTACHMENT = 0; ATTACHMENT < createInfo.SubPasses[SUBPASS].WriteColorAttachments.ElementCount(); ++ATTACHMENT)
 		{
 			VkAttachmentReference attachmentReference;
@@ -55,32 +60,34 @@ GAL::VulkanRenderPass::VulkanRenderPass(const CreateInfo& createInfo)
 		vkDepthAttachmentReferences[SUBPASS].layout = static_cast<VkImageLayout>(createInfo.SubPasses[SUBPASS].DepthAttachmentReference.Layout);
 	}
 
-	GTSL::Array<VkSubpassDescription, 32> vkSubpassDescriptions(createInfo.SubPasses.ElementCount());
+	GTSL::Array<VkSubpassDescription, 32> vkSubpassDescriptions;
 
-	for (GTSL::uint32 SUBPASS = 0; SUBPASS < vkSubpassDescriptions.GetLength(); ++SUBPASS)
+	for (GTSL::uint32 SUBPASS = 0; SUBPASS < createInfo.SubPasses.ElementCount(); ++SUBPASS)
 	{
-		vkSubpassDescriptions[SUBPASS].flags = 0;
-		vkSubpassDescriptions[SUBPASS].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		vkSubpassDescriptions[SUBPASS].colorAttachmentCount = writeAttachmentsReferences[SUBPASS].GetLength();
-		vkSubpassDescriptions[SUBPASS].pColorAttachments = writeAttachmentsReferences[SUBPASS].begin();
-		vkSubpassDescriptions[SUBPASS].inputAttachmentCount = readAttachmentsReferences[SUBPASS].GetLength();
-		vkSubpassDescriptions[SUBPASS].pInputAttachments = readAttachmentsReferences[SUBPASS].begin();
-		vkSubpassDescriptions[SUBPASS].pResolveAttachments = nullptr;
-		vkSubpassDescriptions[SUBPASS].preserveAttachmentCount = 0; //PreserveAttachmentsCount;
-		vkSubpassDescriptions[SUBPASS].pPreserveAttachments = preserveAttachmentsIndices[SUBPASS].begin();
-		vkSubpassDescriptions[SUBPASS].pDepthStencilAttachment = &vkDepthAttachmentReferences[SUBPASS];
+		auto& description = vkSubpassDescriptions.EmplaceBack();
+		description.flags = 0;
+		description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		description.colorAttachmentCount = writeAttachmentsReferences[SUBPASS].GetLength();
+		description.pColorAttachments = writeAttachmentsReferences[SUBPASS].begin();
+		description.inputAttachmentCount = readAttachmentsReferences[SUBPASS].GetLength();
+		description.pInputAttachments = readAttachmentsReferences[SUBPASS].begin();
+		description.pResolveAttachments = nullptr;
+		description.preserveAttachmentCount = 0; //PreserveAttachmentsCount;
+		description.pPreserveAttachments = preserveAttachmentsIndices[SUBPASS].begin();
+		description.pDepthStencilAttachment = &vkDepthAttachmentReferences[SUBPASS];
 	}
 
-	GTSL::Array<VkSubpassDependency, 32> vkSubpassDependencies(createInfo.SubPassDependencies.ElementCount());
-	for (GTSL::uint32 SUBPASS = 0; SUBPASS < vkSubpassDependencies.GetLength(); ++SUBPASS)
+	GTSL::Array<VkSubpassDependency, 32> vkSubpassDependencies;
+	for (GTSL::uint32 SUBPASS = 0; SUBPASS < createInfo.SubPassDependencies.ElementCount(); ++SUBPASS)
 	{
-		vkSubpassDependencies[SUBPASS].srcSubpass = createInfo.SubPassDependencies[SUBPASS].SourceSubPass == EXTERNAL ? VK_SUBPASS_EXTERNAL : createInfo.SubPassDependencies[SUBPASS].SourceSubPass;
-		vkSubpassDependencies[SUBPASS].dstSubpass = createInfo.SubPassDependencies[SUBPASS].DestinationSubPass == EXTERNAL ? VK_SUBPASS_EXTERNAL : createInfo.SubPassDependencies[SUBPASS].DestinationSubPass;
-		vkSubpassDependencies[SUBPASS].srcStageMask = createInfo.SubPassDependencies[SUBPASS].SourcePipelineStage;
-		vkSubpassDependencies[SUBPASS].dstStageMask = createInfo.SubPassDependencies[SUBPASS].DestinationPipelineStage;
-		vkSubpassDependencies[SUBPASS].srcAccessMask = createInfo.SubPassDependencies[SUBPASS].SourceAccessFlags;
-		vkSubpassDependencies[SUBPASS].dstAccessMask = createInfo.SubPassDependencies[SUBPASS].DestinationAccessFlags;
-		vkSubpassDependencies[SUBPASS].dependencyFlags = 0;
+		auto& dependency = vkSubpassDependencies.EmplaceBack();
+		dependency.srcSubpass = createInfo.SubPassDependencies[SUBPASS].SourceSubPass == EXTERNAL ? VK_SUBPASS_EXTERNAL : createInfo.SubPassDependencies[SUBPASS].SourceSubPass;
+		dependency.dstSubpass = createInfo.SubPassDependencies[SUBPASS].DestinationSubPass == EXTERNAL ? VK_SUBPASS_EXTERNAL : createInfo.SubPassDependencies[SUBPASS].DestinationSubPass;
+		dependency.srcStageMask = createInfo.SubPassDependencies[SUBPASS].SourcePipelineStage;
+		dependency.dstStageMask = createInfo.SubPassDependencies[SUBPASS].DestinationPipelineStage;
+		dependency.srcAccessMask = createInfo.SubPassDependencies[SUBPASS].SourceAccessFlags;
+		dependency.dstAccessMask = createInfo.SubPassDependencies[SUBPASS].DestinationAccessFlags;
+		dependency.dependencyFlags = 0;
 	}
 
 	VkRenderPassCreateInfo vkRenderpassCreateInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };

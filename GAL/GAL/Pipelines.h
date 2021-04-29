@@ -53,6 +53,68 @@ namespace GAL
 		static constexpr auto BITANGENT = GTSL::ShortString<64>("BITANGENT");
 		static constexpr auto TEXTURE_COORDINATES = GTSL::ShortString<64>("TEXTURE_COORDINATES");
 		static constexpr auto COLOR = GTSL::ShortString<64>("COLOR");
+
+		struct PipelineStateBlock
+		{
+			struct ViewportState
+			{
+				GTSL::uint8 ViewportCount = 0;
+			};
+
+			struct RasterState
+			{				
+				WindingOrder WindingOrder = WindingOrder::CLOCKWISE;
+				CullMode CullMode = CullMode::CULL_BACK;
+			};
+
+			struct DepthState
+			{
+				CompareOperation CompareOperation = CompareOperation::LESS;
+			};
+
+			struct RenderContext
+			{
+				struct AttachmentState
+				{
+					bool BlendEnable = true;
+				};
+
+				GTSL::Range<const AttachmentState*> Attachments;
+				const RenderPass* RenderPass = nullptr;
+				GTSL::uint8 SubPassIndex = 0;
+			};
+
+			struct VertexState
+			{
+				GTSL::Range<const VertexElement*> VertexDescriptor;
+			};
+
+			union Blocks {
+				ViewportState Viewport;
+				RasterState Raster;
+				DepthState Depth;
+				RenderContext Context;
+				VertexState Vertex;
+
+				Blocks() = default;
+				Blocks(const RasterState& rasterState) : Raster(rasterState) {}
+				Blocks(const DepthState& depth) : Depth(depth) {}
+				Blocks(const RenderContext& renderContext) : Context(renderContext) {}
+				Blocks(const VertexState& vertexState) : Vertex(vertexState) {}
+			} Block;
+			
+
+			enum class StateType
+			{
+				VIEWPORT_STATE, RASTER_STATE, DEPTH_STATE, COLOR_BLEND_STATE, VERTEX_STATE
+			} Type = StateType::VIEWPORT_STATE;
+			
+			PipelineStateBlock() = default;
+			PipelineStateBlock(const RasterState& rasterState) : Block(rasterState), Type(StateType::RASTER_STATE) {}
+			PipelineStateBlock(const DepthState& depth) : Block(depth), Type(StateType::DEPTH_STATE) {}
+			PipelineStateBlock(const RenderContext& renderContext) : Block(renderContext), Type(StateType::COLOR_BLEND_STATE) {}
+			PipelineStateBlock(const VertexState& vertexState) : Block(vertexState), Type(StateType::VERTEX_STATE) {}
+		};
 		
 		//struct ShaderInfo
 		//{
@@ -66,48 +128,12 @@ namespace GAL
 	public:
 	private:
 	};
-
-	//struct PipelineDescriptor
-	//{
-	//	GTSL::Range<const Pipeline::ShaderInfo> Stages;
-	//	CullMode CullMode = CullMode::CULL_NONE;
-	//	bool DepthClampEnable = false;
-	//	bool BlendEnable = false;
-	//	BlendOperation ColorBlendOperation = BlendOperation::ADD;
-	//	SampleCount RasterizationSamples = SampleCount::SAMPLE_COUNT_1;
-	//	CompareOperation DepthCompareOperation = CompareOperation::NEVER;
-	//	StencilOperations StencilOperations;
-	//};
 	
 	class GraphicsPipeline : public Pipeline
 	{
-	public:		
-		//struct CreateInfo : RenderInfo
-		//{
-		//	const RenderPass* RenderPass = nullptr;
-		//	GTSL::Extent2D SurfaceExtent;
-		//	GTSL::Range<const ShaderDataTypes> VertexDescriptor;
-		//	PipelineDescriptor PipelineDescriptor;
-		//	bool IsInheritable = false;
-		//	const GraphicsPipeline* ParentPipeline = nullptr;
-		//
-		//	const PushConstant* PushConstant = nullptr;
-		//	GTSL::Range<const class BindingsPool> BindingsPools;
-		//	const PipelineCache* PipelineCache = nullptr;
-		//};
+	public:
 		
 		GraphicsPipeline() = default;
-
-		//static GTSL::uint32 GetVertexSizeAndOffsetsToMembers(GTSL::Range<const ShaderDataTypes> vertex, GTSL::Range<GTSL::uint8> offsets)
-		//{
-		//	GTSL::uint32 size = 0;
-		//	for (const auto& e : vertex)
-		//	{
-		//		*(offsets + RangeForIndex(e, vertex)) = size;
-		//		size += ShaderDataTypesSize(e);
-		//	}
-		//	return size;
-		//}
 		
 		static GTSL::uint32 GetVertexSize(GTSL::Range<const ShaderDataType*> vertex)
 		{
