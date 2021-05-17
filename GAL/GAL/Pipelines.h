@@ -31,8 +31,8 @@ namespace GAL
 
 	struct PushConstant
 	{
-		GTSL::uint32 Size = 0;
-		ShaderType Stage = ShaderType::VERTEX_SHADER;
+		GTSL::uint32 NumberOf4ByteSlots = 0;
+		ShaderStage Stage;
 	};
 	
 	class Pipeline : public GALObject
@@ -54,6 +54,16 @@ namespace GAL
 		static constexpr auto TEXTURE_COORDINATES = GTSL::ShortString<64>("TEXTURE_COORDINATES");
 		static constexpr auto COLOR = GTSL::ShortString<64>("COLOR");
 
+		struct RayTraceGroup {
+			static constexpr GTSL::uint32 SHADER_UNUSED = (~0U);
+			
+			ShaderGroupType ShaderGroup;
+			GTSL::uint32 GeneralShader;
+			GTSL::uint32 ClosestHitShader;
+			GTSL::uint32 AnyHitShader;
+			GTSL::uint32 IntersectionShader;
+		};
+		
 		struct PipelineStateBlock
 		{
 			struct ViewportState
@@ -89,24 +99,33 @@ namespace GAL
 				GTSL::Range<const VertexElement*> VertexDescriptor;
 			};
 
+			struct RayTracingState
+			{
+				GTSL::Range<const RayTraceGroup*> Groups;
+				GTSL::uint8 MaxRecursionDepth;
+			};
+
 			union Blocks {
 				ViewportState Viewport;
 				RasterState Raster;
 				DepthState Depth;
 				RenderContext Context;
 				VertexState Vertex;
+				RayTracingState RayTracing;
 
 				Blocks() = default;
 				Blocks(const RasterState& rasterState) : Raster(rasterState) {}
 				Blocks(const DepthState& depth) : Depth(depth) {}
 				Blocks(const RenderContext& renderContext) : Context(renderContext) {}
 				Blocks(const VertexState& vertexState) : Vertex(vertexState) {}
+				Blocks(const ViewportState& viewportState) : Viewport(viewportState) {}
+				Blocks(const RayTracingState& rayTracingState) : RayTracing(rayTracingState) {}
 			} Block;
 			
 
 			enum class StateType
 			{
-				VIEWPORT_STATE, RASTER_STATE, DEPTH_STATE, COLOR_BLEND_STATE, VERTEX_STATE
+				VIEWPORT_STATE, RASTER_STATE, DEPTH_STATE, COLOR_BLEND_STATE, VERTEX_STATE, RAY_TRACE_GROUPS
 			} Type = StateType::VIEWPORT_STATE;
 			
 			PipelineStateBlock() = default;
@@ -114,6 +133,8 @@ namespace GAL
 			PipelineStateBlock(const DepthState& depth) : Block(depth), Type(StateType::DEPTH_STATE) {}
 			PipelineStateBlock(const RenderContext& renderContext) : Block(renderContext), Type(StateType::COLOR_BLEND_STATE) {}
 			PipelineStateBlock(const VertexState& vertexState) : Block(vertexState), Type(StateType::VERTEX_STATE) {}
+			PipelineStateBlock(const ViewportState& viewportState) : Block(viewportState), Type(StateType::VIEWPORT_STATE) {}
+			PipelineStateBlock(const RayTracingState& rayTracingGroups) : Block(rayTracingGroups), Type(StateType::RAY_TRACE_GROUPS) {}
 		};
 		
 		//struct ShaderInfo
@@ -143,7 +164,7 @@ namespace GAL
 		static GTSL::uint32 GetByteOffsetToMember(const GTSL::uint8 member, GTSL::Range<const ShaderDataType*> vertex)
 		{
 			GTSL::uint32 offset{ 0 };
-			for(auto* begin = vertex.begin(); begin != vertex.begin() + member; ++begin) { offset += ShaderDataTypesSize(*begin); }
+			for (GTSL::uint8 i = 0; i < member; ++i) { offset += ShaderDataTypesSize(vertex[i]); }
 			return offset;
 		}
 	};

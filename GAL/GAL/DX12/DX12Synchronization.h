@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DX12.h"
+#include "DX12RenderDevice.h"
 
 namespace GAL
 {
@@ -9,15 +10,22 @@ namespace GAL
 	public:
 		DX12Fence() = default;
 		
-		struct CreateInfo : DX12CreateInfo
-		{
-			bool IsSignaled{ true };
-		};
-		void Initialize(const CreateInfo& info);
+		void Initialize(const DX12RenderDevice* renderDevice, const GTSL::uint32 initialValue) {
+			renderDevice->GetID3D12Device2()->CreateFence(initialValue, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), reinterpret_cast<void**>(&fence));
+			//setName(fence, info);
+		}
 
-		void Wait(const DX12RenderDevice* renderDevice) const;
+		void Wait(const DX12RenderDevice* renderDevice) const {
+			const auto event = CreateEventA(nullptr, false, false, nullptr);
+			fence->SetEventOnCompletion(1, event);
+
+			WaitForSingleObject(event, 0xFFFFFFFF);
+		}
 		
-		~DX12Fence();
+		void Destroy(const DX12RenderDevice* renderDevice) {
+			fence->Release();
+			debugClear(fence);
+		}
 		
 	private:
 		ID3D12Fence* fence = nullptr;

@@ -49,9 +49,7 @@
     <ClInclude Include="GTSL\Math\Plane.h" />
     <ClInclude Include="GTSL\Math\Quaternion.h" />
     <ClInclude Include="GTSL\Math\Rotator.h" />
-    <ClInclude Include="GTSL\Math\Vector2.h" />
-    <ClInclude Include="GTSL\Math\Vector3.h" />
-    <ClInclude Include="GTSL\Math\Vector4.h" />
+    <ClInclude Include="GTSL\Math\Vectors.h" />
     <ClInclude Include="GTSL\RatioUnit.hpp" />
     <ClInclude Include="GTSL\Result.h" />
     <ClInclude Include="GTSL\SIMD\SIMD128.hpp" />
@@ -101,9 +99,7 @@
     <ClCompile Include="src\Allocator.cpp" />
     <ClCompile Include="GTSL\ArrayCommon.hpp" />
     <ClCompile Include="src\Console.cpp" />
-    <ClCompile Include="src\DLL.cpp" />
     <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\Bitman.cpp" />
     <ClCompile Include="src\File.cpp" />
     <ClCompile Include="src\Filesystem.cpp" />
     <ClCompile Include="src\Gamepad.cpp" />
@@ -113,8 +109,7 @@
     <ClCompile Include="src\Math\Plane.cpp" />
     <ClCompile Include="src\Math\Quaternion.cpp" />
     <ClCompile Include="src\Math\Rotator.cpp" />
-    <ClCompile Include="src\Math\Vector3.cpp" />
-    <ClCompile Include="src\Math\Vector4.cpp" />
+    <ClCompile Include="src\Math\Vectors.cpp" />
     <ClCompile Include="src\Memory.cpp" />
     <ClCompile Include="src\Sockets.cpp" />
     <ClCompile Include="src\StringCommon.cpp" />

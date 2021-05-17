@@ -6,9 +6,7 @@
 #include "AxisAngle.h"
 #include "GTSL/Core.h"
 
-#include "Vector2.h"
-#include "Vector3.h"
-#include "Vector4.h"
+#include "Vectors.h"
 #include "Quaternion.h"
 #include "Matrix4.h"
 
@@ -241,6 +239,10 @@ namespace GTSL
 		inline float32 Wrap(const float32 a, const float32 range)
 		{
 			return Modulo(a - range, range * 2) - range;
+		}
+
+		inline Vector2 Wrap(const Vector2 a, const Vector2 range) {
+			return Vector2(Wrap(a.X(), range.X()), Wrap(a.Y(), range.Y()));
 		}
 		
 		/**

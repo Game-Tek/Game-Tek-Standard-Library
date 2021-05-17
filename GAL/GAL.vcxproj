@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GAL\DX12\DX12Bindings.h" />
+    <ClInclude Include="GAL\DX12\DX12Framebuffer.h" />
     <ClInclude Include="GAL\DX12\DX12Memory.h" />
     <ClInclude Include="GAL\DX12\DX12Pipeline.h" />
     <ClInclude Include="GAL\Bindings.h" />
@@ -20,13 +21,16 @@
     <ClInclude Include="GAL\DX12\DX12.h" />
     <ClInclude Include="GAL\DX12\DX12Buffer.h" />
     <ClInclude Include="GAL\DX12\DX12CommandBuffer.h" />
+    <ClInclude Include="GAL\DX12\DX12Queue.h" />
     <ClInclude Include="GAL\DX12\DX12RenderContext.h" />
     <ClInclude Include="GAL\DX12\DX12RenderDevice.h" />
+    <ClInclude Include="GAL\DX12\DX12RenderPass.h" />
     <ClInclude Include="GAL\DX12\DX12Synchronization.h" />
     <ClInclude Include="GAL\DX12\DX12Texture.h" />
     <ClInclude Include="GAL\Framebuffer.h" />
     <ClInclude Include="GAL\Pipelines.h" />
     <ClInclude Include="GAL\Memory.h" />
+    <ClInclude Include="GAL\Queue.h" />
     <ClInclude Include="GAL\RenderContext.h" />
     <ClInclude Include="GAL\RenderCore.h" />
     <ClInclude Include="GAL\RenderDevice.h" />
@@ -43,35 +47,12 @@
     <ClInclude Include="GAL\Vulkan\VulkanFramebuffer.h" />
     <ClInclude Include="GAL\Vulkan\VulkanPipelines.h" />
     <ClInclude Include="GAL\Vulkan\VulkanQueryPool.h" />
+    <ClInclude Include="GAL\Vulkan\VulkanQueue.h" />
     <ClInclude Include="GAL\Vulkan\VulkanRenderContext.h" />
     <ClInclude Include="GAL\Vulkan\VulkanRenderDevice.h" />
     <ClInclude Include="GAL\Vulkan\VulkanRenderPass.h" />
     <ClInclude Include="GAL\Vulkan\VulkanSynchronization.h" />
     <ClInclude Include="GAL\Vulkan\VulkanTexture.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\DX12\DX12Pipeline.cpp" />
-    <ClCompile Include="src\DX12\DX12Buffer.cpp" />
-    <ClCompile Include="src\DX12\DX12CommandBuffer.cpp" />
-    <ClCompile Include="src\DX12\DX12Memory.cpp" />
-    <ClCompile Include="src\DX12\DX12RenderContext.cpp" />
-    <ClCompile Include="src\DX12\DX12RenderDevice.cpp" />
-    <ClCompile Include="src\DX12\DX12Synchronization.cpp" />
-    <ClCompile Include="src\DX12\DX12Texture.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanAccelerationStructures.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanAsyncHostOperation.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanBindings.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanBuffer.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanMemory.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanCommandBuffer.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanFramebuffer.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanPipelines.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanQueryPool.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanRenderContext.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanRenderDevice.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanRenderPass.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanSynchronization.cpp" />
-    <ClCompile Include="src\Vulkan\VulkanTexture.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

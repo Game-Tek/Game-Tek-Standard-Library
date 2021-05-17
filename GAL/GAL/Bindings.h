@@ -27,6 +27,11 @@ namespace GAL
 		
 		~BindingsPool() = default;
 
+		struct BindingsPoolSize {
+			BindingType BindingType;
+			GTSL::uint32 Count = 0;
+		};
+		
 		//struct BindingDescriptor
 		//{
 		//	BindingType BindingType = BindingType::UNIFORM_BUFFER;

@@ -2,8 +2,7 @@
 
 #include "GTSL/Core.h"
 
-#include "Vector4.h"
-#include "Vector3.h"
+#include "Vectors.h"
 
 //Index increases in row order.
 

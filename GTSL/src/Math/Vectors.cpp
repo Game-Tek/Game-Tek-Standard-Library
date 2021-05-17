@@ -1,14 +1,13 @@
+#include "GTSL/Math/Vectors.h"
+
 #include "GTSL/Math/Math.hpp"
+#include "GTSL/Math/Rotator.h"
 
 using namespace GTSL;
 
-Vector3::Vector3(const Rotator& rotator) : Vector3(Math::Cosine(rotator.X) * Math::Sine(rotator.Y), Math::Sine(rotator.X), Math::Cosine(rotator.X) * Math::Cosine(rotator.Y))
+Vector3::Vector3(const Rotator& rotator) : Vector3(Math::Cosine(rotator.X)* Math::Sine(rotator.Y), Math::Sine(rotator.X), Math::Cosine(rotator.X)* Math::Cosine(rotator.Y))
 {
 	//CODE IS CORRECT
-}
-
-Vector3::Vector3(const Vector4& vector4) : Vector3(vector4.X(), vector4.Y(), vector4.Z())
-{
 }
 
 Vector3& Vector3::operator*=(const Quaternion& quaternion)

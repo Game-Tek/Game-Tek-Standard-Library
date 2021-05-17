@@ -3,13 +3,16 @@
 #include "Core.h"
 #include "Range.h"
 
+#if (_WIN64)
+#include <Windows.h>
+#undef LoadLibrary
+#endif
+
 namespace GTSL
 {
 	class DLL
 	{
-		#if (_WIN64)
-		void* handle{ nullptr };
-		#endif
+		HMODULE handle{ nullptr };
 
 	public:
 		class DynamicFunction
@@ -32,12 +35,37 @@ namespace GTSL
 		};
 
 		DLL() = default;
-		~DLL() noexcept { TryUnload(); }
+		~DLL() noexcept {
+			TryUnload();
+		}
 		
-		void LoadLibrary(const Range<const char*> ranger);
-		void TryUnload();
-		void UnloadLibrary();
+		bool LoadLibrary(const UTF8* name) { handle = LoadLibraryA(name); return handle; }
 		
-		[[nodiscard]] DynamicFunction LoadDynamicFunction(const Range<const char*> ranger) const;
+		bool LoadLibrary(const Range<const char*> ranger) {
+			handle = LoadLibraryA(ranger.begin());
+			return handle;
+		}
+		
+		void TryUnload() {
+			if (handle)
+				UnloadLibrary();
+		}
+		void UnloadLibrary() {
+			FreeLibrary(handle);
+			handle = nullptr;
+		}
+
+		template<typename T>
+		void LoadDynamicFunction(const UTF8* name, T* func) const {
+			*func = reinterpret_cast<T>(GetProcAddress(handle, name));
+		}
+		
+		[[nodiscard]] DynamicFunction LoadDynamicFunction(const UTF8* name) const {
+			return DynamicFunction(GetProcAddress(handle, name));
+		}
+
+		[[nodiscard]] DynamicFunction LoadDynamicFunction(const Range<const char*> ranger) const {
+			return DynamicFunction(GetProcAddress(handle, ranger.begin()));
+		}
 	};
 }

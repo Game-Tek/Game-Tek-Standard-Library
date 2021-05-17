@@ -563,7 +563,7 @@ void GTSL::Window::AddDevice(const DeviceType deviceType)
 		{
 			RAWINPUTDEVICE rid;
 			rid.usUsagePage = HID_USAGE_PAGE_GENERIC; //generic usage
-			rid.usUsage = HID_USAGE_GENERIC_MOUSE; // MOUSE
+			rid.usUsage = HID_USAGE_GENERIC_MOUSE;
 			rid.dwFlags = RIDEV_INPUTSINK;
 			rid.hwndTarget = (HWND)windowHandle;
 			rawInputDevices.EmplaceBack(rid);
@@ -574,7 +574,7 @@ void GTSL::Window::AddDevice(const DeviceType deviceType)
 		{
 			RAWINPUTDEVICE rid;
 			rid.usUsagePage = HID_USAGE_PAGE_GENERIC;
-			rid.usUsage = HID_USAGE_GENERIC_JOYSTICK; // Joystick
+			rid.usUsage = HID_USAGE_GENERIC_JOYSTICK;
 			rid.dwFlags = 0;
 			rid.hwndTarget = (HWND)windowHandle;
 			rawInputDevices.EmplaceBack(rid);

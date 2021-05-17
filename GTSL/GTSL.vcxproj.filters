@@ -162,13 +162,7 @@
     <ClInclude Include="GTSL\Math\Rotator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\Math\Vector2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GTSL\Math\Vector3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GTSL\Math\Vector4.h">
+    <ClInclude Include="GTSL\Math\Vectors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\Math\Math.hpp">
@@ -290,9 +284,6 @@
     <ClCompile Include="src\Math\Rotator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Math\Vector3.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -300,9 +291,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\File.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DLL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Thread.cpp">
@@ -317,13 +305,10 @@
     <ClCompile Include="src\Filesystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Bitman.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Allocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Math\Vector4.cpp">
+    <ClCompile Include="src\Math\Vectors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Math\Math.cpp">

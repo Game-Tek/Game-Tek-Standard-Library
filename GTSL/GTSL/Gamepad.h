@@ -3,7 +3,7 @@
 #include "Core.h"
 
 #include "Delegate.hpp"
-#include "Math/Vector2.h"
+#include "Math/Vectors.h"
 
 namespace GTSL
 {
@@ -26,8 +26,6 @@ namespace GTSL
 		bool leftShoulder : 1 = false, rightShoulder : 1 = false;
 		bool a : 1 = false, b : 1 = false, x : 1 = false, y : 1 = false;
 #endif
-
-
 		template<typename BF, typename FF, typename VF>
 		friend bool Update(Gamepad& gamepadQuery, BF&& buttonFunction, FF&& floatFunction, VF&& vectorFunction, uint8 controllerId) noexcept;
 	public:

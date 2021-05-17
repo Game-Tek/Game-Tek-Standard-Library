@@ -1,6 +1,11 @@
 #pragma once
 
+#if (_WIN64)
+#define VK_USE_PLATFORM_WIN32_KHR
+#endif
+#define VK_NO_PROTOTYPES
 #include <GAL/ext/vulkan/vulkan.h>
+
 
 #if (_DEBUG)
 #define COMBINE2(x, y) x ## y
@@ -14,87 +19,144 @@
 
 #include <GTSL/Extent.h>
 
-#include "GTSL/Bitman.h"
 #include "GTSL/Flags.h"
 #include "GTSL/Range.h"
 
-#define MAKE_VK_HANDLE(object) typedef struct object##_T* (object);
 #undef OPAQUE
-
-#if (_DEBUG)
-
-#define SET_NAME(handle, type, createInfo) VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };\
-debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(handle);\
-debug_utils_object_name_info_ext.objectType = type;\
-debug_utils_object_name_info_ext.pObjectName = createInfo.Name.begin();\
-createInfo.RenderDevice->vkSetDebugUtilsObjectNameEXT(createInfo.RenderDevice->GetVkDevice(), &debug_utils_object_name_info_ext);
-
-#else
-#define SET_NAME(handle, type, createInfo)
-#endif
 
 namespace GAL
 {	
-	using VulkanDeviceAddress = GTSL::uint64;
 	using VulkanHandle = void*;
 	
-	struct VulkanRenderInfo
-	{
-		const class VulkanRenderDevice* RenderDevice = nullptr;
-
-		VulkanRenderInfo() = default;
-	};
-
-	struct VulkanCreateInfo : VulkanRenderInfo
-	{
-		GTSL::Range<const GTSL::UTF8*> Name;
-
-		VulkanCreateInfo() = default;
-	};
-	
-	inline VkAttachmentLoadOp ToVulkan(const RenderTargetLoadOperations renderTargetLoadOperations)
-	{
-		switch (renderTargetLoadOperations)
+	inline VkAttachmentLoadOp ToVkAttachmentLoadOp(const Operations operations) {
+		switch (operations)
 		{
-		case RenderTargetLoadOperations::UNDEFINED: return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		case RenderTargetLoadOperations::LOAD: return VK_ATTACHMENT_LOAD_OP_LOAD;
-		case RenderTargetLoadOperations::CLEAR: return VK_ATTACHMENT_LOAD_OP_CLEAR;
+		case Operations::UNDEFINED: return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		case Operations::DO: return VK_ATTACHMENT_LOAD_OP_LOAD;
+		case Operations::CLEAR: return VK_ATTACHMENT_LOAD_OP_CLEAR;
 		default: return VK_ATTACHMENT_LOAD_OP_MAX_ENUM;
 		}
 	}
 
-	inline VkAttachmentStoreOp ToVulkan(const RenderTargetStoreOperations renderTargetStoreOperations)
-	{
-		switch (renderTargetStoreOperations)
+	inline VkAttachmentStoreOp ToVkAttachmentStoreOp(const Operations operations) {
+		switch (operations)
 		{
-		case RenderTargetStoreOperations::UNDEFINED: return VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		case RenderTargetStoreOperations::STORE: return VK_ATTACHMENT_STORE_OP_STORE;
+		case Operations::UNDEFINED: return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		case Operations::DO: return VK_ATTACHMENT_STORE_OP_STORE;
+		case Operations::CLEAR: return VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		default: return VK_ATTACHMENT_STORE_OP_MAX_ENUM;
 		}
 	}
+	
+	inline VkAccessFlags ToVulkan(const AccessType access, const PipelineStage pipelineStage) {
+		VkAccessFlags vkAccessFlags = 0;
+		if(access) {
+			TranslateMask(PipelineStages::TRANSFER, VK_ACCESS_TRANSFER_WRITE_BIT, pipelineStage, vkAccessFlags);
+		} else {
+			TranslateMask(PipelineStages::TRANSFER, VK_ACCESS_TRANSFER_READ_BIT, pipelineStage, vkAccessFlags);
+		}
+		return vkAccessFlags;
+	}
+	
+	inline VkAccessFlags ToVulkan(const AccessType access, const PipelineStage pipelineStage, const FormatDescriptor formatDescriptor) {
+		VkAccessFlags vkAccessFlags = 0;
+		
+		if(access) {
+			if(pipelineStage & PipelineStages::TRANSFER) {
+				vkAccessFlags |= VK_ACCESS_TRANSFER_WRITE_BIT;
+			}
+		} else {
+			if(pipelineStage & PipelineStages::TRANSFER) {
+				vkAccessFlags |= VK_ACCESS_TRANSFER_READ_BIT;
+			}
+		}
 
-	//inline VkImageLayout ImageLayoutToVkImageLayout(const TextureLayout textureLayout)
-	//{
-	//	switch (textureLayout)
-	//	{
-	//	case TextureLayout::UNDEFINED: return VK_IMAGE_LAYOUT_UNDEFINED;
-	//	case TextureLayout::SHADER_READ: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	//	case TextureLayout::GENERAL: return VK_IMAGE_LAYOUT_GENERAL;
-	//	case TextureLayout::COLOR_ATTACHMENT: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-	//	case TextureLayout::DEPTH_STENCIL_ATTACHMENT: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-	//	case TextureLayout::DEPTH_STENCIL_READ_ONLY: return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
-	//	case TextureLayout::TRANSFER_SOURCE: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-	//	case TextureLayout::TRANSFER_DESTINATION: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-	//	case TextureLayout::PREINITIALIZED: return VK_IMAGE_LAYOUT_PREINITIALIZED;
-	//	case TextureLayout::PRESENTATION: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-	//	default: return VK_IMAGE_LAYOUT_MAX_ENUM;
-	//	}
-	//}
+		return vkAccessFlags;
+	}
+	
+	inline VkAccessFlags ToVulkan(const AccessType access, const FormatDescriptor formatDescriptor) {
+		if(access) { //write
+			switch (formatDescriptor.Type) {
+			case TextureType::COLOR: return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			case TextureType::DEPTH: return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			}
+		} else { //read
+			switch (formatDescriptor.Type) {
+			case TextureType::COLOR: return VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+			case TextureType::DEPTH: return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+			}
+		}
+	}
 
-	inline VkFormat FormatToVkFomat(const Format format)
-	{
-		switch (format)
+	inline VkQueueFlags ToVulkan(const QueueType queueType) {
+		VkQueueFlags vkQueueFlags = 0;
+		TranslateMask(QueueTypes::GRAPHICS, VK_QUEUE_GRAPHICS_BIT, queueType, vkQueueFlags);
+		TranslateMask(QueueTypes::COMPUTE, VK_QUEUE_COMPUTE_BIT, queueType, vkQueueFlags);
+		TranslateMask(QueueTypes::TRANSFER, VK_QUEUE_TRANSFER_BIT, queueType, vkQueueFlags);
+		return vkQueueFlags;
+	}
+		
+	inline VkImageTiling ToVulkan(const Tiling tiling) {
+		switch (tiling) {
+		case Tiling::OPTIMAL: return VK_IMAGE_TILING_OPTIMAL;
+		case Tiling::LINEAR: return VK_IMAGE_TILING_LINEAR;
+		default: VK_IMAGE_TILING_MAX_ENUM;
+		}
+	}
+	
+	inline VkMemoryAllocateFlags ToVulkan(const AllocationFlag allocationFlag) {
+		VkMemoryAllocateFlags vkMemoryAllocateFlags = 0;
+		TranslateMask(AllocationFlags::DEVICE_ADDRESS, VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT, allocationFlag, vkMemoryAllocateFlags);
+		TranslateMask(AllocationFlags::DEVICE_ADDRESS_CAPTURE_REPLAY, VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_CAPTURE_REPLAY_BIT, allocationFlag, vkMemoryAllocateFlags);
+		return vkMemoryAllocateFlags;
+	}
+	
+	inline VkAccessFlags ToVulkanBufferAccessFlags(const AccessFlag accessFlag) {
+		VkAccessFlags vkAccessFlags = 0;
+		TranslateMask(AccessFlags::INDIRECT_COMMAND_READ, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::INDEX_READ, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::VERTEX_ATTRIBUTE_READ, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::UNIFORM_READ, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::INPUT_ATTACHMENT_READ, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::SHADER_READ, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::SHADER_WRITE, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::ATTACHMENT_READ, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::ATTACHMENT_WRITE, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::TRANSFER_READ, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::TRANSFER_WRITE, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::HOST_READ, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::HOST_WRITE, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::MEMORY_READ, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::MEMORY_WRITE, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::ACCELERATION_STRUCTURE_READ, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::ACCELERATION_STRUCTURE_WRITE, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		TranslateMask(AccessFlags::SHADING_RATE_IMAGE_READ, VK_ACCESS_INDIRECT_COMMAND_READ_BIT, accessFlag, vkAccessFlags);
+		return vkAccessFlags;
+	}
+	
+	inline VkImageLayout ToVulkan(const TextureLayout layout, FormatDescriptor formatDescriptor) {
+		switch (layout) {
+		case TextureLayout::UNDEFINED: return VK_IMAGE_LAYOUT_UNDEFINED;
+		case TextureLayout::GENERAL: return VK_IMAGE_LAYOUT_GENERAL;
+		case TextureLayout::ATTACHMENT:
 		{
+			switch (formatDescriptor.Type) {
+			case TextureType::COLOR: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			case TextureType::DEPTH: return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+			default: return VK_IMAGE_LAYOUT_MAX_ENUM;
+			}
+		}
+		case TextureLayout::SHADER_READ: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		case TextureLayout::TRANSFER_SOURCE: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		case TextureLayout::TRANSFER_DESTINATION: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		case TextureLayout::PREINITIALIZED: return VK_IMAGE_LAYOUT_PREINITIALIZED;
+		case TextureLayout::PRESENTATION: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		default: return VK_IMAGE_LAYOUT_MAX_ENUM;
+		}
+	}
+	
+	inline VkFormat ToVulkan(const Format format) {
+		switch (format) {
 		case Format::RGBA_I8: return VK_FORMAT_R8G8B8A8_UNORM;
 		case Format::RGBA_F16: return VK_FORMAT_R16G16B16A16_SFLOAT;
 		case Format::BGRA_I8: return VK_FORMAT_B8G8R8A8_UNORM;
@@ -105,121 +167,91 @@ namespace GAL
 		GAL_DEBUG_BREAK;
 	}
 
-	inline VkImageAspectFlags TextureAspectToVkImageAspectFlags(const TextureType textureType)
-	{
-		switch (textureType)
-		{
+	inline VkImageAspectFlags TextureAspectToVkImageAspectFlags(const TextureType textureType) {
+		switch (textureType) {
 		case TextureType::COLOR: return VK_IMAGE_ASPECT_COLOR_BIT;
 		case TextureType::DEPTH: return VK_IMAGE_ASPECT_DEPTH_BIT;
 		}
 	}
 	
-	enum class VulkanAccelerationStructureType : GTSL::uint8
-	{
+	enum class VulkanAccelerationStructureType : GTSL::uint8 {
 		TOP_LEVEL = 0, BOTTOM_LEVEL = 1
 	};
 	
-	enum class VulkanShaderGroupType
-	{
+	enum class VulkanShaderGroupType {
 		GENERAL, TRIANGLES, PROCEDURAL
 	};
-
-	struct VulkanAllocateFlags : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type DEVICE_MASK = 0x00000001, DEVICE_ADDRESS = 0x00000002, DEVICE_ADDRESS_CAPTURE_REPLAY = 0x00000004;
-	};
 	
-	struct VulkanGeometryInstanceFlags : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type DISABLE_CULLING = 0x00000001, FRONT_COUNTERCLOCKWISE = 0x00000002, OPAQUE = 0x00000004, NOT_OPAQUE = 0x00000008;
-	};
+	using VulkanGeometryInstanceFlag = GTSL::Flags<GTSL::uint32, struct VulkanGeometryInstanceFlagTag>;
 	
-	struct VulkanBindingFlags : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type UPDATE_AFTER_BIND = 0x00000001, UPDATE_UNUSED_WHILE_PENDING = 0x00000002, PARTIALLY_BOUND = 0x00000004, VARIABLE_DESCRIPTOR_COUNT = 0x00000008;
-	};
-	
-	struct VulkanTextureType : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type COLOR = 1, DEPTH = 2, STENCIL = 4;
-	};
-
-	struct VulkanAccelerationStructureFlags : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type ALLOW_UPDATE = 0x00000001, ALLOW_COMPACTION = 0x00000002, PREFER_FAST_TRACE = 0x00000004, PREFER_FAST_BUILD = 0x00000008, LOW_MEMORY = 0x00000010;
-	};
-	
-	struct VulkanPipelineStage : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type TOP_OF_PIPE = 1;
-		static constexpr value_type DRAW_INDIRECT = 2;
-		static constexpr value_type VERTEX_INPUT = 4;
-		static constexpr value_type VERTEX_SHADER = 8;
-		static constexpr value_type TESSELLATION_CONTROL_SHADER = 16;
-		static constexpr value_type TESSELLATION_EVALUATION_SHADER = 32;
-		static constexpr value_type GEOMETRY_SHADER = 64;
-		static constexpr value_type FRAGMENT_SHADER = 128;
-		static constexpr value_type EARLY_FRAGMENT_TESTS = 256;
-		static constexpr value_type LATE_FRAGMENT_TESTS = 512;
-		static constexpr value_type COLOR_ATTACHMENT_OUTPUT = 1024;
-		static constexpr value_type COMPUTE_SHADER = 2048;
-		static constexpr value_type TRANSFER = 4096;
-		static constexpr value_type BOTTOM_OF_PIPE = 8192;
-		static constexpr value_type HOST_BIT = 16384;
-		static constexpr value_type ALL_GRAPHICS = 32768;
-		static constexpr value_type ALL_COMMANDS = 0x00010000;
-		static constexpr value_type TRANSFORM_FEEDBACK = 0x01000000;
-		static constexpr value_type CONDITIONAL_RENDERING = 0x00040000;
-		static constexpr value_type RAY_TRACING_SHADER = 0x00200000;
-		static constexpr value_type ACCELERATION_STRUCTURE_BUILD = 0x02000000;
-		static constexpr value_type SHADING_RATE_IMAGE = 0x00400000;
-		static constexpr value_type TASK_SHADER = 0x00080000;
-		static constexpr value_type MESH_SHADER = 0x00100000;
-		static constexpr value_type FRAGMENT_DENSITY_PROCESS = 0x00800000;
-		static constexpr value_type COMMAND_PREPROCESS = 0x00020000;
-	};
-
-	struct VulkanAccessFlags : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type INDIRECT_COMMAND_READ = 0x00000001;
-		static constexpr value_type INDEX_READ = 0x00000002;
-		static constexpr value_type VERTEX_ATTRIBUTE_READ = 0x00000004;
-		static constexpr value_type UNIFORM_READ = 0x00000008;
-		static constexpr value_type INPUT_ATTACHMENT_READ = 0x00000010;
-		static constexpr value_type SHADER_READ = 0x00000020;
-		static constexpr value_type SHADER_WRITE = 0x00000040;
-		static constexpr value_type COLOR_ATTACHMENT_READ = 0x00000080;
-		static constexpr value_type COLOR_ATTACHMENT_WRITE = 0x00000100;
-		static constexpr value_type DEPTH_STENCIL_ATTACHMENT_READ = 0x00000200;
-		static constexpr value_type DEPTH_STENCIL_ATTACHMENT_WRITE = 0x00000400;
-		static constexpr value_type TRANSFER_READ = 0x00000800;
-		static constexpr value_type TRANSFER_WRITE = 0x00001000;
-		static constexpr value_type HOST_READ = 0x00002000;
-		static constexpr value_type HOST_WRITE = 0x00004000;
-		static constexpr value_type MEMORY_READ = 0x00008000;
-		static constexpr value_type MEMORY_WRITE = 0x00010000;
-		static constexpr value_type TRANSFORM_FEEDBACK_WRITE = 0x02000000;
-		static constexpr value_type TRANSFORM_FEEDBACK_COUNTER_READ = 0x04000000;
-		static constexpr value_type TRANSFORM_FEEDBACK_COUNTER_WRITE = 0x08000000;
-		static constexpr value_type CONDITIONAL_RENDERING_READ = 0x00100000;
-		static constexpr value_type COLOR_ATTACHMENT_READ_NONCOHERENT = 0x00080000;
-		static constexpr value_type ACCELERATION_STRUCTURE_READ = 0x00200000;
-		static constexpr value_type ACCELERATION_STRUCTURE_WRITE = 0x00400000;
-		static constexpr value_type SHADING_RATE_IMAGE_READ = 0x00800000;
-		static constexpr value_type FRAGMENT_DENSITY_MAP_READ = 0x01000000;
-		static constexpr value_type COMMAND_PREPROCESS_READ = 0x00020000;
-		static constexpr value_type COMMAND_PREPROCESS_WRITE = 0x00040000;
-	};
-	
-	inline VkAccessFlags AccessFlagsToVkAccessFlags(const AccessFlags accessFlags)
-	{
-		return static_cast<VkPipelineStageFlags>(accessFlags);
+	namespace VulkanGeometryInstanceFlags {
+		static constexpr VulkanGeometryInstanceFlag DISABLE_CULLING = 0x00000001, FRONT_COUNTERCLOCKWISE = 0x00000002, OPAQUE = 0x00000004, NOT_OPAQUE = 0x00000008;
 	}
 	
-	inline VkShaderStageFlagBits ShaderTypeToVkShaderStageFlagBits(const ShaderType shaderType)
-	{
-		switch (shaderType)
-		{
+	using VulkanBindingFlag = GTSL::Flags<GTSL::uint32, struct VulkanBindingFlagTag>;
+	
+	namespace VulkanBindingFlags {
+		static constexpr VulkanBindingFlag UPDATE_AFTER_BIND = 0x00000001, UPDATE_UNUSED_WHILE_PENDING = 0x00000002, PARTIALLY_BOUND = 0x00000004, VARIABLE_DESCRIPTOR_COUNT = 0x00000008;
+	}
+
+	inline VkAccelerationStructureCreateFlagsKHR ToVulkan(const AccelerationStructureFlag accelerationStructureFlag) {
+		VkAccelerationStructureCreateFlagsKHR vkAccelerationStructureCreateFlagsKhr = 0;
+		TranslateMask(AccelerationStructureFlags::ALLOW_COMPACTION, VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR, accelerationStructureFlag, vkAccelerationStructureCreateFlagsKhr);
+		TranslateMask(AccelerationStructureFlags::ALLOW_UPDATE, VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR, accelerationStructureFlag, vkAccelerationStructureCreateFlagsKhr);
+		TranslateMask(AccelerationStructureFlags::LOW_MEMORY, VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_KHR, accelerationStructureFlag, vkAccelerationStructureCreateFlagsKhr);
+		TranslateMask(AccelerationStructureFlags::PREFER_FAST_BUILD, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR, accelerationStructureFlag, vkAccelerationStructureCreateFlagsKhr);
+		TranslateMask(AccelerationStructureFlags::PREFER_FAST_TRACE, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR, accelerationStructureFlag, vkAccelerationStructureCreateFlagsKhr);
+		return vkAccelerationStructureCreateFlagsKhr;
+		
+	}
+	
+	inline VkPipelineStageFlags ToVulkan(const PipelineStage pipelineStage) {
+		VkPipelineStageFlags vkPipelineStageFlags = 0;
+		TranslateMask(PipelineStages::TOP_OF_PIPE, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::DRAW_INDIRECT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::VERTEX_INPUT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::VERTEX_SHADER, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::TESSELLATION_CONTROL_SHADER, VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::TESSELLATION_EVALUATION_SHADER, VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::GEOMETRY_SHADER, VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::FRAGMENT_SHADER, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::EARLY_FRAGMENT_TESTS, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::LATE_FRAGMENT_TESTS, VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::COLOR_ATTACHMENT_OUTPUT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::COMPUTE_SHADER, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::TRANSFER, VK_PIPELINE_STAGE_TRANSFER_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::BOTTOM_OF_PIPE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::HOST, VK_PIPELINE_STAGE_HOST_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::ALL_GRAPHICS, VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::ALL_COMMANDS, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::RAY_TRACING_SHADER, VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::ACCELERATION_STRUCTURE_BUILD, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::TASK_SHADER, VK_PIPELINE_STAGE_TASK_SHADER_BIT_NV, pipelineStage, vkPipelineStageFlags);
+		TranslateMask(PipelineStages::MESH_SHADER, VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV, pipelineStage, vkPipelineStageFlags);
+		return vkPipelineStageFlags;
+	}
+	
+	inline VkDescriptorType ToVulkan(const BindingType bindingType) {
+		switch (bindingType) {
+
+		case BindingType::SAMPLER: return VK_DESCRIPTOR_TYPE_SAMPLER;
+		case BindingType::COMBINED_IMAGE_SAMPLER: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		case BindingType::SAMPLED_IMAGE: return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		case BindingType::STORAGE_IMAGE: return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+		case BindingType::UNIFORM_TEXEL_BUFFER: break;
+		case BindingType::STORAGE_TEXEL_BUFFER: break;
+		case BindingType::UNIFORM_BUFFER: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		case BindingType::STORAGE_BUFFER: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		case BindingType::UNIFORM_BUFFER_DYNAMIC: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+		case BindingType::STORAGE_BUFFER_DYNAMIC: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+		case BindingType::INPUT_ATTACHMENT: return VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+		case BindingType::ACCELERATION_STRUCTURE: return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+		default: return VK_DESCRIPTOR_TYPE_MAX_ENUM;
+		}
+	}
+	
+	inline VkShaderStageFlagBits ToVulkan(const ShaderType shaderType) {
+		switch (shaderType) {
 		case ShaderType::VERTEX_SHADER: return VK_SHADER_STAGE_VERTEX_BIT;
 		case ShaderType::TESSELLATION_CONTROL_SHADER: return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 		case ShaderType::TESSELLATION_EVALUATION_SHADER: return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
@@ -235,31 +267,59 @@ namespace GAL
 		default: return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
 		}
 	}
-
-	inline VkExtent2D Extent2DToVkExtent2D(const GTSL::Extent2D extent)
-	{
+	
+	inline VkExtent2D ToVulkan(const GTSL::Extent2D extent) {
 		return { extent.Width, extent.Height };
 	}
 
-	inline VkExtent3D Extent3DToVkExtent3D(const GTSL::Extent3D extent)
-	{
+	inline VkExtent3D ToVulkan(const GTSL::Extent3D extent) {
 		return { extent.Width, extent.Height, extent.Depth };
 	}
 
-	inline GTSL::uint32 ImageTypeToVkImageAspectFlagBits(const TextureType imageType)
-	{
-		switch (imageType)
+	inline VkRayTracingShaderGroupTypeKHR ToVulkan(const ShaderGroupType type) {
+		switch (type)
 		{
+		case ShaderGroupType::GENERAL: return VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+		case ShaderGroupType::TRIANGLES: return VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
+		case ShaderGroupType::PROCEDURAL: return VK_RAY_TRACING_SHADER_GROUP_TYPE_PROCEDURAL_HIT_GROUP_KHR;
+		default: return VK_RAY_TRACING_SHADER_GROUP_TYPE_MAX_ENUM_KHR;
+		}
+	}
+	
+	inline VkPresentModeKHR ToVulkan(const PresentModes presentModes)
+	{
+		switch (presentModes) {
+		case GAL::PresentModes::FIFO: return VK_PRESENT_MODE_FIFO_KHR;
+		case GAL::PresentModes::SWAP: return VK_PRESENT_MODE_MAILBOX_KHR;
+		default: return VK_PRESENT_MODE_MAX_ENUM_KHR;
+		}
+	}
+	
+	inline GTSL::uint32 ImageTypeToVkImageAspectFlagBits(const TextureType imageType) {
+		switch (imageType) {
 		case TextureType::COLOR: return VK_IMAGE_ASPECT_COLOR_BIT;
 		case TextureType::DEPTH: return VK_IMAGE_ASPECT_DEPTH_BIT;
 		default: return VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM;
 		}
 	}
 
-	inline VkFormat ToVulkan(const ShaderDataType shaderDataTypes)
-	{
-		switch (shaderDataTypes)
-		{
+	inline VkBufferUsageFlags ToVulkan(const BufferUse bufferUses) {
+		VkBufferUsageFlags vkBufferUsageFlags = 0;
+		TranslateMask(BufferUses::STORAGE, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, bufferUses, vkBufferUsageFlags);
+		TranslateMask(BufferUses::TRANSFER_SOURCE, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, bufferUses, vkBufferUsageFlags);
+		TranslateMask(BufferUses::TRANSFER_DESTINATION, VK_BUFFER_USAGE_TRANSFER_DST_BIT, bufferUses, vkBufferUsageFlags);
+		TranslateMask(BufferUses::ADDRESS, VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, bufferUses, vkBufferUsageFlags);
+		TranslateMask(BufferUses::ACCELERATION_STRUCTURE, VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR, bufferUses, vkBufferUsageFlags);
+		TranslateMask(BufferUses::UNIFORM, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, bufferUses, vkBufferUsageFlags);
+		TranslateMask(BufferUses::VERTEX, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, bufferUses, vkBufferUsageFlags);
+		TranslateMask(BufferUses::INDEX, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, bufferUses, vkBufferUsageFlags);
+		TranslateMask(BufferUses::SHADER_BINDING_TABLE, VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR, bufferUses, vkBufferUsageFlags);
+		TranslateMask(BufferUses::BUILD_INPUT_READ, VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR, bufferUses, vkBufferUsageFlags);
+		return vkBufferUsageFlags;
+	}
+	
+	inline VkFormat ToVulkan(const ShaderDataType shaderDataTypes) {
+		switch (shaderDataTypes) {
 		case ShaderDataType::FLOAT: return VK_FORMAT_R32_SFLOAT;
 		case ShaderDataType::FLOAT2: return VK_FORMAT_R32G32_SFLOAT;
 		case ShaderDataType::FLOAT3: return VK_FORMAT_R32G32B32_SFLOAT;
@@ -273,10 +333,15 @@ namespace GAL
 		}
 	}
 
-	inline VkDescriptorType UniformTypeToVkDescriptorType(const BindingType uniformType)
-	{
-		switch (uniformType)
-		{
+	inline VkQueryType ToVulkan(const QueryType queryType) {
+		switch (queryType) {
+		case QueryType::COMPACT_ACCELERATION_STRUCTURE_SIZE: return VK_QUERY_TYPE_ACCELERATION_STRUCTURE_COMPACTED_SIZE_KHR;
+		default: return VK_QUERY_TYPE_MAX_ENUM;
+		}
+	}
+	
+	inline VkDescriptorType UniformTypeToVkDescriptorType(const BindingType uniformType) {
+		switch (uniformType) {
 		case BindingType::SAMPLER: return VK_DESCRIPTOR_TYPE_SAMPLER;
 		case BindingType::COMBINED_IMAGE_SAMPLER: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		case BindingType::SAMPLED_IMAGE: return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
@@ -292,10 +357,18 @@ namespace GAL
 		}
 	};
 
-	inline VkCullModeFlagBits ToVulkan(const CullMode cullMode)
-	{
-		switch (cullMode)
-		{
+	inline VkAccelerationStructureBuildTypeKHR ToVulkan(const BuildDevice buildDevice) {
+		switch (buildDevice) {
+		case BuildDevice::GPU: return VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR;
+		case BuildDevice::HOST: return VK_ACCELERATION_STRUCTURE_BUILD_TYPE_HOST_KHR;
+		case BuildDevice::GPU_OR_HOST: return VK_ACCELERATION_STRUCTURE_BUILD_TYPE_HOST_OR_DEVICE_KHR;
+		default: return VK_ACCELERATION_STRUCTURE_BUILD_TYPE_MAX_ENUM_KHR;
+		}
+	}
+
+	
+	inline VkCullModeFlagBits ToVulkan(const CullMode cullMode) {
+		switch (cullMode) {
 		case CullMode::CULL_BACK: return VK_CULL_MODE_BACK_BIT;
 		case CullMode::CULL_FRONT: return VK_CULL_MODE_FRONT_BIT;
 		case CullMode::CULL_NONE: return VK_CULL_MODE_NONE;
@@ -303,20 +376,16 @@ namespace GAL
 		}
 	}	
 	
-	inline VkFrontFace ToVulkan(const WindingOrder windingOrder)
-	{
-		switch (windingOrder)
-		{
+	inline VkFrontFace ToVulkan(const WindingOrder windingOrder) {
+		switch (windingOrder) {
 		case WindingOrder::CLOCKWISE: return VK_FRONT_FACE_CLOCKWISE;
 		case WindingOrder::COUNTER_CLOCKWISE: return VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		default: return VK_FRONT_FACE_MAX_ENUM;
 		}
 	}
 
-	inline VkCompareOp ToVulkan(const CompareOperation compareOperation)
-	{
-		switch (compareOperation)
-		{
+	inline VkCompareOp ToVulkan(const CompareOperation compareOperation) {
+		switch (compareOperation) {
 		case CompareOperation::NEVER: return VK_COMPARE_OP_NEVER;
 		case CompareOperation::LESS: return VK_COMPARE_OP_LESS;
 		case CompareOperation::EQUAL: return VK_COMPARE_OP_EQUAL;
@@ -328,413 +397,62 @@ namespace GAL
 		default: return VK_COMPARE_OP_MAX_ENUM;
 		}
 	}
-	
-	enum class VulkanTextureTiling : GTSL::uint32
-	{
-		OPTIMAL = 0,
-		LINEAR = 1,
-	};
 
-	using VulkanTextureUses = GTSL::Flags<GTSL::uint32>;
-
-	namespace VulkanTextureUse
-	{
-		static constexpr VulkanTextureUses TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, SAMPLE = 4, STORAGE = 8, COLOR_ATTACHMENT = 16, DEPTH_STENCIL_ATTACHMENT = 32, TRANSIENT_ATTACHMENT = 64, INPUT_ATTACHMENT = 128;
-	}
-
-	enum class VulkanDimensions : GTSL::uint8
-	{
-		LINE = 0, SQUARE = 1, CUBE = 2
-	};
-
-	inline VulkanDimensions DimensionsToVulkanDimension(const Dimension dimension)
-	{
-		switch (dimension)
-		{
-		case Dimension::LINEAR: return VulkanDimensions::LINE;
-		case Dimension::SQUARE: return VulkanDimensions::SQUARE;
-		case Dimension::CUBE: return VulkanDimensions::CUBE;
+	inline VkImageType ToVulkanType(const GTSL::Extent3D extent) {
+		if(extent.Height != 1) {
+			if (extent.Depth != 1) { return VK_IMAGE_TYPE_3D; }
+			return VK_IMAGE_TYPE_2D;
 		}
 
-		GAL_DEBUG_BREAK;
+		return VK_IMAGE_TYPE_1D;
 	}
 
-	inline VulkanDimensions VulkanDimensionsFromExtent(const GTSL::Extent3D extent)
-	{
-		if(extent.Height != 1)
-		{
-			if (extent.Depth != 1) { return VulkanDimensions::CUBE; }
-			return VulkanDimensions::SQUARE;
+	inline VkImageViewType ToVkImageViewType(const GTSL::Extent3D extent) {
+		if(extent.Height != 1) {
+			if (extent.Depth != 1) { return VK_IMAGE_VIEW_TYPE_3D; }
+			return VK_IMAGE_VIEW_TYPE_2D;
 		}
 
-		return VulkanDimensions::LINE;
+		return VK_IMAGE_VIEW_TYPE_1D;
 	}
-	
-	enum class VulkanTextureLayout
-	{
-		UNDEFINED = 0,
-		GENERAL = 1,
-		COLOR_ATTACHMENT = 2,
-		DEPTH_STENCIL_ATTACHMENT = 3,
-		DEPTH_STENCIL_READ_ONLY = 4,
-		SHADER_READ_ONLY = 5,
-		TRANSFER_SRC = 6,
-		TRANSFER_DST = 7,
-		PRE_INITIALIZED = 8,
-		DEPTH_READ_ONLY_STENCIL_ATTACHMENT = 1000117000,
-		DEPTH_ATTACHMENT_STENCIL_READ_ONLY = 1000117001,
-		DEPTH_ATTACHMENT = 1000241000,
-		DEPTH_READ_ONLY = 1000241001,
-		STENCIL_ATTACHMENT = 1000241002,
-		STENCIL_READ_ONLY = 1000241003,
-		PRESENTATION = 1000001002
-	};
-	
-	enum class VulkanBindingType : GTSL::uint32
-	{
-		SAMPLER = 0,
-		COMBINED_IMAGE_SAMPLER = 1,
-		SAMPLED_IMAGE = 2,
-		STORAGE_IMAGE = 3,
-		UNIFORM_TEXEL_BUFFER = 4,
-		STORAGE_TEXEL_BUFFER = 5,
-		UNIFORM_BUFFER = 6,
-		STORAGE_BUFFER = 7,
-		UNIFORM_BUFFER_DYNAMIC = 8,
-		STORAGE_BUFFER_DYNAMIC = 9,
-		INPUT_ATTACHMENT = 10,
-		ACCELERATION_STRUCTURE  = 1000150000
-	};
-	
-	enum class VulkanShaderType : GTSL::uint32
-	{		
-		VERTEX = 0x00000001,
-		TESSELLATION_CONTROL = 0x00000002,
-		TESSELLATION_EVALUATION = 0x00000004,
-		GEOMETRY = 0x00000008,
-		FRAGMENT = 0x00000010,
 
-		COMPUTE = 0x00000020,
+	inline VkImageAspectFlags ToVulkan(const TextureType textureType) {
+		switch (textureType) {
+		case TextureType::COLOR: return VK_IMAGE_ASPECT_COLOR_BIT;
+		case TextureType::DEPTH: return VK_IMAGE_ASPECT_DEPTH_BIT;
+		}
+	}
 
-		RAY_GEN = 0x00000100,
-		ANY_HIT = 0x00000200,
-		CLOSEST_HIT = 0x00000400,
-		MISS = 0x00000800,
-		INTERSECTION = 0x00001000,
-		CALLABLE = 0x00002000
-	};
-	
-	enum class VulkanIndexType
-	{
-		UINT8 = 1000265000, UINT16 = 0, UINT32 = 1
-	};
+	inline VkIndexType ToVulkan(const IndexType indexType) {
+		switch (indexType) {
+		case IndexType::UINT8: return VK_INDEX_TYPE_UINT8_EXT;
+		case IndexType::UINT16: return VK_INDEX_TYPE_UINT16;
+		case IndexType::UINT32: return VK_INDEX_TYPE_UINT32;
+		}
+	}
 
-	enum class VulkanGeometryType
-	{
-		TRIANGLES = 0, AABB = 1, INSTANCES = 1000150000
-	};
-
-	struct VulkanGeometryFlags : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type OPAQUE = 1, NO_DUPLICATE_ANY_HIT = 2;
-	};
-	
-	struct VulkanShaderStage : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type VERTEX = 1, TESSELLATION_CONTROL = 2, TASK = 0x00000040, MESH = 0x00000080;
-		static constexpr value_type TESSELLATION_EVALUATION = 4, GEOMETRY = 8, FRAGMENT = 16, COMPUTE = 32, ALL = 0x7FFFFFFF;
-		static constexpr value_type RAY_GEN = 0x00000100, ANY_HIT = 0x00000200, CLOSEST_HIT = 0x00000400, MISS = 0x00000800, INTERSECTION = 0x00001000, CALLABLE = 0x00002000;
-	};
-
-	enum class VulkanQueryType
-	{
-		OCCLUSION = 0,
-		PIPELINE_STATISTICS = 1,
-		TIMESTAMP = 2,
-		TRANSFORM_FEEDBACK_STREAM = 1000028004,
-		PERFORMANCE_QUERY = 1000116000,
-		ACCELERATION_STRUCTURE_COMPACTED_SIZE = 1000165000,
-		ACCELERATION_STRUCTURE_SERIALIZATION_SIZE = 1000150000,
-	};
-
-	enum class VulkanAccelerationStructureBuildType
-	{
-		GPU_LOCAL = 0, HOST = 1, GPU_OR_HOST = 2
-	};
-	
-	enum class VulkanColorSpace : GTSL::uint32
-	{
-		//The non linear SRGB color space is the most commonly used color space to display things on screen. Use this when you are not developing an HDR application.
-		NONLINEAR_SRGB = 0,
-	};
-	
-	enum class VulkanTextureFormat : GTSL::uint32
-	{
-		UNDEFINED = 0,
-
-		//INTEGER
-
-		//R
-		R_I8 = 9,
-		R_I16 = 70,
-		R_I32 = 98,
-		R_I64 = 110,
-		//RG
-		RG_I8 = 16,
-		RG_I16 = 77,
-		RG_I32 = 101,
-		RG_I64 = 113,
-		//RBG
-		RGB_I8 = 23,
-		RGB_I16 = 84,
-		RGB_I32 = 104,
-		RGB_I64 = 116,
-		//RGBA
-		RGBA_I8 = 37,
-		RGBA_I16 = 91,
-		RGBA_I32 = 107,
-		RGBA_I64 = 119,
-		//RGBA
-		BGRA_I8 = 44,
-
-		RGBA_F16 = VK_FORMAT_R16G16B16A16_SFLOAT,
-		RGBA_F32 = VK_FORMAT_R32G32B32A32_SFLOAT,
-
-		BGR_I8 = 30,
-
-		//  DEPTH STENCIL
-
-		STENCIL_8 = 127,
+	inline VkImageUsageFlags ToVulkan(const TextureUse uses, const FormatDescriptor formatDescriptor) {
+		VkImageUsageFlags vkUsage = 0;
 		
-		//A depth-only format with a 16 bit (2 byte) size.
-		DEPTH16 = 124,
-		//A depth-only format with a 32 (4 byte) bit size.
-		DEPTH32 = 126,
-		//A depth/stencil format with a 16 bit (2 byte) size depth part and an 8 bit (1 byte) size stencil part.
-		DEPTH16_STENCIL8 = 128,
-		//A depth/stencil format with a 24 bit (3 byte) size depth part and an 8 bit (1 byte) size stencil part.
-		DEPTH24_STENCIL8 = 129,
-		//A depth/stencil format with a 32 bit (4 byte) size depth part and an 8 bit (1 byte) size stencil part.
-		DEPTH32_STENCIL8 = 130
-	};
-	
-	struct VulkanBufferType : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type	TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, UNIFORM = 16, STORAGE = 0x00000020, INDEX = 64, VERTEX = 128, ADDRESS = 0x00020000;
-		static constexpr value_type	SHADER_BINDING_TABLE = 0x00000400, INDIRECT = 0x00000100, ACCELERATION_STRUCTURE = 0x00100000, BUILD_INPUT_READ_ONLY = 0x00080000;
-	};
-	
-	struct VulkanQueueCapabilities : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type GRAPHICS = 1, COMPUTE = 2, TRANSFER = 4;
-	};
-	
-	struct VulkanMemoryType : GTSL::Flags<GTSL::uint32>
-	{
-		static constexpr value_type GPU = 1, SHARED = 2, COHERENT = 4, CACHED = 8;
-	};
-
-	enum class VulkanPipelineType : GTSL::uint32
-	{
-		RASTER = 0, COMPUTE = 1, RAY_TRACING = 1000165000
-	};
-	
-	enum class VulkanShaderDataType
-	{
-		FLOAT = 100,
-		FLOAT2 = 103,
-		FLOAT3 = 106,
-		FLOAT4 = 109,
-		INT = 99,
-		INT2 = 102,
-		INT3 = 105,
-		INT4 = 108,
-		BOOL = 99
-	};
-	
-	inline VulkanBindingType BindingTypeToVulkanBindingType(const BindingType binding)
-	{
-		switch (binding)
-		{
-		case BindingType::SAMPLER: return VulkanBindingType::SAMPLER;
-		case BindingType::COMBINED_IMAGE_SAMPLER: return VulkanBindingType::COMBINED_IMAGE_SAMPLER;
-		case BindingType::SAMPLED_IMAGE: return VulkanBindingType::SAMPLED_IMAGE;
-		case BindingType::STORAGE_IMAGE: return VulkanBindingType::STORAGE_IMAGE;
-		case BindingType::UNIFORM_TEXEL_BUFFER: return VulkanBindingType::UNIFORM_TEXEL_BUFFER;
-		case BindingType::STORAGE_TEXEL_BUFFER: return VulkanBindingType::STORAGE_TEXEL_BUFFER;
-		case BindingType::UNIFORM_BUFFER: return VulkanBindingType::UNIFORM_BUFFER;
-		case BindingType::STORAGE_BUFFER: return VulkanBindingType::STORAGE_BUFFER;
-		case BindingType::UNIFORM_BUFFER_DYNAMIC: return VulkanBindingType::UNIFORM_BUFFER_DYNAMIC;
-		case BindingType::STORAGE_BUFFER_DYNAMIC: return VulkanBindingType::STORAGE_BUFFER_DYNAMIC;
-		case BindingType::INPUT_ATTACHMENT: return VulkanBindingType::INPUT_ATTACHMENT;
-		case BindingType::ACCELERATION_STRUCTURE: return VulkanBindingType::ACCELERATION_STRUCTURE;
-		default: GAL_DEBUG_BREAK;
+		if(uses & TextureUses::ATTACHMENT) {
+			switch (formatDescriptor.Type) {
+			case TextureType::COLOR: vkUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; break;
+			case TextureType::DEPTH: vkUsage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT; break;
+			}
 		}
-
-		return VulkanBindingType::UNIFORM_BUFFER_DYNAMIC;
-	}
-
-	inline VulkanShaderType ShaderTypeToVulkanShaderType(const ShaderType shader)
-	{
-		switch (shader) {
-		case ShaderType::VERTEX_SHADER: return VulkanShaderType::VERTEX;
-		case ShaderType::TESSELLATION_CONTROL_SHADER: return VulkanShaderType::TESSELLATION_CONTROL;
-		case ShaderType::TESSELLATION_EVALUATION_SHADER: return VulkanShaderType::TESSELLATION_EVALUATION;
-		case ShaderType::GEOMETRY_SHADER: return VulkanShaderType::GEOMETRY;
-		case ShaderType::FRAGMENT_SHADER: return VulkanShaderType::FRAGMENT;
-		case ShaderType::COMPUTE_SHADER: return VulkanShaderType::COMPUTE;
-		case ShaderType::RAY_GEN: return VulkanShaderType::RAY_GEN;
-		case ShaderType::CALLABLE: return VulkanShaderType::CALLABLE;
-		case ShaderType::CLOSEST_HIT: return VulkanShaderType::CLOSEST_HIT;
-		case ShaderType::ANY_HIT: return VulkanShaderType::ANY_HIT;
-		case ShaderType::MISS: return VulkanShaderType::MISS;
-		case ShaderType::INTERSECTION: return VulkanShaderType::INTERSECTION;
-		default: GAL_DEBUG_BREAK;
-		}
-	}
-
-	inline VulkanShaderDataType ShaderDataTypeToVulkanShaderDataType(const ShaderDataType shaderDataType)
-	{
-		switch (shaderDataType)
-		{
-		case ShaderDataType::FLOAT: return VulkanShaderDataType::FLOAT;
-		case ShaderDataType::FLOAT2: return VulkanShaderDataType::FLOAT2;
-		case ShaderDataType::FLOAT3: return VulkanShaderDataType::FLOAT3;
-		case ShaderDataType::FLOAT4: return VulkanShaderDataType::FLOAT4;
-		case ShaderDataType::INT: return VulkanShaderDataType::INT;
-		case ShaderDataType::INT2: return VulkanShaderDataType::INT2;
-		case ShaderDataType::INT3: return VulkanShaderDataType::INT3;
-		case ShaderDataType::INT4: return VulkanShaderDataType::INT4;
-		case ShaderDataType::BOOL: return VulkanShaderDataType::BOOL;
-		case ShaderDataType::MAT3: break;
-		case ShaderDataType::MAT4: break;
-		}
-
-		GAL_DEBUG_BREAK;
 		
-		return VulkanShaderDataType::FLOAT;
-	}
-	
-	inline GTSL::uint8 VulkanShaderDataTypeSize(const VulkanShaderDataType sdt)
-	{
-		switch (sdt)
-		{
-		case VulkanShaderDataType::FLOAT: return 4;
-		case VulkanShaderDataType::FLOAT2: return 4 * 2;
-		case VulkanShaderDataType::FLOAT3: return 4 * 3;
-		case VulkanShaderDataType::FLOAT4: return 4 * 4;
-		case VulkanShaderDataType::INT: return 4;
-		case VulkanShaderDataType::INT2: return 4 * 2;
-		case VulkanShaderDataType::INT3: return 4 * 3;
-		case VulkanShaderDataType::INT4: return 4 * 4;
-		default: GAL_DEBUG_BREAK;
-		}
+		TranslateMask(TextureUses::INPUT_ATTACHMENT, VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT, uses, vkUsage);
+		TranslateMask(TextureUses::SAMPLE, VK_IMAGE_USAGE_SAMPLED_BIT, uses, vkUsage);
+		TranslateMask(TextureUses::STORAGE, VK_IMAGE_USAGE_STORAGE_BIT, uses, vkUsage);
+		TranslateMask(TextureUses::TRANSFER_DESTINATION, VK_IMAGE_USAGE_TRANSFER_DST_BIT, uses, vkUsage);
+		TranslateMask(TextureUses::TRANSFER_SOURCE, VK_IMAGE_USAGE_TRANSFER_SRC_BIT, uses, vkUsage);
+		TranslateMask(TextureUses::TRANSIENT_ATTACHMENT, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, uses, vkUsage);
 
-		return 0;
+		return vkUsage;
 	}
 
-	inline VkShaderStageFlagBits VulkanShaderTypeToVkShaderStageFlagBits(const VulkanShaderType shader)
-	{
-		switch (shader)
-		{
-		case VulkanShaderType::VERTEX: return VK_SHADER_STAGE_VERTEX_BIT;
-		case VulkanShaderType::TESSELLATION_CONTROL: return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-		case VulkanShaderType::TESSELLATION_EVALUATION: return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-		case VulkanShaderType::GEOMETRY: return VK_SHADER_STAGE_GEOMETRY_BIT;
-		case VulkanShaderType::FRAGMENT: return VK_SHADER_STAGE_FRAGMENT_BIT;
-		case VulkanShaderType::COMPUTE: return VK_SHADER_STAGE_COMPUTE_BIT;
-		case VulkanShaderType::RAY_GEN: return VK_SHADER_STAGE_RAYGEN_BIT_KHR;
-		case VulkanShaderType::ANY_HIT: return VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
-		case VulkanShaderType::CLOSEST_HIT: return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
-		case VulkanShaderType::MISS: return VK_SHADER_STAGE_MISS_BIT_KHR;
-		case VulkanShaderType::INTERSECTION: return VK_SHADER_STAGE_INTERSECTION_BIT_KHR;
-		case VulkanShaderType::CALLABLE: return VK_SHADER_STAGE_CALLABLE_BIT_KHR;
-		default: GAL_DEBUG_BREAK;
-		}
-
-		return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
-	}
-
-	inline VulkanTextureFormat FormatToVulkanTextureFormat(const Format format)
-	{
-		switch (format)
-		{
-		//case Format::UNDEFINED:		return VulkanTextureFormat::UNDEFINED;
-		//case Format::R_I8: 		    return VulkanTextureFormat::R_I8;
-		//case Format::R_I16: 		    return VulkanTextureFormat::R_I16;
-		//case Format::R_I32: 		    return VulkanTextureFormat::R_I32;
-		//case Format::R_I64: 		    return VulkanTextureFormat::R_I64;
-		//case Format::RG_I8: 		    return VulkanTextureFormat::RG_I8;
-		//case Format::RG_I16:		    return VulkanTextureFormat::RG_I16;
-		//case Format::RG_I32:		    return VulkanTextureFormat::RG_I32;
-		//case Format::RG_I64:		    return VulkanTextureFormat::RG_I64;
-		//case Format::RGB_I8:		    return VulkanTextureFormat::RGB_I8;
-		//case Format::RGB_I16:		return VulkanTextureFormat::RGB_I16;
-		//case Format::RGB_I32:		return VulkanTextureFormat::RGB_I32;
-		//case Format::RGB_I64:		return VulkanTextureFormat::RGB_I64;
-		case Format::RGBA_I8:		return VulkanTextureFormat::RGBA_I8;
-		//case Format::RGBA_I16:		return VulkanTextureFormat::RGBA_I16;
-		//case Format::RGBA_I32:		return VulkanTextureFormat::RGBA_I32;
-		//case Format::RGBA_I64:		return VulkanTextureFormat::RGBA_I64;
-		case Format::BGRA_I8: 		return VulkanTextureFormat::BGRA_I8;
-		//case Format::BGR_I8:		    return VulkanTextureFormat::BGR_I8;
-		//case Format::DEPTH16: 		return VulkanTextureFormat::DEPTH16;
-		//case Format::DEPTH32: 		return VulkanTextureFormat::DEPTH32;
-		//case Format::DEPTH16_STENCIL8: return VulkanTextureFormat::DEPTH16_STENCIL8;
-		//case Format::DEPTH24_STENCIL8: return VulkanTextureFormat::DEPTH24_STENCIL8;
-		//case Format::DEPTH32_STENCIL8: return VulkanTextureFormat::DEPTH32_STENCIL8;
-		default: break;
-		}
-
-		__debugbreak();
-
-		return VulkanTextureFormat::UNDEFINED;
-	}
-
-	template<GTSL::uint32 FV, GTSL::uint32 TV, typename FVR, typename TVR>
-	void TranslateMask(const FVR fromVar, TVR& toVar)
-	{
-		GTSL::SetBitAs(GTSL::FindFirstSetBit(TV), static_cast<GTSL::uint32>(fromVar) & FV, static_cast<GTSL::uint32&>(toVar));
-	}
-	
-//#define TRANSLATE_MASK(toVal, fromVar, fromVal, toVar) GTSL::SetBitAs(GTSL::FindFirstSetBit(static_cast<GTSL::uint32>(toVal)), fromVar & (fromVal), static_cast<GTSL::uint32&>(toVar))
-	
-	inline VulkanShaderStage ShaderStageToVulkanShaderStage(const ShaderStage::value_type stage)
-	{
-		VulkanShaderStage shaderStage{};
-		
-		TranslateMask<ShaderStage::VERTEX,					VulkanShaderStage::VERTEX					>(stage, shaderStage);
-		TranslateMask<ShaderStage::TESSELLATION_CONTROL,	VulkanShaderStage::TESSELLATION_CONTROL		>(stage, shaderStage);
-		TranslateMask<ShaderStage::TESSELLATION_EVALUATION,	VulkanShaderStage::TESSELLATION_EVALUATION	>(stage, shaderStage);
-		TranslateMask<ShaderStage::GEOMETRY,				VulkanShaderStage::GEOMETRY					>(stage, shaderStage);
-		TranslateMask<ShaderStage::FRAGMENT,				VulkanShaderStage::FRAGMENT					>(stage, shaderStage);
-		TranslateMask<ShaderStage::COMPUTE,					VulkanShaderStage::COMPUTE					>(stage, shaderStage);
-		TranslateMask<ShaderStage::TASK,					VulkanShaderStage::TASK						>(stage, shaderStage);
-		TranslateMask<ShaderStage::MESH,					VulkanShaderStage::MESH						>(stage, shaderStage);
-		TranslateMask<ShaderStage::RAY_GEN,					VulkanShaderStage::RAY_GEN					>(stage, shaderStage);
-		TranslateMask<ShaderStage::ANY_HIT,					VulkanShaderStage::ANY_HIT					>(stage, shaderStage);
-		TranslateMask<ShaderStage::CLOSEST_HIT,				VulkanShaderStage::CLOSEST_HIT				>(stage, shaderStage);
-		TranslateMask<ShaderStage::MISS,					VulkanShaderStage::MISS						>(stage, shaderStage);
-		TranslateMask<ShaderStage::INTERSECTION,			VulkanShaderStage::INTERSECTION				>(stage, shaderStage);
-		TranslateMask<ShaderStage::CALLABLE,				VulkanShaderStage::CALLABLE					>(stage, shaderStage);
-
-		return shaderStage;
-	}
-
-	inline VulkanTextureType::value_type TextureTypeToVulkanTextureType(const TextureType type)
-	{
-		switch (type) {
-		case TextureType::COLOR: return VulkanTextureType::COLOR;
-		case TextureType::DEPTH: return VulkanTextureType::DEPTH;
-		}
-
-		return 0;
-	}
-
-	inline VkStencilOp ToVulkan(const StencilCompareOperation stencilCompareOperation)
-	{
-		switch (stencilCompareOperation)
-		{
+	inline VkStencilOp ToVulkan(const StencilCompareOperation stencilCompareOperation) {
+		switch (stencilCompareOperation) {
 		case StencilCompareOperation::KEEP: return VK_STENCIL_OP_KEEP;
 		case StencilCompareOperation::ZERO: return VK_STENCIL_OP_ZERO;
 		case StencilCompareOperation::REPLACE: return VK_STENCIL_OP_REPLACE;
@@ -744,6 +462,92 @@ namespace GAL
 		case StencilCompareOperation::INCREMENT_AND_WRAP: return VK_STENCIL_OP_INCREMENT_AND_WRAP;
 		case StencilCompareOperation::DECREMENT_AND_WRAP: return VK_STENCIL_OP_DECREMENT_AND_WRAP;
 		default: return VK_STENCIL_OP_MAX_ENUM;
+		}
+	}
+	
+	inline VkShaderStageFlags ToVulkan(const ShaderStage shaderStage) {
+		VkShaderStageFlags vkShaderStageFlags = 0;
+		TranslateMask(ShaderStages::VERTEX, VK_SHADER_STAGE_VERTEX_BIT, shaderStage, vkShaderStageFlags);
+		TranslateMask(ShaderStages::FRAGMENT, VK_SHADER_STAGE_FRAGMENT_BIT, shaderStage, vkShaderStageFlags);
+		TranslateMask(ShaderStages::COMPUTE, VK_SHADER_STAGE_COMPUTE_BIT, shaderStage, vkShaderStageFlags);
+		TranslateMask(ShaderStages::RAY_GEN, VK_SHADER_STAGE_RAYGEN_BIT_KHR, shaderStage, vkShaderStageFlags);
+		TranslateMask(ShaderStages::CLOSEST_HIT, VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, shaderStage, vkShaderStageFlags);
+		TranslateMask(ShaderStages::ANY_HIT, VK_SHADER_STAGE_ANY_HIT_BIT_KHR, shaderStage, vkShaderStageFlags);
+		TranslateMask(ShaderStages::MISS, VK_SHADER_STAGE_MISS_BIT_KHR, shaderStage, vkShaderStageFlags);
+		TranslateMask(ShaderStages::CALLABLE, VK_SHADER_STAGE_CALLABLE_BIT_KHR, shaderStage, vkShaderStageFlags);
+		return vkShaderStageFlags;
+	}
+	
+	inline VkDescriptorBindingFlags ToVulkan(const BindingFlag bindingFlag) {
+		VkDescriptorBindingFlags vkDescriptorBindingFlags = 0;
+		TranslateMask(BindingFlags::PARTIALLY_BOUND, VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT, bindingFlag, vkDescriptorBindingFlags);
+		return vkDescriptorBindingFlags;
+	}
+
+	inline VkGeometryFlagsKHR ToVulkan(const GeometryFlag geometryFlag) {
+		VkGeometryFlagsKHR vkGeometryFlagsKhr = 0;
+		TranslateMask(GeometryFlags::OPAQUE, VK_GEOMETRY_OPAQUE_BIT_KHR, geometryFlag, vkGeometryFlagsKhr);
+		return vkGeometryFlagsKhr;
+	}
+
+	inline VkColorSpaceKHR ToVulkan(const ColorSpace colorSpace) {
+		switch (colorSpace) {
+		case ColorSpace::SRGB: return VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+		default: return VK_COLOR_SPACE_MAX_ENUM_KHR;
+		}
+	}
+	
+	//TO GAL
+
+	inline PresentModes ToGAL(const VkPresentModeKHR presentModes) {
+		switch (presentModes) {
+		case VK_PRESENT_MODE_FIFO_KHR: return PresentModes::FIFO;
+		case VK_PRESENT_MODE_FIFO_RELAXED_KHR: return PresentModes::FIFO;
+		case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR: return PresentModes::SWAP;
+		case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR: return PresentModes::SWAP;
+		case VK_PRESENT_MODE_MAX_ENUM_KHR: return PresentModes::SWAP;
+		case VK_PRESENT_MODE_IMMEDIATE_KHR: return PresentModes::FIFO;
+		case VK_PRESENT_MODE_MAILBOX_KHR:  return PresentModes::SWAP;
+		default: return PresentModes::SWAP;
+		}
+	}
+
+	inline MemoryType ToGAL(const VkMemoryPropertyFlags memoryPropertyFlags) {
+		MemoryType memoryType = 0;
+		TranslateMask(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, MemoryTypes::GPU, memoryPropertyFlags, memoryType);
+		TranslateMask(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, MemoryTypes::HOST_VISIBLE, memoryPropertyFlags, memoryType);
+		TranslateMask(VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, MemoryTypes::HOST_COHERENT, memoryPropertyFlags, memoryType);
+		TranslateMask(VK_MEMORY_PROPERTY_HOST_CACHED_BIT, MemoryTypes::HOST_CACHED, memoryPropertyFlags, memoryType);
+		TranslateMask(VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT, 0, memoryPropertyFlags, memoryType);
+		return memoryType;
+	}
+
+	inline Format ToGAL(const VkFormat format) {
+		switch (format) {
+		case VK_FORMAT_R8G8B8A8_UNORM: return Format::RGBA_I8;
+		case VK_FORMAT_B8G8R8A8_UNORM: return Format::BGRA_I8;
+		}
+	}
+	
+	inline ColorSpace ToGAL(const VkColorSpaceKHR colorSpace) {
+		switch (colorSpace) {
+		case VK_COLOR_SPACE_SRGB_NONLINEAR_KHR: return ColorSpace::SRGB;
+		case VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT: break;
+		case VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT: break;
+		case VK_COLOR_SPACE_DISPLAY_P3_LINEAR_EXT: break;
+		case VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT: break;
+		case VK_COLOR_SPACE_BT709_LINEAR_EXT: break;
+		case VK_COLOR_SPACE_BT709_NONLINEAR_EXT: break;
+		case VK_COLOR_SPACE_BT2020_LINEAR_EXT: break;
+		case VK_COLOR_SPACE_HDR10_ST2084_EXT: break;
+		case VK_COLOR_SPACE_DOLBYVISION_EXT: break;
+		case VK_COLOR_SPACE_HDR10_HLG_EXT: break;
+		case VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT: break;
+		case VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT: break;
+		case VK_COLOR_SPACE_PASS_THROUGH_EXT: break;
+		case VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT: break;
+		case VK_COLOR_SPACE_DISPLAY_NATIVE_AMD: break;
+		case VK_COLOR_SPACE_MAX_ENUM_KHR: break;
 		}
 	}
 }

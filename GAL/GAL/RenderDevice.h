@@ -2,7 +2,7 @@
 
 #include <GTSL/Core.h>
 
-#include "GTSL/Allocator.h"
+#include "RenderCore.h"
 #include "GTSL/Delegate.hpp"
 
 #include "GTSL/StaticString.hpp"
@@ -19,24 +19,12 @@ namespace GAL
 		GTSL::uint8 PipelineCacheUUID[16];
 	};
 
-	class Queue
-	{
-	public:
-		struct CreateInfo
-		{
-			GTSL::uint32 Capabilities{ 0 };
-			GTSL::float32 QueuePriority = 1.0f;
-		};
-		//void Submit(const SubmitInfo& dispatchInfo);
-	};
-
 	class RenderDevice
 	{
 	public:
 		enum class MessageSeverity : GTSL::uint8 { MESSAGE, WARNING, ERROR };
 
-		enum class Extension
-		{
+		enum class Extension {
 			RAY_TRACING, PIPELINE_CACHE_EXTERNAL_SYNC, SCALAR_LAYOUT, SWAPCHAIN_RENDERING
 		};
 

@@ -1,123 +1,65 @@
 #pragma once
 
 #include "Vulkan.h"
-#include "VulkanMemory.h"
 #include "GTSL/Range.h"
 #include "GTSL/Math/Matrix4.h"
 #include <GAL/Vulkan/VulkanBuffer.h>
 
 namespace GAL
 {
-	class VulkanAccelerationStructure
+	struct BuildAccelerationStructureInfo;
+
+	struct GeometryTriangles {
+		ShaderDataType VertexFormat;
+		GTSL::uint32 VertexStride, MaxVertices;
+		IndexType IndexType;
+		DeviceAddress VertexData, IndexData, TransformData;
+		GTSL::uint32 FirstVertex;
+	};
+
+	struct GeometryAABB
 	{
-	public:
-		[[nodiscard]] VkAccelerationStructureKHR GetVkAccelerationStructure() const { return accelerationStructure; }
-		
-		struct GeometryTriangles
-		{	
-			VulkanShaderDataType VertexFormat;
-			GTSL::uint32 VertexStride, MaxVertices;
-			VulkanIndexType IndexType;
-			VulkanDeviceAddress VertexData, IndexData, TransformData;
-			GTSL::uint32 FirstVertex;
-		};
+		DeviceAddress Data;
+		GTSL::uint32 Stride;
+	};
 
-		struct GeometryAABB
-		{
-			VulkanDeviceAddress Data;
-			GTSL::uint32 Stride;
-		};
-		
-		struct GeometryInstances
-		{
-			VulkanDeviceAddress Data;
-		};
+	struct GeometryInstances
+	{
+		DeviceAddress Data;
+	};
 
-		union GeometryData
-		{
+	struct Geometry
+	{
+		GeometryType Type;
+		union {
 			GeometryTriangles Triangles;
 			GeometryAABB AABB;
 			GeometryInstances Instances;
 		};
+		GeometryFlag Flags;
 
-		struct Geometry
-		{
-			VulkanGeometryType Type;
-			GeometryData Geometry;
-			VulkanGeometryFlags::value_type Flags;
+		void SetGeometryTriangles(const GeometryTriangles triangles) { Type = GeometryType::TRIANGLES; Triangles = triangles; }
+		void SetGeometryAABB(const GeometryAABB aabb) { Type = GeometryType::AABB; AABB = aabb; }
+		void SetGeometryInstances(const GeometryInstances instances) { Type = GeometryType::INSTANCES; Instances = instances; }
 
-			void SetGeometryTriangles(const GeometryTriangles triangles) { Type = VulkanGeometryType::TRIANGLES; Geometry.Triangles = triangles; }
-			void SetGeometryAABB(const GeometryAABB aabb) { Type = VulkanGeometryType::AABB; Geometry.AABB = aabb; }
-			void SetGeometryInstances(const GeometryInstances instances) { Type = VulkanGeometryType::INSTANCES; Geometry.Instances = instances; }
-			
-			GTSL::uint32 PrimitiveCount, PrimitiveOffset;
-		};
-		
-		struct Instance
-		{
-			GTSL::Matrix3x4 Transform;
-			uint32_t InstanceIndex : 24;
-			uint32_t Mask : 8;
-			uint32_t InstanceShaderBindingTableRecordOffset : 24;
-			VkGeometryInstanceFlagsKHR Flags : 8;
-			VulkanDeviceAddress AccelerationStructureAddress;
-		};
-
-		static_assert(sizeof(Instance) == 64, "Size must be 64 bytes");
-
-		VulkanAccelerationStructure() = default;
-		
-		struct CreateInfo : VulkanCreateInfo
-		{		
-			VulkanDeviceAddress DeviceAddress = 0;
-
-			/**
-			 * \brief These describe the maximum size and format of the data that will be built into the acceleration structure.
-			 */
-			GTSL::Range<const Geometry*> Geometries;
-
-			VulkanBuffer Buffer;
-			GTSL::uint32 Size, Offset;
-		};
-
-		struct GetMemoryRequirementsInfo final : VulkanRenderInfo
-		{
-			GTSL::Range<const Geometry*> Geometries;
-			VulkanAccelerationStructureBuildType BuildType;
-			VulkanAccelerationStructureFlags::value_type Flags;
-		};
-		void GetMemoryRequirements(const GetMemoryRequirementsInfo& memoryRequirements, GTSL::uint32* accStructureSize, GTSL::uint32* scratchSize);
-		
-		void Initialize(const CreateInfo& info);
-
-		void Destroy(const VulkanRenderDevice* renderDevice);
-
-		VulkanDeviceAddress GetAddress(const VulkanRenderDevice* renderDevice) const;
-		
-		//UTILITY
-		static void BuildAccelerationStructure(const struct BuildAccelerationStructuresInfo& info);
-		
-	protected:
-		VkAccelerationStructureKHR accelerationStructure = nullptr;
-
+		GTSL::uint32 PrimitiveCount, PrimitiveOffset;
 	};
-
-	inline void buildGeometryAndRange(const VulkanAccelerationStructure::Geometry& descriptor, VkAccelerationStructureGeometryKHR& vkGeometry, VkAccelerationStructureBuildRangeInfoKHR& buildRange)
+	
+	inline void buildGeometryAndRange(const Geometry& descriptor, VkAccelerationStructureGeometryKHR& vkGeometry, VkAccelerationStructureBuildRangeInfoKHR& buildRange)
 	{
 		auto& s = descriptor;
 
 		vkGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
 		vkGeometry.pNext = nullptr;
-		vkGeometry.flags = s.Flags;
+		vkGeometry.flags = ToVulkan(s.Flags);
 
 		buildRange.primitiveCount = descriptor.PrimitiveCount;
 		buildRange.primitiveOffset = descriptor.PrimitiveOffset;
-		
+
 		switch (s.Type)
 		{
-		case VulkanGeometryType::TRIANGLES:
-		{
-			auto& t = s.Geometry.Triangles;
+		case GeometryType::TRIANGLES: {
+			auto& t = s.Triangles;
 
 			vkGeometry.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
 			vkGeometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
@@ -125,19 +67,17 @@ namespace GAL
 			vkGeometry.geometry.triangles.vertexData.deviceAddress = t.VertexData;
 			vkGeometry.geometry.triangles.indexData.deviceAddress = t.IndexData;
 			vkGeometry.geometry.triangles.transformData.deviceAddress = t.TransformData;
-			vkGeometry.geometry.triangles.indexType = (VkIndexType)t.IndexType;
+			vkGeometry.geometry.triangles.indexType = ToVulkan(t.IndexType);
 			vkGeometry.geometry.triangles.maxVertex = t.MaxVertices;
-			vkGeometry.geometry.triangles.vertexFormat = (VkFormat)t.VertexFormat;
+			vkGeometry.geometry.triangles.vertexFormat = ToVulkan(t.VertexFormat);
 			vkGeometry.geometry.triangles.vertexStride = t.VertexStride;
 
-			buildRange.firstVertex = descriptor.Geometry.Triangles.FirstVertex;
+			buildRange.firstVertex = descriptor.Triangles.FirstVertex;
 			buildRange.transformOffset = 0;
 			break;
 		}
-
-		case VulkanGeometryType::AABB:
-		{
-			auto& a = s.Geometry.AABB;
+		case GeometryType::AABB: {
+			auto& a = s.AABB;
 
 			vkGeometry.geometryType = VK_GEOMETRY_TYPE_AABBS_KHR;
 			vkGeometry.geometry.aabbs.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR;
@@ -150,9 +90,8 @@ namespace GAL
 			break;
 		}
 
-		case VulkanGeometryType::INSTANCES:
-		{
-			auto& a = s.Geometry.Instances;
+		case GeometryType::INSTANCES: {
+			auto& a = s.Instances;
 
 			vkGeometry.geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR;
 			vkGeometry.geometry.instances.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
@@ -166,19 +105,143 @@ namespace GAL
 		}
 		}
 	}
-
-	struct BuildAccelerationStructureInfo
+	
+	class VulkanAccelerationStructure
 	{
+	public:
+		[[nodiscard]] VkAccelerationStructureKHR GetVkAccelerationStructure() const { return accelerationStructure; }
+		
+		struct Instance
+		{
+			GTSL::Matrix3x4 Transform;
+			uint32_t InstanceIndex : 24;
+			uint32_t Mask : 8;
+			uint32_t InstanceShaderBindingTableRecordOffset : 24;
+			VkGeometryInstanceFlagsKHR Flags : 8;
+			DeviceAddress AccelerationStructureAddress;
+		};
+
+		static_assert(sizeof(Instance) == 64, "Size must be 64 bytes");
+
+		VulkanAccelerationStructure() = default;
+
+		void GetMemoryRequirements(const VulkanRenderDevice* renderDevice, GTSL::Range<const Geometry*> geometries, BuildDevice buildDevice, AccelerationStructureFlag flags, GTSL::uint32* accStructureSize, GTSL::uint32* scratchSize) {
+			GTSL::Array<VkAccelerationStructureGeometryKHR, 8> vkGeometries;
+			GTSL::Array<uint32_t, 8> primitiveCounts;
+			for (auto& e : geometries) {
+				VkAccelerationStructureGeometryKHR geometryKhr; VkAccelerationStructureBuildRangeInfoKHR buildRange;
+				buildGeometryAndRange(e, geometryKhr, buildRange);
+				vkGeometries.EmplaceBack(geometryKhr); primitiveCounts.EmplaceBack(e.PrimitiveCount);
+			}
+
+			auto type = vkGeometries[0].geometryType == VK_GEOMETRY_TYPE_INSTANCES_KHR ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+
+			VkAccelerationStructureBuildGeometryInfoKHR buildInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR };
+			buildInfo.flags = ToVulkan(flags);
+			buildInfo.type = type;
+			buildInfo.geometryCount = vkGeometries.GetLength();
+			buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+			buildInfo.pGeometries = vkGeometries.begin();
+
+			VkAccelerationStructureBuildSizesInfoKHR buildSizes{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR };
+			renderDevice->vkGetAccelerationStructureBuildSizesKHR(renderDevice->GetVkDevice(),
+				ToVulkan(buildDevice), &buildInfo, primitiveCounts.begin(), &buildSizes);
+
+			*accStructureSize = buildSizes.accelerationStructureSize;
+			*scratchSize = buildSizes.buildScratchSize;
+		}
+		
+		void Initialize(const VulkanRenderDevice* renderDevice, GTSL::Range<const Geometry*> geometries, VulkanBuffer buffer, GTSL::uint32 size, GTSL::uint32 offset) {
+			VkAccelerationStructureCreateInfoKHR vkAccelerationStructureCreateInfoKhr{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
+			vkAccelerationStructureCreateInfoKhr.createFlags = 0;
+			vkAccelerationStructureCreateInfoKhr.type = geometries[0].Type == GeometryType::INSTANCES ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+			vkAccelerationStructureCreateInfoKhr.offset = 0;
+			vkAccelerationStructureCreateInfoKhr.deviceAddress = 0;
+			vkAccelerationStructureCreateInfoKhr.buffer = buffer.GetVkBuffer();
+			vkAccelerationStructureCreateInfoKhr.size = size;
+
+			renderDevice->vkCreateAccelerationStructureKHR(renderDevice->GetVkDevice(), &vkAccelerationStructureCreateInfoKhr, renderDevice->GetVkAllocationCallbacks(), &accelerationStructure);
+
+			//setName(info.RenderDevice, accelerationStructure, VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR, info.Name);
+		}
+
+		void Destroy(const VulkanRenderDevice* renderDevice) {
+			renderDevice->vkDestroyAccelerationStructureKHR(renderDevice->GetVkDevice(), accelerationStructure, renderDevice->GetVkAllocationCallbacks());
+			debugClear(accelerationStructure);
+		}
+
+		DeviceAddress GetAddress(const VulkanRenderDevice* renderDevice) const {
+			VkAccelerationStructureDeviceAddressInfoKHR deviceAddress{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR };
+			deviceAddress.accelerationStructure = accelerationStructure;
+			return renderDevice->vkGetAccelerationStructureDeviceAddressKHR(renderDevice->GetVkDevice(), &deviceAddress);
+		}
+		
+		//UTILITY
+		static void BuildAccelerationStructure(const VulkanRenderDevice* renderDevice,
+		                                       GTSL::Range<BuildAccelerationStructureInfo*>
+		                                       buildAccelerationStructureInfos);
+
+	protected:
+		VkAccelerationStructureKHR accelerationStructure = nullptr;
+
+	};
+
+	struct BuildAccelerationStructureInfo {
 		VulkanAccelerationStructure SourceAccelerationStructure, DestinationAccelerationStructure;
-		GTSL::Range<const VulkanAccelerationStructure::Geometry*> Geometries;
-		VulkanDeviceAddress ScratchBufferAddress;
+		GTSL::Range<const Geometry*> Geometries;
+		DeviceAddress ScratchBufferAddress;
 
 		//VkBuildAccelerationStructureFlagsKHR
 		GTSL::uint32 Flags = 0;
 	};
 	
-	struct BuildAccelerationStructuresInfo : VulkanRenderInfo
-	{
-		GTSL::Range<BuildAccelerationStructureInfo*> BuildAccelerationStructureInfos;
-	};
+	inline void VulkanAccelerationStructure::BuildAccelerationStructure(const VulkanRenderDevice* renderDevice,
+	                                                                    GTSL::Range<BuildAccelerationStructureInfo*>
+	                                                                    buildAccelerationStructureInfos) {
+		GTSL::Array<VkAccelerationStructureBuildGeometryInfoKHR, 8> buildGeometryInfos;
+		GTSL::Array<GTSL::Array<VkAccelerationStructureGeometryKHR, 8>, 8> geometriesPerAccelerationStructure;
+		GTSL::Array<GTSL::Array<VkAccelerationStructureBuildRangeInfoKHR, 8>, 8> buildRangesPerAccelerationStructure;
+		GTSL::Array<VkAccelerationStructureBuildRangeInfoKHR*, 8> buildRangesRangePerAccelerationStructure;
+
+		for (GTSL::uint32 accStrInfoIndex = 0; accStrInfoIndex < buildAccelerationStructureInfos.ElementCount(); ++
+		     accStrInfoIndex) {
+			auto& source = buildAccelerationStructureInfos[accStrInfoIndex];
+
+			geometriesPerAccelerationStructure.EmplaceBack();
+			buildRangesPerAccelerationStructure.EmplaceBack();
+			buildRangesRangePerAccelerationStructure.EmplaceBack(
+				buildRangesPerAccelerationStructure[accStrInfoIndex].begin());
+
+			for (GTSL::uint32 i = 0; i < source.Geometries.ElementCount(); ++i) {
+				VkAccelerationStructureGeometryKHR accelerationStructureGeometry;
+				VkAccelerationStructureBuildRangeInfoKHR buildRange;
+				buildGeometryAndRange(source.Geometries[i], accelerationStructureGeometry, buildRange);
+				geometriesPerAccelerationStructure[accStrInfoIndex].EmplaceBack(accelerationStructureGeometry);
+				buildRangesPerAccelerationStructure[accStrInfoIndex].EmplaceBack(buildRange);
+			}
+
+			VkAccelerationStructureBuildGeometryInfoKHR buildGeometryInfo{
+				VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR
+			};
+			buildGeometryInfo.flags = source.Flags;
+			buildGeometryInfo.srcAccelerationStructure = source.SourceAccelerationStructure.GetVkAccelerationStructure();
+			buildGeometryInfo.dstAccelerationStructure = source.DestinationAccelerationStructure.GetVkAccelerationStructure();
+			buildGeometryInfo.type = source.Geometries[0].Type == GeometryType::INSTANCES
+				                         ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR
+				                         : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+			buildGeometryInfo.pGeometries = geometriesPerAccelerationStructure[accStrInfoIndex].begin();
+			buildGeometryInfo.ppGeometries = nullptr;
+			buildGeometryInfo.geometryCount = geometriesPerAccelerationStructure[accStrInfoIndex].GetLength();
+			buildGeometryInfo.scratchData.deviceAddress = source.ScratchBufferAddress;
+			buildGeometryInfo.mode = source.SourceAccelerationStructure.GetVkAccelerationStructure()
+				                         ? VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR
+				                         : VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+			buildGeometryInfos.EmplaceBack(buildGeometryInfo);
+		}
+
+		renderDevice->vkBuildAccelerationStructuresKHR(renderDevice->GetVkDevice(), nullptr,
+		                                               buildAccelerationStructureInfos.ElementCount(),
+		                                               buildGeometryInfos.begin(),
+		                                               buildRangesRangePerAccelerationStructure.begin());
+	}	
 }

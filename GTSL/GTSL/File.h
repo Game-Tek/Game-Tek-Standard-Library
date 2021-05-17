@@ -5,6 +5,8 @@
 
 #include "Range.h"
 
+#undef ERROR
+
 namespace GTSL
 {
 	class BufferInterface;
@@ -15,30 +17,29 @@ namespace GTSL
 		File() = default;
 		~File();
 
-		struct AccessMode : Flags<uint8> { static constexpr value_type READ = 1, WRITE = 2; };
+		using AccessMode = Flags<uint8, struct AccessModeFlag>;
+		static constexpr AccessMode READ = 1, WRITE = 2;
 
 		enum class OpenMode : uint8 { LEAVE_CONTENTS, CLEAR };
-		
-		void OpenFile(Range<const UTF8*> path, AccessMode::value_type accessMode, OpenMode openMode = OpenMode::LEAVE_CONTENTS);
 
-		[[nodiscard]] uint32 WriteToFile(const Range<const byte*> buffer) const;
-		[[nodiscard]] uint32 ReadFromFile(const Range<byte*> buffer) const;
-		uint32 WriteToFile(BufferInterface buffer) const;
+		enum class OpenResult { OK, ALREADY_EXISTS, DOES_NOT_EXIST, ERROR };
 		
-		uint32 ReadFile(BufferInterface buffer) const;
-		uint32 ReadFile(uint64 size, BufferInterface buffer) const;
-		uint32 ReadFile(GTSL::Range<byte*> buffer) const;
-		uint32 ReadFile(uint64 size, uint64 offset, GTSL::Range<byte*> buffer) const;
+		[[nodiscard]] OpenResult Create(Range<const UTF8*> path, AccessMode accessMode);
+		[[nodiscard]] OpenResult Open(Range<const UTF8*> path, AccessMode accessMode);
 
-		void SetEndOfFile();
+		uint32 Write(const Range<const byte*> buffer) const;
+		uint32 Write(BufferInterface buffer) const;
 		
-		enum class MoveFrom : uint8
-		{
-			BEGIN, CURRENT, END
-		};
-		void SetPointer(int64 byte, MoveFrom from);
+		[[nodiscard]] uint32 Read(const Range<byte*> buffer) const;
+		uint32 Read(BufferInterface buffer) const;
+		uint32 Read(uint64 size, BufferInterface buffer) const;
+		uint32 Read(uint64 size, uint64 offset, GTSL::Range<byte*> buffer) const;
 
-		[[nodiscard]] uint64 GetFileSize() const;
+		void Resize(const uint64 newSize);
+		
+		void SetPointer(uint64 byte);
+
+		[[nodiscard]] uint64 GetSize() const;
 		
 	private:
 		void* fileHandle{ nullptr };

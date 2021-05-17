@@ -1,10 +1,14 @@
 #pragma once
 
 #include "DX12.h"
-#include "DX12Bindings.h"
 #include "DX12Buffer.h"
+#include "DX12Framebuffer.h"
+#include "DX12Pipeline.h"
 #include "DX12Texture.h"
+#include "GTSL/Array.hpp"
 #include "GTSL/RGB.h"
+#include "DX12RenderDevice.h"
+#include "GAL/CommandBuffer.h"
 
 #undef MemoryBarrier
 
@@ -14,52 +18,59 @@ namespace GAL
 	struct BuildAccelerationStructuresInfo;
 	class DX12Pipeline;
 	class DX12Queue;
-	class DX12RenderPass;
-	class DX12Framebuffer;
 
-	class DX12CommandBuffer final
+	class DX12CommandBuffer final : public CommandBuffer
 	{
 	public:
 		DX12CommandBuffer() = default;
 
-		struct CreateInfo : DX12CreateInfo
-		{
-		};
+		void BeginRecording(const DX12RenderDevice* renderDevice) { DX_CHECK(commandAllocator->Reset()) }
 
-		[[nodiscard]] ID3D12CommandList* GetID3D12CommandList() const { return commandList; }
+		void EndRecording(const DX12RenderDevice* renderDevice) { commandList->Close(); }
+		
+		void BeginRenderPass(const DX12RenderDevice* renderDevice, DX12RenderPass renderPass, DX12Framebuffer framebuffer,
+			GTSL::Extent2D renderArea, GTSL::Range<const RenderPassTargetDescription*> renderPassTargetDescriptions) {
+			GTSL::Array<D3D12_RENDER_PASS_RENDER_TARGET_DESC, 16> renderPassRenderTargetDescs;
+			D3D12_RENDER_PASS_DEPTH_STENCIL_DESC renderPassDepthStencilDesc;
 
-		struct BeginRecordingInfo final : DX12RenderInfo
-		{
-			/**
-			 * \brief Pointer to primary/parent command buffer, can be null if this command buffer is primary/has no children.
-			 */
-			const DX12CommandBuffer* PrimaryCommandBuffer{ nullptr };
-		};
-		void BeginRecording(const BeginRecordingInfo& beginRecordingInfo);
+			for(GTSL::uint8 i = 0; i < renderPassTargetDescriptions.ElementCount(); ++i) {
+				if (renderPassTargetDescriptions[i].FormatDescriptor.Type == TextureType::COLOR) {
+					auto& e = renderPassRenderTargetDescs.EmplaceBack();
+					e.BeginningAccess.Type = ToD3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE(renderPassTargetDescriptions[i].LoadOperation);
+					e.BeginningAccess.Clear.ClearValue.Format = ToDX12(MakeFormatFromFormatDescriptor(renderPassTargetDescriptions[i].FormatDescriptor));
+					e.BeginningAccess.Clear.ClearValue.Color[0] = renderPassTargetDescriptions[i].ClearValue.R();
+					e.BeginningAccess.Clear.ClearValue.Color[1] = renderPassTargetDescriptions[i].ClearValue.G();
+					e.BeginningAccess.Clear.ClearValue.Color[2] = renderPassTargetDescriptions[i].ClearValue.B();
+					e.BeginningAccess.Clear.ClearValue.Color[3] = renderPassTargetDescriptions[i].ClearValue.A();
 
-		struct EndRecordingInfo final : DX12RenderInfo
-		{
-		};
-		void EndRecording(const EndRecordingInfo& endRecordingInfo);
+					e.EndingAccess.Type = ToD3D12_RENDER_PASS_ENDING_ACCESS_TYPE(renderPassTargetDescriptions[i].StoreOperation);
 
-		struct BeginRenderPassInfo final : DX12RenderInfo
-		{
-			const DX12RenderPass* RenderPass = nullptr;
-			const DX12Framebuffer* Framebuffer = nullptr;
-			GTSL::Extent2D RenderArea;
-			GTSL::Range<const GTSL::RGBA*> ClearValues;
-		};
-		void BeginRenderPass(const BeginRenderPassInfo& beginRenderPassInfo) {}
+					e.cpuDescriptor;
+				} else {
+					renderPassDepthStencilDesc.DepthBeginningAccess.Type = ToD3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE(renderPassTargetDescriptions[i].LoadOperation);
+					
+					renderPassDepthStencilDesc.DepthBeginningAccess.Clear.ClearValue.Format = ToDX12(MakeFormatFromFormatDescriptor(renderPassTargetDescriptions[i].FormatDescriptor));
+					renderPassDepthStencilDesc.DepthBeginningAccess.Clear.ClearValue.DepthStencil.Depth = renderPassTargetDescriptions[i].ClearValue.R();
+					
+					renderPassDepthStencilDesc.DepthEndingAccess.Type = ToD3D12_RENDER_PASS_ENDING_ACCESS_TYPE(renderPassTargetDescriptions[i].StoreOperation);
 
-		struct AdvanceSubpassInfo final : DX12RenderInfo
-		{
-		};
-		void AdvanceSubPass(const AdvanceSubpassInfo& advanceSubpassInfo) {}
+					renderPassDepthStencilDesc.cpuDescriptor;
+				}
+			}
+			
+			ID3D12GraphicsCommandList4* renderPassCapableCommandList = nullptr;
+			commandList->QueryInterface(__uuidof(ID3D12GraphicsCommandList4), reinterpret_cast<void**>(&renderPassCapableCommandList));
+			renderPassCapableCommandList->BeginRenderPass(renderPassRenderTargetDescs.GetLength(), renderPassRenderTargetDescs.begin(),
+				&renderPassDepthStencilDesc, D3D12_RENDER_PASS_FLAG_NONE);
+			renderPassCapableCommandList->Release();
+		}
 
-		struct EndRenderPassInfo final : DX12RenderInfo
-		{
-		};
-		void EndRenderPass(const EndRenderPassInfo& endRenderPassInfo) {}
+		void EndRenderPass(const DX12RenderDevice* renderDevice) {
+			ID3D12GraphicsCommandList4* renderPassCapableCommandList = nullptr;
+			commandList->QueryInterface(__uuidof(ID3D12GraphicsCommandList4), reinterpret_cast<void**>(&renderPassCapableCommandList));
+			renderPassCapableCommandList->EndRenderPass();
+			renderPassCapableCommandList->Release();
+		}
 		
 		struct MemoryBarrier
 		{
@@ -69,193 +80,202 @@ namespace GAL
 		struct BufferBarrier
 		{
 			DX12Buffer Buffer;
-			DX12AccessFlags::value_type SourceAccessFlags, DestinationAccessFlags;
+			AccessType SourceAccessFlags, DestinationAccessFlags;
 		};
 
 		struct TextureBarrier
 		{
 			DX12Texture Texture;
 
-			DX12TextureLayout CurrentLayout, TargetLayout;
-			DX12AccessFlags::value_type SourceAccessFlags, DestinationAccessFlags;
+			TextureLayout CurrentLayout, TargetLayout;
+			AccessType SourceAccessFlags, DestinationAccessFlags;
 		};
 		
-		struct AddPipelineBarrierInfo : DX12CreateInfo
-		{
-			GTSL::Range<const MemoryBarrier*> MemoryBarriers;
-			GTSL::Range<const BufferBarrier*> BufferBarriers;
-			GTSL::Range<const TextureBarrier*> TextureBarriers;
-			GTSL::uint32 InitialStage, FinalStage;
-		};
-		void AddPipelineBarrier(const AddPipelineBarrierInfo& info);
+		template<class ALLOCATOR>
+		void AddPipelineBarrier(const DX12RenderDevice* renderDevice, GTSL::Range<const BarrierData*> barriers, ShaderStage initialStage, ShaderStage finalStage, const ALLOCATOR& allocator) {
+			GTSL::Array<D3D12_RESOURCE_BARRIER, 64> resourceBarriers;
 
-		struct SetScissorInfo final : DX12RenderInfo
-		{
-			GTSL::Extent2D Area;
-			GTSL::Extent2D Offset;
-		};
-		void SetScissor(const SetScissorInfo& info);
+			for(auto& e : barriers) {
+				switch (e.Type) {
 
-		struct BindPipelineInfo final : DX12RenderInfo
-		{
-			const DX12Pipeline* Pipeline = nullptr;
-			DX12PipelineType PipelineType;
-		};
-		void BindPipeline(const BindPipelineInfo& bindPipelineInfo);
+				case BarrierType::MEMORY: {
+					break;
+				}
+				case BarrierType::BUFFER: {
+					resourceBarriers.EmplaceBack();
+					auto& resourceBarrier = resourceBarriers.back();
 
-		struct BindIndexBufferInfo final : DX12RenderInfo
-		{
-			const DX12Buffer* Buffer{ nullptr };
-			GTSL::uint32 Size = 0, Offset = 0;
-			DX12IndexType IndexType;
-		};
-		void BindIndexBuffer(const BindIndexBufferInfo& buffer) const;
+					resourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+					resourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 
-		struct BindVertexBufferInfo final : DX12RenderInfo
-		{
-			const DX12Buffer* Buffer{ nullptr };
-			GTSL::uint32 Offset = 0;
-			GTSL::uint32 Size = 0, Stride = 0;
-		};
-		void BindVertexBuffer(const BindVertexBufferInfo& buffer) const;
+					resourceBarrier.Transition.StateBefore = ToDX12(e.Barrier.BufferBarrier.SourceAccessFlags);
+					resourceBarrier.Transition.StateAfter = ToDX12(e.Barrier.BufferBarrier.DestinationAccessFlags);
+					resourceBarrier.Transition.Subresource = 0;
+					resourceBarrier.Transition.pResource = static_cast<DX12Buffer*>(e.Barrier.BufferBarrier.Buffer)->GetID3D12Resource();
+					break;
+				}
+				case BarrierType::TEXTURE: {
+					resourceBarriers.EmplaceBack();
+					auto& resourceBarrier = resourceBarriers.back();
 
-		struct UpdatePushConstantsInfo : DX12RenderInfo
-		{
-			const DX12PipelineLayout* PipelineLayout = nullptr;
-			size_t Offset = 0;
-			size_t Size = 0;
-			GTSL::byte* Data = nullptr;
-		};
-		void UpdatePushConstant(const UpdatePushConstantsInfo& info);
+					resourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+					resourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 
-		struct DrawInfo final : DX12RenderInfo
-		{
-			GTSL::uint32 VertexCount;
-			GTSL::uint32 InstanceCount;
-			GTSL::uint32 FirstVertex;
-			GTSL::uint32 FirstInstance;
-		};
-		void Draw(const DrawInfo& info) const;
+					resourceBarrier.Transition.StateBefore = ToDX12(e.Barrier.TextureBarrier.CurrentLayout);
+					resourceBarrier.Transition.StateAfter = ToDX12(e.Barrier.TextureBarrier.TargetLayout);
+					resourceBarrier.Transition.Subresource = 0;
+					resourceBarrier.Transition.pResource = static_cast<DX12Texture*>(e.Barrier.TextureBarrier.Texture)->GetID3D12Resource();
+					break;
+				}
+				default: ;
+				}
+			}
 
-		struct DrawIndexedInfo final : DX12RenderInfo
-		{
-			GTSL::uint32 InstanceCount = 0, IndexCount = 0;
-		};
-		void DrawIndexed(const DrawIndexedInfo& drawIndexedInfo) const;
+			commandList->ResourceBarrier(resourceBarriers.GetLength(), resourceBarriers.begin());
+		}
 
-		struct TraceRaysInfo : DX12RenderInfo
-		{
-			struct ShaderTableDescriptor
-			{
-				DX12Buffer* Buffer = nullptr;
-				GTSL::uint32 Size = 0, Offset = 0, Stride = 0;
-			} RayGenDescriptor, HitDescriptor, MissDescriptor;
+		void BindPipeline(const DX12RenderDevice* renderDevice, DX12Pipeline pipeline, ShaderStage shaderStage) const {
+			commandList->SetPipelineState(pipeline.GetID3D12PipelineState());
+		}
 
-			GTSL::Extent3D DispatchSize;
-		};
-		void TraceRays(const TraceRaysInfo& traceRaysInfo);
+		void BindIndexBuffer(const DX12RenderDevice* renderDevice, DX12Buffer buffer, const GTSL::uint32 size, const GTSL::uint32 offset, IndexType indexType) const {
+			D3D12_INDEX_BUFFER_VIEW indexBufferView;
+			indexBufferView.Format = ToDX12(indexType);
+			indexBufferView.BufferLocation = buffer.GetID3D12Resource()->GetGPUVirtualAddress() + offset;
+			indexBufferView.SizeInBytes = size;
+			commandList->IASetIndexBuffer(&indexBufferView);
+		}
 
-		struct AddLabelInfo : DX12RenderInfo
-		{
-			GTSL::Range<const GTSL::UTF8*> Name;
-		};
-		void AddLabel(const AddLabelInfo& info);
+		void BindVertexBuffer(const DX12RenderDevice* renderDevice, const DX12Buffer buffer, const GTSL::uint32 size, const GTSL::uint32 offset, const GTSL::uint32 stride) const {
+			D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+			vertexBufferView.SizeInBytes =size;
+			vertexBufferView.BufferLocation = buffer.GetID3D12Resource()->GetGPUVirtualAddress() + offset;
+			vertexBufferView.StrideInBytes = stride;
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+		}
+		
+		void UpdatePushConstant(const DX12RenderDevice* renderDevice, DX12PipelineLayout pipelineLayout, GTSL::uint32 offset, GTSL::Range<const GTSL::byte*> data, ShaderStage shaderStages) {
+			if (shaderStages & (ShaderStages::VERTEX | ShaderStages::FRAGMENT)) {
+				commandList->SetComputeRoot32BitConstants(0, data.Bytes() / 4, data.begin(), offset / 4);
+				return;
+			}
 
-		struct BeginRegionInfo : DX12RenderInfo
-		{
-			GTSL::Range<const GTSL::UTF8*> Name;
-		};
-		void BeginRegion(const BeginRegionInfo& info) const;
+			if (shaderStages & (ShaderStages::COMPUTE)) {
+				commandList->SetGraphicsRoot32BitConstants(0, data.Bytes() / 4, data.begin(), offset / 4);
+				return;
+			}
+		}
+		
+		void DrawIndexed(const DX12RenderDevice* renderDevice, uint32_t indexCount, uint32_t instanceCount = 0) const {
+			commandList->DrawIndexedInstanced(indexCount, instanceCount, 0, 0, 0);
+		}
 
-		struct EndRegionInfo : DX12RenderInfo
-		{
-		};
-		void EndRegion(const EndRegionInfo& info) const;
+		void TraceRays(const DX12RenderDevice* renderDevice, GTSL::Array<ShaderTableDescriptor, 4> shaderTableDescriptors, GTSL::Extent3D dispatchSize) {
+			ID3D12GraphicsCommandList4* t = nullptr;
+			commandList->QueryInterface(__uuidof(ID3D12GraphicsCommandList4), reinterpret_cast<void**>(&t));
+			D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc;
+			dispatchRaysDesc.Width = dispatchSize.Width; dispatchRaysDesc.Height = dispatchSize.Height; dispatchRaysDesc.Depth = dispatchSize.Depth;
+			
+			dispatchRaysDesc.RayGenerationShaderRecord.StartAddress = shaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].Address;
+			dispatchRaysDesc.RayGenerationShaderRecord.SizeInBytes = shaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].Entries * shaderTableDescriptors[GAL::RAY_GEN_TABLE_INDEX].EntrySize;
+			
+			dispatchRaysDesc.HitGroupTable.StartAddress = shaderTableDescriptors[GAL::HIT_TABLE_INDEX].Address;
+			dispatchRaysDesc.HitGroupTable.SizeInBytes = shaderTableDescriptors[GAL::HIT_TABLE_INDEX].Entries * shaderTableDescriptors[GAL::HIT_TABLE_INDEX].EntrySize;
+			dispatchRaysDesc.HitGroupTable.StrideInBytes = shaderTableDescriptors[GAL::HIT_TABLE_INDEX].EntrySize;
+			
+			dispatchRaysDesc.MissShaderTable.StartAddress = shaderTableDescriptors[GAL::MISS_TABLE_INDEX].Address;
+			dispatchRaysDesc.MissShaderTable.SizeInBytes = shaderTableDescriptors[GAL::MISS_TABLE_INDEX].Entries * shaderTableDescriptors[GAL::MISS_TABLE_INDEX].EntrySize;
+			dispatchRaysDesc.MissShaderTable.StrideInBytes = shaderTableDescriptors[GAL::MISS_TABLE_INDEX].EntrySize;
+			
+			dispatchRaysDesc.CallableShaderTable.StartAddress = shaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].Address;
+			dispatchRaysDesc.CallableShaderTable.SizeInBytes = shaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].Entries * shaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].EntrySize;
+			dispatchRaysDesc.CallableShaderTable.StrideInBytes = shaderTableDescriptors[GAL::CALLABLE_TABLE_INDEX].EntrySize;
+			
+			t->DispatchRays(&dispatchRaysDesc);
 
-		struct DispatchInfo : DX12RenderInfo
-		{
-			GTSL::Extent3D WorkGroups;
-		};
-		void Dispatch(const DispatchInfo& dispatchInfo);
+			t->Release();
+		}
 
-		struct BindBindingsSetInfo : DX12RenderInfo
-		{
-			DX12PipelineType PipelineType;
-			GTSL::Range<const DX12BindingsSet*> BindingsSets;
-			GTSL::Range<const GTSL::uint32*> Offsets;
-			const DX12PipelineLayout* PipelineLayout = nullptr;
-			GTSL::uint32 FirstSet = 0, BoundSets = 0;
-		};
-		void BindBindingsSets(const BindBindingsSetInfo& info);
+		void AddLabel(const DX12RenderDevice* renderDevice, GTSL::Range<const GTSL::UTF8*> name) {
+			//commandList->SetMarker(METADA)
+		}
 
-		struct CopyTextureToTextureInfo final : DX12RenderInfo
-		{
-			DX12Texture SourceTexture, DestinationTexture;
-			DX12TextureLayout SourceLayout, DestinationLayout;
+		void BeginRegion(const DX12RenderDevice* renderDevice) const;
 
-			GTSL::Extent3D Extent;
-		};
-		void CopyTextureToTexture(const CopyTextureToTextureInfo& info);
+		void EndRegion(const DX12RenderDevice* renderDevice) const;
+		
+		void Dispatch(const DX12RenderDevice* renderDevice, GTSL::Extent3D workGroups) {
+			commandList->Dispatch(workGroups.Width, workGroups.Height, workGroups.Depth);
+		}
 
-		struct CopyBufferToTextureInfo : DX12RenderInfo
-		{
-			const DX12Buffer* SourceBuffer{ nullptr };
-			DX12TextureLayout TextureLayout;
-			const DX12Texture* DestinationTexture{ nullptr };
+		void BindBindingsSets(const DX12RenderDevice* renderDevice) {
+		}
 
-			GTSL::Extent3D Extent;
-			GTSL::Extent3D Offset;
-		};
-		void CopyBufferToTexture(const CopyBufferToTextureInfo& copyBufferToImageInfo);
+		void CopyTextureToTexture(const DX12RenderDevice* renderDevice, const DX12Texture source, const DX12Texture destination, const GTSL::Extent3D extent, const FormatDescriptor format) {
+			D3D12_TEXTURE_COPY_LOCATION sourceTextureCopyLocation, destinationTextureCopyLocation;
+			sourceTextureCopyLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+			sourceTextureCopyLocation.pResource = source.GetID3D12Resource();
+			sourceTextureCopyLocation.PlacedFootprint.Footprint.Width = extent.Width;
+			sourceTextureCopyLocation.PlacedFootprint.Footprint.Height = extent.Height;
+			sourceTextureCopyLocation.PlacedFootprint.Footprint.Depth = extent.Depth;
+			sourceTextureCopyLocation.PlacedFootprint.Footprint.Format = ToDX12(MakeFormatFromFormatDescriptor(format));
+			sourceTextureCopyLocation.PlacedFootprint.Footprint.RowPitch = 0;
+			sourceTextureCopyLocation.PlacedFootprint.Offset = 0;
 
-		struct CopyBuffersInfo final : DX12RenderInfo
-		{
-			const DX12Buffer* Source = nullptr;
-			GTSL::uint32 SourceOffset{ 0 };
-			const DX12Buffer* Destination{ nullptr };
-			GTSL::uint32 DestinationOffset{ 0 };
+			destinationTextureCopyLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+			destinationTextureCopyLocation.pResource = destination.GetID3D12Resource();
+			destinationTextureCopyLocation.PlacedFootprint.Footprint.Width = extent.Width;
+			destinationTextureCopyLocation.PlacedFootprint.Footprint.Height = extent.Height;
+			destinationTextureCopyLocation.PlacedFootprint.Footprint.Depth = extent.Depth;
+			destinationTextureCopyLocation.PlacedFootprint.Footprint.Format = ToDX12(MakeFormatFromFormatDescriptor(format));
+			destinationTextureCopyLocation.PlacedFootprint.Footprint.RowPitch = 0;
+			destinationTextureCopyLocation.PlacedFootprint.Offset = 0;
 
-			GTSL::uint32 Size{ 0 };
-		};
-		void CopyBuffers(const CopyBuffersInfo& copyBuffersInfo);
+			D3D12_BOX box;
+			box.back;
+			box.bottom;
+			box.front;
+			box.left;
+			box.right;
+			box.top;
 
-		void BuildAccelerationStructure(const BuildAccelerationStructuresInfo& info) const;
+			commandList->CopyTextureRegion(&destinationTextureCopyLocation, 0, 0, 0, &sourceTextureCopyLocation, &box);
+		}
+
+		void CopyBufferToTexture(const DX12RenderDevice* renderDevice, const DX12Buffer source, const DX12Texture destination, const GTSL::uint32 size) {
+			commandList->CopyResource(destination.GetID3D12Resource(), source.GetID3D12Resource());
+		}
+
+		void CopyBuffers(const DX12RenderDevice* renderDevice, const DX12Buffer source, const DX12Buffer destination, const GTSL::uint32 size) {
+			commandList->CopyBufferRegion(destination.GetID3D12Resource(), 0, source.GetID3D12Resource(),
+				0, size);
+		}
+
+		void BuildAccelerationStructure(const DX12RenderDevice* renderDevice, const BuildAccelerationStructuresInfo& info) const;
 		
 		~DX12CommandBuffer() = default;
-		
-	private:
-		ID3D12GraphicsCommandList* commandList = nullptr;
-	};
 
-	class DX12CommandPool final
-	{
-	public:
-		DX12CommandPool() = default;
+		void Initialize(const DX12RenderDevice* renderDevice, DX12Queue queue, bool isPrimary = true) {
+			const D3D12_COMMAND_LIST_TYPE type = isPrimary ? D3D12_COMMAND_LIST_TYPE_DIRECT : D3D12_COMMAND_LIST_TYPE_BUNDLE;
 
-		struct CreateInfo final : DX12CreateInfo
-		{
-			const DX12Queue* Queue = nullptr;
-			bool IsPrimary = true;
-		};
-		void Initialize(const CreateInfo& info);
+			DX_CHECK(renderDevice->GetID3D12Device2()->CreateCommandAllocator(type, __uuidof(ID3D12CommandAllocator), reinterpret_cast<void**>(commandAllocator)))
+			DX_CHECK(renderDevice->GetID3D12Device2()->CreateCommandList(0, type, commandAllocator, nullptr, __uuidof(ID3D12CommandList), reinterpret_cast<void**>(&commandList)))
+
+			//setName(commandAllocator, info);
+		}
 
 		[[nodiscard]] ID3D12CommandAllocator* GetID3D12CommandAllocator() const { return commandAllocator; }
+		[[nodiscard]] ID3D12CommandList* GetID3D12CommandList() const { return commandList; }
 
-		struct AllocateCommandBuffersInfo final : DX12CreateInfo
-		{
-			bool IsPrimary = true;
-			GTSL::Range<const DX12CommandBuffer::CreateInfo*> CommandBufferCreateInfos;
-			GTSL::Range<DX12CommandBuffer*> CommandBuffers;
-		};
-		void AllocateCommandBuffer(const AllocateCommandBuffersInfo& allocateCommandBuffersInfo) const;
-		
-		void ResetPool(DX12RenderDevice* renderDevice) const;
-		
-		void Destroy(const DX12RenderDevice* renderDevice);
-
-		~DX12CommandPool() = default;
+		void Destroy(const DX12RenderDevice* renderDevice) {
+			commandAllocator->Release();
+			commandList->Release();
+			debugClear(commandAllocator);
+			debugClear(commandList);
+		}
 		
 	private:
 		ID3D12CommandAllocator* commandAllocator = nullptr;
+		ID3D12GraphicsCommandList* commandList = nullptr;
 	};
 }

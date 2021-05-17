@@ -20,7 +20,7 @@ Matrix4::Matrix4(const Quaternion& quaternion)
 	const auto yw = quaternion.Y() * quaternion.W();
 	const auto zz = quaternion.Z() * quaternion.Z();
 	const auto zw = quaternion.Z() * quaternion.W();
-
+	
 	array[0][0] = 1 - 2 * (yy + zz);
 	array[0][1] = 2 * (xy - zw);
 	array[0][2] = 2 * (xz + yw);
@@ -58,7 +58,7 @@ Matrix4::Matrix4(const AxisAngle& axisAngle) : Matrix4(1)
 	array[0][1] = tmp1 - tmp2;
 
 	tmp1 = xz * t;
-	tmp2 = axisAngle.Y * s;
+	tmp2 = -axisAngle.Y * s;
 
 	array[2][0] = tmp1 - tmp2;
 	array[0][2] = tmp1 + tmp2;

@@ -36,7 +36,7 @@ Quaternion::Quaternion(const AxisAngle& axisAngle)
 	X() = axisAngle.X * halfAngleSine;
 	Y() = axisAngle.Y * halfAngleSine;
 	Z() = axisAngle.Z * halfAngleSine;
-	W() = Math::Cosine(axisAngle.Angle / 2);
+	W() = Math::Cosine(-axisAngle.Angle / 2);
 }
 
 Quaternion Quaternion::operator*(const Quaternion& other) const

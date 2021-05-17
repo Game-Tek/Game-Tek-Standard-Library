@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DX12.h"
+#include "DX12RenderDevice.h"
 
 namespace GAL
 {
@@ -9,13 +10,25 @@ namespace GAL
 	public:
 		DX12Memory() = default;
 
-		struct CreateInfo final : DX12CreateInfo
-		{
-			DX12AllocateFlags::value_type Flags;
-			GTSL::uint32 Size = 0, MemoryType = 0;
-		};
-		void Initialize(const CreateInfo& info);
-		void Destroy(const DX12RenderDevice* renderDevice);
+		void Initialize(const DX12RenderDevice* renderDevice, const GTSL::Range<const GTSL::UTF8*> name, AllocationFlag flags, GTSL::uint32 size, MemoryType memoryType) {
+			D3D12_HEAP_DESC heapDesc;
+			heapDesc.Flags = D3D12_HEAP_FLAGS(11); //D3D12_HEAP_FLAG_CREATE_NOT_ZEROED
+			heapDesc.Alignment = 1024;
+			heapDesc.SizeInBytes = size;
+			heapDesc.Properties.CreationNodeMask = 0;
+			heapDesc.Properties.VisibleNodeMask = 0;
+			heapDesc.Properties.Type;
+			heapDesc.Properties.CPUPageProperty;
+			heapDesc.Properties.MemoryPoolPreference;
+
+			DX_CHECK(renderDevice->GetID3D12Device2()->CreateHeap(&heapDesc, __uuidof(ID3D12Heap), reinterpret_cast<void**>(&heap)));
+			setName(heap, name);
+		}
+		
+		void Destroy(const DX12RenderDevice* renderDevice) {
+			heap->Release();
+			debugClear(heap);
+		}
 		
 		[[nodiscard]] ID3D12Heap* GetID3D12Heap() const { return heap; }
 		
