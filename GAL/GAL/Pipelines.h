@@ -66,26 +66,22 @@ namespace GAL
 		
 		struct PipelineStateBlock
 		{
-			struct ViewportState
-			{
+			struct ViewportState {
 				GTSL::uint8 ViewportCount = 0;
 			};
 
-			struct RasterState
-			{				
+			struct RasterState {				
 				WindingOrder WindingOrder = WindingOrder::CLOCKWISE;
 				CullMode CullMode = CullMode::CULL_BACK;
 			};
 
-			struct DepthState
-			{
+			struct DepthState {
 				CompareOperation CompareOperation = CompareOperation::LESS;
 			};
 
-			struct RenderContext
-			{
-				struct AttachmentState
-				{
+			struct RenderContext {
+				struct AttachmentState {
+					FormatDescriptor FormatDescriptor;
 					bool BlendEnable = true;
 				};
 
@@ -94,47 +90,36 @@ namespace GAL
 				GTSL::uint8 SubPassIndex = 0;
 			};
 
-			struct VertexState
-			{
+			struct VertexState {
 				GTSL::Range<const VertexElement*> VertexDescriptor;
 			};
 
-			struct RayTracingState
-			{
+			struct RayTracingState {
 				GTSL::Range<const RayTraceGroup*> Groups;
 				GTSL::uint8 MaxRecursionDepth;
 			};
 
-			union Blocks {
+			union {
 				ViewportState Viewport;
 				RasterState Raster;
 				DepthState Depth;
 				RenderContext Context;
 				VertexState Vertex;
 				RayTracingState RayTracing;
-
-				Blocks() = default;
-				Blocks(const RasterState& rasterState) : Raster(rasterState) {}
-				Blocks(const DepthState& depth) : Depth(depth) {}
-				Blocks(const RenderContext& renderContext) : Context(renderContext) {}
-				Blocks(const VertexState& vertexState) : Vertex(vertexState) {}
-				Blocks(const ViewportState& viewportState) : Viewport(viewportState) {}
-				Blocks(const RayTracingState& rayTracingState) : RayTracing(rayTracingState) {}
-			} Block;
-			
+			};			
 
 			enum class StateType
 			{
 				VIEWPORT_STATE, RASTER_STATE, DEPTH_STATE, COLOR_BLEND_STATE, VERTEX_STATE, RAY_TRACE_GROUPS
-			} Type = StateType::VIEWPORT_STATE;
+			} Type;
 			
 			PipelineStateBlock() = default;
-			PipelineStateBlock(const RasterState& rasterState) : Block(rasterState), Type(StateType::RASTER_STATE) {}
-			PipelineStateBlock(const DepthState& depth) : Block(depth), Type(StateType::DEPTH_STATE) {}
-			PipelineStateBlock(const RenderContext& renderContext) : Block(renderContext), Type(StateType::COLOR_BLEND_STATE) {}
-			PipelineStateBlock(const VertexState& vertexState) : Block(vertexState), Type(StateType::VERTEX_STATE) {}
-			PipelineStateBlock(const ViewportState& viewportState) : Block(viewportState), Type(StateType::VIEWPORT_STATE) {}
-			PipelineStateBlock(const RayTracingState& rayTracingGroups) : Block(rayTracingGroups), Type(StateType::RAY_TRACE_GROUPS) {}
+			PipelineStateBlock(const RasterState& rasterState) : Raster(rasterState), Type(StateType::RASTER_STATE) {}
+			PipelineStateBlock(const DepthState& depth) : Depth(depth), Type(StateType::DEPTH_STATE) {}
+			PipelineStateBlock(const RenderContext& renderContext) : Context(renderContext), Type(StateType::COLOR_BLEND_STATE) {}
+			PipelineStateBlock(const VertexState& vertexState) : Vertex(vertexState), Type(StateType::VERTEX_STATE) {}
+			PipelineStateBlock(const ViewportState& viewportState) : Viewport(viewportState), Type(StateType::VIEWPORT_STATE) {}
+			PipelineStateBlock(const RayTracingState& rayTracingGroups) : RayTracing(rayTracingGroups), Type(StateType::RAY_TRACE_GROUPS) {}
 		};
 		
 		//struct ShaderInfo

@@ -161,13 +161,13 @@ namespace GTSL
 			return *this;
 		}
 
-		Vector3 operator-(const float32 other) const
-		{
+		Vector3 operator-() const { return Vector3(-X(), -Y(), -Z()); }
+		
+		Vector3 operator-(const float32 other) const {
 			return { X() - other, Y() - other, Z() - other };
 		}
 
-		Vector3 operator-(const Vector3& other) const
-		{
+		Vector3 operator-(const Vector3& other) const {
 			return { X() - other.X(), Y() - other.Y(), Z() - other.Z() };
 		}
 

@@ -19,7 +19,7 @@ namespace GAL
 		void Initialize(const VulkanRenderDevice* renderDevice, GTSL::Range<const BindingsPoolSize*> bindingsPoolSizes, GTSL::uint32 maxSets) {
 			GTSL::Array<VkDescriptorPoolSize, MAX_BINDINGS_PER_SET> vkDescriptorPoolSizes;
 
-			for (GTSL::uint8 i = 0; i < bindingsPoolSizes.ElementCount(); ++i) {
+			for (GTSL::uint32 i = 0; i < static_cast<GTSL::uint32>(bindingsPoolSizes.ElementCount()); ++i) {
 				auto& descriptorPoolSize = vkDescriptorPoolSizes.EmplaceBack();
 				descriptorPoolSize.type = ToVulkan(bindingsPoolSizes[i].BindingType);
 				//Max number of descriptors of VkDescriptorPoolSize::type we can allocate.
@@ -31,7 +31,7 @@ namespace GAL
 			vkDescriptorPoolCreateInfo.maxSets = maxSets;
 			vkDescriptorPoolCreateInfo.poolSizeCount = vkDescriptorPoolSizes.GetLength();
 			vkDescriptorPoolCreateInfo.pPoolSizes = vkDescriptorPoolSizes.begin();
-			VK_CHECK(renderDevice->VkCreateDescriptorPool(renderDevice->GetVkDevice(), &vkDescriptorPoolCreateInfo, renderDevice->GetVkAllocationCallbacks(), &descriptorPool));
+			renderDevice->VkCreateDescriptorPool(renderDevice->GetVkDevice(), &vkDescriptorPoolCreateInfo, renderDevice->GetVkAllocationCallbacks(), &descriptorPool);
 			//setName(renderDevice, descriptorPool, VK_OBJECT_TYPE_DESCRIPTOR_POOL, createInfo.Name);
 		}
 
@@ -46,10 +46,10 @@ namespace GAL
 		//}
 
 		[[nodiscard]] VkDescriptorPool GetVkDescriptorPool() const { return descriptorPool; }
-		[[nodiscard]] GTSL::uint64 GetHandle() const { return (GTSL::uint64)descriptorPool; }
+		[[nodiscard]] GTSL::uint64 GetHandle() const { return reinterpret_cast<GTSL::uint64>(descriptorPool); }
 
 	private:
-		VkDescriptorPool descriptorPool = nullptr;
+		VkDescriptorPool descriptorPool;
 	};
 
 	class VulkanBindingsSetLayout final
@@ -90,13 +90,13 @@ namespace GAL
 
 			GTSL::Array<VkDescriptorSetLayoutBinding, MAX_BINDINGS_PER_SET> vkDescriptorSetLayoutBindings;
 
-			for (GTSL::uint32 i = 0; i < bindingsDescriptors.ElementCount(); ++i) {
+			for (GTSL::uint32 i = 0; i < static_cast<GTSL::uint32>(bindingsDescriptors.ElementCount()); ++i) {
 				vkDescriptorBindingFlags.EmplaceBack();
 				vkDescriptorSetLayoutBindings.EmplaceBack();
 			}
 
 			{
-				GTSL::uint8 i = 0;
+				GTSL::uint32 i = 0;
 
 				for (auto& binding : vkDescriptorSetLayoutBindings) {
 					binding.binding = i;
@@ -114,7 +114,7 @@ namespace GAL
 			vkDescriptorSetLayoutCreateInfo.bindingCount = vkDescriptorSetLayoutBindings.GetLength();
 			vkDescriptorSetLayoutCreateInfo.pBindings = vkDescriptorSetLayoutBindings.begin();
 
-			VK_CHECK(renderDevice->VkCreateDescriptorSetLayout(renderDevice->GetVkDevice(), &vkDescriptorSetLayoutCreateInfo, renderDevice->GetVkAllocationCallbacks(), &descriptorSetLayout));
+			renderDevice->VkCreateDescriptorSetLayout(renderDevice->GetVkDevice(), &vkDescriptorSetLayoutCreateInfo, renderDevice->GetVkAllocationCallbacks(), &descriptorSetLayout);
 			//setName(createInfo.RenderDevice, &descriptorSetLayout, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, createInfo.Name);
 		}
 		void Destroy(const VulkanRenderDevice* renderDevice) {
@@ -123,10 +123,10 @@ namespace GAL
 		}
 
 		[[nodiscard]] VkDescriptorSetLayout GetVkDescriptorSetLayout() const { return descriptorSetLayout; }
-		[[nodiscard]] GTSL::uint64 GetHandle() const { return (GTSL::uint64)descriptorSetLayout; }
+		[[nodiscard]] GTSL::uint64 GetHandle() const { return reinterpret_cast<GTSL::uint64>(descriptorSetLayout); }
 
 	private:
-		VkDescriptorSetLayout descriptorSetLayout = nullptr;
+		VkDescriptorSetLayout descriptorSetLayout;
 	};
 
 	class VulkanBindingsSet final : public BindingsSet
@@ -134,21 +134,19 @@ namespace GAL
 	public:
 		VulkanBindingsSet() = default;
 
-		struct TextureBindingUpdateInfo
-		{
+		struct TextureBindingUpdateInfo {
 			VulkanSampler Sampler;
 			VulkanTextureView TextureView;
 			TextureLayout TextureLayout;
+			FormatDescriptor FormatDescriptor;
 		};
 
-		struct BufferBindingUpdateInfo
-		{
+		struct BufferBindingUpdateInfo {
 			VulkanBuffer Buffer;
 			GTSL::uint64 Offset, Range;
 		};
 
-		struct AccelerationStructureBindingUpdateInfo
-		{
+		struct AccelerationStructureBindingUpdateInfo {
 			VulkanAccelerationStructure AccelerationStructure;
 		};
 
@@ -178,7 +176,7 @@ namespace GAL
 			vkDescriptorSetAllocateInfo.descriptorPool = bindingsPool.GetVkDescriptorPool();
 			vkDescriptorSetAllocateInfo.descriptorSetCount = 1;
 			vkDescriptorSetAllocateInfo.pSetLayouts = &vkDescriptorSetLayout;
-			VK_CHECK(renderDevice->VkAllocateDescriptorSets(renderDevice->GetVkDevice(), &vkDescriptorSetAllocateInfo, &descriptorSet));
+			renderDevice->VkAllocateDescriptorSets(renderDevice->GetVkDevice(), &vkDescriptorSetAllocateInfo, &descriptorSet);
 		}
 
 		template<class ALLOCATOR>
@@ -192,19 +190,17 @@ namespace GAL
 			GTSL::Vector<GTSL::Vector<VkDescriptorBufferInfo, ALLOCATOR>, ALLOCATOR> buffersPerSubSetUpdate(8, allocator);
 			GTSL::Vector<GTSL::Vector<VkDescriptorImageInfo, ALLOCATOR>, ALLOCATOR> imagesPerSubSetUpdate(8, allocator);
 
-			for (GTSL::uint32 index = 0; index < bindingsUpdateInfos.ElementCount(); ++index)
-			{
-				VkWriteDescriptorSet writeSet{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+			for (GTSL::uint32 index = 0; index < static_cast<GTSL::uint32>(bindingsUpdateInfos.ElementCount()); ++index) {
+				VkWriteDescriptorSet& writeSet = vkWriteDescriptorSets.EmplaceBack();
 				auto& info = bindingsUpdateInfos[index];
 
+				writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET; writeSet.pNext = nullptr;
 				writeSet.dstSet = descriptorSet;
 				writeSet.dstBinding = info.SubsetIndex;
 				writeSet.dstArrayElement = info.BindingIndex;
-				writeSet.descriptorCount = info.BindingUpdateInfos.ElementCount();
-				writeSet.descriptorType = static_cast<VkDescriptorType>(info.Type);
-				writeSet.pImageInfo = nullptr;
-				writeSet.pBufferInfo = nullptr;
-				writeSet.pTexelBufferView = nullptr;
+				writeSet.descriptorCount = static_cast<GTSL::uint32>(info.BindingUpdateInfos.ElementCount());
+				writeSet.descriptorType = ToVulkan(info.Type);
+				writeSet.pImageInfo = nullptr; writeSet.pBufferInfo = nullptr; writeSet.pTexelBufferView = nullptr;
 
 				switch (info.Type)
 				{
@@ -212,15 +208,16 @@ namespace GAL
 				case BindingType::COMBINED_IMAGE_SAMPLER:
 				case BindingType::SAMPLED_IMAGE:
 				case BindingType::STORAGE_IMAGE:
-				case BindingType::INPUT_ATTACHMENT:
-				{
+				case BindingType::INPUT_ATTACHMENT: {
 					imagesPerSubSetUpdate.EmplaceBack(8, allocator);
 
-					for (auto e : info.BindingUpdateInfos)
-					{
-						VkDescriptorImageInfo vkDescriptorImageInfo{ e.TextureBindingUpdateInfo.Sampler.GetVkSampler(), e.TextureBindingUpdateInfo.TextureView.GetVkImageView(), (VkImageLayout)e.TextureBindingUpdateInfo.TextureLayout };
-						imagesPerSubSetUpdate.back().EmplaceBack(vkDescriptorImageInfo);
+					for (auto e : info.BindingUpdateInfos) {
+						auto& vkDescriptorImageInfo = imagesPerSubSetUpdate.back().EmplaceBack();
+						vkDescriptorImageInfo.sampler = e.TextureBindingUpdateInfo.Sampler.GetVkSampler();
+						vkDescriptorImageInfo.imageView = e.TextureBindingUpdateInfo.TextureView.GetVkImageView();
+						vkDescriptorImageInfo.imageLayout = ToVulkan(e.TextureBindingUpdateInfo.TextureLayout, e.TextureBindingUpdateInfo.FormatDescriptor);
 					}
+					
 					writeSet.pImageInfo = imagesPerSubSetUpdate.back().begin();
 
 					break;
@@ -232,23 +229,23 @@ namespace GAL
 				case BindingType::UNIFORM_BUFFER:
 				case BindingType::STORAGE_BUFFER:
 				case BindingType::UNIFORM_BUFFER_DYNAMIC:
-				case BindingType::STORAGE_BUFFER_DYNAMIC:
-				{
+				case BindingType::STORAGE_BUFFER_DYNAMIC: {
 					buffersPerSubSetUpdate.EmplaceBack(8, allocator);
 
-					for (auto e : info.BindingUpdateInfos)
-					{
-						VkDescriptorBufferInfo vkDescriptorBufferInfo{ e.BufferBindingUpdateInfo.Buffer.GetVkBuffer(), e.BufferBindingUpdateInfo.Offset, e.BufferBindingUpdateInfo.Range };
-						buffersPerSubSetUpdate.back().EmplaceBack(vkDescriptorBufferInfo);
+					for (auto e : info.BindingUpdateInfos) {
+						auto& vkDescriptorBufferInfo = buffersPerSubSetUpdate.back().EmplaceBack();
+						vkDescriptorBufferInfo.buffer = e.BufferBindingUpdateInfo.Buffer.GetVkBuffer();
+						vkDescriptorBufferInfo.offset = e.BufferBindingUpdateInfo.Offset;
+						vkDescriptorBufferInfo.range = e.BufferBindingUpdateInfo.Range;
 					}
+					
 					writeSet.pBufferInfo = buffersPerSubSetUpdate.back().begin();
 					break;
 				}
 
-				case BindingType::ACCELERATION_STRUCTURE: //BUG: IF THERE IS MORE THAN ONE ACC STRCUCT THIS WON'T WORK
-				{
+				case BindingType::ACCELERATION_STRUCTURE: { //BUG: IF THERE IS MORE THAN ONE ACC STRCUCT THIS WON'T WORK
 					writeSet.pNext = &as;
-					as.accelerationStructureCount = info.BindingUpdateInfos.ElementCount();
+					as.accelerationStructureCount = static_cast<GTSL::uint32>(info.BindingUpdateInfos.ElementCount());
 					accelerationStructuresPerSubSetUpdate.EmplaceBack(8, allocator);
 
 					for (auto e : info.BindingUpdateInfos) { accelerationStructuresPerSubSetUpdate.back().EmplaceBack(e.AccelerationStructureBindingUpdateInfo.AccelerationStructure.GetVkAccelerationStructure()); }
@@ -257,19 +254,15 @@ namespace GAL
 				}
 				default: __debugbreak();
 				}
-
-				vkWriteDescriptorSets.EmplaceBack(writeSet);
 			}
 
 			renderDevice->VkUpdateDescriptorSets(renderDevice->GetVkDevice(), vkWriteDescriptorSets.GetLength(), vkWriteDescriptorSets.begin(), 0, nullptr);
 		}
 
 		[[nodiscard]] VkDescriptorSet GetVkDescriptorSet() const { return descriptorSet; }
-		[[nodiscard]] GTSL::uint64 GetHandle() const { return (GTSL::uint64)descriptorSet; }
+		[[nodiscard]] GTSL::uint64 GetHandle() const { return reinterpret_cast<GTSL::uint64>(descriptorSet); }
 
 	private:
-		VkDescriptorSet descriptorSet{ nullptr };
-
-		friend VulkanBindingsPool;
+		VkDescriptorSet descriptorSet;
 	};
 }

@@ -14,22 +14,22 @@ namespace GAL
 	public:
 		VulkanRenderPass() = default;
 		
-		void Initialize(const VulkanRenderDevice* renderDevice, GTSL::Range<const RenderPassTargetDescription*> renderPassAttachments,
+		void Initialize(const VulkanRenderDevice* renderDevice, GTSL::Range<const RenderPassTargetDescription*> attachments,
 			GTSL::Range<const SubPassDescriptor*> subPasses, const GTSL::Range<const SubPassDependency*> subPassDependencies) {
 			GTSL::Array<VkAttachmentDescription, 32> vkAttachmentDescriptions;
 
-			for (GTSL::uint32 i = 0; i < renderPassAttachments.ElementCount(); ++i) {
+			for (GTSL::uint32 i = 0; i < static_cast<GTSL::uint32>(attachments.ElementCount()); ++i) {
 				auto& attachmentDescription = vkAttachmentDescriptions.EmplaceBack();
 
 				attachmentDescription.flags = 0;
-				attachmentDescription.format = ToVulkan(MakeFormatFromFormatDescriptor(renderPassAttachments[i].FormatDescriptor));
+				attachmentDescription.format = ToVulkan(MakeFormatFromFormatDescriptor(attachments[i].FormatDescriptor));
 				attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT; //TODO: Should match that of the SwapChain images.
-				attachmentDescription.loadOp = ToVkAttachmentLoadOp(renderPassAttachments[i].LoadOperation);
-				attachmentDescription.storeOp = ToVkAttachmentStoreOp(renderPassAttachments[i].StoreOperation);
+				attachmentDescription.loadOp = ToVkAttachmentLoadOp(attachments[i].LoadOperation);
+				attachmentDescription.storeOp = ToVkAttachmentStoreOp(attachments[i].StoreOperation);
 				attachmentDescription.stencilLoadOp = vkAttachmentDescriptions[i].loadOp;
 				attachmentDescription.stencilStoreOp = vkAttachmentDescriptions[i].storeOp;
-				attachmentDescription.initialLayout = ToVulkan(renderPassAttachments[i].Start, renderPassAttachments[i].FormatDescriptor);
-				attachmentDescription.finalLayout = ToVulkan(renderPassAttachments[i].End, renderPassAttachments[i].FormatDescriptor);
+				attachmentDescription.initialLayout = ToVulkan(attachments[i].Start, attachments[i].FormatDescriptor);
+				attachmentDescription.finalLayout = ToVulkan(attachments[i].End, attachments[i].FormatDescriptor);
 			}
 
 			GTSL::Array<GTSL::Array<VkAttachmentReference, 16>, 16> writeAttachmentsReferences;
@@ -37,42 +37,45 @@ namespace GAL
 			GTSL::Array<GTSL::Array<GTSL::uint32, 16>, 16> preserveAttachmentsIndices;
 			GTSL::Array<VkAttachmentReference, 16> vkDepthAttachmentReferences;
 
-			for (GTSL::uint32 SUBPASS = 0; SUBPASS < subPasses.ElementCount(); ++SUBPASS) {
+			for (GTSL::uint32 subpass = 0; subpass < static_cast<GTSL::uint32>(subPasses.ElementCount()); ++subpass) {
 				writeAttachmentsReferences.EmplaceBack(); readAttachmentsReferences.EmplaceBack();
-				preserveAttachmentsIndices.EmplaceBack(); vkDepthAttachmentReferences.EmplaceBack();
+				preserveAttachmentsIndices.EmplaceBack();
 
-				for (GTSL::uint32 ATTACHMENT = 0; ATTACHMENT < subPasses[SUBPASS].WriteColorAttachments.ElementCount(); ++ATTACHMENT) {
-					VkAttachmentReference attachmentReference;
-					attachmentReference.attachment = subPasses[SUBPASS].WriteColorAttachments[ATTACHMENT].Index;
-					attachmentReference.layout = ToVulkan(subPasses[SUBPASS].WriteColorAttachments[ATTACHMENT].Layout, renderPassAttachments[subPasses[SUBPASS].WriteColorAttachments[ATTACHMENT].Index].FormatDescriptor);
+				auto& depthAttachment = vkDepthAttachmentReferences.EmplaceBack();
+				depthAttachment.attachment = VK_ATTACHMENT_UNUSED; depthAttachment.layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-					writeAttachmentsReferences[SUBPASS].EmplaceBack(attachmentReference);
+				for (GTSL::uint32 a = 0; a < static_cast<GTSL::uint32>(subPasses[subpass].WriteAttachments.ElementCount()); ++a) {
+					if (attachments[subPasses[subpass].WriteAttachments[a].Index].FormatDescriptor.Type == TextureType::COLOR) {
+						VkAttachmentReference attachmentReference;
+						attachmentReference.attachment = subPasses[subpass].WriteAttachments[a].Index;
+						attachmentReference.layout = ToVulkan(subPasses[subpass].WriteAttachments[a].Layout, attachments[subPasses[subpass].WriteAttachments[a].Index].FormatDescriptor);
+						writeAttachmentsReferences[subpass].EmplaceBack(attachmentReference);
+					} else {
+						depthAttachment.attachment = subPasses[subpass].WriteAttachments[a].Index;
+						depthAttachment.layout = ToVulkan(subPasses[subpass].WriteAttachments[a].Layout, attachments[subPasses[subpass].WriteAttachments[a].Index].FormatDescriptor);
+					}
 				}
 
-				for (GTSL::uint32 A = 0; A < subPasses[SUBPASS].ReadColorAttachments.ElementCount(); ++A) {
-					VkAttachmentReference attachmentReference;
-					attachmentReference.attachment = subPasses[SUBPASS].ReadColorAttachments[A].Index;
-					attachmentReference.layout = ToVulkan(subPasses[SUBPASS].ReadColorAttachments[A].Layout, renderPassAttachments[subPasses[SUBPASS].ReadColorAttachments[A].Index].FormatDescriptor);
-
-					readAttachmentsReferences[SUBPASS].EmplaceBack(attachmentReference);
+				for (GTSL::uint32 a = 0; a < static_cast<GTSL::uint32>(subPasses[subpass].ReadAttachments.ElementCount()); ++a) {
+					if (attachments[subPasses[subpass].ReadAttachments[a].Index].FormatDescriptor.Type == TextureType::COLOR) {
+						VkAttachmentReference attachmentReference;
+						attachmentReference.attachment = subPasses[subpass].ReadAttachments[a].Index;
+						attachmentReference.layout = ToVulkan(subPasses[subpass].ReadAttachments[a].Layout, attachments[subPasses[subpass].ReadAttachments[a].Index].FormatDescriptor);
+						readAttachmentsReferences[subpass].EmplaceBack(attachmentReference);
+					} else {
+						depthAttachment.attachment = subPasses[subpass].ReadAttachments[a].Index;
+						depthAttachment.layout = ToVulkan(subPasses[subpass].ReadAttachments[a].Layout, attachments[subPasses[subpass].ReadAttachments[a].Index].FormatDescriptor);
+					}
 				}
 
-				for (GTSL::uint32 ATT = 0; ATT < subPasses[SUBPASS].PreserveAttachments.ElementCount(); ++ATT) {
-					preserveAttachmentsIndices[SUBPASS].EmplaceBack(subPasses[SUBPASS].PreserveAttachments[ATT]);
-				}
-
-				if (subPasses[SUBPASS].DepthAttachmentReference.Index != ATTACHMENT_UNUSED) {
-					vkDepthAttachmentReferences[SUBPASS].attachment = subPasses[SUBPASS].DepthAttachmentReference.Index;
-					vkDepthAttachmentReferences[SUBPASS].layout = ToVulkan(subPasses[SUBPASS].DepthAttachmentReference.Layout, renderPassAttachments[subPasses[SUBPASS].DepthAttachmentReference.Index].FormatDescriptor);
-				} else {
-					vkDepthAttachmentReferences[SUBPASS].attachment = VK_ATTACHMENT_UNUSED;
-					vkDepthAttachmentReferences[SUBPASS].layout = VK_IMAGE_LAYOUT_UNDEFINED;
+				for (GTSL::uint32 a = 0; a < static_cast<GTSL::uint32>(subPasses[subpass].PreserveAttachments.ElementCount()); ++a) {
+					preserveAttachmentsIndices[subpass].EmplaceBack(subPasses[subpass].PreserveAttachments[a]);
 				}
 			}
 
 			GTSL::Array<VkSubpassDescription, 32> vkSubpassDescriptions;
 
-			for (GTSL::uint32 SUBPASS = 0; SUBPASS < subPasses.ElementCount(); ++SUBPASS) {
+			for (GTSL::uint32 SUBPASS = 0; SUBPASS < static_cast<GTSL::uint32>(subPasses.ElementCount()); ++SUBPASS) {
 				auto& description = vkSubpassDescriptions.EmplaceBack();
 				description.flags = 0;
 				description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -81,13 +84,13 @@ namespace GAL
 				description.inputAttachmentCount = readAttachmentsReferences[SUBPASS].GetLength();
 				description.pInputAttachments = readAttachmentsReferences[SUBPASS].begin();
 				description.pResolveAttachments = nullptr;
-				description.preserveAttachmentCount = 0; //PreserveAttachmentsCount;
+				description.preserveAttachmentCount = preserveAttachmentsIndices[SUBPASS].GetLength();
 				description.pPreserveAttachments = preserveAttachmentsIndices[SUBPASS].begin();
 				description.pDepthStencilAttachment = &vkDepthAttachmentReferences[SUBPASS];
 			}
 
 			GTSL::Array<VkSubpassDependency, 32> vkSubpassDependencies;
-			for (GTSL::uint32 SUBPASS = 0; SUBPASS < subPassDependencies.ElementCount(); ++SUBPASS) {
+			for (GTSL::uint32 SUBPASS = 0; SUBPASS < static_cast<GTSL::uint32>(subPassDependencies.ElementCount()); ++SUBPASS) {
 				auto& dependency = vkSubpassDependencies.EmplaceBack();
 				dependency.srcSubpass = subPassDependencies[SUBPASS].SourceSubPass == EXTERNAL ? VK_SUBPASS_EXTERNAL : subPassDependencies[SUBPASS].SourceSubPass;
 				dependency.dstSubpass = subPassDependencies[SUBPASS].DestinationSubPass == EXTERNAL ? VK_SUBPASS_EXTERNAL : subPassDependencies[SUBPASS].DestinationSubPass;
@@ -99,14 +102,14 @@ namespace GAL
 			}
 
 			VkRenderPassCreateInfo vkRenderpassCreateInfo{ VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
-			vkRenderpassCreateInfo.attachmentCount = renderPassAttachments.ElementCount();
+			vkRenderpassCreateInfo.attachmentCount = static_cast<GTSL::uint32>(attachments.ElementCount());
 			vkRenderpassCreateInfo.pAttachments = vkAttachmentDescriptions.begin();
-			vkRenderpassCreateInfo.subpassCount = subPasses.ElementCount();
+			vkRenderpassCreateInfo.subpassCount = static_cast<GTSL::uint32>(subPasses.ElementCount());
 			vkRenderpassCreateInfo.pSubpasses = vkSubpassDescriptions.begin();
 			vkRenderpassCreateInfo.dependencyCount = vkSubpassDependencies.GetLength();
 			vkRenderpassCreateInfo.pDependencies = vkSubpassDependencies.begin();
 
-			VK_CHECK(renderDevice->VkCreateRenderPass(renderDevice->GetVkDevice(), &vkRenderpassCreateInfo, renderDevice->GetVkAllocationCallbacks(), &renderPass))
+			renderDevice->VkCreateRenderPass(renderDevice->GetVkDevice(), &vkRenderpassCreateInfo, renderDevice->GetVkAllocationCallbacks(), &renderPass);
 			//setName(createInfo.RenderDevice, renderPass, VK_OBJECT_TYPE_RENDER_PASS, createInfo.Name);
 		}
 		

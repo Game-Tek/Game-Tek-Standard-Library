@@ -16,7 +16,7 @@ namespace GAL
 			VkFenceCreateInfo vk_fence_create_info{ VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
 			vk_fence_create_info.flags = isSignaled;
 
-			VK_CHECK(renderDevice->VkCreateFence(renderDevice->GetVkDevice(), &vk_fence_create_info, renderDevice->GetVkAllocationCallbacks(), &fence))
+			renderDevice->VkCreateFence(renderDevice->GetVkDevice(), &vk_fence_create_info, renderDevice->GetVkAllocationCallbacks(), &fence);
 				//SET_NAME(fence, VK_OBJECT_TYPE_FENCE, createInfo)
 		}
 
@@ -28,10 +28,10 @@ namespace GAL
 		[[nodiscard]] VkFence GetVkFence() const { return fence; }
 
 		void Wait(const VulkanRenderDevice* renderDevice) const {
-			VK_CHECK(renderDevice->VkWaitForFences(renderDevice->GetVkDevice(), 1u, &fence, true, 0xFFFFFFFFFFFFFFFF))
+			renderDevice->VkWaitForFences(renderDevice->GetVkDevice(), 1u, &fence, true, 0xFFFFFFFFFFFFFFFF);
 		}
 		void Reset(const VulkanRenderDevice* renderDevice) const {
-			VK_CHECK(renderDevice->VkResetFences(renderDevice->GetVkDevice(), 1u, &fence))
+			renderDevice->VkResetFences(renderDevice->GetVkDevice(), 1u, &fence);
 		}
 		
 		//[[nodiscard]] bool GetStatus(const VulkanRenderDevice* renderDevice) const {
@@ -68,7 +68,7 @@ namespace GAL
 			vkSemaphoreTypeCreateInfo.initialValue = initialValue == 0xFFFFFFFFFFFFFFFF ? 0 : initialValue;
 			vkSemaphoreCreateInfo.pNext = &vkSemaphoreTypeCreateInfo;
 
-			VK_CHECK(renderDevice->VkCreateSemaphore(renderDevice->GetVkDevice(), &vkSemaphoreCreateInfo, renderDevice->GetVkAllocationCallbacks(), &semaphore))
+			renderDevice->VkCreateSemaphore(renderDevice->GetVkDevice(), &vkSemaphoreCreateInfo, renderDevice->GetVkAllocationCallbacks(), &semaphore);
 		}
 
 		void Destroy(const VulkanRenderDevice* renderDevice) {

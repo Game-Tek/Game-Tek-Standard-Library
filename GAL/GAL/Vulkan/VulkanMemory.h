@@ -12,7 +12,7 @@ namespace GAL
 	public:		
 		VulkanDeviceMemory() = default;
 		
-		void Initialize(const VulkanRenderDevice* renderDevice, AllocationFlag flags, GTSL::uint32 size, MemoryType memoryType) {
+		bool Initialize(const VulkanRenderDevice* renderDevice, AllocationFlag flags, GTSL::uint32 size, MemoryType memoryType) {
 			VkMemoryAllocateInfo vkMemoryAllocateInfo{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
 
 			VkMemoryAllocateFlagsInfo vkMemoryAllocateFlagsInfo{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO };
@@ -22,7 +22,7 @@ namespace GAL
 			vkMemoryAllocateInfo.allocationSize = size;
 			vkMemoryAllocateInfo.memoryTypeIndex = renderDevice->GetMemoryTypeIndex(memoryType);
 
-			VK_CHECK(renderDevice->VkAllocateMemory(renderDevice->GetVkDevice(), &vkMemoryAllocateInfo, renderDevice->GetVkAllocationCallbacks(), &deviceMemory))
+			return renderDevice->VkAllocateMemory(renderDevice->GetVkDevice(), &vkMemoryAllocateInfo, renderDevice->GetVkAllocationCallbacks(), &deviceMemory) == VK_SUCCESS;
 			//setName(info.RenderDevice, deviceMemory, VK_OBJECT_TYPE_DEVICE_MEMORY, info.Name);
 		}
 		
@@ -37,7 +37,7 @@ namespace GAL
 
 		[[nodiscard]] void* Map(const VulkanRenderDevice* renderDevice, const GTSL::uint32 size, const GTSL::uint32 offset) const {
 			void* data = nullptr;
-			VK_CHECK(renderDevice->VkMapMemory(renderDevice->GetVkDevice(), deviceMemory, offset, size, 0, &data))
+			renderDevice->VkMapMemory(renderDevice->GetVkDevice(), deviceMemory, offset, size, 0, &data);
 			return data;
 		}
 		

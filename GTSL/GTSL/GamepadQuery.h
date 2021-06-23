@@ -15,7 +15,7 @@ namespace GTSL
 	 * \param connected Returns true if the gamepad is connected, false otherwise.
 	 */
 	template<typename BF, typename FF, typename VF>
-	inline bool Update(Gamepad& gamepadQuery, BF&& buttonFunction, FF&& floatFunction, VF&& vectorFunction, uint8 controllerId) noexcept
+	bool Update(Gamepad& gamepadQuery, BF&& buttonFunction, FF&& floatFunction, VF&& vectorFunction, uint8 controllerId) noexcept
 	{
 		XINPUT_STATE xinput_state;
 
@@ -44,74 +44,74 @@ namespace GTSL
 			gamepadQuery.thumbRX = xinput_state.Gamepad.sThumbRX; gamepadQuery.thumbRY = xinput_state.Gamepad.sThumbRY;
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != gamepadQuery.dpadUp) {
-			buttonFunction(Gamepad::GamepadButtonPosition::DPAD_UP, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP);
-			gamepadQuery.dpadUp = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != gamepadQuery.dpadUp) {
+			gamepadQuery.dpadUp = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP);
+			buttonFunction(Gamepad::GamepadButtonPosition::DPAD_UP, gamepadQuery.dpadUp);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != gamepadQuery.dpadDown) {
-			buttonFunction(Gamepad::GamepadButtonPosition::DPAD_DOWN, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
-			gamepadQuery.dpadUp = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != gamepadQuery.dpadDown) {
+			gamepadQuery.dpadDown = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
+			buttonFunction(Gamepad::GamepadButtonPosition::DPAD_DOWN, gamepadQuery.dpadDown);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) != gamepadQuery.dpadLeft) {
-			buttonFunction(Gamepad::GamepadButtonPosition::DPAD_LEFT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
-			gamepadQuery.dpadUp = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) != gamepadQuery.dpadLeft) {
+			gamepadQuery.dpadLeft = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
+			buttonFunction(Gamepad::GamepadButtonPosition::DPAD_LEFT, gamepadQuery.dpadLeft);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) != gamepadQuery.dpadRight) {
-			buttonFunction(Gamepad::GamepadButtonPosition::DPAD_RIGHT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
-			gamepadQuery.dpadUp = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) != gamepadQuery.dpadRight) {
+			gamepadQuery.dpadRight = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
+			buttonFunction(Gamepad::GamepadButtonPosition::DPAD_RIGHT, gamepadQuery.dpadRight);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START) != gamepadQuery.start) {
-			buttonFunction(Gamepad::GamepadButtonPosition::HOME, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START);
-			gamepadQuery.start = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START) != gamepadQuery.start) {
+			gamepadQuery.start = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START);
+			buttonFunction(Gamepad::GamepadButtonPosition::HOME, gamepadQuery.start);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK) != gamepadQuery.back) {
-			buttonFunction(Gamepad::GamepadButtonPosition::BACK, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK);
-			gamepadQuery.back = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK) != gamepadQuery.back) {
+			gamepadQuery.back = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK);
+			buttonFunction(Gamepad::GamepadButtonPosition::BACK, gamepadQuery.back);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB) != gamepadQuery.leftThumb) {
-			buttonFunction(Gamepad::GamepadButtonPosition::LEFT_STICK, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB);
-			gamepadQuery.leftThumb = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB) != gamepadQuery.leftThumb) {
+			gamepadQuery.leftThumb = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB);
+			buttonFunction(Gamepad::GamepadButtonPosition::LEFT_STICK, gamepadQuery.leftThumb);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) != gamepadQuery.rightThumb) {
-			buttonFunction(Gamepad::GamepadButtonPosition::RIGHT_STICK, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB);
-			gamepadQuery.rightThumb = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) != gamepadQuery.rightThumb) {
+			gamepadQuery.rightThumb = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB);
+			buttonFunction(Gamepad::GamepadButtonPosition::RIGHT_STICK, gamepadQuery.rightThumb);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) != gamepadQuery.leftShoulder) {
-			buttonFunction(Gamepad::GamepadButtonPosition::LEFT_SHOULDER, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
-			gamepadQuery.leftShoulder = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) != gamepadQuery.leftShoulder) {
+			gamepadQuery.leftShoulder = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
+			buttonFunction(Gamepad::GamepadButtonPosition::LEFT_SHOULDER, gamepadQuery.leftShoulder);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) != gamepadQuery.rightShoulder) {
-			buttonFunction(Gamepad::GamepadButtonPosition::RIGHT_SHOULDER, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
-			gamepadQuery.rightShoulder = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) != gamepadQuery.rightShoulder) {
+			gamepadQuery.rightShoulder = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
+			buttonFunction(Gamepad::GamepadButtonPosition::RIGHT_SHOULDER, gamepadQuery.rightShoulder);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A) != gamepadQuery.a) {
-			buttonFunction(Gamepad::GamepadButtonPosition::BOTTOM, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A);
-			gamepadQuery.a = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A) != gamepadQuery.a) {
+			gamepadQuery.a = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A);
+			buttonFunction(Gamepad::GamepadButtonPosition::BOTTOM, gamepadQuery.a);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B) != gamepadQuery.b) {
-			buttonFunction(Gamepad::GamepadButtonPosition::RIGHT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B);
-			gamepadQuery.b = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B) != gamepadQuery.b) {
+			gamepadQuery.b = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B);
+			buttonFunction(Gamepad::GamepadButtonPosition::RIGHT, gamepadQuery.b);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X) != gamepadQuery.x) {
-			buttonFunction(Gamepad::GamepadButtonPosition::LEFT, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X);
-			gamepadQuery.x = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X) != gamepadQuery.x) {
+			gamepadQuery.x = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X);
+			buttonFunction(Gamepad::GamepadButtonPosition::LEFT, gamepadQuery.x);
 		}
 
-		if ((xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y) != gamepadQuery.y) {
-			buttonFunction(Gamepad::GamepadButtonPosition::TOP, xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y);
-			gamepadQuery.y = (xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y);
+		if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y) != gamepadQuery.y) {
+			gamepadQuery.y = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y);
+			buttonFunction(Gamepad::GamepadButtonPosition::TOP, gamepadQuery.y);
 		}
 
 		return true;

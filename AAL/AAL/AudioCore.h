@@ -2,6 +2,8 @@
 
 #include <GTSL/Core.h>
 
+#include "GTSL/Math/Math.hpp"
+
 namespace AAL
 {
 	/**
@@ -96,6 +98,7 @@ namespace AAL
 		EXCLUSIVE
 	};
 
-	float dBToVolume(float db);
-	float VolumeTodB(float volume);
+	inline float dBToVolume(const float db) { return GTSL::Math::Power(10.0f, 0.05f * db); }
+
+	inline float VolumeTodB(const float volume) { return 20.0f * GTSL::Math::Log10(volume); }
 }

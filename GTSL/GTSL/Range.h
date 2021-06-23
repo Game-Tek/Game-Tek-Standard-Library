@@ -72,6 +72,9 @@ namespace GTSL
 		friend struct Range;
 	};
 
+	template<uint64 N>
+	Range<const UTF8*> MakeRange(UTF8 const (&string)[N]) { return Range<const UTF8*>(N, string); }
+
 	template<typename A, typename B>
 	inline bool CompareContents(const GTSL::Range<const A*> a, const Range<const B*> b)
 	{

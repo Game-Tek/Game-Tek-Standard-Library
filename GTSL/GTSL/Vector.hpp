@@ -4,7 +4,7 @@
 
 #include "Memory.h"
 #include "Assert.h"
-#include "Allocator.h"
+#include "Algorithm.h"
 #include <initializer_list>
 #include <new>
 #include "Range.h"
@@ -139,10 +139,10 @@ namespace GTSL
 
 		void TryFree()
 		{
-			if (this->data) [[likely]]
-			{
-				for (auto& e : *this) { e.~T(); }
+			if (this->data) [[likely]] {
+				for (auto& e : *this) { Destroy(e); }
 				deallocate();
+				if constexpr (_DEBUG) { data = nullptr; }
 			}
 		}
 		
@@ -208,13 +208,8 @@ namespace GTSL
 		 */
 		void Resize(const length_type count)
 		{
-			if (this->length + count > this->capacity) { reallocate(); }
-			this->length = count;
-		}
-
-		void ResizeDown(const length_type count)
-		{
-			for (auto* begin = this->begin() + count; begin != this->end(); ++begin) { begin->~T(); }
+			if (count > this->capacity) { reallocate(); }			
+			for(uint32 i = count; i < this->length; ++i) { GTSL::Destroy(this->data[i]); }
 			this->length = count;
 		}
 		
@@ -343,12 +338,13 @@ namespace GTSL
 		 * \return Returns the length of the vector after inserting.
 		 */
 		template<typename... ARGS>
-		length_type Insert(const length_type index, ARGS&&... args)
+		T& Insert(const length_type index, ARGS&&... args)
 		{
 			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
 			copyArray(getIterator(index), getIterator(index + 1), this->length - index);
-			::new(getIterator(index)) T(ForwardRef<ARGS>(args)...);
-			return this->length += 1;
+			auto* data = ::new(getIterator(index)) T(ForwardRef<ARGS>(args)...);
+			this->length += 1;
+			return *data;
 		}
 
 		/**

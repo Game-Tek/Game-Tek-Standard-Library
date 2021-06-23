@@ -34,16 +34,13 @@ namespace GTSL
 	Result<T> ToNumber(Range<const UTF8*> numberString);
 
 	template<>
-	inline Result<uint32> ToNumber(Range<const UTF8*> numberString)
-	{
+	inline Result<uint32> ToNumber(Range<const UTF8*> numberString) {
 		uint32 value = 0, mult = 1;
 
-		for (uint64 j = 0, c = numberString.ElementCount() - 1; j < numberString.ElementCount(); ++j, --c)
-		{
+		for (uint64 j = 0, c = numberString.ElementCount() - 1; j < numberString.ElementCount(); ++j, --c) {
 			uint8 num;
 
-			switch (numberString[c])
-			{
+			switch (numberString[c]) {
 			case '0': num = 0; break;
 			case '1': num = 1; break;
 			case '2': num = 2; break;
@@ -55,7 +52,7 @@ namespace GTSL
 			case '8': num = 8; break;
 			case '9': num = 9; break;
 			case '\0': continue;
-			default: return Result<uint32>(0, false);
+			default: return Result(0u, false);
 			}
 
 			value += num * mult;
@@ -63,20 +60,17 @@ namespace GTSL
 			mult *= 10;
 		}
 
-		return Result<uint32>(GTSL::MoveRef(value), true);
+		return Result(MoveRef(value), true);
 	}
 
 	template<>
-	inline Result<int32> ToNumber(Range<const UTF8*> numberString)
-	{
+	inline Result<int32> ToNumber(Range<const UTF8*> numberString) {
 		int32 value = 0, mult = 1;
 
-		for (uint64 j = 0, c = numberString.ElementCount() - 1; j < numberString.ElementCount(); ++j, --c)
-		{
+		for (uint64 j = 0, c = numberString.ElementCount() - 1; j < numberString.ElementCount(); ++j, --c) {
 			uint8 num;
 
-			switch (numberString[c])
-			{
+			switch (numberString[c]) {
 			case '0': num = 0; break;
 			case '1': num = 1; break;
 			case '2': num = 2; break;
@@ -89,7 +83,7 @@ namespace GTSL
 			case '9': num = 9; break;
 			case '-': num = 0; value = -value; break;
 			case '\0': continue;
-			default: return Result<int32>(0, false);
+			default: return Result(0, false);
 			}
 
 			value += num * mult;
@@ -97,13 +91,12 @@ namespace GTSL
 			mult *= 10;
 		}
 
-		return Result<int32>(GTSL::MoveRef(value), true);
+		return Result(MoveRef(value), true);
 	}
 
 	template<>
-	inline Result<float32> ToNumber(Range<const UTF8*> numberString)
-	{
-		float32 value = 0; uint64 c = numberString.ElementCount() - 1/*because of inverse parse*/; uint64 dot = 0;
+	inline Result<float32> ToNumber(Range<const UTF8*> numberString) {
+		float32 value = 0; uint64 c = numberString.ElementCount() - 1/*because of inverse parse*/; uint64 dot;
 
 		{
 			float32 div = 1.0f;
@@ -138,12 +131,10 @@ namespace GTSL
 
 		float32 mult = 1;
 
-		for (uint64 i = 0; i < dot; ++i, --c)
-		{
+		for (uint64 i = 0; i < dot; ++i, --c) {
 			uint8 num;
 
-			switch (numberString[c])
-			{
+			switch (numberString[c]) {
 			case '0': num = 0; break;
 			case '1': num = 1; break;
 			case '2': num = 2; break;
@@ -154,9 +145,9 @@ namespace GTSL
 			case '7': num = 7; break;
 			case '8': num = 8; break;
 			case '9': num = 9; break;
-			case '-': num = 0; value = -value; return Result<float32>(GTSL::MoveRef(value), true);
+			case '-': num = 0; value = -value; return Result(MoveRef(value), true);
 			case '\0': continue;
-			default: return Result<float32>(0, false);
+			default: return Result(0.0f, false);
 			}
 
 			value += num * mult;
@@ -164,7 +155,7 @@ namespace GTSL
 			mult *= 10;
 		}
 
-		return Result<float32>(GTSL::MoveRef(value), true);
+		return Result(MoveRef(value), true);
 	}
 
 	/**
@@ -174,14 +165,12 @@ namespace GTSL
 	 */
 	constexpr uint32 StringLength(const char* text) noexcept { uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i + 1; }
 
-	inline char ToLowerCase(char c)
-	{
+	inline char ToLowerCase(char c) {
 		if ('A' <= c && c <= 'Z') return c += ('a' - 'A');
 		return c;
 	}
 
-	inline char ToUpperCase(char c)
-	{
+	inline char ToUpperCase(char c) {
 		if ('a' <= c && c <= 'z') return c += ('a' - 'A');
 		return c;
 	}
@@ -209,8 +198,7 @@ namespace GTSL
 	//	return true;
 	//}
 
-	inline bool IsLetter(const UTF8 character)
-	{
+	inline bool IsLetter(const UTF8 character) {
 		switch (character)
 		{
 		case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J':

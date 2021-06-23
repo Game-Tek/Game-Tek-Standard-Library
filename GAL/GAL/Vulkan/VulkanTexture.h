@@ -11,6 +11,7 @@ namespace GAL
 	{
 	public:
 		VulkanTexture() = default;
+		VulkanTexture(VkImage i) : image(i) {}
 
 		void GetMemoryRequirements(const VulkanRenderDevice* renderDevice, MemoryRequirements* memoryRequirements, TextureUse uses,
 			FormatDescriptor format, GTSL::Extent3D extent, Tiling tiling, GTSL::uint8 mipLevels) {
@@ -27,7 +28,7 @@ namespace GAL
 			vkImageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 			vkImageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-			VK_CHECK(renderDevice->VkCreateImage(renderDevice->GetVkDevice(), &vkImageCreateInfo, renderDevice->GetVkAllocationCallbacks(), &image))
+			renderDevice->VkCreateImage(renderDevice->GetVkDevice(), &vkImageCreateInfo, renderDevice->GetVkAllocationCallbacks(), &image);
 
 			VkMemoryRequirements vkMemoryRequirements;
 			renderDevice->VkGetImageMemoryRequirements(renderDevice->GetVkDevice(), image, &vkMemoryRequirements);
@@ -38,7 +39,7 @@ namespace GAL
 		
 		void Initialize(const VulkanRenderDevice* renderDevice, const VulkanDeviceMemory deviceMemory, const GTSL::uint32 offset) {
 			//SET_NAME(image, VK_OBJECT_TYPE_IMAGE, createInfo);
-			VK_CHECK(renderDevice->VkBindImageMemory(renderDevice->GetVkDevice(), image, deviceMemory.GetVkDeviceMemory(), offset))
+			renderDevice->VkBindImageMemory(renderDevice->GetVkDevice(), image, deviceMemory.GetVkDeviceMemory(), offset);
 		}
 		
 		void Destroy(const VulkanRenderDevice* renderDevice) {
@@ -49,9 +50,7 @@ namespace GAL
 		[[nodiscard]] VkImage GetVkImage() const { return image; }
 		
 	private:
-		VkImage image = nullptr;
-
-		friend class VulkanRenderContext;
+		VkImage image = nullptr;		
 	};
 
 	class VulkanTextureView final
@@ -59,7 +58,7 @@ namespace GAL
 	public:
 		VulkanTextureView() = default;
 
-		void Initialize(const VulkanRenderDevice* renderDevice, const VulkanTexture texture, const FormatDescriptor formatDescriptor, const GTSL::Extent3D extent, const GTSL::uint8 mipLevels) {
+		void Initialize(const VulkanRenderDevice* renderDevice, const GTSL::Range<const GTSL::UTF8*> name, const VulkanTexture texture, const FormatDescriptor formatDescriptor, const GTSL::Extent3D extent, const GTSL::uint8 mipLevels) {
 			VkImageViewCreateInfo vkImageViewCreateInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 			vkImageViewCreateInfo.image = texture.GetVkImage();
 			vkImageViewCreateInfo.viewType = ToVkImageViewType(extent);
@@ -74,8 +73,8 @@ namespace GAL
 			vkImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
 			vkImageViewCreateInfo.subresourceRange.layerCount = 1;
 
-			VK_CHECK(renderDevice->VkCreateImageView(renderDevice->GetVkDevice(), &vkImageViewCreateInfo, renderDevice->GetVkAllocationCallbacks(), &imageView))
-			//setName(createInfo.RenderDevice, imageView, VK_OBJECT_TYPE_IMAGE_VIEW, createInfo.Name);
+			renderDevice->VkCreateImageView(renderDevice->GetVkDevice(), &vkImageViewCreateInfo, renderDevice->GetVkAllocationCallbacks(), &imageView);
+			setName(renderDevice, imageView, VK_OBJECT_TYPE_IMAGE_VIEW, name);
 		}
 		
 		void Destroy(const VulkanRenderDevice* renderDevice) {
@@ -113,7 +112,7 @@ namespace GAL
 			vkSamplerCreateInfo.minLod = 0.0f;
 			vkSamplerCreateInfo.maxLod = 0.0f;
 
-			VK_CHECK(renderDevice->VkCreateSampler(renderDevice->GetVkDevice(), &vkSamplerCreateInfo, renderDevice->GetVkAllocationCallbacks(), &sampler));
+			renderDevice->VkCreateSampler(renderDevice->GetVkDevice(), &vkSamplerCreateInfo, renderDevice->GetVkAllocationCallbacks(), &sampler);
 			//setName(renderDevice, sampler, VK_OBJECT_TYPE_SAMPLER, createInfo.Name);
 		}
 		

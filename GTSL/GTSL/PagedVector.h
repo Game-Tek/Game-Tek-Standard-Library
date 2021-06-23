@@ -8,52 +8,29 @@
 
 namespace GTSL
 {
-	template<typename T>
-	class PagedVectorReference
+	template<typename T, class ALLOCATOR>
+	class PagedVector;
+	
+	template<typename T, class ALLOCATOR>
+	class PagedVectorIterator
 	{
 	public:
-		PagedVectorReference(T** pages, const uint32 pageLength, const uint32 allocatedPages, const uint32 length) : pages(pages), PAGE_LENGTH(pageLength), allocatedPages(allocatedPages),
-		length(length)
+		PagedVectorIterator(PagedVector<T, ALLOCATOR>* vector) : vector(vector)
 		{}
 
-		[[nodiscard]] uint32 GetPageCount() const
-		{
-			if(length != 0)
-			{
-				return (length / PAGE_LENGTH) + 1;
-			}
+		T& operator*() const;
 
-			return 0;
-		}
-		
-		[[nodiscard]] uint32 GetLength() const
-		{
-			return length;
-		}
+		PagedVectorIterator operator++();
 
-		Range<T*> GetPage(const uint32 page) const
-		{
-			return GTSL::Range<T*>(length - (PAGE_LENGTH * page), pages[page]);
-		}
-		
-		T& operator[](const uint32 i) const
-		{
-			GTSL_ASSERT(i < length, "Non valid index")
-			return *iterator(i);
-		}
-		
+		bool operator!=(const bool) const;
+
 	private:
-		T** pages = nullptr;
-		uint32 PAGE_LENGTH = 0, allocatedPages = 0;
-		uint32 length = 0;
+		PagedVector<T, ALLOCATOR>* vector = nullptr;
+		uint32 page = 0, element = 0, pos = 0;
 
 		static constexpr uint32 modulo(const uint32 key, const uint32 size) { return key & (size - 1); }
-		
-		T* iterator(const uint32 pos) const {
-			return pages[pos / PAGE_LENGTH] + modulo(pos, PAGE_LENGTH);
-		}
 	};
-	
+
 	template<typename T, class ALLOCATOR>
 	class PagedVector
 	{
@@ -136,15 +113,11 @@ namespace GTSL
 			return *iterator(i);
 		}
 
-		PagedVectorReference<T> GetReference()
-		{
-			return PagedVectorReference<T>(pages, PAGE_LENGTH, allocatedPages, length);
+		PagedVectorIterator<T, ALLOCATOR> begin() {
+			return PagedVectorIterator<T, ALLOCATOR>(this);
 		}
 
-		PagedVectorReference<const T> GetReference() const
-		{
-			return PagedVectorReference<const T>(pages, PAGE_LENGTH, allocatedPages, length);
-		}
+		[[nodiscard]] bool end() const { return true; }
 	private:
 		T** pages = nullptr;
 		//is a power of 2
@@ -187,5 +160,23 @@ namespace GTSL
 			//run destructor on every item of the potentially partially filled last page
 			for (uint32 j = 0; j < modulo(length, PAGE_LENGTH); ++j) { pages[fullyUsedPagesCount][j].~T(); }
 		}
+
+		friend PagedVectorIterator<T, ALLOCATOR>;
 	};
+
+	template <typename T, class ALLOCATOR>
+	T& PagedVectorIterator<T, ALLOCATOR>::operator*() const {
+		return vector->pages[page][element];
+	}
+
+	template <typename T, class ALLOCATOR>
+	PagedVectorIterator<T, ALLOCATOR> PagedVectorIterator<T, ALLOCATOR>::operator++() {
+		++pos;
+		page = pos / vector->PAGE_LENGTH;
+		element = modulo(pos, vector->PAGE_LENGTH);
+		return *this;
+	}
+
+	template <typename T, class ALLOCATOR>
+	bool PagedVectorIterator<T, ALLOCATOR>::operator!=(const bool) const { return pos != vector->length; }
 }

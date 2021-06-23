@@ -14,40 +14,41 @@ namespace GTSL
 	/*export*/ class ShortString
 	{
 	public:
-		constexpr ShortString()
-		{
-			static_assert(SIZE < 255, "Size must be less that 255");
+		static_assert(SIZE < 255, "Size must be less that 255");
+		
+		constexpr ShortString() {
 			array[SIZE - 1] = SIZE;
 		}
 
 		template<uint8 N>
-		constexpr ShortString(const ShortString<N>& other) : ShortString()
-		{
+		constexpr ShortString(const ShortString<N>& other) : ShortString() {
 			(*this) += other;
 		}
 
 		template<uint64 N>
-		constexpr ShortString(const char(&string)[N]) : ShortString()
-		{
+		constexpr ShortString(const char(&string)[N]) : ShortString() {
 			(*this) += string;
 		}
 		
 		constexpr operator Range<UTF8*>() { return Range<UTF8*>(GetLength(), array); }
 		constexpr operator Range<const UTF8*>() const { return Range<const UTF8*>(GetLength(), array); }
 
-		constexpr const UTF8* begin() const { return array; }
-		constexpr const UTF8* end() const { return array + GetLength(); }
+		[[nodiscard]] constexpr const UTF8* begin() const { return array; }
+		[[nodiscard]] constexpr const UTF8* end() const { return array + GetLength(); }
 		
-		constexpr ShortString(const UTF8* text) : ShortString()
-		{
+		constexpr ShortString(const UTF8* text) : ShortString() {
 			(*this) += Range<const UTF8*>(StringLength(text), text);
 		}
 
-		constexpr ShortString(const GTSL::Range<const UTF8*> text) : ShortString()
-		{
+		constexpr ShortString(const Range<const UTF8*> text) : ShortString() {
 			(*this) += text;
 		}
 
+		constexpr ShortString& operator=(const Range<const UTF8*> range) {
+			array[SIZE - 1] = SIZE;
+			*this += range; return *this;
+		}
+		
 		constexpr ShortString& operator+=(const Range<const UTF8*> text)
 		{
 			auto oldSize = array[SIZE - 1];

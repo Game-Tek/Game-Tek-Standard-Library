@@ -15,7 +15,7 @@ namespace GAL
 			vk_query_pool_create_info.queryCount = queryCount;
 			vk_query_pool_create_info.queryType = ToVulkan(queryType);
 
-			VK_CHECK(renderDevice->VkCreateQueryPool(renderDevice->GetVkDevice(), &vk_query_pool_create_info, renderDevice->GetVkAllocationCallbacks(), &queryPool));
+			renderDevice->VkCreateQueryPool(renderDevice->GetVkDevice(), &vk_query_pool_create_info, renderDevice->GetVkAllocationCallbacks(), &queryPool);
 			//setName(createInfo.RenderDevice, queryPool, VK_OBJECT_TYPE_QUERY_POOL, createInfo.Name);
 		}
 
@@ -23,7 +23,7 @@ namespace GAL
 			VkQueryResultFlags flags = 0;
 			GTSL::SetBitAs(1, wait, flags);
 
-			VK_CHECK(renderDevice->VkGetQueryPoolResults(renderDevice->GetVkDevice(), queryPool, 0, queryCount, size, data, stride, flags));
+			renderDevice->VkGetQueryPoolResults(renderDevice->GetVkDevice(), queryPool, 0, queryCount, size, data, stride, flags);
 		}
 		
 		void Destroy(const VulkanRenderDevice* renderDevice) {

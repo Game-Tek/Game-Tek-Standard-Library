@@ -21,7 +21,7 @@ namespace GAL
 			vkBufferCreateInfo.usage = ToVulkan(bufferUses);
 			vkBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-			VK_CHECK(renderDevice->VkCreateBuffer(renderDevice->GetVkDevice(), &vkBufferCreateInfo, renderDevice->GetVkAllocationCallbacks(), &buffer))
+			renderDevice->VkCreateBuffer(renderDevice->GetVkDevice(), &vkBufferCreateInfo, renderDevice->GetVkAllocationCallbacks(), &buffer);
 
 			VkMemoryRequirements vkMemoryRequirements;
 			renderDevice->VkGetBufferMemoryRequirements(renderDevice->GetVkDevice(), buffer, &vkMemoryRequirements);
@@ -32,7 +32,7 @@ namespace GAL
 		
 		void Initialize(const VulkanRenderDevice* renderDevice, const MemoryRequirements& memoryRequirements, VulkanDeviceMemory memory, GTSL::uint32 offset) {
 			//SET_NAME(buffer, VK_OBJECT_TYPE_BUFFER, info);
-			VK_CHECK(renderDevice->VkBindBufferMemory(renderDevice->GetVkDevice(), buffer, static_cast<VkDeviceMemory>(memory.GetVkDeviceMemory()), offset))
+			renderDevice->VkBindBufferMemory(renderDevice->GetVkDevice(), buffer, static_cast<VkDeviceMemory>(memory.GetVkDeviceMemory()), offset);
 		}
 		
 		[[nodiscard]] DeviceAddress GetAddress(const VulkanRenderDevice* renderDevice) const {

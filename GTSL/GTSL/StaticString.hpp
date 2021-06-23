@@ -126,14 +126,12 @@ namespace GTSL
 			return false;
 		}
 		
-		[[nodiscard]] GTSL::Result<Pair<uint32, uint32>> FindLast(UTF8 c) const
-		{
-			for (uint32 i = length, t = 0; t < length; --i, ++t) { if (array[i] == c) { return GTSL::Result<Pair<uint32, uint32>>(Pair<uint32, uint32>(t, i), true); } }
+		[[nodiscard]] Result<Pair<uint32, uint32>> FindLast(UTF8 c) const {
+			for (uint32 i = length, t = 0; t < length; --i, ++t) { if (array[i] == c) { return Result(Pair(t, i), true); } }
 			return GTSL::Result<Pair<uint32, uint32>>(false);
 		}
 
-		constexpr StaticString& operator+=(const char* cstring) noexcept
-		{
+		constexpr StaticString& operator+=(const char* cstring) noexcept {
 			auto len = StringLength(cstring);
 			GTSL_ASSERT(len <= N, "String larger than buffer capacity")
 			copy(len, cstring);

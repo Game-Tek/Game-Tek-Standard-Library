@@ -7,6 +7,7 @@
 #include <shaderc/shaderc.hpp>
 
 #include "Vulkan.h"
+#include "VulkanBindings.h"
 #include "VulkanRenderPass.h"
 #include "GTSL/Array.hpp"
 
@@ -16,8 +17,6 @@ namespace GTSL {
 
 namespace GAL
 {
-	class VulkanBindingsSetLayout;
-
 	inline bool CompileShader(GTSL::Range<const GTSL::UTF8*> code, GTSL::Range<const GTSL::UTF8*> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::BufferInterface result, GTSL::BufferInterface stringResult)
 	{
 		shaderc_shader_kind shaderc_stage;
@@ -165,14 +164,14 @@ namespace GAL
 			vkPipelineCacheCreateInfo.initialDataSize = data.Bytes();
 			vkPipelineCacheCreateInfo.pInitialData = data.begin();
 
-			VK_CHECK(renderDevice->VkCreatePipelineCache( renderDevice->GetVkDevice(), &vkPipelineCacheCreateInfo, renderDevice->GetVkAllocationCallbacks(), &pipelineCache))
+			renderDevice->VkCreatePipelineCache(renderDevice->GetVkDevice(), &vkPipelineCacheCreateInfo, renderDevice->GetVkAllocationCallbacks(), &pipelineCache);
 		}
 		
 		void Initialize(const VulkanRenderDevice* renderDevice, GTSL::Range<const VulkanPipelineCache*> caches) {
 
 			VkPipelineCacheCreateInfo vkPipelineCacheCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO };
 
-			VK_CHECK(renderDevice->VkCreatePipelineCache(renderDevice->GetVkDevice(), &vkPipelineCacheCreateInfo, renderDevice->GetVkAllocationCallbacks(), &pipelineCache))
+			renderDevice->VkCreatePipelineCache(renderDevice->GetVkDevice(), &vkPipelineCacheCreateInfo, renderDevice->GetVkAllocationCallbacks(), &pipelineCache);
 
 			renderDevice->VkMergePipelineCaches(renderDevice->GetVkDevice(), pipelineCache, static_cast<GTSL::uint32>(caches.ElementCount()), reinterpret_cast<const VkPipelineCache*>(caches.begin()));
 		}
@@ -186,13 +185,13 @@ namespace GAL
 
 		void GetCacheSize(const VulkanRenderDevice* renderDevice, GTSL::uint32& size) const {
 			size_t data_size = 0;
-			VK_CHECK(renderDevice->VkGetPipelineCacheData(renderDevice->GetVkDevice(), pipelineCache, &data_size, nullptr));
+			renderDevice->VkGetPipelineCacheData(renderDevice->GetVkDevice(), pipelineCache, &data_size, nullptr);
 			size = static_cast<GTSL::uint32>(data_size);
 		}
 		
 		void GetCache(const VulkanRenderDevice* renderDevice, GTSL::BufferInterface buffer) const {
 			GTSL::uint64 data_size;
-			VK_CHECK(renderDevice->VkGetPipelineCacheData(renderDevice->GetVkDevice(), pipelineCache, &data_size, buffer.begin()));
+			renderDevice->VkGetPipelineCacheData(renderDevice->GetVkDevice(), pipelineCache, &data_size, buffer.begin());
 			buffer.Resize(data_size);
 		}
 		
@@ -230,6 +229,9 @@ namespace GAL
 		void Initialize(const VulkanRenderDevice* renderDevice, const PushConstant* pushConstant, const GTSL::Range<const VulkanBindingsSetLayout*> bindingsSetLayouts) {
 			VkPipelineLayoutCreateInfo vkPipelineLayoutCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
 
+			GTSL::Array<VkDescriptorSetLayout, 16> vkDescriptorSetLayouts;
+			for (auto& e : bindingsSetLayouts) { vkDescriptorSetLayouts.EmplaceBack(e.GetVkDescriptorSetLayout()); }
+			
 			VkPushConstantRange vkPushConstantRange;
 			if (pushConstant) {
 				vkPushConstantRange.size = pushConstant->NumberOf4ByteSlots * 4;
@@ -243,11 +245,10 @@ namespace GAL
 				vkPipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 			}
 
-			vkPipelineLayoutCreateInfo.setLayoutCount = static_cast<GTSL::uint32>(bindingsSetLayouts.ElementCount());
-			//What sets this pipeline layout uses.
-			vkPipelineLayoutCreateInfo.pSetLayouts = reinterpret_cast<const VkDescriptorSetLayout*>(bindingsSetLayouts.begin());
+			vkPipelineLayoutCreateInfo.setLayoutCount = vkDescriptorSetLayouts.GetLength();
+			vkPipelineLayoutCreateInfo.pSetLayouts = vkDescriptorSetLayouts.begin();
 
-			VK_CHECK(renderDevice->VkCreatePipelineLayout(renderDevice->GetVkDevice(), &vkPipelineLayoutCreateInfo, renderDevice->GetVkAllocationCallbacks(), &pipelineLayout));
+			renderDevice->VkCreatePipelineLayout(renderDevice->GetVkDevice(), &vkPipelineLayoutCreateInfo, renderDevice->GetVkAllocationCallbacks(), &pipelineLayout);
 			//setName(createInfo.RenderDevice, pipelineLayout, VK_OBJECT_TYPE_PIPELINE_LAYOUT, createInfo.Name);
 		}
 		
@@ -291,14 +292,11 @@ namespace GAL
 
 			GTSL::Buffer buffer(8192, 8, GTSL::StackAllocator<8192>());
 
-			for (GTSL::uint8 i = 0; i < pipelineStates.ElementCount(); ++i)
+			for (GTSL::uint8 ps = 0; ps < static_cast<GTSL::uint8>(pipelineStates.ElementCount()); ++ps)
 			{
-				auto& pipelineState = pipelineStates[i];
-
-				switch (pipelineState.Type)
+				switch (const auto& pipelineState = pipelineStates[ps]; pipelineState.Type)
 				{
-				case PipelineStateBlock::StateType::VIEWPORT_STATE:
-				{
+				case PipelineStateBlock::StateType::VIEWPORT_STATE: {
 					auto* vkViewport = buffer.AllocateStructure<VkViewport>();
 					vkViewport->x = 0;
 					vkViewport->y = 0;
@@ -315,7 +313,7 @@ namespace GAL
 					VkPipelineViewportStateCreateInfo& vkPipelineViewportStateCreateInfo = *pointer;
 					vkPipelineViewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 					vkPipelineViewportStateCreateInfo.pNext = nullptr;
-					vkPipelineViewportStateCreateInfo.viewportCount = pipelineState.Block.Viewport.ViewportCount;
+					vkPipelineViewportStateCreateInfo.viewportCount = pipelineState.Viewport.ViewportCount;
 					vkPipelineViewportStateCreateInfo.pViewports = vkViewport;
 					vkPipelineViewportStateCreateInfo.scissorCount = 1;
 					vkPipelineViewportStateCreateInfo.pScissors = vkScissor;
@@ -324,9 +322,8 @@ namespace GAL
 
 					break;
 				}
-				case PipelineStateBlock::StateType::RASTER_STATE:
-				{
-					VkPipelineRasterizationStateCreateInfo* pointer = buffer.AllocateStructure<VkPipelineRasterizationStateCreateInfo>();
+				case PipelineStateBlock::StateType::RASTER_STATE: {
+					auto* pointer = buffer.AllocateStructure<VkPipelineRasterizationStateCreateInfo>();
 
 					VkPipelineRasterizationStateCreateInfo& vkPipelineRasterizationStateCreateInfo = *pointer;
 					vkPipelineRasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -335,8 +332,8 @@ namespace GAL
 					vkPipelineRasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
 					vkPipelineRasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
 					vkPipelineRasterizationStateCreateInfo.lineWidth = 1.0f;
-					vkPipelineRasterizationStateCreateInfo.frontFace = ToVulkan(pipelineState.Block.Raster.WindingOrder);
-					vkPipelineRasterizationStateCreateInfo.cullMode = ToVulkan(pipelineState.Block.Raster.CullMode);
+					vkPipelineRasterizationStateCreateInfo.frontFace = ToVulkan(pipelineState.Raster.WindingOrder);
+					vkPipelineRasterizationStateCreateInfo.cullMode = ToVulkan(pipelineState.Raster.CullMode);
 					vkPipelineRasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
 					vkPipelineRasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f; // Optional
 					vkPipelineRasterizationStateCreateInfo.depthBiasClamp = 0.0f; // Optional
@@ -355,7 +352,7 @@ namespace GAL
 					vkPipelineDepthStencilStateCreateInfo.pNext = nullptr;
 					vkPipelineDepthStencilStateCreateInfo.depthTestEnable = true;
 					vkPipelineDepthStencilStateCreateInfo.depthWriteEnable = true;
-					vkPipelineDepthStencilStateCreateInfo.depthCompareOp = ToVulkan(pipelineState.Block.Depth.CompareOperation);
+					vkPipelineDepthStencilStateCreateInfo.depthCompareOp = ToVulkan(pipelineState.Depth.CompareOperation);
 					vkPipelineDepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
 					vkPipelineDepthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
 					vkPipelineDepthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
@@ -365,8 +362,7 @@ namespace GAL
 
 					break;
 				}
-				case PipelineStateBlock::StateType::COLOR_BLEND_STATE:
-				{
+				case PipelineStateBlock::StateType::COLOR_BLEND_STATE: {
 					auto* pointer = buffer.AllocateStructure<VkPipelineColorBlendStateCreateInfo>();
 
 					auto& vkPipelineColorblendStateCreateInfo = *pointer;
@@ -377,16 +373,16 @@ namespace GAL
 					vkPipelineColorblendStateCreateInfo.pAttachments = reinterpret_cast<const VkPipelineColorBlendAttachmentState*>(buffer.GetData() + buffer.GetLength());
 
 					GTSL::uint8 attachmentCount = 0;
-					for (; attachmentCount < pipelineState.Block.Context.Attachments.ElementCount(); ++attachmentCount) {
-						auto* state = buffer.AllocateStructure<VkPipelineColorBlendAttachmentState>();
-						state->blendEnable = pipelineState.Block.Context.Attachments[attachmentCount].BlendEnable;
-						state->colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-						state->srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-						state->dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-						state->colorBlendOp = VK_BLEND_OP_ADD;
-						state->srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-						state->dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-						state->alphaBlendOp = VK_BLEND_OP_ADD;
+					for (GTSL::uint8 i = 0; i < static_cast<GTSL::uint8>(pipelineState.Context.Attachments.ElementCount()); ++i) {
+						if (pipelineState.Context.Attachments[i].FormatDescriptor.Type == TextureType::COLOR) {
+							auto* state = buffer.AllocateStructure<VkPipelineColorBlendAttachmentState>();
+							state->blendEnable = pipelineState.Context.Attachments[i].BlendEnable;
+							state->colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+							state->srcColorBlendFactor = VK_BLEND_FACTOR_ONE; state->dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+							state->colorBlendOp = VK_BLEND_OP_ADD; state->alphaBlendOp = VK_BLEND_OP_ADD;
+							state->srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE; state->dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+							++attachmentCount;
+						}
 					}
 
 					vkPipelineColorblendStateCreateInfo.attachmentCount = attachmentCount;
@@ -397,13 +393,12 @@ namespace GAL
 
 					vkGraphicsPipelineCreateInfo.pColorBlendState = pointer;
 
-					vkGraphicsPipelineCreateInfo.renderPass = static_cast<const VulkanRenderPass*>(pipelineState.Block.Context.RenderPass)->GetVkRenderPass();
-					vkGraphicsPipelineCreateInfo.subpass = pipelineState.Block.Context.SubPassIndex;
+					vkGraphicsPipelineCreateInfo.renderPass = static_cast<const VulkanRenderPass*>(pipelineState.Context.RenderPass)->GetVkRenderPass();
+					vkGraphicsPipelineCreateInfo.subpass = pipelineState.Context.SubPassIndex;
 
 					break;
 				}
-				case PipelineStateBlock::StateType::VERTEX_STATE:
-				{
+				case PipelineStateBlock::StateType::VERTEX_STATE: {
 					auto* pointer = buffer.AllocateStructure<VkPipelineVertexInputStateCreateInfo>();
 					auto* binding = buffer.AllocateStructure<VkVertexInputBindingDescription>();
 
@@ -417,12 +412,12 @@ namespace GAL
 
 					GTSL::uint16 offset = 0;
 
-					for (GTSL::uint8 i = 0; i < pipelineState.Block.Vertex.VertexDescriptor.ElementCount(); ++i) {
-						auto size = ShaderDataTypesSize(pipelineState.Block.Vertex.VertexDescriptor[i].Type);
+					for (GTSL::uint8 i = 0; i < static_cast<GTSL::uint8>(pipelineState.Vertex.VertexDescriptor.ElementCount()); ++i) {
+						auto size = ShaderDataTypesSize(pipelineState.Vertex.VertexDescriptor[i].Type);
 
-						if (pipelineState.Block.Vertex.VertexDescriptor[i].Enabled) {
+						if (pipelineState.Vertex.VertexDescriptor[i].Enabled) {
 							auto& vertex = *buffer.AllocateStructure<VkVertexInputAttributeDescription>();
-							vertex.binding = 0; vertex.location = i; vertex.format = ToVulkan(pipelineState.Block.Vertex.VertexDescriptor[i].Type);
+							vertex.binding = 0; vertex.location = i; vertex.format = ToVulkan(pipelineState.Vertex.VertexDescriptor[i].Type);
 							vertex.offset = offset;
 							offset += size;
 							binding->stride += size;
@@ -450,8 +445,7 @@ namespace GAL
 
 			GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vkPipelineShaderStageCreateInfos;
 
-			for (GTSL::uint8 i = 0; i < stages.ElementCount(); ++i)
-			{
+			for (GTSL::uint8 i = 0; i < static_cast<GTSL::uint8>(stages.ElementCount()); ++i) {
 				auto& stage = vkPipelineShaderStageCreateInfos.EmplaceBack();
 
 				stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -469,7 +463,7 @@ namespace GAL
 			vkGraphicsPipelineCreateInfo.basePipelineIndex = -1;
 			vkGraphicsPipelineCreateInfo.basePipelineHandle = nullptr;
 
-			VK_CHECK(renderDevice->VkCreateGraphicsPipelines(renderDevice->GetVkDevice(), pipelineCache.GetVkPipelineCache(), 1, &vkGraphicsPipelineCreateInfo, renderDevice->GetVkAllocationCallbacks(), &pipeline));
+			renderDevice->VkCreateGraphicsPipelines(renderDevice->GetVkDevice(), pipelineCache.GetVkPipelineCache(), 1, &vkGraphicsPipelineCreateInfo, renderDevice->GetVkAllocationCallbacks(), &pipeline);
 			//SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
 		}
 		
@@ -492,7 +486,7 @@ namespace GAL
 			vkRayTracingPipelineCreateInfo.basePipelineIndex = -1;
 			vkRayTracingPipelineCreateInfo.maxPipelineRayRecursionDepth = 0;
 
-			for (GTSL::uint32 i = 0; i < pipelineStates.ElementCount(); ++i)
+			for (GTSL::uint32 i = 0; i < static_cast<GTSL::uint32>(pipelineStates.ElementCount()); ++i)
 			{
 				auto& pipelineState = pipelineStates[i];
 
@@ -500,7 +494,7 @@ namespace GAL
 				{
 				case PipelineStateBlock::StateType::RAY_TRACE_GROUPS:
 				{
-					for (const auto& e : pipelineState.Block.RayTracing.Groups) {
+					for (const auto& e : pipelineState.RayTracing.Groups) {
 						auto& p = vkRayTracingShaderGroupCreateInfoKhrs.EmplaceBack();
 						p.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
 						p.pNext = nullptr;
@@ -515,7 +509,7 @@ namespace GAL
 						p.pShaderGroupCaptureReplayHandle = nullptr;
 					}
 
-					vkRayTracingPipelineCreateInfo.maxPipelineRayRecursionDepth = pipelineState.Block.RayTracing.MaxRecursionDepth;
+					vkRayTracingPipelineCreateInfo.maxPipelineRayRecursionDepth = pipelineState.RayTracing.MaxRecursionDepth;
 
 					break;
 				}

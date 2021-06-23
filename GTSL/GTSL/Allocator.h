@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Algorithm.h"
 #include "Core.h"
 #include "Assert.h"
 
@@ -63,10 +64,13 @@ namespace GTSL
 	}
 
 	template<typename T, class ALLOCATOR>
-	void Delete(T* data, const ALLOCATOR& allocator)
+	void Delete(T** data, const ALLOCATOR& allocator)
 	{
-		static_cast<T*>(data)->~T();
-		allocator.Deallocate(sizeof(T), alignof(T), data);
+		GTSL::Destroy(**data);
+		allocator.Deallocate(sizeof(T), alignof(T), *data);
+		if constexpr (_DEBUG) {
+			*data = nullptr;
+		}
 	}
 	
 	template<typename T, class ALLOCATOR>
@@ -80,7 +84,11 @@ namespace GTSL
 		}
 
 		bool TryFree() { if (data) { Free(); return true; } return false; }
-		void Free() { this->data->~T(); this->data = nullptr; }
+		void Free() {
+			Destroy(*data);
+			allocator.Deallocate(size, alignment, reinterpret_cast<void*>(data));
+			data = nullptr;
+		}
 		
 		~SmartPointer() { TryFree(); }
 
@@ -100,9 +108,8 @@ namespace GTSL
 		template<typename TT, typename... ARGS>
 		static SmartPointer<T, ALLOCATOR> Create(const ALLOCATOR& allocatorReference, ARGS&&... args)
 		{
-			T* data = nullptr; uint64 a_s; allocatorReference.Allocate(sizeof(TT), alignof(TT), reinterpret_cast<void**>(&data), &a_s);
-			::new(data) TT(GTSL::ForwardRef<ARGS>(args)...);
-			return SmartPointer<T, ALLOCATOR>(sizeof(TT), alignof(TT), data, allocatorReference);
+			auto d = New<TT>(allocatorReference, GTSL::ForwardRef<ARGS>(args)...);
+			return SmartPointer<T, ALLOCATOR>(sizeof(TT), alignof(TT), reinterpret_cast<T*>(d), allocatorReference);
 		}
 
 	private:

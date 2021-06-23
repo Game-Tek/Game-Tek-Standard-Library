@@ -22,7 +22,7 @@ namespace GAL
 		struct RayTracingCapabilities
 		{
 			GTSL::uint32 RecursionDepth = 0, ShaderGroupHandleAlignment = 0, ShaderGroupBaseAlignment = 0, ShaderGroupHandleSize = 0, ScratchBuildOffsetAlignment = 0;
-			bool CanBuildOnHost = false;
+			Device BuildDevice;
 		};
 
 		VulkanRenderDevice() = default;
@@ -49,6 +49,9 @@ namespace GAL
 			debugPrintFunction = createInfo.DebugPrintFunction;
 			
 			if (!vulkanDLL.LoadLibrary("vulkan-1")) { return false; }
+
+			vulkanDLL.LoadDynamicFunction("vkGetInstanceProcAddr", &VkGetInstanceProcAddr);
+			if (!VkGetInstanceProcAddr) { return false; }
 			
 			auto vkAllocate = [](void* data, GTSL::uint64 size, GTSL::uint64 alignment, VkSystemAllocationScope) {
 				auto* allocation_info = static_cast<AllocationInfo*>(data);
@@ -195,55 +198,60 @@ namespace GAL
 				vkInstanceCreateInfo.enabledExtensionCount = instanceExtensions.GetLength();
 				vkInstanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.begin();
 
-				if (vulkanDLL.LoadDynamicFunction("vkCreateInstance").Call<VkResult>(&vkInstanceCreateInfo, GetVkAllocationCallbacks(), &instance) != VK_SUCCESS) { return false; }
-
+				if (getInstanceProcAddr<PFN_vkCreateInstance>("vkCreateInstance")(&vkInstanceCreateInfo, GetVkAllocationCallbacks(), &instance) != VK_SUCCESS) { return false; }
+				
 #if (_DEBUG)
 				if (debug) {
-					vulkanDLL.LoadDynamicFunction("vkCreateDebugUtilsMessengerEXT").Call<VkResult>(instance, &vkDebugUtilsMessengerCreateInfoExt, GetVkAllocationCallbacks(), &debugMessenger);
+					getInstanceProcAddr<PFN_vkCreateDebugUtilsMessengerEXT>("vkCreateDebugUtilsMessengerEXT")(instance, &vkDebugUtilsMessengerCreateInfoExt, GetVkAllocationCallbacks(), &debugMessenger);
 				}
 #endif
 			}
 
 			{
 				uint32_t physicalDeviceCount{ 16 }; VkPhysicalDevice vkPhysicalDevices[16];
-				vulkanDLL.LoadDynamicFunction("vkEnumeratePhysicalDevices").Call<VkResult>(instance, &physicalDeviceCount, vkPhysicalDevices);
+				getInstanceProcAddr<PFN_vkEnumeratePhysicalDevices>("vkEnumeratePhysicalDevices")(instance, &physicalDeviceCount, vkPhysicalDevices);
 				physicalDevice = vkPhysicalDevices[0];
 			}
 
 			{
-				GTSL::Array<VkDeviceQueueCreateInfo, 8> vkDeviceQueueCreateInfos; GTSL::Array<GTSL::Array<GTSL::uint16, 8>, 8> familiesIndices;
+				GTSL::Array<VkDeviceQueueCreateInfo, 8> vkDeviceQueueCreateInfos; GTSL::uint32 queueFamiliesCount = 32;
 				
 				{
-					GTSL::uint32 queueFamiliesCount = 32; VkQueueFamilyProperties vkQueueFamiliesProperties[32];
+					VkQueueFamilyProperties vkQueueFamiliesProperties[32];
 					//Get the amount of queue families there are in the physical device.
-					vulkanDLL.LoadDynamicFunction("vkGetPhysicalDeviceQueueFamilyProperties").Call<VkResult>(physicalDevice, &queueFamiliesCount, vkQueueFamiliesProperties);
+					getInstanceProcAddr<PFN_vkGetPhysicalDeviceQueueFamilyProperties>("vkGetPhysicalDeviceQueueFamilyProperties")(physicalDevice, &queueFamiliesCount, vkQueueFamiliesProperties);
 
 					VkQueueFlags vkQueuesFlagBits[16];
-					for (GTSL::uint8 i = 0; i < createInfo.Queues.ElementCount(); ++i) {
+					for (GTSL::uint8 i = 0; i < static_cast<GTSL::uint8>(createInfo.Queues.ElementCount()); ++i) {
 						vkQueuesFlagBits[i] = ToVulkan(createInfo.Queues[i]);
 					}
 
 					GTSL::Array<GTSL::Array<GTSL::float32, 8>, 8> familiesPriorities;
 
-					for (GTSL::uint8 QUEUE = 0; QUEUE < createInfo.Queues.ElementCount(); ++QUEUE) {
-						for (GTSL::uint8 FAMILY = 0; FAMILY < queueFamiliesCount; ++FAMILY) {
-							if (vkQueueFamiliesProperties[FAMILY].queueCount > 0 && vkQueueFamiliesProperties[FAMILY].queueFlags & vkQueuesFlagBits[QUEUE]) //if family has vk_queue_flags_bits[FAMILY] create queue from this family
-							{
-								if (familiesIndices[FAMILY].GetLength()) { //if a queue is already being used from this family add another
-									++vkDeviceQueueCreateInfos[FAMILY].queueCount;
-								} else {
-									vkDeviceQueueCreateInfos.EmplaceBack(); familiesPriorities.EmplaceBack(); familiesIndices.EmplaceBack();
-									
-									vkDeviceQueueCreateInfos[FAMILY].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-									vkDeviceQueueCreateInfos[FAMILY].pNext = nullptr;
-									vkDeviceQueueCreateInfos[FAMILY].flags = 0;
-									vkDeviceQueueCreateInfos[FAMILY].queueFamilyIndex = FAMILY;
-									vkDeviceQueueCreateInfos[FAMILY].queueCount = 1;
+					GTSL::uint8 queuesPerFamily[16]{ 0 };
+					
+					for (GTSL::uint8 queue = 0; queue < static_cast<GTSL::uint8>(createInfo.Queues.ElementCount()); ++queue) {
+						for (GTSL::uint8 family = 0; family < queueFamiliesCount; ++family) {
+							if (vkQueueFamiliesProperties[family].queueCount > 0 && vkQueueFamiliesProperties[family].queueFlags & vkQueuesFlagBits[queue]) { //if family has vk_queue_flags_bits[FAMILY] create queue from this family
+								if(!queuesPerFamily[family]) {
+									auto& familyPriorities = familiesPriorities.EmplaceBack();
+									auto& queueCreateInfo = vkDeviceQueueCreateInfos.EmplaceBack();
+
+									queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+									queueCreateInfo.pNext = nullptr;
+									queueCreateInfo.flags = 0;
+									queueCreateInfo.queueFamilyIndex = family;
+									queueCreateInfo.queueCount = 0;
+									queueCreateInfo.pQueuePriorities = familyPriorities.begin();
 								}
+
+								createInfo.QueueKeys[queue].Queue = queuesPerFamily[family];
+								createInfo.QueueKeys[queue].Family = family;
+								++vkDeviceQueueCreateInfos[family].queueCount;
+								familiesPriorities[family].EmplaceBack(1.0f);
+								++queuesPerFamily[family];
 								
-								familiesPriorities[FAMILY].EmplaceBack(1.0f);
-								familiesIndices[FAMILY].EmplaceBack(QUEUE);
-								vkDeviceQueueCreateInfos[FAMILY].pQueuePriorities = &familiesPriorities[FAMILY][vkDeviceQueueCreateInfos[FAMILY].queueCount - 1];
+								break;
 							}
 						}
 					}
@@ -263,7 +271,8 @@ namespace GAL
 				void** lastProperty = &properties2.pNext; void** lastFeature = &features2.pNext;
 
 				{
-					GTSL::Buffer<GTSL::StackAllocator<8192>> buffer; GTSL::Array<GTSL::StaticString<32>, 32> deviceExtensions;
+					GTSL::Buffer<GTSL::StackAllocator<8192>> buffer; buffer.Allocate(8192, 8, GTSL::StackAllocator<8192>());
+					GTSL::Array<GTSL::StaticString<32>, 32> deviceExtensions;
 
 					auto placePropertiesStructure = [&]<typename T>(T** structure, VkStructureType structureType) {
 						auto* newStructure = buffer.AllocateStructure<T>(); *lastProperty = static_cast<void*>(newStructure);
@@ -280,13 +289,13 @@ namespace GAL
 					auto getProperties = [&](void* prop) {
 						VkPhysicalDeviceProperties2 props{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
 						props.pNext = prop;
-						vulkanDLL.LoadDynamicFunction("vkGetPhysicalDeviceProperties2").Call<VkResult>(physicalDevice, &props);
+						getInstanceProcAddr<PFN_vkGetPhysicalDeviceProperties2>("vkGetPhysicalDeviceProperties2")(physicalDevice, &props);
 					};
 
 					auto getFeatures = [&](void* feature) {
 						VkPhysicalDeviceFeatures2 feats{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
 						feats.pNext = feature;
-						vulkanDLL.LoadDynamicFunction("vkGetPhysicalDeviceFeatures2").Call<VkResult>(physicalDevice, &feats);
+						getInstanceProcAddr<PFN_vkGetPhysicalDeviceFeatures2>("vkGetPhysicalDeviceFeatures2")(physicalDevice, &feats);
 					};
 
 					[[no_discard]] auto tryAddExtension = [&](const char* extensionName) {
@@ -316,7 +325,7 @@ namespace GAL
 
 					tryAddExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-					for (GTSL::uint32 extension = 0; extension < createInfo.Extensions.ElementCount(); ++extension)
+					for (GTSL::uint32 extension = 0; extension < static_cast<GTSL::uint32>(createInfo.Extensions.ElementCount()); ++extension)
 					{
 						switch (createInfo.Extensions[extension].First)
 						{
@@ -340,7 +349,7 @@ namespace GAL
 								getFeatures(&features);
 
 								auto* capabilities = static_cast<RayTracingCapabilities*>(createInfo.Extensions[extension].Second);
-								capabilities->CanBuildOnHost = features.accelerationStructureHostCommands;
+								capabilities->BuildDevice = features.accelerationStructureHostCommands ? Device::CPU : Device::GPU;
 								capabilities->ScratchBuildOffsetAlignment = properties.minAccelerationStructureScratchOffsetAlignment;
 							}
 
@@ -399,165 +408,164 @@ namespace GAL
 
 					vkDeviceCreateInfo.ppEnabledExtensionNames = strings.begin();
 
-					if (vulkanDLL.LoadDynamicFunction("vkCreateDevice").Call<VkResult>(physicalDevice, &vkDeviceCreateInfo, GetVkAllocationCallbacks(), &device) != VK_SUCCESS) { return false; }
+					if (getInstanceProcAddr<PFN_vkCreateDevice>("vkCreateDevice")(physicalDevice, &vkDeviceCreateInfo, GetVkAllocationCallbacks(), &device) != VK_SUCCESS) { return false; }
 
-					vulkanDLL.LoadDynamicFunction("vkGetPhysicalDeviceProperties2").Call<VkResult>(physicalDevice, &properties2);
-					vulkanDLL.LoadDynamicFunction("vkGetPhysicalDeviceFeatures2").Call<VkResult>(physicalDevice, &features2);
+					getInstanceProcAddr("vkGetDeviceProcAddr", &VkGetDeviceProcAddr);
+					
+					getInstanceProcAddr<PFN_vkGetPhysicalDeviceProperties2>("vkGetPhysicalDeviceProperties2")(physicalDevice, &properties2);
+					getInstanceProcAddr<PFN_vkGetPhysicalDeviceFeatures2>("vkGetPhysicalDeviceFeatures2")(physicalDevice, &features2);
 
-					uniformBufferMinOffset = properties2.properties.limits.minUniformBufferOffsetAlignment;
-					storageBufferMinOffset = properties2.properties.limits.minStorageBufferOffsetAlignment;
-					linearNonLinearAlignment = properties2.properties.limits.bufferImageGranularity;
-				}
-
-				for (GTSL::uint8 FAMILY = 0; FAMILY < familiesIndices.GetLength(); ++FAMILY) {
-					for (GTSL::uint8 QUEUE = 0; QUEUE < familiesIndices[FAMILY].GetLength(); ++QUEUE) {
-						createInfo.QueueKeys[familiesIndices[FAMILY][QUEUE]].Family = FAMILY;
-						createInfo.QueueKeys[familiesIndices[FAMILY][QUEUE]].Queue = QUEUE;
-					}
+					uniformBufferMinOffset = static_cast<GTSL::uint16>(properties2.properties.limits.minUniformBufferOffsetAlignment);
+					storageBufferMinOffset = static_cast<GTSL::uint16>(properties2.properties.limits.minStorageBufferOffsetAlignment);
+					linearNonLinearAlignment = static_cast<GTSL::uint16>(properties2.properties.limits.bufferImageGranularity);
 				}
 			}
 
-			vulkanDLL.LoadDynamicFunction("vkGetPhysicalDeviceMemoryProperties").Call<VkResult>(physicalDevice, &memoryProperties);
+			getInstanceProcAddr<PFN_vkGetPhysicalDeviceMemoryProperties>("vkGetPhysicalDeviceMemoryProperties")(physicalDevice, &memoryProperties);
 
-			vulkanDLL.LoadDynamicFunction("vkQueueSubmit", &VkQueueSubmit);
-			vulkanDLL.LoadDynamicFunction("vkQueuePresetKHR", &VkQueuePresent);
+			getDeviceProcAddr("vkQueueSubmit", &VkQueueSubmit);
+			getDeviceProcAddr("vkQueuePresentKHR", &VkQueuePresent);
 
-			vulkanDLL.LoadDynamicFunction("vkCreateSwapchainKHR", &VkCreateSwapchain);
-			vulkanDLL.LoadDynamicFunction("vkGetSwapchainImagesKHR", &VkGetSwapchainImages);
-			vulkanDLL.LoadDynamicFunction("vkAcquireNextImageKHR", &VkAcquireNextImage);
-			vulkanDLL.LoadDynamicFunction("vkDestroySwapchainKHR", &VkDestroySwapchain);
+			getInstanceProcAddr("vkCreateSwapchainKHR", &VkCreateSwapchain);
+			getInstanceProcAddr("vkGetSwapchainImagesKHR", &VkGetSwapchainImages);
+			getInstanceProcAddr("vkAcquireNextImageKHR", &VkAcquireNextImage);
+			getInstanceProcAddr("vkDestroySwapchainKHR", &VkDestroySwapchain);
 
-			vulkanDLL.LoadDynamicFunction("vkCreateWin32SurfaceKHR", &VkCreateWin32Surface);
-			vulkanDLL.LoadDynamicFunction("vkDestroySurfaceKHR", &VkDestroySurface);
+#if (_WIN64)
+			getInstanceProcAddr("vkCreateWin32SurfaceKHR", &VkCreateWin32Surface);
+#endif
+			getInstanceProcAddr("vkDestroySurfaceKHR", &VkDestroySurface);
 
-			vulkanDLL.LoadDynamicFunction("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", &VkGetPhysicalDeviceSurfaceCapabilities);
-			vulkanDLL.LoadDynamicFunction("vkGetPhysicalDeviceSurfaceFormatsKHR", &VkGetPhysicalDeviceSurfaceFormats);
-			vulkanDLL.LoadDynamicFunction("vkGetPhysicalDeviceSurfacePresentModesKHR", &VkGetPhysicalDeviceSurfacePresentModes);
-			vulkanDLL.LoadDynamicFunction("vkGetPhysicalDeviceSurfaceSupportKHR", &VkGetPhysicalDeviceSurfaceSupport);
+			getInstanceProcAddr("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", &VkGetPhysicalDeviceSurfaceCapabilities);
+			getInstanceProcAddr("vkGetPhysicalDeviceSurfaceFormatsKHR", &VkGetPhysicalDeviceSurfaceFormats);
+			getInstanceProcAddr("vkGetPhysicalDeviceSurfacePresentModesKHR", &VkGetPhysicalDeviceSurfacePresentModes);
+			getInstanceProcAddr("vkGetPhysicalDeviceSurfaceSupportKHR", &VkGetPhysicalDeviceSurfaceSupport);
 
-			vulkanDLL.LoadDynamicFunction("vkCreateBuffer", &VkCreateBuffer);
-			vulkanDLL.LoadDynamicFunction("vkGetBufferDeviceAddress", &VkGetBufferDeviceAddress);
-			vulkanDLL.LoadDynamicFunction("vkDestroyBuffer", &VkDestroyBuffer);
-			vulkanDLL.LoadDynamicFunction("vkGetBufferMemoryRequirements", &VkGetBufferMemoryRequirements);
-			vulkanDLL.LoadDynamicFunction("vkBindBufferMemory", &VkBindBufferMemory);
+			getDeviceProcAddr("vkCreateBuffer", &VkCreateBuffer);
+			getDeviceProcAddr("vkGetBufferDeviceAddress", &VkGetBufferDeviceAddress);
+			getDeviceProcAddr("vkDestroyBuffer", &VkDestroyBuffer);
+			getDeviceProcAddr("vkGetBufferMemoryRequirements", &VkGetBufferMemoryRequirements);
+			getDeviceProcAddr("vkBindBufferMemory", &VkBindBufferMemory);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreateImage", &VkCreateImage);			
-			vulkanDLL.LoadDynamicFunction("vkDestroyImage", &VkDestroyImage);
-			vulkanDLL.LoadDynamicFunction("vkGetImageMemoryRequirements", &VkGetImageMemoryRequirements);
-			vulkanDLL.LoadDynamicFunction("vkBindImageMemory", &VkBindImageMemory);
+			getDeviceProcAddr("vkCreateImage", &VkCreateImage);			
+			getDeviceProcAddr("vkDestroyImage", &VkDestroyImage);
+			getDeviceProcAddr("vkGetImageMemoryRequirements", &VkGetImageMemoryRequirements);
+			getDeviceProcAddr("vkBindImageMemory", &VkBindImageMemory);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreateCommandPool", &VkCreateCommandPool);
-			vulkanDLL.LoadDynamicFunction("vkDestroyCommandPool", &VkDestroyCommandPool);
-			vulkanDLL.LoadDynamicFunction("vkResetCommandPool", &VkResetCommandPool);
-			vulkanDLL.LoadDynamicFunction("vkAllocateCommandBuffers", &VkAllocateCommandBuffers);
-			vulkanDLL.LoadDynamicFunction("vkBeginCommandBuffer", &VkBeginCommandBuffer);
-			vulkanDLL.LoadDynamicFunction("vkEndCommandBuffer", &VkEndCommandBuffer);
+			getDeviceProcAddr("vkCreateCommandPool", &VkCreateCommandPool);
+			getDeviceProcAddr("vkDestroyCommandPool", &VkDestroyCommandPool);
+			getDeviceProcAddr("vkResetCommandPool", &VkResetCommandPool);
+			getDeviceProcAddr("vkAllocateCommandBuffers", &VkAllocateCommandBuffers);
+			getDeviceProcAddr("vkBeginCommandBuffer", &VkBeginCommandBuffer);
+			getDeviceProcAddr("vkEndCommandBuffer", &VkEndCommandBuffer);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreateRenderPass", &VkCreateRenderPass);
-			vulkanDLL.LoadDynamicFunction("vkDestroyRenderPass", &VkDestroyRenderPass);
-			vulkanDLL.LoadDynamicFunction("vkCreateFramebuffer", &VkCreateFramebuffer);
-			vulkanDLL.LoadDynamicFunction("vkDestroyFramebuffer", &VkDestroyFramebuffer);
+			getDeviceProcAddr("vkCreateRenderPass", &VkCreateRenderPass);
+			getDeviceProcAddr("vkDestroyRenderPass", &VkDestroyRenderPass);
+			getDeviceProcAddr("vkCreateFramebuffer", &VkCreateFramebuffer);
+			getDeviceProcAddr("vkDestroyFramebuffer", &VkDestroyFramebuffer);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreateShaderModule", &VkCreateShaderModule);
-			vulkanDLL.LoadDynamicFunction("vkDestroyShaderModule", &VkDestroyShaderModule);
+			getDeviceProcAddr("vkCreateShaderModule", &VkCreateShaderModule);
+			getDeviceProcAddr("vkDestroyShaderModule", &VkDestroyShaderModule);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreatePipelineLayout", &VkCreatePipelineLayout);
-			vulkanDLL.LoadDynamicFunction("vkDestroyPipelineLayout", &VkDestroyPipelineLayout);
+			getDeviceProcAddr("vkCreatePipelineLayout", &VkCreatePipelineLayout);
+			getDeviceProcAddr("vkDestroyPipelineLayout", &VkDestroyPipelineLayout);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreatePipelineCache", &VkCreatePipelineCache);
-			vulkanDLL.LoadDynamicFunction("vkMergePipelineCaches", &VkMergePipelineCaches);
-			vulkanDLL.LoadDynamicFunction("vkGetPipelineCacheData", &VkGetPipelineCacheData);
-			vulkanDLL.LoadDynamicFunction("vkDestroyPipelineCache", &VkDestroyPipelineCache);
+			getDeviceProcAddr("vkCreatePipelineCache", &VkCreatePipelineCache);
+			getDeviceProcAddr("vkMergePipelineCaches", &VkMergePipelineCaches);
+			getDeviceProcAddr("vkGetPipelineCacheData", &VkGetPipelineCacheData);
+			getDeviceProcAddr("vkDestroyPipelineCache", &VkDestroyPipelineCache);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreateDescriptorSetLayout", &VkCreateDescriptorSetLayout);
-			vulkanDLL.LoadDynamicFunction("vkDestroyDescriptorSetLayout", &VkDestroyDescriptorSetLayout);
+			getDeviceProcAddr("vkCreateDescriptorSetLayout", &VkCreateDescriptorSetLayout);
+			getDeviceProcAddr("vkDestroyDescriptorSetLayout", &VkDestroyDescriptorSetLayout);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreateDescriptorPool", &VkCreateDescriptorPool);
-			vulkanDLL.LoadDynamicFunction("vkAllocateDescriptorSets", &VkAllocateDescriptorSets);
-			vulkanDLL.LoadDynamicFunction("vkUpdateDescriptorSets", &VkUpdateDescriptorSets);
-			vulkanDLL.LoadDynamicFunction("vkDestroyDescriptorPool", &VkDestroyDescriptorPool);
+			getDeviceProcAddr("vkCreateDescriptorPool", &VkCreateDescriptorPool);
+			getDeviceProcAddr("vkAllocateDescriptorSets", &VkAllocateDescriptorSets);
+			getDeviceProcAddr("vkUpdateDescriptorSets", &VkUpdateDescriptorSets);
+			getDeviceProcAddr("vkDestroyDescriptorPool", &VkDestroyDescriptorPool);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreateFence", &VkCreateFence);
-			vulkanDLL.LoadDynamicFunction("vkWaitForFences", &VkWaitForFences);
-			vulkanDLL.LoadDynamicFunction("vkResetFences", &VkResetFences);
-			vulkanDLL.LoadDynamicFunction("vkDestroyFence", &VkDestroyFence);
-			vulkanDLL.LoadDynamicFunction("vkCreateSemaphore", &VkCreateSemaphore);
-			vulkanDLL.LoadDynamicFunction("vkDestroySemaphore", &VkDestroySemaphore);
-			vulkanDLL.LoadDynamicFunction("vkCreateEvent", &VkCreateEvent);
-			vulkanDLL.LoadDynamicFunction("vkSetEvent", &VkSetEvent);
-			vulkanDLL.LoadDynamicFunction("vkResetEvent", &VkResetEvent);
-			vulkanDLL.LoadDynamicFunction("vkDestroyEvent", &VkDestroyEvent);
+			getDeviceProcAddr("vkCreateFence", &VkCreateFence);
+			getDeviceProcAddr("vkWaitForFences", &VkWaitForFences);
+			getDeviceProcAddr("vkResetFences", &VkResetFences);
+			getDeviceProcAddr("vkDestroyFence", &VkDestroyFence);
+			getDeviceProcAddr("vkCreateSemaphore", &VkCreateSemaphore);
+			getDeviceProcAddr("vkDestroySemaphore", &VkDestroySemaphore);
+			getDeviceProcAddr("vkCreateEvent", &VkCreateEvent);
+			getDeviceProcAddr("vkSetEvent", &VkSetEvent);
+			getDeviceProcAddr("vkResetEvent", &VkResetEvent);
+			getDeviceProcAddr("vkDestroyEvent", &VkDestroyEvent);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreateGraphicsPipeline", &VkCreateGraphicsPipelines);
-			vulkanDLL.LoadDynamicFunction("vkCreateComputePipelines", &VkCreateComputePipelines);
-			vulkanDLL.LoadDynamicFunction("vkDestroyPipeline", &VkDestroyPipeline);
+			getDeviceProcAddr("vkCreateGraphicsPipelines", &VkCreateGraphicsPipelines);
+			getDeviceProcAddr("vkCreateComputePipelines", &VkCreateComputePipelines);
+			getDeviceProcAddr("vkDestroyPipeline", &VkDestroyPipeline);
 			
-			vulkanDLL.LoadDynamicFunction("vkAllocateMemory", &VkAllocateMemory);
-			vulkanDLL.LoadDynamicFunction("vkFreeMemory", &VkFreeMemory);
-			vulkanDLL.LoadDynamicFunction("vkMapMemory", &VkMapMemory);
-			vulkanDLL.LoadDynamicFunction("vkUnmapMemory", &VkUnmapMemory);
+			getDeviceProcAddr("vkAllocateMemory", &VkAllocateMemory);
+			getDeviceProcAddr("vkFreeMemory", &VkFreeMemory);
+			getDeviceProcAddr("vkMapMemory", &VkMapMemory);
+			getDeviceProcAddr("vkUnmapMemory", &VkUnmapMemory);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreateImageView", &VkCreateImageView);
-			vulkanDLL.LoadDynamicFunction("vkDestroyImageView", &VkDestroyImageView);
+			getDeviceProcAddr("vkCreateImageView", &VkCreateImageView);
+			getDeviceProcAddr("vkDestroyImageView", &VkDestroyImageView);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreateSampler", &VkCreateSampler);
-			vulkanDLL.LoadDynamicFunction("vkDestroySampler", &VkCreateSampler);
+			getDeviceProcAddr("vkCreateSampler", &VkCreateSampler);
+			getDeviceProcAddr("vkDestroySampler", &VkDestroySampler);
 			
-			vulkanDLL.LoadDynamicFunction("vkCreateQueryPool", &VkCreateQueryPool);
-			vulkanDLL.LoadDynamicFunction("vkGetQueryPoolResults", &VkGetQueryPoolResults);
-			vulkanDLL.LoadDynamicFunction("vkDestroyQueryPool", &VkDestroyQueryPool);
+			getDeviceProcAddr("vkCreateQueryPool", &VkCreateQueryPool);
+			getDeviceProcAddr("vkGetQueryPoolResults", &VkGetQueryPoolResults);
+			getDeviceProcAddr("vkDestroyQueryPool", &VkDestroyQueryPool);
 			
-			vulkanDLL.LoadDynamicFunction("vkBeginCommandBuffer", &VkBeginCommandBuffer);
-			vulkanDLL.LoadDynamicFunction("vkEndCommandBuffer", &VkEndCommandBuffer);
+			getDeviceProcAddr("vkBeginCommandBuffer", &VkBeginCommandBuffer);
+			getDeviceProcAddr("vkEndCommandBuffer", &VkEndCommandBuffer);
 			
-			vulkanDLL.LoadDynamicFunction("vkCmdBeginRenderPass", &VkCmdBeginRenderPass);
-			vulkanDLL.LoadDynamicFunction("vkCmdNextSubpass", &VkCmdNextSubpass);
-			vulkanDLL.LoadDynamicFunction("vkCmdEndRenderPass", &VkCmdEndRenderPass);
+			getDeviceProcAddr("vkCmdBeginRenderPass", &VkCmdBeginRenderPass);
+			getDeviceProcAddr("vkCmdNextSubpass", &VkCmdNextSubpass);
+			getDeviceProcAddr("vkCmdEndRenderPass", &VkCmdEndRenderPass);
 			
-			vulkanDLL.LoadDynamicFunction("vkCmdSetScissor", &VkCmdSetScissor);
-			vulkanDLL.LoadDynamicFunction("vkCmdSetViewport", &VkCmdSetViewport);
+			getDeviceProcAddr("vkCmdSetScissor", &VkCmdSetScissor);
+			getDeviceProcAddr("vkCmdSetViewport", &VkCmdSetViewport);
 			
-			vulkanDLL.LoadDynamicFunction("vkCmdBindPipeline", &VkCmdBindPipeline);
-			vulkanDLL.LoadDynamicFunction("vkCmdBindDescriptorSets", &VkCmdBindDescriptorSets);
-			vulkanDLL.LoadDynamicFunction("vkCmdPushConstants", &VkCmdPushConstants);
+			getDeviceProcAddr("vkCmdBindPipeline", &VkCmdBindPipeline);
+			getDeviceProcAddr("vkCmdBindDescriptorSets", &VkCmdBindDescriptorSets);
+			getDeviceProcAddr("vkCmdPushConstants", &VkCmdPushConstants);
 			
-			vulkanDLL.LoadDynamicFunction("vkCmdBindVertexBuffers", &VkCmdBindVertexBuffers);
-			vulkanDLL.LoadDynamicFunction("vkCmdBindIndexBuffer", &VkCmdBindIndexBuffer);
+			getDeviceProcAddr("vkCmdBindVertexBuffers", &VkCmdBindVertexBuffers);
+			getDeviceProcAddr("vkCmdBindIndexBuffer", &VkCmdBindIndexBuffer);
 			
-			vulkanDLL.LoadDynamicFunction("vkCmdDrawIndexed", &VkCmdDrawIndexed);
-			vulkanDLL.LoadDynamicFunction("vkCmdDispatch", &VkCmdDispatch);
+			getDeviceProcAddr("vkCmdDrawIndexed", &VkCmdDrawIndexed);
+			getDeviceProcAddr("vkCmdDispatch", &VkCmdDispatch);
 			
-			vulkanDLL.LoadDynamicFunction("vkCmdCopyBuffer", &VkCmdCopyBuffer);
-			vulkanDLL.LoadDynamicFunction("vkCmdCopyBufferToImage", &VkCmdCopyBufferToImage);
-			vulkanDLL.LoadDynamicFunction("vkCmdCopyImage", &VkCmdCopyImage);
+			getDeviceProcAddr("vkCmdCopyBuffer", &VkCmdCopyBuffer);
+			getDeviceProcAddr("vkCmdCopyBufferToImage", &VkCmdCopyBufferToImage);
+			getDeviceProcAddr("vkCmdCopyImage", &VkCmdCopyImage);
 			
-			vulkanDLL.LoadDynamicFunction("vkCmdPipelineBarrier", &VkCmdPipelineBarrier);
+			getDeviceProcAddr("vkCmdPipelineBarrier", &VkCmdPipelineBarrier);
 			
-			vulkanDLL.LoadDynamicFunction("vkCmdSetEvent", &VkCmdSetEvent);
-			vulkanDLL.LoadDynamicFunction("vkCmdResetEvent", &VkCmdResetEvent);
-			
+			getDeviceProcAddr("vkCmdSetEvent", &VkCmdSetEvent);
+			getDeviceProcAddr("vkCmdResetEvent", &VkCmdResetEvent);
+
+			//if(extensionSupported())
+			getDeviceProcAddr("vkCmdDrawMeshTasksNV", &VkCmdDrawMeshTasks);
 			
 			for (auto e : createInfo.Extensions) {
 				switch (e.First) {
 				case Extension::RAY_TRACING: {
-					vulkanDLL.LoadDynamicFunction("vkCreateAccelerationStructureKHR", &vkCreateAccelerationStructureKHR);
-					vulkanDLL.LoadDynamicFunction("vkDestroyAccelerationStructureKHR", &vkDestroyAccelerationStructureKHR);
-					vulkanDLL.LoadDynamicFunction("vkCreateRayTracingPipelinesKHR", &vkCreateRayTracingPipelinesKHR);
-					vulkanDLL.LoadDynamicFunction("vkGetAccelerationStructureBuildSizesKHR", &vkGetAccelerationStructureBuildSizesKHR);
-					vulkanDLL.LoadDynamicFunction("vkGetRayTracingShaderGroupHandlesKHR", &vkGetRayTracingShaderGroupHandlesKHR);
-					vulkanDLL.LoadDynamicFunction("vkBuildAccelerationStructuresKHR", &vkBuildAccelerationStructuresKHR);
-					vulkanDLL.LoadDynamicFunction("vkCmdBuildAccelerationStructuresKHR", &vkCmdBuildAccelerationStructuresKHR);
-					vulkanDLL.LoadDynamicFunction("vkGetAccelerationStructureDeviceAddressKHR", &vkGetAccelerationStructureDeviceAddressKHR);
-					vulkanDLL.LoadDynamicFunction("vkCreateDeferredOperationKHR", &vkCreateDeferredOperationKHR);
-					vulkanDLL.LoadDynamicFunction("vkDeferredOperationJoinKHR", &vkDeferredOperationJoinKHR);
-					vulkanDLL.LoadDynamicFunction("vkGetDeferredOperationResultKHR", &vkGetDeferredOperationResultKHR);
-					vulkanDLL.LoadDynamicFunction("vkGetDeferredOperationMaxConcurrencyKHR", &vkGetDeferredOperationMaxConcurrencyKHR);
-					vulkanDLL.LoadDynamicFunction("vkDestroyDeferredOperationKHR", &vkDestroyDeferredOperationKHR);
-					vulkanDLL.LoadDynamicFunction("vkCmdCopyAccelerationStructureKHR", &vkCmdCopyAccelerationStructureKHR);
-					vulkanDLL.LoadDynamicFunction("vkCmdCopyAccelerationStructureToMemoryKHR", &vkCmdCopyAccelerationStructureToMemoryKHR);
-					vulkanDLL.LoadDynamicFunction("vkCmdCopyMemoryToAccelerationStructureKHR", &vkCmdCopyMemoryToAccelerationStructureKHR);
-					vulkanDLL.LoadDynamicFunction("vkCmdWriteAccelerationStructuresPropertiesKHR", &vkCmdWriteAccelerationStructuresPropertiesKHR);
-					vulkanDLL.LoadDynamicFunction("vkCmdTraceRaysKHR", &vkCmdTraceRaysKHR);
+					getDeviceProcAddr("vkCreateAccelerationStructureKHR", &vkCreateAccelerationStructureKHR);
+					getDeviceProcAddr("vkDestroyAccelerationStructureKHR", &vkDestroyAccelerationStructureKHR);
+					getDeviceProcAddr("vkCreateRayTracingPipelinesKHR", &vkCreateRayTracingPipelinesKHR);
+					getDeviceProcAddr("vkGetAccelerationStructureBuildSizesKHR", &vkGetAccelerationStructureBuildSizesKHR);
+					getDeviceProcAddr("vkGetRayTracingShaderGroupHandlesKHR", &vkGetRayTracingShaderGroupHandlesKHR);
+					getDeviceProcAddr("vkBuildAccelerationStructuresKHR", &vkBuildAccelerationStructuresKHR);
+					getDeviceProcAddr("vkCmdBuildAccelerationStructuresKHR", &vkCmdBuildAccelerationStructuresKHR);
+					getDeviceProcAddr("vkGetAccelerationStructureDeviceAddressKHR", &vkGetAccelerationStructureDeviceAddressKHR);
+					getDeviceProcAddr("vkCreateDeferredOperationKHR", &vkCreateDeferredOperationKHR);
+					getDeviceProcAddr("vkDeferredOperationJoinKHR", &vkDeferredOperationJoinKHR);
+					getDeviceProcAddr("vkGetDeferredOperationResultKHR", &vkGetDeferredOperationResultKHR);
+					getDeviceProcAddr("vkGetDeferredOperationMaxConcurrencyKHR", &vkGetDeferredOperationMaxConcurrencyKHR);
+					getDeviceProcAddr("vkDestroyDeferredOperationKHR", &vkDestroyDeferredOperationKHR);
+					getDeviceProcAddr("vkCmdCopyAccelerationStructureKHR", &vkCmdCopyAccelerationStructureKHR);
+					getDeviceProcAddr("vkCmdCopyAccelerationStructureToMemoryKHR", &vkCmdCopyAccelerationStructureToMemoryKHR);
+					getDeviceProcAddr("vkCmdCopyMemoryToAccelerationStructureKHR", &vkCmdCopyMemoryToAccelerationStructureKHR);
+					getDeviceProcAddr("vkCmdWriteAccelerationStructuresPropertiesKHR", &vkCmdWriteAccelerationStructuresPropertiesKHR);
+					getDeviceProcAddr("vkCmdTraceRaysKHR", &vkCmdTraceRaysKHR);
 					break;
 				}
 				default:;
@@ -569,10 +577,10 @@ namespace GAL
 			}
 
 			if constexpr (_DEBUG) {
-				vulkanDLL.LoadDynamicFunction("vkSetDebugUtilsObjectNameEXT", &vkSetDebugUtilsObjectNameEXT);
-				vulkanDLL.LoadDynamicFunction("vkCmdInsertDebugUtilsLabelEXT", &vkCmdInsertDebugUtilsLabelEXT);
-				vulkanDLL.LoadDynamicFunction("vkCmdBeginDebugUtilsLabelEXT", &vkCmdBeginDebugUtilsLabelEXT);
-				vulkanDLL.LoadDynamicFunction("vkCmdEndDebugUtilsLabelEXT", &vkCmdEndDebugUtilsLabelEXT);
+				getInstanceProcAddr("vkSetDebugUtilsObjectNameEXT", &vkSetDebugUtilsObjectNameEXT);
+				getInstanceProcAddr("vkCmdInsertDebugUtilsLabelEXT", &vkCmdInsertDebugUtilsLabelEXT);
+				getInstanceProcAddr("vkCmdBeginDebugUtilsLabelEXT", &vkCmdBeginDebugUtilsLabelEXT);
+				getInstanceProcAddr("vkCmdEndDebugUtilsLabelEXT", &vkCmdEndDebugUtilsLabelEXT);
 
 				//NVIDIA's driver have a bug when setting the name for this 3 object types, TODO. fix in the future
 				//{
@@ -615,18 +623,20 @@ namespace GAL
 			return true;
 		}
 
+		void Wait() const { getDeviceProcAddr<PFN_vkDeviceWaitIdle>("vkDeviceWaitIdle")(device); }
+		
 		void Destroy() {
-			vulkanDLL.LoadDynamicFunction("vkDeviceWaitIdle").Call<VkResult>(device);
-			vulkanDLL.LoadDynamicFunction("vkDestroyDevice").Call<VkResult>(device, GetVkAllocationCallbacks());
+			Wait();
+			getDeviceProcAddr<PFN_vkDestroyDevice>("vkDestroyDevice")(device, GetVkAllocationCallbacks());
 
 #if (_DEBUG)
 			if (debug) {
-				vulkanDLL.LoadDynamicFunction("vkDestroyDebugUtilsMessengerEXT").Call<VkResult>(instance, debugMessenger, GetVkAllocationCallbacks());
+				getInstanceProcAddr<PFN_vkDestroyDebugUtilsMessengerEXT>("vkDestroyDebugUtilsMessengerEXT")(instance, debugMessenger, GetVkAllocationCallbacks());
 			}
 			debugClear(debugMessenger);
 #endif
 
-			vulkanDLL.LoadDynamicFunction("vkDestroyInstance").Call<VkResult>(instance, GetVkAllocationCallbacks());
+			getInstanceProcAddr<PFN_vkDestroyInstance>("vkDestroyInstance")(instance, GetVkAllocationCallbacks());
 
 			debugClear(device); debugClear(instance);
 		}
@@ -636,7 +646,7 @@ namespace GAL
 		GPUInfo GetGPUInfo() const {
 			GPUInfo result; VkPhysicalDeviceProperties physicalDeviceProperties;
 
-			vulkanDLL.LoadDynamicFunction("vkGetPhysicalDeviceProperties").Call<VkResult>(physicalDevice, &physicalDeviceProperties);
+			getInstanceProcAddr<PFN_vkGetPhysicalDeviceProperties>("vkGetPhysicalDeviceProperties")(physicalDevice, &physicalDeviceProperties);
 
 			result.GPUName = physicalDeviceProperties.deviceName;
 			result.DriverVersion = physicalDeviceProperties.driverVersion;
@@ -670,10 +680,10 @@ namespace GAL
 
 			VkFormatFeatureFlags features{};
 
-			TranslateMask(TextureUses::TRANSFER_SOURCE, VK_FORMAT_FEATURE_TRANSFER_SRC_BIT, findSupportedImageFormat.TextureUses, features);
-			TranslateMask(TextureUses::TRANSFER_DESTINATION, VK_FORMAT_FEATURE_TRANSFER_DST_BIT, findSupportedImageFormat.TextureUses, features);
-			TranslateMask(TextureUses::SAMPLE, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, findSupportedImageFormat.TextureUses, features);
-			TranslateMask(TextureUses::STORAGE, VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT, findSupportedImageFormat.TextureUses, features);
+			TranslateMask<TextureUses::TRANSFER_SOURCE, VK_FORMAT_FEATURE_TRANSFER_SRC_BIT>(findSupportedImageFormat.TextureUses, features);
+			TranslateMask<TextureUses::TRANSFER_DESTINATION, VK_FORMAT_FEATURE_TRANSFER_DST_BIT>(findSupportedImageFormat.TextureUses, features);
+			TranslateMask<TextureUses::SAMPLE, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT>(findSupportedImageFormat.TextureUses, features);
+			TranslateMask<TextureUses::STORAGE, VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT>(findSupportedImageFormat.TextureUses, features);
 			if(findSupportedImageFormat.TextureUses & TextureUses::ATTACHMENT) {
 				switch (findSupportedImageFormat.FormatDescriptor.Type) {
 				case TextureType::COLOR: features |= VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT; break;
@@ -682,7 +692,7 @@ namespace GAL
 			}
 
 			for (auto e : findSupportedImageFormat.Candidates) {
-				vulkanDLL.LoadDynamicFunction("vkGetPhysicalDeviceFormatProperties").Call<VkResult>(physicalDevice, ToVulkan(MakeFormatFromFormatDescriptor(e)), &format_properties);
+				getInstanceProcAddr<PFN_vkGetPhysicalDeviceFormatProperties>("vkGetPhysicalDeviceFormatProperties")(physicalDevice, ToVulkan(MakeFormatFromFormatDescriptor(e)), &format_properties);
 
 				switch (static_cast<VkImageTiling>(findSupportedImageFormat.TextureTiling))
 				{
@@ -737,16 +747,16 @@ namespace GAL
 				memoryHeap.Size = GTSL::Byte(memoryProperties.memoryHeaps[heapIndex].size);
 				memoryHeap.HeapType = 0;
 
-				TranslateMask(VK_MEMORY_HEAP_DEVICE_LOCAL_BIT, MemoryTypes::GPU, memoryProperties.memoryHeaps[heapIndex].flags, memoryHeap.HeapType);
+				TranslateMask<VK_MEMORY_HEAP_DEVICE_LOCAL_BIT, MemoryTypes::GPU>(memoryProperties.memoryHeaps[heapIndex].flags, memoryHeap.HeapType);
 
 				for (GTSL::uint8 memType = 0; memType < memoryProperties.memoryTypeCount; ++memType) {
 					if (memoryProperties.memoryTypes[memType].heapIndex == heapIndex) {
 						MemoryType memoryType;
 
-						TranslateMask(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, MemoryTypes::GPU, memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
-						TranslateMask(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, MemoryTypes::HOST_VISIBLE, memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
-						TranslateMask(VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, MemoryTypes::HOST_COHERENT, memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
-						TranslateMask(VK_MEMORY_PROPERTY_HOST_CACHED_BIT, MemoryTypes::HOST_CACHED, memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
+						TranslateMask<VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, MemoryTypes::GPU>(memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
+						TranslateMask<VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, MemoryTypes::HOST_VISIBLE>(memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
+						TranslateMask<VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, MemoryTypes::HOST_COHERENT>(memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
+						TranslateMask<VK_MEMORY_PROPERTY_HOST_CACHED_BIT, MemoryTypes::HOST_CACHED>(memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
 
 						memoryHeap.MemoryTypes.EmplaceBack(memoryType);
 					}
@@ -763,11 +773,24 @@ namespace GAL
 
 		GTSL::uint32 GetLinearNonLinearGranularity() const { return linearNonLinearAlignment; }
 
-		GTSL::DLL vulkanDLL;
+		[[nodiscard]] GTSL::Byte GetAccelerationStructureInstanceSize() const { return GTSL::Byte(64); }
 		
-		PFN_vkCmdBeginRenderPass VkCmdBeginRenderPass = nullptr;
-		PFN_vkCmdEndRenderPass VkCmdEndRenderPass = nullptr;
-		PFN_vkCmdNextSubpass VkCmdNextSubpass;
+		GTSL::DLL vulkanDLL;
+
+		PFN_vkGetInstanceProcAddr VkGetInstanceProcAddr; PFN_vkGetDeviceProcAddr VkGetDeviceProcAddr;
+
+		template<typename FT>
+		FT getInstanceProcAddr(const GTSL::UTF8* name) const { return reinterpret_cast<FT>(VkGetInstanceProcAddr(instance, name)); }
+		template<typename FT>
+		void getInstanceProcAddr(const GTSL::UTF8* name, FT* function) const { *function = *reinterpret_cast<FT>(VkGetInstanceProcAddr(instance, name)); }
+		
+		template<typename FT>
+		void getDeviceProcAddr(const GTSL::UTF8* name, FT* function) const { *function = *reinterpret_cast<FT>(VkGetDeviceProcAddr(device, name)); }
+
+		template<typename FT>
+		FT getDeviceProcAddr(const GTSL::UTF8* name) const { return reinterpret_cast<FT>(VkGetDeviceProcAddr(device, name)); }
+		
+		PFN_vkCmdBeginRenderPass VkCmdBeginRenderPass; PFN_vkCmdNextSubpass VkCmdNextSubpass; PFN_vkCmdEndRenderPass VkCmdEndRenderPass;
 		PFN_vkCmdDrawIndexed VkCmdDrawIndexed;
 		PFN_vkAcquireNextImageKHR VkAcquireNextImage;
 		PFN_vkResetCommandPool VkResetCommandPool;
@@ -850,6 +873,8 @@ namespace GAL
 		PFN_vkCmdCopyMemoryToAccelerationStructureKHR vkCmdCopyMemoryToAccelerationStructureKHR = nullptr;
 		PFN_vkCmdWriteAccelerationStructuresPropertiesKHR vkCmdWriteAccelerationStructuresPropertiesKHR = nullptr;
 		PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR = nullptr;
+
+		PFN_vkCmdDrawMeshTasksNV VkCmdDrawMeshTasks;
 		
 #if (_DEBUG)
 		PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT = nullptr;
@@ -874,8 +899,6 @@ namespace GAL
 		VkPhysicalDeviceMemoryProperties memoryProperties;
 
 		MemoryType memoryTypes[16];
-		
-		friend VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 	};
 
 	template<typename T>

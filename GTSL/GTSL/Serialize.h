@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Buffer.hpp"
-#include "FlatHashMap.h"
+#include "HashMap.h"
 #include "Array.hpp"
 #include "Extent.h"
 #include "Vector.hpp"
@@ -83,7 +83,7 @@ namespace GTSL
 	}
 	
 	template<typename V, typename K, class ALLOCATOR1, class ALLOCATOR2>
-	void Insert(const FlatHashMap<V, K, ALLOCATOR1>& map, Buffer<ALLOCATOR2>& buffer)
+	void Insert(const HashMap<V, K, ALLOCATOR1>& map, Buffer<ALLOCATOR2>& buffer)
 	{
 		Insert(map.bucketCount, buffer);
 		Insert(map.maxBucketLength, buffer);
@@ -99,7 +99,7 @@ namespace GTSL
 	}
 
 	template<typename K, typename V, class ALLOCATOR1, class ALLOCATOR2>
-	void Extract(FlatHashMap<K, V, ALLOCATOR1>& map, Buffer<ALLOCATOR2>& buffer)
+	void Extract(HashMap<K, V, ALLOCATOR1>& map, Buffer<ALLOCATOR2>& buffer)
 	{
 		uint32 capacity{ 0 }, maxBucketLength = 0;
 		Extract(capacity, buffer);

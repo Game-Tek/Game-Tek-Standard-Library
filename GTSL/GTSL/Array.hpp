@@ -51,8 +51,8 @@ namespace GTSL
 
 		constexpr Array(const Range<const T*> ranger) noexcept : length(static_cast<uint32>(ranger.ElementCount()))
 		{
-			GTSL_ASSERT(ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!");
-			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { begin()[i] = ranger[i]; }
+			GTSL_ASSERT((uint32)ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!");
+			for (uint32 i = 0; i < static_cast<uint32>(ranger.ElementCount()); ++i) { begin()[i] = ranger[i]; }
 		}
 
 		constexpr Array(const Array& other) noexcept : length(other.length) { for (uint32 i = 0; i < other.length; ++i) { begin()[i] = other[i]; } }
@@ -107,8 +107,8 @@ namespace GTSL
 
 		constexpr Array& operator=(const Range<const T*> ranger) noexcept
 		{
-			for (uint32 i = 0; i < ranger.ElementCount(); ++i) { begin()[i] = ranger[i]; }
-			length = ranger.ElementCount();
+			for (uint32 i = 0; i < static_cast<uint32>(ranger.ElementCount()); ++i) { begin()[i] = ranger[i]; }
+			length = static_cast<uint32>(ranger.ElementCount());
 			return *this;
 		}
 
@@ -160,8 +160,8 @@ namespace GTSL
 
 		constexpr uint32 PushBack(const Range<const T*> ranger) noexcept
 		{
-			GTSL_ASSERT(this->length + ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
-			for (uint32 i = 0, p = length; i < ranger.ElementCount(); ++i, ++p) { begin()[p] = ranger[i]; }
+			GTSL_ASSERT(this->length + (uint32)ranger.ElementCount() <= CAPACITY, "Array is not big enough to insert the elements requested!")
+			for (uint32 i = 0, p = length; i < static_cast<uint32>(ranger.ElementCount()); ++i, ++p) { begin()[p] = ranger[i]; }
 			auto ret = this->length;
 			this->length += static_cast<uint32>(ranger.ElementCount());
 			return ret;
@@ -218,13 +218,6 @@ namespace GTSL
 		Result<uint32> Find(const T& obj) const
 		{
 			for (uint32 i = 0; i < GetLength(); ++i) { if (begin()[i] == obj) { return Result<uint32>(MoveRef(i), true); } }
-			return Result<uint32>(false);
-		}
-
-		template<typename F>
-		Result<uint32> LookFor(F&& function) const
-		{
-			for (uint32 i = 0; i < GetLength(); ++i) { if (function(begin()[i])) { return Result<uint32>(MoveRef(i), true); } }
 			return Result<uint32>(false);
 		}
 		

@@ -2,26 +2,70 @@
 
 #if (_WIN32)
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#define NOCOMM
+#include <Windows.h>
 #include <intrin.h>
 #undef BitScanForward
 #endif
 
+#include <xtr1common>
+
 #include "Core.h"
+#include "Result.h"
 
 namespace GTSL
 {
-	inline void FindFirstSetBit(uint32 number, uint8& bit) { unsigned long set_bit{ 0 }; _BitScanForward(&set_bit, number); bit = static_cast<uint8>(set_bit); }
-	inline void FindFirstSetBit(uint32 number, uint8& bit, bool& anySetBit) { unsigned long set_bit{ 0 }; anySetBit = _BitScanForward(&set_bit, number); bit = static_cast<uint8>(set_bit); }
-	inline void FindFirstSetBit(uint64 number, uint8& bit) { unsigned long set_bit{ 0 }; _BitScanForward64(&set_bit, number); bit = static_cast<uint8>(set_bit); }
-	inline void FindFirstSetBit(uint64 number, uint8& bit, bool& anySetBit) { unsigned long set_bit{ 0 }; anySetBit = _BitScanForward64(&set_bit, number); bit = static_cast<uint8>(set_bit); }
+	constexpr Result<uint8> FindFirstSetBit(uint8 number) {
+		if (std::is_constant_evaluated()) {
+			uint8 r = 0; bool anySet = true;
+			//while (number >>= 1) { r++; }
+			//return Result(static_cast<uint8>(r), number != 0);
 
-	inline void FindLastSetBit(const uint32 number, uint8& bit, bool& anySetBit) {
-		unsigned long set_bit{ 0 }; anySetBit = _BitScanReverse(&set_bit, number); bit = static_cast<uint8>(set_bit);
+			switch (number) {
+			case 0: r = 0; anySet = false; break;
+			case 1 << 1: r = 1; break;
+			case 1 << 2: r = 2; break;
+			case 1 << 3: r = 3; break;
+			case 1 << 4: r = 4; break;
+			case 1 << 5: r = 5; break;
+			case 1 << 6: r = 6; break;
+			case 1 << 7: r = 7; break;
+			}
+
+			return Result(MoveRef(r), anySet);
+		} else {
+			unsigned long setBit{ 0 };
+			const bool anySetBit = _BitScanForward(&setBit, number);
+			return Result(static_cast<uint8>(setBit), anySetBit);
+		}
 	}
 
-	inline void FindLastSetBit(const uint64 number, uint8& bit, bool& anySetBit) {
-		unsigned long set_bit{ 0 }; anySetBit = _BitScanReverse64(&set_bit, number); bit = static_cast<uint8>(set_bit);
+	inline Result<uint8> FindFirstSetBit(uint32 number) {
+		unsigned long setBit{ 0 };
+		const bool anySetBit = _BitScanForward(&setBit, number);
+		return Result(static_cast<uint8>(setBit), anySetBit);
+	}
+	
+	inline Result<uint8> FindFirstSetBit(uint64 number) {
+		unsigned long setBit{ 0 };
+		const bool anySetBit = _BitScanForward64(&setBit, number);
+		return Result(static_cast<uint8>(setBit), anySetBit);
+	}
+
+	inline Result<uint8> FindFirstClearBit(uint32 number) {
+		unsigned long setBit{ 0 };
+		const bool anySetBit = _BitScanForward(&setBit, ~number);
+		return Result(static_cast<uint8>(setBit), anySetBit);
+	}
+	
+	inline Result<uint8> FindLastSetBit(const uint32 number) {
+		unsigned long setBit{ 0 }; const bool anySetBit = _BitScanReverse(&setBit, number);
+		return Result(static_cast<uint8>(setBit), anySetBit);
+	}
+
+	inline Result<uint8> FindLastSetBit(const uint64 number) {
+		unsigned long setBit{ 0 }; const bool anySetBit = _BitScanReverse64(&setBit, number);
+		return Result(static_cast<uint8>(setBit), anySetBit);
 	}
 
 	inline uint8 NumberOfSetBits(const uint16 number) {
@@ -36,12 +80,17 @@ namespace GTSL
 		return static_cast<uint8>(__popcnt64(number));
 	}
 
-	template<typename T>
-	consteval uint8 FindFirstSetBit(T number) {
+	constexpr uint8 FFSB(uint32 number) {
 		uint8 r = 0;
 		while (number >>= 1) r++;
 		return r;
 	}
+
+	//consteval uint8 FindFirstSetBit(uint64 number) {
+	//	uint8 r = 0;
+	//	while (number >>= 1) r++;
+	//	return r;
+	//}
 	
 	inline void SetBit(const uint8 bitN, uint64& n) { n |= 1ULL << bitN; }
 	inline void SetBit(const uint8 bitN, uint32& n) { n |= 1U << bitN; }

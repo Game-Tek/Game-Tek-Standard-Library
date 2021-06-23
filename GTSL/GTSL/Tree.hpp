@@ -8,8 +8,7 @@ namespace GTSL
 	class Tree
 	{
 	public:
-		struct Node
-		{
+		struct Node {
 			T Data;
 			Vector<struct Node*, ALLOCATOR> Nodes;
 		};
@@ -22,17 +21,13 @@ namespace GTSL
 			nodes.Initialize(4, this->allocator);
 		}
 
-		Node* AddChild(Node* parent)
-		{
-			if (parent)
-			{
+		Node* AddChild(Node* parent) {
+			if (parent) {
 				Node* newNode = New<Node>(allocator);
 				newNode->Nodes.Initialize(4, allocator);
 				parent->Nodes.EmplaceBack(newNode);
 				return newNode;
-			}
-			else
-			{
+			} else  {
 				Node* newNode = New<Node>(allocator);
 				newNode->Nodes.Initialize(4, allocator);
 				nodes.EmplaceBack(newNode);
@@ -40,13 +35,11 @@ namespace GTSL
 			}
 		}
 
-		~Tree()
-		{
-			auto freeNode = [&](Node* node, auto&& self) -> void
-			{
+		~Tree() {
+			auto freeNode = [&](Node* node, auto&& self) -> void {
 				for (uint32 i = 0; i < node->Nodes.GetLength(); ++i) { self(node->Nodes[i], self); }
 
-				Delete(node, allocator);
+				Delete(&node, allocator);
 			};
 
 			for(auto e : nodes) {
@@ -56,9 +49,12 @@ namespace GTSL
 
 		Node* operator[](const uint32 i) { return nodes[i]; }
 		const Node* operator[](const uint32 i) const { return nodes[i]; }
+
+		auto begin() const { return nodes.begin(); }
+		auto end() const { return nodes.end(); }
 	
 	private:
-		GTSL::Vector<Node*, ALLOCATOR> nodes;
+		Vector<Node*, ALLOCATOR> nodes;
 
 		ALLOCATOR allocator;
 	};

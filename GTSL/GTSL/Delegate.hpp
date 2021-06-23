@@ -63,14 +63,12 @@ namespace GTSL
 
 		operator bool() const noexcept { return callerFunction; }
 
-		Delegate& operator=(const Delegate& another)
-		{
+		Delegate& operator=(const Delegate& another) {
 			callee = another.callee; callerFunction = another.callerFunction;
 			return *this;
 		}
 		
-		Delegate& operator=(Delegate&& another) noexcept
-		{
+		Delegate& operator=(Delegate&& another) noexcept {
 			callee = another.callee; callerFunction = another.callerFunction;
 			another.callee = nullptr; another.callerFunction = nullptr;
 			return *this;
@@ -83,7 +81,13 @@ namespace GTSL
 		bool operator !=(const Delegate& another) const { return callerFunction != another.callerFunction && callee != another.callee; }
 
 		template <class T, RET(T::* METHOD)(ARGS...)>
-		static Delegate Create(T* instance) { return Delegate(instance, methodCaller<T, METHOD>); }
+		static Delegate Create(T* instance) {			
+			//auto methodCaller = [](void* callee, ARGS&&... args) -> RET {
+			//	return (static_cast<T*>(callee)->*METHOD)(GTSL::ForwardRef<ARGS>(args)...);
+			//};
+			
+			return Delegate(instance, methodCaller<T, METHOD>);
+		}
 
 		template <class T, RET(T::* CONST_METHOD)(ARGS...) const>
 		static Delegate Create(T const* instance) { return Delegate(const_cast<T*>(instance), constMethodCaller<T, CONST_METHOD>); }
@@ -106,16 +110,16 @@ namespace GTSL
 		{
 		}
 		
-		template <class T, RET(T::* METHOD)(ARGS ...)>
+		template <class T, RET(T::*METHOD)(ARGS ...)>
 		static RET methodCaller(void* callee, ARGS&&... params) { return (static_cast<T*>(callee)->*METHOD)(GTSL::ForwardRef<ARGS>(params)...); }
 
-		template <class T, RET(T::* CONST_METHOD)(ARGS ...) const>
+		template <class T, RET(T::*CONST_METHOD)(ARGS ...) const>
 		static RET constMethodCaller(void* callee, ARGS&&... params) { return (static_cast<const T*>(callee)->*CONST_METHOD)(GTSL::ForwardRef<ARGS>(params)...); }
 
 		template <RET(*FUNCTION)(ARGS ...)>
 		static RET functionCaller(void* callee, ARGS&&... params) { return (FUNCTION)(GTSL::ForwardRef<ARGS>(params)...); }
 
 		template <typename LAMBDA>
-		static RET lambdaCaller(void* callee, ARGS&&... params) { return (static_cast<LAMBDA*>(callee)->operator())(GTSL::ForwardRef<ARGS>(params)...); }
+		static RET lambdaCaller(void* callee, ARGS&&... params) { return static_cast<LAMBDA*>(callee)->operator()(GTSL::ForwardRef<ARGS>(params)...); }
 	};
 }

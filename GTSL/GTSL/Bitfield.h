@@ -7,7 +7,7 @@ namespace GTSL
 	template<uint16 N>
 	class Bitfield
 	{
-		constexpr uint8 number[N / 8 + 1]{ 0 };
+		uint8 number[N / 8 + 1]{ 0 };
 
 		friend class BitReference;
 		class BitReference

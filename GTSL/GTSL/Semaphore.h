@@ -11,35 +11,34 @@ namespace GTSL
     {
     public:
         Semaphore() = default;
-
-        explicit Semaphore(const int32 count) noexcept : count(count)
-        {
+    
+        explicit Semaphore(const int32 count) noexcept : count(count) {
             GTSL_ASSERT(count > -1, "Count must be more than -1.")
         }
-
-        void Add() noexcept
-        {
-            {
-                Lock lock(mutex);
-                ++count;
-            }
+    
+        void Add() noexcept {
+            Lock lock(mutex);
+            ++count;
         }
-
-        void Post() noexcept
-        {
+    
+        Semaphore& operator++() { Add(); return *this; }
+    	
+        void Post() noexcept {
             {
                 Lock lock(mutex);
                 --count;
             }
+        	
             cv.NotifyOne();
         }
-
-        void Wait() noexcept
-        {
-	        const Lock lock(mutex);
+    	
+        Semaphore& operator--() { Post(); return *this; }
+    
+        void Wait() noexcept {
+            const Lock lock(mutex);
             cv.Wait(lock, [&]() { return count == 0; });
         }
-
+    
     private:
         int32 count = 0;
         Mutex mutex;

@@ -32,8 +32,7 @@ namespace GTSL
 		type operator++(int32) { const auto ret = value; static_cast<type>(_InterlockedIncrement(AtomicAddressAs<long>(value))); return ret; }
 		type operator--(int32) { const auto ret = value; static_cast<type>(_InterlockedDecrement(AtomicAddressAs<long>(value))); return ret; }
 
-		operator type() const
-		{
+		operator type() const {
 			_mm_mfence();
 			return value;
 		}

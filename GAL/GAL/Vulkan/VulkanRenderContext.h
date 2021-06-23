@@ -5,12 +5,6 @@
 #include "VulkanTexture.h"
 #include <GTSL/Pair.h>
 
-#if (_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#undef WIN32_LEAN_AND_MEAN
-#endif
-
 #include "VulkanQueue.h"
 #include "VulkanSynchronization.h"
 #include "GTSL/Array.hpp"
@@ -25,11 +19,11 @@ namespace GAL
 	public:
 		VulkanSurface() = default;
 		
-		void Initialize(const VulkanRenderDevice* renderDevice, const WindowsWindowData windowsWindowData) {
+		bool Initialize(const VulkanRenderDevice* renderDevice, const WindowsWindowData windowsWindowData) {
 			VkWin32SurfaceCreateInfoKHR vkWin32SurfaceCreateInfoKhr{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
 			vkWin32SurfaceCreateInfoKhr.hwnd = static_cast<HWND>(windowsWindowData.WindowHandle);
 			vkWin32SurfaceCreateInfoKhr.hinstance = static_cast<HINSTANCE>(windowsWindowData.InstanceHandle);
-			VK_CHECK(renderDevice->VkCreateWin32Surface(renderDevice->GetVkInstance(), &vkWin32SurfaceCreateInfoKhr, renderDevice->GetVkAllocationCallbacks(), &surface));
+			return renderDevice->VkCreateWin32Surface(renderDevice->GetVkInstance(), &vkWin32SurfaceCreateInfoKhr, renderDevice->GetVkAllocationCallbacks(), &surface) == VK_SUCCESS;
 			//setName(renderDevice, surface, VK_OBJECT_TYPE_SURFACE_KHR, createInfo.Name);
 		}
 
@@ -46,7 +40,8 @@ namespace GAL
 			GTSL::Array<GTSL::Pair<ColorSpace, FormatDescriptor>, 16> result;
 
 			for (GTSL::uint8 i = 0; i < static_cast<GTSL::uint8>(surfaceFormatsCount); ++i) {
-				result.EmplaceBack(ToGAL(vkSurfaceFormatKhrs[i].colorSpace), MakeFormatDescriptorFromFormat(ToGAL(vkSurfaceFormatKhrs[i].format)));
+				if(GAL::IsSupported(vkSurfaceFormatKhrs[i].format))
+					result.EmplaceBack(GTSL::Pair(ToGAL(vkSurfaceFormatKhrs[i].colorSpace), ToGAL(vkSurfaceFormatKhrs[i].format)));
 			}
 
 			return result;
@@ -105,7 +100,7 @@ namespace GAL
 
 		~VulkanRenderContext() = default;
 
-		void InitializeOrRecreate(const VulkanRenderDevice* renderDevice, const VulkanSurface* surface,
+		bool InitializeOrRecreate(const VulkanRenderDevice* renderDevice, const VulkanSurface* surface,
 		                          GTSL::Extent2D extent, FormatDescriptor format, ColorSpace colorSpace,
 		                          TextureUse textureUse, PresentModes presentMode, GTSL::uint8 desiredFramesInFlight) {
 			VkSwapchainCreateInfoKHR vkSwapchainCreateInfoKhr{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
@@ -124,12 +119,14 @@ namespace GAL
 			vkSwapchainCreateInfoKhr.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 			vkSwapchainCreateInfoKhr.presentMode = ToVulkan(presentMode);
 			vkSwapchainCreateInfoKhr.clipped = VK_TRUE;
-			vkSwapchainCreateInfoKhr.oldSwapchain = VkSwapchainKHR(swapchain);
+			vkSwapchainCreateInfoKhr.oldSwapchain = swapchain;
 
-			VK_CHECK(renderDevice->VkCreateSwapchain(renderDevice->GetVkDevice(), &vkSwapchainCreateInfoKhr, renderDevice->GetVkAllocationCallbacks(), reinterpret_cast<VkSwapchainKHR*>(&swapchain)));
+			auto res = renderDevice->VkCreateSwapchain(renderDevice->GetVkDevice(), &vkSwapchainCreateInfoKhr, renderDevice->GetVkAllocationCallbacks(), &swapchain);
 			//setName(createInfo.RenderDevice, swapchain, VK_OBJECT_TYPE_SWAPCHAIN_KHR, createInfo.Name);
 
 			renderDevice->VkDestroySwapchain(renderDevice->GetVkDevice(), vkSwapchainCreateInfoKhr.oldSwapchain, renderDevice->GetVkAllocationCallbacks());
+
+			return res == VK_SUCCESS;
 		}
 
 		void Destroy(const VulkanRenderDevice* renderDevice) {
@@ -164,27 +161,35 @@ namespace GAL
 			return GTSL::Result(static_cast<GTSL::uint8>(image_index), state);
 		}
 		
-		void Present(const VulkanRenderDevice* renderDevice, GTSL::Range<const VulkanSemaphore*> waitSemaphores, GTSL::uint32 index, VulkanQueue queue) {
+		bool Present(const VulkanRenderDevice* renderDevice, GTSL::Range<const VulkanSemaphore*> waitSemaphores, GTSL::uint32 index, VulkanQueue queue) {
 			VkPresentInfoKHR vkPresentInfoKhr{ VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
-			{
-				vkPresentInfoKhr.waitSemaphoreCount = waitSemaphores.ElementCount();
-				vkPresentInfoKhr.pWaitSemaphores = reinterpret_cast<const VkSemaphore*>(waitSemaphores.begin());
-				vkPresentInfoKhr.swapchainCount = 1;
-				vkPresentInfoKhr.pSwapchains = &swapchain;
-				vkPresentInfoKhr.pImageIndices = &index;
-				vkPresentInfoKhr.pResults = nullptr;
-			}
+			
+			vkPresentInfoKhr.waitSemaphoreCount = waitSemaphores.ElementCount();
+			vkPresentInfoKhr.pWaitSemaphores = reinterpret_cast<const VkSemaphore*>(waitSemaphores.begin());
+			vkPresentInfoKhr.swapchainCount = 1;
+			vkPresentInfoKhr.pSwapchains = &swapchain;
+			vkPresentInfoKhr.pImageIndices = &index;
+			vkPresentInfoKhr.pResults = nullptr;			
 
-			VK_CHECK(renderDevice->VkQueuePresent(queue.GetVkQueue(), &vkPresentInfoKhr));
+			return renderDevice->VkQueuePresent(queue.GetVkQueue(), &vkPresentInfoKhr) == VK_SUCCESS;
 		}
 
 		[[nodiscard]] GTSL::Array<VulkanTexture, 8> GetTextures(const VulkanRenderDevice* renderDevice) const {
 			GTSL::uint32 swapchainImageCount = 8;
-			VulkanTexture vkImages[8];
-			VK_CHECK(renderDevice->VkGetSwapchainImages(renderDevice->GetVkDevice(), swapchain, &swapchainImageCount, reinterpret_cast<VkImage*>(vkImages)))
-			return GTSL::Array<VulkanTexture, 8>(GTSL::Range<VulkanTexture*>(swapchainImageCount, vkImages));
+			VkImage vkImages[8];
+			renderDevice->VkGetSwapchainImages(renderDevice->GetVkDevice(), swapchain, &swapchainImageCount, vkImages);
+
+			GTSL::Array<VulkanTexture, 8> vulkanTextures;
+			
+			for(GTSL::uint32 i = 0; i < swapchainImageCount; ++i) {
+				vulkanTextures.EmplaceBack(vkImages[i]);
+			}
+			
+			return vulkanTextures;
 		}
-		
+
+		[[nodiscard]] GTSL::uint64 GetHandle() const { return reinterpret_cast<GTSL::uint64>(swapchain); }
+	
 	private:
 		VkSwapchainKHR swapchain = nullptr;
 	};

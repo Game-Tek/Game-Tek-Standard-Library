@@ -16,6 +16,8 @@ namespace GTSL
 		
 		bool DoQuery();
 
+		operator bool() { return DoQuery(); }
+
 		auto GetFileNameWithExtension() const { return fileNameWithExtension; }
 	
 	private:

@@ -23,22 +23,20 @@ namespace GAL
 		struct SubPassDescriptor
 		{
 			//Array of AttachmentsReferences for attachments which the subpass reads from.
-			GTSL::Range<const AttachmentReference*> ReadColorAttachments;
+			GTSL::Range<const AttachmentReference*> ReadAttachments;
 
 			//Array of AttachmentsReferences for attachments which the subpass writes to.
-			GTSL::Range<const AttachmentReference*> WriteColorAttachments;
+			GTSL::Range<const AttachmentReference*> WriteAttachments;
 
 			//Array of indices identifying attachments that are not used by this subpass, but whose contents MUST be preserved throughout the subpass.
 			GTSL::Range<const GTSL::uint8*> PreserveAttachments;
-
-			AttachmentReference DepthAttachmentReference;
 		};
 		
-		static constexpr uint8_t EXTERNAL = 255;
+		static constexpr GTSL::uint8 EXTERNAL = 255;
 
 		struct SubPassDependency
 		{
-			uint8_t SourceSubPass, DestinationSubPass;
+			GTSL::uint8 SourceSubPass, DestinationSubPass;
 			PipelineStage SourcePipelineStage, DestinationPipelineStage;
 			AccessType SourceAccessType, DestinationAccessType;
 		};

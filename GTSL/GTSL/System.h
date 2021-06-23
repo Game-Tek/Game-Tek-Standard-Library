@@ -2,6 +2,15 @@
 #include "Core.h"
 #include "DataSizes.h"
 #include "Extent.h"
+#include "Range.h"
+
+#ifdef _WIN64
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN
+#undef min
+#undef max
+#include <Windows.h>
+#endif
 
 namespace GTSL
 {
@@ -72,5 +81,18 @@ namespace GTSL
 		static void GetVectorInfo(VectorInfo& vectorInfo);
 		static void GetSystemInfo(SystemInfo& systemInfo);
 		static Extent2D GetScreenExtent();
+
+		static void QueryParameter(const Range<const UTF8*> name) {
+			HKEY result;
+			auto openResult = RegOpenKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\", &result);
+			if(openResult != ERROR_SUCCESS) {}
+			DWORD valueCount = 0, maxNameLength = 0, maxValueLength = 0;
+			openResult = RegQueryInfoKeyA(result, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, &valueCount, &maxNameLength, &maxValueLength, nullptr, nullptr);
+			if(openResult != ERROR_SUCCESS) {}
+			DWORD type = 0, index = 0, charCountValueName = 128, charBytesData = 1024;
+			UTF8 valueName[128]; byte dataBuffer[1024];
+			RegEnumValueA(result, index, valueName, &charCountValueName, nullptr, &type, dataBuffer, &charBytesData);
+			RegCloseKey(result);
+		}
 	};
 }

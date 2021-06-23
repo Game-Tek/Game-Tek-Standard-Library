@@ -27,10 +27,8 @@ namespace GTSL
 		MemCopy(sizeof(T), object, range.end());
 	}
 
-	inline Result<uint32> getFreeIndex(GTSL::Range<Pair<uint32, uint32>*> freeSpaces, uint32* freeSpacesCount)
-	{
-		for(uint32 i = 0; i < *freeSpacesCount; ++i)
-		{
+	inline Result<uint32> getFreeIndex(Range<Pair<uint32, uint32>*> freeSpaces, uint32* freeSpacesCount) {
+		for(uint32 i = 0; i < *freeSpacesCount; ++i) {
 			auto res = freeSpaces[i].First++;
 			
 			if (freeSpaces[i].First == freeSpaces[i].Second + 1) {

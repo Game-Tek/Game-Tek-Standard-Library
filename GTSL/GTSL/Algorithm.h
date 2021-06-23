@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Result.h"
 #include "Tuple.h"
 
 namespace GTSL
@@ -13,6 +14,9 @@ namespace GTSL
 	template <typename LAMBDA, typename... ARGS>
 	static auto Call(LAMBDA&& lambda, Tuple<ARGS...>&& tup) { return Call(lambda, GTSL::MoveRef(tup), BuildIndices<sizeof...(ARGS)>{}); }
 
+	template<typename T>
+	void Destroy(T& object) { object.~T(); }
+	
 	template<typename T>
 	constexpr uint64 Bits() { return sizeof(T) * 8; }
 	
@@ -61,5 +65,15 @@ namespace GTSL
 			function(i, *(iterators.begin())...);
 			add(iterators.begin()...);
 		}
+	}
+
+	constexpr auto LookFor(auto& iterable, auto&& function) {
+		for (auto begin = iterable.begin(); begin != iterable.end(); ++begin) {
+			if (function(*begin)) {
+				return Result(MoveRef(begin), true);
+			}
+		}
+		
+		return Result<decltype(iterable.begin())>(false);
 	}
 }

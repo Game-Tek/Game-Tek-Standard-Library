@@ -18,10 +18,10 @@ namespace GAL
 			vkFramebufferCreateInfo.height = extent.Height;
 			vkFramebufferCreateInfo.layers = 1;
 			vkFramebufferCreateInfo.renderPass = renderPass.GetVkRenderPass();
-			vkFramebufferCreateInfo.attachmentCount = textureViews.ElementCount();
+			vkFramebufferCreateInfo.attachmentCount = static_cast<GTSL::uint32>(textureViews.ElementCount());
 			vkFramebufferCreateInfo.pAttachments = reinterpret_cast<const VkImageView*>(textureViews.begin());
 
-			VK_CHECK(renderDevice->VkCreateFramebuffer(renderDevice->GetVkDevice(), &vkFramebufferCreateInfo, renderDevice->GetVkAllocationCallbacks(), &framebuffer));
+			renderDevice->VkCreateFramebuffer(renderDevice->GetVkDevice(), &vkFramebufferCreateInfo, renderDevice->GetVkAllocationCallbacks(), &framebuffer);
 			//setName(createInfo.RenderDevice, framebuffer, VK_OBJECT_TYPE_FRAMEBUFFER, createInfo.Name);
 		}
 		

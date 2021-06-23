@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "FunctionPointer.hpp"
 #include "Range.h"
 
 #if (_WIN64)
@@ -59,13 +60,19 @@ namespace GTSL
 		void LoadDynamicFunction(const UTF8* name, T* func) const {
 			*func = reinterpret_cast<T>(GetProcAddress(handle, name));
 		}
-		
-		[[nodiscard]] DynamicFunction LoadDynamicFunction(const UTF8* name) const {
-			return DynamicFunction(GetProcAddress(handle, name));
+
+		//[[nodiscard]] DynamicFunction LoadDynamicFunction(const Range<const char*> ranger) const {
+		//	return DynamicFunction(GetProcAddress(handle, ranger.begin()));
+		//}
+
+		template<typename RET, typename... PARAMS>
+		[[nodiscard]] FunctionPointer<RET(PARAMS...)> LoadDynamicFunction(const UTF8* name) const {
+			return FunctionPointer<RET(PARAMS...)>(reinterpret_cast<RET(__stdcall *)(PARAMS...)>(GetProcAddress(handle, name)));
 		}
 
-		[[nodiscard]] DynamicFunction LoadDynamicFunction(const Range<const char*> ranger) const {
-			return DynamicFunction(GetProcAddress(handle, ranger.begin()));
+		template<typename RET, typename... PARAMS>
+		[[nodiscard]] auto LoadDynamicFunction(const Range<const char*> ranger) const {
+			return FunctionPointer<RET(PARAMS...)>(reinterpret_cast<RET(__stdcall *)(PARAMS...)>(GetProcAddress(handle, ranger.begin())));
 		}
 	};
 }
