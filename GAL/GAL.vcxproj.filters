@@ -21,9 +21,6 @@
     <ClInclude Include="GAL\Vulkan\VulkanBindings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GAL\Vulkan\VulkanCommandBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GAL\Vulkan\VulkanFramebuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -42,7 +39,7 @@
     <ClInclude Include="GAL\Bindings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GAL\CommandBuffer.h">
+    <ClInclude Include="GAL\CommandList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GAL\Framebuffer.h">
@@ -139,6 +136,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GAL\Queue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GAL\Vulkan\VulkanCommandList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GAL\DX12\DX12AccelerationStructure.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GAL\Serialize.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -19,21 +19,21 @@ namespace GTSL
 			this->length = other.length;
 		}
 		
-		constexpr StaticString(const char character)
+		constexpr StaticString(const char8_t character)
 		{
 			GTSL_ASSERT(1 <= N, "String larger than buffer capacity");
 			copy(1, &character); this->length = 1;
 			array[length] = '\0';
 		}
 
-		constexpr StaticString(const char* string)
+		constexpr StaticString(const char8_t* string)
 		{
 			const auto len = StringLength(string);
 			GTSL_ASSERT(len <= N, "String larger than buffer capacity");
 			copy(len, string); this->length = len - 1;
 		}
 
-		constexpr StaticString(const Range<const UTF8*> ranger)
+		constexpr StaticString(const Range<const char8_t*> ranger)
 		{
 			GTSL_ASSERT(ranger.ElementCount() <= N, "String larger than buffer capacity")
 			copy(ranger.ElementCount(), ranger.begin()); this->length = ranger.ElementCount() - 1;
@@ -45,10 +45,10 @@ namespace GTSL
 			return *this;
 		}
 		
-		[[nodiscard]] UTF8* begin() { return this->array; }
-		[[nodiscard]] UTF8* end() { return this->array + this->length + 1; }
-		[[nodiscard]] const UTF8* begin() const { return this->array; }
-		[[nodiscard]] const UTF8* end() const { return this->array + this->length + 1; }
+		[[nodiscard]] char8_t* begin() { return this->array; }
+		[[nodiscard]] char8_t* end() { return this->array + this->length + 1; }
+		[[nodiscard]] const char8_t* begin() const { return this->array; }
+		[[nodiscard]] const char8_t* end() const { return this->array + this->length + 1; }
 
 		[[nodiscard]] bool IsEmpty() const { return length == 0; }
 		
@@ -91,7 +91,7 @@ namespace GTSL
 			this->length = newLength;
 		}
 
-		constexpr operator GTSL::Range<const UTF8*>() const { return Range<const UTF8*>(this->length + 1, this->array); }
+		constexpr operator GTSL::Range<const char8_t*>() const { return Range<const char8_t*>(this->length + 1, this->array); }
 
 		void Drop(const uint32 from)
 		{
@@ -105,12 +105,12 @@ namespace GTSL
 		//	this->array.Remove(0, from);
 		//}
 
-		void ReplaceAll(UTF8 a, const UTF8 with)
+		void ReplaceAll(char8_t a, const char8_t with)
 		{
 			for (auto& c : this->array) { if (c == a) { c = with; } }
 		}
 
-		bool Find(const char* string) const
+		bool Find(const char8_t* string) const
 		{
 			auto stringLength = StringLength(string) - 1;
 			
@@ -126,12 +126,12 @@ namespace GTSL
 			return false;
 		}
 		
-		[[nodiscard]] Result<Pair<uint32, uint32>> FindLast(UTF8 c) const {
+		[[nodiscard]] Result<Pair<uint32, uint32>> FindLast(char8_t c) const {
 			for (uint32 i = length, t = 0; t < length; --i, ++t) { if (array[i] == c) { return Result(Pair(t, i), true); } }
 			return GTSL::Result<Pair<uint32, uint32>>(false);
 		}
 
-		constexpr StaticString& operator+=(const char* cstring) noexcept {
+		constexpr StaticString& operator+=(const char8_t* cstring) noexcept {
 			auto len = StringLength(cstring);
 			GTSL_ASSERT(len <= N, "String larger than buffer capacity")
 			copy(len, cstring);
@@ -139,7 +139,7 @@ namespace GTSL
 			return *this;
 		}
 
-		constexpr StaticString& operator+=(const Range<const UTF8*> range)
+		constexpr StaticString& operator+=(const Range<const char8_t*> range)
 		{
 			GTSL_ASSERT(range.ElementCount() <= N, "String larger than buffer capacity")
 			const auto len = range.ElementCount();
@@ -148,7 +148,7 @@ namespace GTSL
 			return *this;
 		}
 		
-		constexpr StaticString& operator+=(const UTF8 num)
+		constexpr StaticString& operator+=(const char8_t num)
 		{
 			GTSL_ASSERT(this->length + 1 <= N, "String larger than buffer capacity")
 			this->array[this->length] = num;
@@ -157,86 +157,14 @@ namespace GTSL
 			return *this;
 		}
 
-		constexpr StaticString& operator+=(const uint8 num)
-		{
-			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
-			ToString(num, range);
-			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
-			return *this;
-		}
-
-		constexpr StaticString& operator+=(const int16 num)
-		{
-			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
-			ToString(num, range);
-			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
-			return *this;
-		}
-
-		constexpr StaticString& operator+=(const uint16 num)
-		{
-			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
-			ToString(num, range);
-			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
-			return *this;
-		}
-
-		constexpr StaticString& operator+=(const int32 num)
-		{
-			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
-			ToString(num, range);
-			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
-			return *this;
-		}
-
-		constexpr StaticString& operator+=(const uint32 num)
-		{
-			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
-			ToString(num, range);
-			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
-			return *this;
-		}
-
-		constexpr StaticString& operator+=(const int64 num)
-		{
-			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
-			ToString(num, range);
-			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
-			return *this;
-		}
-
-		constexpr StaticString& operator+=(const uint64 num)
-		{
-			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
-			ToString(num, range);
-			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
-			return *this;
-		}
-
-		constexpr StaticString& operator+=(const float32 num)
-		{
-			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
-			ToString(num, range);
-			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
-			return *this;
-		}
-
-		constexpr StaticString& operator+=(const float64 num)
-		{
-			Range<UTF8*> range(this->begin() + this->length, this->begin() + this->GetCapacity());
-			ToString(num, range);
-			this->length += static_cast<uint32>(range.ElementCount() - 1); //to string buffer filled buffer contains null terminator but when don't account for it in string implementation
-			return *this;
-		}
-
-		UTF8 operator[](const uint32 index) const { return array[index]; }
+		char8_t operator[](const uint32 index) const { return array[index]; }
 		
 	private:
-		UTF8 array[N];
+		char8_t array[N];
 		uint32 length = 0;
 		friend class StaticString;
 
-		constexpr void copy(const uint64 size, const UTF8* data)
+		constexpr void copy(const uint64 size, const char8_t* data)
 		{
 			for(uint64 i = this->length, iD = 0; iD < size; ++i, ++iD) { this->array[i] = data[iD]; }
 		}

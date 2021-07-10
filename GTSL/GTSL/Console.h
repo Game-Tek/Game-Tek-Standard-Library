@@ -8,8 +8,8 @@ namespace GTSL
 	class Console
 	{
 	public:
-		static void Print(const Range<const UTF8*> text);
-		static void Read(Range<UTF8*> buffer);
+		static void Print(const Range<const char8_t*> text);
+		static void Read(Range<char8_t*> buffer);
 
 		enum class ConsoleTextColor : uint8
 		{

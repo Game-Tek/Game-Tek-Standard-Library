@@ -40,10 +40,10 @@ namespace GTSL
 			TryUnload();
 		}
 		
-		bool LoadLibrary(const UTF8* name) { handle = LoadLibraryA(name); return handle; }
+		bool LoadLibrary(const char8_t* name) { handle = LoadLibraryA(reinterpret_cast<const char*>(name)); return handle; }
 		
-		bool LoadLibrary(const Range<const char*> ranger) {
-			handle = LoadLibraryA(ranger.begin());
+		bool LoadLibrary(const Range<const char8_t*> ranger) {
+			handle = LoadLibraryA(reinterpret_cast<const char*>(ranger.begin()));
 			return handle;
 		}
 		
@@ -57,8 +57,8 @@ namespace GTSL
 		}
 
 		template<typename T>
-		void LoadDynamicFunction(const UTF8* name, T* func) const {
-			*func = reinterpret_cast<T>(GetProcAddress(handle, name));
+		void LoadDynamicFunction(const char8_t* name, T* func) const {
+			*func = reinterpret_cast<T>(GetProcAddress(handle, reinterpret_cast<const char*>(name)));
 		}
 
 		//[[nodiscard]] DynamicFunction LoadDynamicFunction(const Range<const char*> ranger) const {
@@ -66,13 +66,13 @@ namespace GTSL
 		//}
 
 		template<typename RET, typename... PARAMS>
-		[[nodiscard]] FunctionPointer<RET(PARAMS...)> LoadDynamicFunction(const UTF8* name) const {
-			return FunctionPointer<RET(PARAMS...)>(reinterpret_cast<RET(__stdcall *)(PARAMS...)>(GetProcAddress(handle, name)));
+		[[nodiscard]] FunctionPointer<RET(PARAMS...)> LoadDynamicFunction(const char8_t* name) const {
+			return FunctionPointer<RET(PARAMS...)>(reinterpret_cast<RET(__stdcall *)(PARAMS...)>(GetProcAddress(handle, reinterpret_cast<const char*>(name))));
 		}
 
 		template<typename RET, typename... PARAMS>
-		[[nodiscard]] auto LoadDynamicFunction(const Range<const char*> ranger) const {
-			return FunctionPointer<RET(PARAMS...)>(reinterpret_cast<RET(__stdcall *)(PARAMS...)>(GetProcAddress(handle, ranger.begin())));
+		[[nodiscard]] auto LoadDynamicFunction(const Range<const char8_t*> ranger) const {
+			return FunctionPointer<RET(PARAMS...)>(reinterpret_cast<RET(__stdcall *)(PARAMS...)>(GetProcAddress(handle, reinterpret_cast<const char*>(ranger.begin()))));
 		}
 	};
 }

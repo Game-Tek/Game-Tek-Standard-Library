@@ -8,7 +8,7 @@
 #include "GTSL/Array.hpp"
 #include "GTSL/RGB.h"
 #include "DX12RenderDevice.h"
-#include "GAL/CommandBuffer.h"
+#include "GAL/CommandList.h"
 
 #undef MemoryBarrier
 
@@ -19,7 +19,7 @@ namespace GAL
 	class DX12Pipeline;
 	class DX12Queue;
 
-	class DX12CommandBuffer final : public CommandBuffer
+	class DX12CommandBuffer final : public CommandList
 	{
 	public:
 		DX12CommandBuffer() = default;
@@ -196,7 +196,7 @@ namespace GAL
 			t->Release();
 		}
 
-		void AddLabel(const DX12RenderDevice* renderDevice, GTSL::Range<const GTSL::UTF8*> name) {
+		void AddLabel(const DX12RenderDevice* renderDevice, GTSL::Range<const GTSL::char8_t*> name) {
 			//commandList->SetMarker(METADA)
 		}
 

@@ -34,6 +34,9 @@ namespace GTSL
 		constexpr Range(I* b, I* e) : from(b), to(e) {}
 
 		constexpr Range(const uint64 length, I* b) : from(b), to(b + length) {}
+		
+		//template<uint64 N>
+		//Range(char8_t const(&string)[N]) : Range(N, string) {}
 
 		[[nodiscard]] constexpr I* begin() { return from; }
 		[[nodiscard]] constexpr I* end() { return to; }
@@ -71,9 +74,9 @@ namespace GTSL
 
 		friend struct Range;
 	};
-
+	
 	template<uint64 N>
-	Range<const UTF8*> MakeRange(UTF8 const (&string)[N]) { return Range<const UTF8*>(N, string); }
+	Range<const char8_t*> MakeRange(char8_t const (&string)[N]) { return Range<const char8_t*>(N, string); }
 
 	template<typename A, typename B>
 	inline bool CompareContents(const GTSL::Range<const A*> a, const Range<const B*> b)
@@ -81,6 +84,10 @@ namespace GTSL
 		if (a.ElementCount() != b.ElementCount()) { return false; }
 		for (uint64 i = 0; i < a.ElementCount(); ++i) { if (a[i] != b[i]) { return false; } }
 		return true;
+	}
+
+	inline Range<const char8_t*> operator""_s(const char8_t* str, size_t size) {
+		return Range<const char8_t*>(size, str);
 	}
 	
 	//template<typename T>

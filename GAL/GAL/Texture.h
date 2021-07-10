@@ -4,13 +4,12 @@
 
 #include <GTSL/Extent.h>
 #include <GTSL/Memory.h>
-#include <GTSL/Math/Math.hpp>
 #include <GTSL/SIMD/SIMD128.hpp>
 
 namespace GAL
 {
 	//Represents a resource utilized by the rendering API for storing and referencing textures. Which are images which hold some information loaded from memory.
-	class Texture : public GALObject
+	class Texture
 	{
 	public:
 		Texture() = default;
@@ -118,14 +117,14 @@ namespace GAL
 		}
 	};
 
-	class ImageView : public GALObject
+	class ImageView
 	{
 	public:
 		ImageView() = default;
 		~ImageView() = default;
 	};
 
-	class Sampler : public GALObject
+	class Sampler
 	{
 	public:
 	};

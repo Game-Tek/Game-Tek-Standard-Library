@@ -27,6 +27,8 @@ namespace GTSL
 		Tuple(T&& arg, TYPES&&... types) : element(GTSL::ForwardRef<T>(arg)), rest(GTSL::ForwardRef<TYPES>(types)...)
 		{}
 
+		using type = T;
+		
 		T element;
 		Tuple<TYPES...> rest;
 	};

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GAL/CommandBuffer.h"
+#include "GAL/CommandList.h"
 
 #include "Vulkan.h"
 #include "VulkanTexture.h"
@@ -19,16 +19,7 @@
 
 namespace GAL
 {
-	class VulkanFramebuffer;
-	class VulkanRenderPass;
-	class VulkanPipelineLayout;
-	class VulkanQueue;
-	class VulkanTexture;
-	class VulkanPipeline;
-	class VulkanBindingsSet;
-	class VulkanBuffer;
-
-	class VulkanCommandList final : public CommandBuffer
+	class VulkanCommandList final : public CommandList
 	{
 	public:
 		VulkanCommandList() = default;
@@ -162,15 +153,15 @@ namespace GAL
 			renderDevice->vkCmdTraceRaysKHR(commandBuffer, &raygenSBT, &missSBT, &hitSBT, &callableSBT, dispatchSize.Width, dispatchSize.Height, dispatchSize.Depth);
 		}		
 		
-		void AddLabel(const VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::UTF8*> name) const {
+		void AddLabel(const VulkanRenderDevice* renderDevice, GTSL::Range<const char8_t*> name) const {
 			VkDebugUtilsLabelEXT vkLabelInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
-			vkLabelInfo.pLabelName = name.begin();
+			vkLabelInfo.pLabelName = reinterpret_cast<const char*>(name.begin());
 			renderDevice->vkCmdInsertDebugUtilsLabelEXT(commandBuffer, &vkLabelInfo);
 		}
 
-		void BeginRegion(const VulkanRenderDevice* renderDevice, GTSL::Range<const GTSL::UTF8*> name) const {
+		void BeginRegion(const VulkanRenderDevice* renderDevice, GTSL::Range<const char8_t*> name) const {
 			VkDebugUtilsLabelEXT vkLabelInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
-			vkLabelInfo.pLabelName = name.begin();
+			vkLabelInfo.pLabelName = reinterpret_cast<const char*>(name.begin());
 			renderDevice->vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &vkLabelInfo);
 		}
 

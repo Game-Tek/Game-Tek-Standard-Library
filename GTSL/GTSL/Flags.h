@@ -6,11 +6,11 @@ namespace GTSL
 	struct Flags
 	{
 		constexpr Flags() = default;
-		constexpr Flags(const T val) noexcept : value(val) {}
+		constexpr explicit Flags(const T val) noexcept : value(val) {}
 		constexpr Flags(const Flags& other) noexcept : value(other.value) {}
 		~Flags() = default;
 
-		constexpr Flags& operator=(const T val) { value = val; return *this; }
+		//constexpr Flags& operator=(const T val) { value = val; return *this; }
 		constexpr Flags& operator=(const Flags& val) { value = val.value; return *this; }
 
 		constexpr operator T() const { return value; }

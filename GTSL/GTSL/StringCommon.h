@@ -3,27 +3,130 @@
 
 #include "Range.h"
 #include "Result.h"
+#include "Math/Math.hpp"
 
 namespace GTSL
 {
-	template<uint32 L>
-	class StaticString;
+	/**
+	* \brief Computes the length of a c string.
+	* \param text Pointer to a c string containing the string to be measured.
+	* \return The string length including the null terminator.
+	*/
+	constexpr uint32 StringLength(const char8_t* text) noexcept { uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i + 1; }
 	
-	void ToString(int8 num, Range<UTF8*>& buffer);
-	void ToString(uint8 num, Range<UTF8*>& buffer);
-	void ToString(int16 num, Range<UTF8*>& buffer);
-	void ToString(uint16 num, Range<UTF8*>& buffer);
-	void ToString(int32 num, Range<UTF8*>& buffer);
-	void ToString(uint32 num, Range<UTF8*>& buffer);
-	void ToString(int64 num, Range<UTF8*>& buffer);
-	void ToString(uint64 num, Range<UTF8*>& buffer);
-	void ToString(float32 num, Range<UTF8*>& buffer);
-	void ToString(float64 num, Range<UTF8*>& buffer);
+	template<class S>
+	void ToString(const char* str, S& string) {
+		string += Range<const char8_t*>(StringLength(reinterpret_cast<const char8_t*>(str)), reinterpret_cast<const char8_t*>(str));
+	}
 
-	void ToString(uint32 num, StaticString<32>& string);
-	void ToString(int32 num, StaticString<32>& string);
-	void ToString(float32 num, StaticString<32>& string);
+	template<class S>
+	void ToString(const char8_t* str, S& string) {
+		string += Range<const char8_t*>(StringLength(str), str);
+	}
 
+	template<class S>
+	void ToString(const Range<const char8_t*> str, S& string) {
+		string += str;
+	}
+
+	template<class S>
+	void ToString(uint32 num, S& string)
+	{
+		uint8 i = 30, len = 0;
+
+		char8_t str[32]; str[31] = '\0';
+
+		do {
+			// Process individual digits 
+			str[i--] = (num % 10) + '0';
+			num /= 10;
+			++len;
+		} while (num);
+
+		string += GTSL::Range<const char8_t*>(len + 1, str + i + 1);
+	}
+
+	template<class S>
+	void ToString(uint64 num, S& string) {
+		uint8 i = 30, len = 0;
+
+		char8_t str[32]; str[31] = '\0';
+
+		do {
+			// Process individual digits 
+			str[i--] = (num % 10) + '0';
+			num /= 10;
+			++len;
+		} while (num);
+
+		string += GTSL::Range<const char8_t*>(len + 1, str + i + 1);
+	}
+
+	template<class S>
+	void ToString(int32 num, S& string)
+	{
+		uint8 i = 30, len = 0;
+
+		char8_t str[32]; str[31] = '\0';
+
+		do {
+			// Process individual digits 
+			str[i--] = (num % 10) + '0';
+			num /= 10;
+			++len;
+		} while (num);
+
+		if (num < 0) { str[i--] = '-'; ++len; }
+
+		string += GTSL::Range<const char8_t*>(len + 1, str + i + 1);
+	}
+
+	template<class S>
+	void ToString(float32 num, S& string)
+	{
+		uint8 i = 30, len = 0;
+		char8_t str[32]; str[31] = '\0'; bool isNegative = false;
+
+		if (num < 0.0f) { num = -num; isNegative = true; }
+
+		// Extract integer part 
+		int32 ipart = static_cast<int32>(num);
+
+		// Extract floating part 
+		float32 fpart = num - static_cast<float32>(ipart);
+
+		auto intToStr = [&](int32 integer)
+		{
+			do {
+				// Process individual digits 
+				str[i--] = (integer % 10) + '0';
+				num /= 10;
+				++len;
+			} while (num);
+		};
+
+		// check for display option after point 
+		if (6 != 0) {
+			// Get the value of fraction part upto given no. 
+			// of points after dot. The third parameter  
+			// is needed to handle cases like 233.007 
+			fpart = fpart * Math::Power(10.0f, 6.0f);
+
+			intToStr(static_cast<int32>(fpart));
+
+			str[i--] = '.'; // add dot
+			++len;
+		}
+
+		// convert integer part to string 
+		intToStr(ipart);
+
+		if (isNegative) { str[i--] = '-'; ++len; }
+
+		string += GTSL::Range<const char8_t*>(len + 1, str + i + 1);
+	}
+
+	
 	/**
 	 * \brief Parses an string to return a number.
 	 * \tparam T Type of the number to parse. int, uint, float
@@ -31,10 +134,10 @@ namespace GTSL
 	 * \return Result of the parse. Can fail.
 	 */
 	template<typename T>
-	Result<T> ToNumber(Range<const UTF8*> numberString);
+	Result<T> ToNumber(Range<const char8_t*> numberString);
 
 	template<>
-	inline Result<uint32> ToNumber(Range<const UTF8*> numberString) {
+	inline Result<uint32> ToNumber(Range<const char8_t*> numberString) {
 		uint32 value = 0, mult = 1;
 
 		for (uint64 j = 0, c = numberString.ElementCount() - 1; j < numberString.ElementCount(); ++j, --c) {
@@ -64,7 +167,7 @@ namespace GTSL
 	}
 
 	template<>
-	inline Result<int32> ToNumber(Range<const UTF8*> numberString) {
+	inline Result<int32> ToNumber(Range<const char8_t*> numberString) {
 		int32 value = 0, mult = 1;
 
 		for (uint64 j = 0, c = numberString.ElementCount() - 1; j < numberString.ElementCount(); ++j, --c) {
@@ -95,7 +198,7 @@ namespace GTSL
 	}
 
 	template<>
-	inline Result<float32> ToNumber(Range<const UTF8*> numberString) {
+	inline Result<float32> ToNumber(Range<const char8_t*> numberString) {
 		float32 value = 0; uint64 c = numberString.ElementCount() - 1/*because of inverse parse*/; uint64 dot;
 
 		{
@@ -158,28 +261,21 @@ namespace GTSL
 		return Result(MoveRef(value), true);
 	}
 
-	/**
-	 * \brief Computes the length of a c string.
-	 * \param text Pointer to a c string containing the string to be measured.
-	 * \return The string length including the null terminator.
-	 */
-	constexpr uint32 StringLength(const char* text) noexcept { uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i + 1; }
-
-	inline char ToLowerCase(char c) {
-		if ('A' <= c && c <= 'Z') return c += ('a' - 'A');
+	inline char8_t ToLowerCase(char8_t c) {
+		if (u8'A' <= c && c <= u8'Z') return c += (u8'a' - u8'A');
 		return c;
 	}
 
-	inline char ToUpperCase(char c) {
-		if ('a' <= c && c <= 'z') return c += ('a' - 'A');
+	inline char8_t ToUpperCase(char8_t c) {
+		if (u8'a' <= c && c <= u8'z') return c += (u8'a' - u8'A');
 		return c;
 	}
 
-	inline bool CompareCaseInsensitive(const UTF8 a, const UTF8 b) {
+	inline bool CompareCaseInsensitive(const char8_t a, const char8_t b) {
 		return a == ToLowerCase(b) || a == ToUpperCase(b);
 	}
 	
-	//inline bool IsLetter(const UTF8 character)
+	//inline bool IsLetter(const char8_t character)
 	//{
 	//	switch (character)
 	//	{
@@ -198,7 +294,7 @@ namespace GTSL
 	//	return true;
 	//}
 
-	inline bool IsLetter(const UTF8 character) {
+	inline bool IsLetter(const char8_t character) {
 		switch (character)
 		{
 		case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J':
@@ -214,17 +310,16 @@ namespace GTSL
 		return false;
 	}
 
-	inline bool IsWhitespace(const UTF8 character) { return character == ' ' || character == '	'; }
+	inline bool IsWhitespace(const char8_t character) { return character == ' ' || character == '	'; }
 
-	inline bool IsSpecialCharacter(const UTF8 character)
+	inline bool IsSpecialCharacter(const char8_t character)
 	{
 		return character == '\n' || character == '\0' || character == '\r' || character == '\f' || character == '\b';
 	}
 	
-	inline bool IsNumber(const UTF8 character)
+	inline bool IsNumber(const char8_t character)
 	{
-		switch (character)
-		{
+		switch (character) {
 		case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
 			return true;
 		}
@@ -232,7 +327,7 @@ namespace GTSL
 		return false;
 	}
 
-	inline bool IsSymbol(const UTF8 character)
+	inline bool IsSymbol(const char8_t character)
 	{
 		switch (character)
 		{

@@ -71,7 +71,30 @@ namespace GAL
 	public:
 		DX12TextureView() = default;
 
+		void Initialize(const DX12RenderDevice* renderDevice, const GTSL::Range<const GTSL::char8_t*> name, const DX12Texture texture, const FormatDescriptor formatDescriptor, const GTSL::Extent3D extent, const GTSL::uint8 mipLevels)
+		{
+			D3D12_CPU_DESCRIPTOR_HANDLE cpu_descriptor_handle;
+			
+			D3D12_UNORDERED_ACCESS_VIEW_DESC unordered_access_view_desc;
+			unordered_access_view_desc.Format = ToDX12(MakeFormatFromFormatDescriptor(formatDescriptor));
+			unordered_access_view_desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+			unordered_access_view_desc.Texture2D.MipSlice = 0;
+			unordered_access_view_desc.Texture2D.PlaneSlice = 0;
+			renderDevice->GetID3D12Device2()->CreateUnorderedAccessView(nullptr, nullptr, &unordered_access_view_desc, cpu_descriptor_handle);
+
+			D3D12_SHADER_RESOURCE_VIEW_DESC shader_resource_view_desc;
+			shader_resource_view_desc.Format = ToDX12(MakeFormatFromFormatDescriptor(formatDescriptor));
+			shader_resource_view_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+			shader_resource_view_desc.Texture2D.PlaneSlice = 0;
+			shader_resource_view_desc.Texture2D.MipLevels = 1;
+			shader_resource_view_desc.Texture2D.MostDetailedMip = 0;
+			shader_resource_view_desc.Texture2D.ResourceMinLODClamp = 0.0f;
+			
+			renderDevice->GetID3D12Device2()->CreateShaderResourceView(texture.GetID3D12Resource(), &shader_resource_view_desc, );
+		}
+	
 	private:
+		ID3D12Resource* tex_2d = nullptr;
 	};
 
 	class DX12Sampler final

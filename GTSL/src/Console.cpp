@@ -5,17 +5,17 @@
 #include <Windows.h>
 #endif
 
-void GTSL::Console::Print(const Range<const UTF8*> text)
+void GTSL::Console::Print(const Range<const char8_t*> text)
 {
 	DWORD chars_written{ 0 };
 	WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), text.begin(), text.Bytes(), &chars_written, nullptr);
 }
 
-void GTSL::Console::Read(Range<UTF8*> buffer)
+void GTSL::Console::Read(Range<char8_t*> buffer)
 {
 	DWORD characters_read{ 0 };
 	ReadConsoleA(GetStdHandle(STD_INPUT_HANDLE), buffer.begin(), buffer.ElementCount(), &characters_read, nullptr);
-	buffer = Range<UTF8*>(characters_read, buffer.begin());
+	buffer = Range<char8_t*>(characters_read, buffer.begin());
 }
 
 void GTSL::Console::SetTextColor(const ConsoleTextColor textColor)

@@ -6,7 +6,7 @@ namespace GAL
 	/**
 	 * \brief Object to achieve host-device synchronization.
 	 */
-	class Fence : public GALObject
+	class Fence
 	{
 	public:
 	};
@@ -14,7 +14,7 @@ namespace GAL
 	/**
 	 * \brief Object to achieve inter queue synchronization.
 	 */
-	class Semaphore : public GALObject
+	class Semaphore
 	{
 	public:
 	};

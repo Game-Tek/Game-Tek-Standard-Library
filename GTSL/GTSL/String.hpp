@@ -12,7 +12,7 @@ namespace GTSL
 	class String
 	{
 	public:
-		using string_type = UTF8;
+		using string_type = char8_t;
 		using length_type = typename Vector<string_type, ALLOCATOR>::length_type;
 		
 		String() = default;
@@ -28,7 +28,7 @@ namespace GTSL
 			capacity = static_cast<uint32>(allocatedSize / sizeof(string_type));
 		}
 		
-		String(const char* cstring, const ALLOCATOR& allocatorReference) : String(StringLength(cstring), allocatorReference)
+		String(const char8_t* cstring, const ALLOCATOR& allocatorReference) : String(StringLength(cstring), allocatorReference)
 		{
 			auto stringLength = StringLength(cstring);
 			copy(stringLength, cstring);
@@ -75,98 +75,17 @@ namespace GTSL
 		//	return true;
 		//}
 
-		operator Range<UTF8*>() const { return Range<UTF8*>(begin(), end()); }
-		operator Range<const UTF8*>() const { return Range<const UTF8*>(begin(), end()); }
+		operator Range<char8_t*>() const { return Range<char8_t*>(begin(), end()); }
+		operator Range<const char8_t*>() const { return Range<const char8_t*>(begin(), end()); }
 
-		[[nodiscard]] const char* c_str() const { return data; }
+		[[nodiscard]] const char8_t* c_str() const { return data; }
 
 		//Return the length of this String. Does not take into account the null terminator character.
 		[[nodiscard]] length_type GetLength() const { return length + 1; }
 		//Returns whether this String is empty.
 		[[nodiscard]] bool IsEmpty() const { return !length; }
 
-		////Places a the c-string after this String with a space in the middle.
-		//void Append(const char* cstring)
-		//{
-		//	data.Place(data.GetLength(), ' '); //Push space.
-		//	data.PushBack(Range<const UTF8*>(StringLength(cstring), cstring));
-		//	data.PushBack(Range<const UTF8*>(StringLength(cstring), cstring));
-		//}
-		//
-		////Places the String after this String with a space in the middle.
-		//void Append(const String& string)
-		//{
-		//	data.Place(data.GetLength(), ' '); //Push space.
-		//	data.PushBack(string.data); //Push new string.
-		//}
-		//
-		//void Append(const Range<const UTF8*> ranger)
-		//{
-		//	data.PushBack(ranger);
-		//}
-		//
-		//void Append(const uint8 number)
-		//{
-		//	Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
-		//	ToString(number, range);
-		//	data.PushBack(range);
-		//}
-		//void Append(const int8 number)
-		//{
-		//	Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
-		//	ToString(number, range);
-		//	data.PushBack(range);
-		//}
-		//void Append(const uint16 number)
-		//{
-		//	Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
-		//	ToString(number, range);
-		//	data.PushBack(range);
-		//}
-		//void Append(const int16 number)
-		//{
-		//	Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
-		//	ToString(number, range);
-		//	data.PushBack(range);
-		//}
-		//void Append(const uint32 number)
-		//{
-		//	Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
-		//	ToString(number, range);
-		//	data.PushBack(range);
-		//}
-		//void Append(const int32 number)
-		//{
-		//	Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
-		//	ToString(number, range);
-		//	data.PushBack(range);
-		//}
-		//void Append(const uint64 number)
-		//{
-		//	Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
-		//	ToString(number, range);
-		//	data.PushBack(range);
-		//}
-		//void Append(const int64 number)
-		//{
-		//	Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
-		//	ToString(number, range);
-		//	data.PushBack(range);
-		//}
-		//void Append(const float32 number)
-		//{
-		//	Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
-		//	ToString(number, range);
-		//	data.PushBack(range);
-		//}
-		//void Append(const float64 number)
-		//{
-		//	Range<string_type*> range(data.begin() + data.GetLength(), data.begin() + data.GetCapacity());
-		//	ToString(number, range);
-		//	data.PushBack(range);
-		//}
-
-		String& operator+=(const char* string)
+		String& operator+=(const char8_t* string)
 		{
 			auto stringLength = StringLength(string);
 			copy(stringLength, string);
@@ -174,7 +93,7 @@ namespace GTSL
 			return *this;
 		}
 
-		String& operator+=(Range<const UTF8*> range)
+		String& operator+=(Range<const char8_t*> range)
 		{
 			auto stringLength = range.ElementCount();
 			copy(stringLength, range.begin());
@@ -182,7 +101,7 @@ namespace GTSL
 			return *this;
 		}
 
-		String& operator+=(UTF8 character)
+		String& operator+=(char8_t character)
 		{
 			data[length] = character;
 			++length;
@@ -194,7 +113,7 @@ namespace GTSL
 		* \param c Char to Find.
 		* \return Index to found char.
 		*/
-		[[nodiscard]] Result<length_type> FindFirst(char c) const
+		[[nodiscard]] Result<length_type> FindFirst(char8_t c) const
 		{
 			length_type i = 0;
 			for (const auto& e : data) { if (e == c) { return Result<length_type>(MoveRef(i), true); } ++i; }
@@ -206,7 +125,7 @@ namespace GTSL
 		 * \param c Char to Find.
 		 * \return Index to found char.
 		 */
-		[[nodiscard]] Result<Pair<length_type, uint32>> FindLast(char c) const
+		[[nodiscard]] Result<Pair<length_type, uint32>> FindLast(char8_t c) const
 		{
 			length_type i = 1, t = GetLength();
 			for (const auto& e : data) { if (e == c) { return Result<Pair<length_type, uint32>>(Pair<length_type, uint32>(i, t), true); } ++i; --t; }
@@ -221,7 +140,7 @@ namespace GTSL
 		{
 		}
 
-		void ReplaceAll(char a, char with)
+		void ReplaceAll(char8_t a, char8_t with)
 		{
 			for (auto& c : data) { if (c == a) { c = with; } }
 		}
@@ -274,7 +193,7 @@ namespace GTSL
 		//
 		//		for (auto& e : ocurrences)
 		//		{
-		//			data.Insert(e, Range<const UTF8*>(with_length, with));
+		//			data.Insert(e, Range<const char8_t*>(with_length, with));
 		//		}
 		//
 		//		if (i == data.GetLength() - 1) //if current index is last index in whole string break out of the loop
@@ -285,7 +204,7 @@ namespace GTSL
 		//}
 		
 	private:
-		UTF8* data = nullptr; uint32 length = 0, capacity = 0;
+		char8_t* data = nullptr; uint32 length = 0, capacity = 0;
 		[[no_unique_address]] ALLOCATOR allocator;
 
 		void copy(uint32 stringLength, const string_type* string)

@@ -222,12 +222,12 @@ namespace GTSL
 	template<uint8 SIZE, class ALLOCATOR>
 	inline void Insert(const ShortString<SIZE>& string, Buffer<ALLOCATOR>& buffer)
 	{
-		buffer.CopyBytes(SIZE, reinterpret_cast<const byte*>((Range<const UTF8*>(string).begin())));
+		buffer.CopyBytes(SIZE, reinterpret_cast<const byte*>((Range<const char8_t*>(string).begin())));
 	}
 
 	template<uint8 SIZE, class ALLOCATOR>
 	inline void Extract(ShortString<SIZE>& string, Buffer<ALLOCATOR>& buffer)
 	{
-		buffer.ReadBytes(SIZE, reinterpret_cast<byte*>((Range<UTF8*>(string).begin())));
+		buffer.ReadBytes(SIZE, reinterpret_cast<byte*>((Range<char8_t*>(string).begin())));
 	}
 }

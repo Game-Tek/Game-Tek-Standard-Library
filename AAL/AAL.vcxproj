@@ -15,10 +15,6 @@
     <ClInclude Include="AAL\AudioDevice.h" />
     <ClInclude Include="AAL\Platform\Windows\WindowsAudioDevice.h" />
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\AudioCore.cpp" />
-    <ClCompile Include="src\Windows\WindowsAudioDevice.cpp" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{38BE2DB5-1206-48BE-B478-18FD741FD190}</ProjectGuid>

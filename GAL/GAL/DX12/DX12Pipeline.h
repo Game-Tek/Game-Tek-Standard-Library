@@ -152,12 +152,12 @@ namespace GAL
 					{
 						switch (info.Stages[i].Type)
 						{
-						case ShaderType::VERTEX_SHADER: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VS; break;
-						case ShaderType::TESSELLATION_CONTROL_SHADER: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VS; break;
-						case ShaderType::TESSELLATION_EVALUATION_SHADER: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VS; break;
-						case ShaderType::GEOMETRY_SHADER: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_GS; break;
-						case ShaderType::FRAGMENT_SHADER: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_PS; break;
-						case ShaderType::COMPUTE_SHADER: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_CS; break;
+						case ShaderType::VERTEX: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VS; break;
+						case ShaderType::TESSELLATION_CONTROL: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VS; break;
+						case ShaderType::TESSELLATION_EVALUATION: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VS; break;
+						case ShaderType::GEOMETRY: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_GS; break;
+						case ShaderType::FRAGMENT: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_PS; break;
+						case ShaderType::COMPUTE: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_CS; break;
 						default: type = D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_MAX_VALID;
 						}
 

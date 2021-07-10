@@ -28,16 +28,15 @@
     <ClInclude Include="GTSL\DataSizes.h" />
     <ClInclude Include="GTSL\DeferrableContainer.h" />
     <ClInclude Include="GTSL\DLL.h" />
-    <ClInclude Include="GTSL\DynamicType.h" />
     <ClInclude Include="GTSL\Flags.h" />
     <ClInclude Include="GTSL\File.h" />
     <ClInclude Include="GTSL\Filesystem.h" />
     <ClInclude Include="GTSL\Delegate.hpp" />
     <ClInclude Include="GTSL\Extent.h" />
-    <ClInclude Include="GTSL\FlatHashMap.h" />
     <ClInclude Include="GTSL\FlipFlop.h" />
     <ClInclude Include="GTSL\FunctionPointer.hpp" />
     <ClInclude Include="GTSL\GamepadQuery.h" />
+    <ClInclude Include="GTSL\HashMap.h" />
     <ClInclude Include="GTSL\PagedVector.h" />
     <ClInclude Include="GTSL\SlottedVector.hpp" />
     <ClInclude Include="GTSL\SparseVector.hpp" />
@@ -62,7 +61,7 @@
     <ClInclude Include="GTSL\Tuple.h" />
     <ClInclude Include="GTSL\Vector.hpp" />
     <ClInclude Include="GTSL\Id.h" />
-    <ClInclude Include="GTSL\KeepVector.h" />
+    <ClInclude Include="GTSL\FixedVector.h" />
     <ClInclude Include="GTSL\Memory.h" />
     <ClInclude Include="GTSL\Mutex.h" />
     <ClInclude Include="GTSL\Network\NetConnection.h" />
@@ -96,11 +95,11 @@
   <ItemGroup>
     <ClCompile Include="GTSL\StaticMap.hpp" />
     <ClCompile Include="GTSL\ShortString.hpp" />
+    <ClCompile Include="GTSL\MappedFile.hpp" />
     <ClCompile Include="src\Allocator.cpp" />
     <ClCompile Include="GTSL\ArrayCommon.hpp" />
     <ClCompile Include="src\Console.cpp" />
     <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\File.cpp" />
     <ClCompile Include="src\Filesystem.cpp" />
     <ClCompile Include="src\Gamepad.cpp" />
     <ClCompile Include="src\Math\AxisAngle.cpp" />
@@ -111,8 +110,6 @@
     <ClCompile Include="src\Math\Rotator.cpp" />
     <ClCompile Include="src\Math\Vectors.cpp" />
     <ClCompile Include="src\Memory.cpp" />
-    <ClCompile Include="src\Sockets.cpp" />
-    <ClCompile Include="src\StringCommon.cpp" />
     <ClCompile Include="src\System.cpp" />
     <ClCompile Include="src\Thread.cpp" />
     <ClCompile Include="src\Window.cpp" />

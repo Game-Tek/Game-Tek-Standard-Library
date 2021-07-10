@@ -3,7 +3,10 @@
 #include "RenderCore.h"
 #include <GTSL/Extent.h>
 #include <GTSL/Range.h>
+#include <shaderc/shaderc.h>
+#include <shaderc/shaderc.hpp>
 
+#include "GTSL/Buffer.hpp"
 #include "GTSL/ShortString.hpp"
 
 namespace GAL
@@ -22,7 +25,7 @@ namespace GAL
 		} Front, Back;
 	};
 
-	class Shader : public GALObject
+	class Shader
 	{
 	public:
 	};
@@ -35,24 +38,23 @@ namespace GAL
 		ShaderStage Stage;
 	};
 	
-	class Pipeline : public GALObject
+	class Pipeline
 	{
 	public:
 
 		static constexpr GTSL::uint8 MAX_VERTEX_ELEMENTS = 20;
 
 		struct VertexElement {
-			GTSL::ShortString<64> Identifier;
-			GTSL::uint8 Index = 0;
-			bool Enabled; ShaderDataType Type;
+			GTSL::ShortString<32> Identifier;
+			ShaderDataType Type;
 		};
 
-		static constexpr auto POSITION = GTSL::ShortString<64>("POSITION");
-		static constexpr auto NORMAL = GTSL::ShortString<64>("NORMAL");
-		static constexpr auto TANGENT = GTSL::ShortString<64>("TANGENT");
-		static constexpr auto BITANGENT = GTSL::ShortString<64>("BITANGENT");
-		static constexpr auto TEXTURE_COORDINATES = GTSL::ShortString<64>("TEXTURE_COORDINATES");
-		static constexpr auto COLOR = GTSL::ShortString<64>("COLOR");
+		static constexpr auto POSITION = GTSL::ShortString<32>(u8"POSITION");
+		static constexpr auto NORMAL = GTSL::ShortString<32>(u8"NORMAL");
+		static constexpr auto TANGENT = GTSL::ShortString<32>(u8"TANGENT");
+		static constexpr auto BITANGENT = GTSL::ShortString<32>(u8"BITANGENT");
+		static constexpr auto TEXTURE_COORDINATES = GTSL::ShortString<32>(u8"TEXTURE_COORDINATES");
+		static constexpr auto COLOR = GTSL::ShortString<32>(u8"COLOR");
 
 		struct RayTraceGroup {
 			static constexpr GTSL::uint32 SHADER_UNUSED = (~0U);
@@ -159,4 +161,53 @@ namespace GAL
 	public:
 	};
 
+	inline bool CompileShader(GTSL::Range<const char8_t*> code, GTSL::Range<const char8_t*> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::BufferInterface result, GTSL::BufferInterface stringResult)
+	{
+		shaderc_shader_kind shaderc_stage;
+
+		switch (shaderType)
+		{
+		case ShaderType::VERTEX: shaderc_stage = shaderc_vertex_shader;	break;
+		case ShaderType::TESSELLATION_CONTROL: shaderc_stage = shaderc_tess_control_shader;	break;
+		case ShaderType::TESSELLATION_EVALUATION: shaderc_stage = shaderc_tess_evaluation_shader; break;
+		case ShaderType::GEOMETRY: shaderc_stage = shaderc_geometry_shader;	break;
+		case ShaderType::FRAGMENT: shaderc_stage = shaderc_fragment_shader;	break;
+		case ShaderType::COMPUTE: shaderc_stage = shaderc_compute_shader; break;
+		case ShaderType::RAY_GEN: shaderc_stage = shaderc_raygen_shader; break;
+		case ShaderType::CLOSEST_HIT: shaderc_stage = shaderc_closesthit_shader; break;
+		case ShaderType::ANY_HIT: shaderc_stage = shaderc_anyhit_shader; break;
+		case ShaderType::INTERSECTION: shaderc_stage = shaderc_intersection_shader; break;
+		case ShaderType::MISS: shaderc_stage = shaderc_miss_shader; break;
+		case ShaderType::CALLABLE: shaderc_stage = shaderc_callable_shader; break;
+		default: GAL_DEBUG_BREAK;
+		}
+
+		const shaderc::Compiler shaderc_compiler;
+		shaderc::CompileOptions shaderc_compile_options;
+		shaderc_compile_options.SetTargetSpirv(shaderc_spirv_version_1_5);
+		shaderc_compile_options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+
+		shaderc_source_language shaderc_source_language;
+		switch (shaderLanguage)
+		{
+		case ShaderLanguage::GLSL: shaderc_source_language = shaderc_source_language_glsl; break;
+		case ShaderLanguage::HLSL: shaderc_source_language = shaderc_source_language_hlsl; break;
+		default: GAL_DEBUG_BREAK;
+		}
+
+		shaderc_compile_options.SetSourceLanguage(shaderc_source_language);
+		shaderc_compile_options.SetOptimizationLevel(shaderc_optimization_level_performance);
+		const auto shaderc_module = shaderc_compiler.CompileGlslToSpv(reinterpret_cast<const char*>(code.begin()), code.Bytes(), shaderc_stage, reinterpret_cast<const char*>(shaderName.begin()), shaderc_compile_options);
+
+		if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success) {
+			auto errorString = shaderc_module.GetErrorMessage();
+			stringResult.CopyBytes(errorString.size() + 1, reinterpret_cast<const GTSL::byte*>(errorString.c_str()));
+			*(stringResult.end() - 1) = '\0';
+			return false;
+		}
+
+		result.CopyBytes((shaderc_module.end() - shaderc_module.begin()) * sizeof(GTSL::uint32), reinterpret_cast<const GTSL::byte*>(shaderc_module.begin()));
+
+		return true;
+	}
 }

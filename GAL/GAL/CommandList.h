@@ -9,11 +9,11 @@ namespace GAL
 	class Buffer;
 	class Texture;
 
-	class CommandBuffer
+	class CommandList
 	{
 	public:
-		CommandBuffer() = default;
-		~CommandBuffer() = default;
+		CommandList() = default;
+		~CommandList() = default;
 		//Starts recording of commands.
 
 		
@@ -100,10 +100,5 @@ namespace GAL
 			 */
 			GTSL::uint32 EntrySize = 0;
 		};
-	};
-
-	class CommandPool
-	{
-	public:
 	};
 }

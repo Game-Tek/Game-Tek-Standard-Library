@@ -1,11 +1,19 @@
 #pragma once
 
+#include "Buffer.hpp"
 #include "Core.h"
 #include "Flags.h"
 
 #include "Range.h"
 
+#if (_WIN64)
+#define WIN32_LEAN_AND_MEAN
+#define NO_COMM
+#define NO_MIN_MAX
+#include <Windows.h>
 #undef ERROR
+#endif
+
 
 namespace GTSL
 {
@@ -15,32 +23,115 @@ namespace GTSL
 	{		
 	public:
 		File() = default;
-		~File();
+		
+		~File() {
+			if (fileHandle) { CloseHandle(fileHandle); fileHandle = nullptr; }
+		}
 
 		using AccessMode = Flags<uint8, struct AccessModeFlag>;
-		static constexpr AccessMode READ = 1, WRITE = 2;
+		static constexpr AccessMode READ{ 1 }, WRITE{ 2 };
 
 		enum class OpenMode : uint8 { LEAVE_CONTENTS, CLEAR };
 
-		enum class OpenResult { OK, ALREADY_EXISTS, DOES_NOT_EXIST, ERROR };
+		enum class OpenResult { OK, CREATED, ERROR };
 		
-		[[nodiscard]] OpenResult Create(Range<const UTF8*> path, AccessMode accessMode);
-		[[nodiscard]] OpenResult Open(Range<const UTF8*> path, AccessMode accessMode);
+		[[nodiscard]] OpenResult Open(Range<const char8_t*> path, AccessMode accessMode, bool create) {
+			DWORD desiredAccess = 0;  DWORD shareMode = 0;
 
-		uint32 Write(const Range<const byte*> buffer) const;
-		uint32 Write(BufferInterface buffer) const;
-		
-		[[nodiscard]] uint32 Read(const Range<byte*> buffer) const;
-		uint32 Read(BufferInterface buffer) const;
-		uint32 Read(uint64 size, BufferInterface buffer) const;
-		uint32 Read(uint64 size, uint64 offset, GTSL::Range<byte*> buffer) const;
+			if (static_cast<uint8>(accessMode) & static_cast<uint8>(READ)) { desiredAccess |= GENERIC_READ; shareMode |= FILE_SHARE_READ; }
+			if (static_cast<uint8>(accessMode) & static_cast<uint8>(WRITE)) { desiredAccess |= GENERIC_WRITE; shareMode |= FILE_SHARE_WRITE; }
 
-		void Resize(const uint64 newSize);
-		
-		void SetPointer(uint64 byte);
+			DWORD creationDisposition = create ? OPEN_ALWAYS : OPEN_EXISTING;
 
-		[[nodiscard]] uint64 GetSize() const;
+			fileHandle = CreateFileA(reinterpret_cast<const char*>(path.begin()), desiredAccess, shareMode, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
+
+			OpenResult openResult;
+
+			switch (GetLastError()) {
+			case ERROR_SUCCESS: openResult = OpenResult::CREATED; break;
+			case ERROR_ALREADY_EXISTS: openResult = OpenResult::OK; break;
+			default: openResult = OpenResult::ERROR; break;
+			}
+
+			return openResult;
+		}
+
+		uint32 Write(const Range<const byte*> buffer) const {
+			DWORD bytes{ 0 };
+			WriteFile(fileHandle, buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
+			//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
+			return bytes;
+		}
 		
+		uint32 Write(BufferInterface buffer) const {
+			DWORD bytes{ 0 };
+			WriteFile(fileHandle, buffer.begin(), static_cast<uint32>(buffer.GetLength()), &bytes, nullptr);
+			//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
+			buffer.AddResize(-(int64)bytes);
+			return bytes;
+		}
+		
+		[[nodiscard]] uint32 Read(const Range<byte*> buffer) const
+		{
+			DWORD bytes{ 0 };
+			ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
+			auto w = GetLastError();
+			//GTSL_ASSERT(w , "Win32 Error!");
+			return bytes;
+		}
+		
+		uint32 Read(BufferInterface buffer) const {
+			DWORD bytes{ 0 };
+			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), GetSize(), &bytes, nullptr);
+			auto w = GetLastError();
+			//GTSL_ASSERT(w , "Win32 Error!");
+			buffer.AddResize(bytes);
+			return bytes;
+		}
+		
+		uint32 Read(uint64 size, BufferInterface buffer) const {
+			DWORD bytes{ 0 };
+			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), static_cast<uint32>(size), &bytes, nullptr);
+			auto w = GetLastError();
+			//GTSL_ASSERT(w , "Win32 Error!");
+			buffer.AddResize(bytes);
+			return bytes;
+		}
+		
+		uint32 Read(uint64 size, uint64 offset, GTSL::Range<byte*> buffer) const
+		{
+			DWORD bytes{ 0 };
+			ReadFile(fileHandle, buffer.begin() + offset, static_cast<uint32>(size), &bytes, nullptr);
+			auto w = GetLastError();
+			GTSL_ASSERT(buffer.begin() + offset + size <= buffer.end(), "Trying to write outside of buffer!");
+			return bytes;
+		}
+
+		void Resize(const uint64 newSize)
+		{
+			GTSL_ASSERT(newSize < (~(0ULL)) / 2, "Number too large.");
+			const LARGE_INTEGER bytes{ .QuadPart = static_cast<LONGLONG>(newSize) };
+			SetFilePointerEx(fileHandle, bytes, nullptr, FILE_BEGIN);
+			SetEndOfFile(fileHandle);
+		}
+		
+		void SetPointer(uint64 byte)
+		{
+			GTSL_ASSERT(byte < (~(0ULL)) / 2, "Number too large.");
+			const LARGE_INTEGER bytes{ .QuadPart = static_cast<LONGLONG>(byte) };
+			SetFilePointerEx(fileHandle, bytes, nullptr, FILE_BEGIN);
+		}
+
+		[[nodiscard]] uint64 GetSize() const
+		{
+			LARGE_INTEGER size;
+			auto res = GetFileSizeEx(fileHandle, &size);
+			GTSL_ASSERT(res != 0, "Win32 Error!");
+			return size.QuadPart;
+		}
+
+		explicit operator bool() const { return fileHandle && GetSize(); }
+	
 	private:
 		void* fileHandle{ nullptr };
 	};

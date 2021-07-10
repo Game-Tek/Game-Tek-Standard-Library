@@ -87,7 +87,7 @@ namespace GTSL
 		
 		struct WindowCreateInfo
 		{
-			Range<const UTF8*> Name;
+			Range<const char8_t*> Name;
 			Extent2D Extent;
 			Window* ParentWindow = nullptr;
 			class Application* Application = nullptr;

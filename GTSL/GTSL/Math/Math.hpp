@@ -268,7 +268,7 @@ namespace GTSL
 
 		//http://lolengine.net/blog/2011/12/21/better-function-approximations
 		inline float32 sin(float32 x) {
-			x = Wrap(x, PI);
+			x = Wrap(x, static_cast<float32>(PI));
 
 			const float32 x2 = x * x, x4 = x2 * x2, x8 = x4 * x4, x9 = x8 * x;
 			const auto a = x * (1.0f + x2 * (-1.666666666640169148537065260055e-1f + x2 * (8.333333316490113523036717102793e-3f + x2 * -1.984126600659171392655484413285e-4f)));
@@ -283,7 +283,7 @@ namespace GTSL
 		 */
 		inline float32 sin_CW(Radians radians) {
 			auto x = radians();
-			x = Wrap(x, PI);
+			x = Wrap(x, static_cast<float32>(PI));
 
 			const float32 x2 = x * x, x4 = x2 * x2, x8 = x4 * x4, x9 = x8 * x;
 			const auto a = x * (-1.0f + x2 * (1.666666666640169148537065260055e-1f + x2 * (-8.333333316490113523036717102793e-3f + x2 * 1.984126600659171392655484413285e-4f)));
@@ -292,11 +292,11 @@ namespace GTSL
 		}
 
 		inline float32 cos(const float32 x) {
-			return sin(x + PI / 2);
+			return sin(x + static_cast<float32>(PI) / 2.0f);
 		}
 
 		inline float32 cos_CW(const float32 x) {
-			return sin_CW(Radians(x + PI / 2));
+			return sin_CW(Radians(x + static_cast<float32>(PI) / 2.0f));
 		}
 		
 		/**
@@ -384,8 +384,8 @@ namespace GTSL
 				auto x = SIMD(AlignedPointer<const float32, 16>(n.begin() + i));
 
 				//wrap modulo PI
-				auto c = (x - SIMD(PI)) / SIMD(PI * 2);
-				x = (c - SIMD::Floor(c)) * SIMD(PI * 2);
+				auto c = (x - SIMD(static_cast<float32>(PI))) / SIMD(static_cast<float32>(PI) * 2.0f);
+				x = (c - SIMD::Floor(c)) * SIMD(static_cast<float32>(PI) * 2.0f);
 				//wrap modulo PI
 
 				const SIMD x2 = x * x, x4 = x2 * x2, x8 = x4 * x4, x9 = x8 * x;
@@ -396,33 +396,6 @@ namespace GTSL
 
 			for (; i < n.ElementCount(); ++i) {
 				n[i] = Sine(n[i]);
-			}
-		}
-
-		inline void Cosine(Range<float32*> n) {
-			using SIMD = SIMD128<float32>;
-
-			const auto VPI = SIMD(PI); const auto VPI2 = SIMD(PI * 2);
-			const auto B = SIMD(4.0f / PI); const auto C = SIMD(-4.0f / Square(Math::PI)); const auto P = SIMD(0.225f);
-
-			uint32 i = 0;
-
-			for (uint32 t = 0; t < n.ElementCount() / SIMD::TypeElementsCount; ++t, i += SIMD::TypeElementsCount) {
-				auto x = SIMD(AlignedPointer<const float32, 16>(n.begin() + t));
-
-				x += SIMD(Math::PI * 0.5f); //cosine shift
-
-				//wrap modulo PI
-				auto c = (x - VPI) / VPI2 - VPI;
-				x = (c - SIMD::Floor(c)) * VPI;
-				//wrap modulo PI
-
-				auto y = B * x + C * x * SIMD::Abs(x);
-				(P * (y * SIMD::Abs(y) - y) + y).CopyTo(AlignedPointer<float32, 16>(n.begin() + t));
-			}
-
-			for (; i < n.ElementCount(); ++i) {
-				n[i] = Cosine(n[i]);
 			}
 		}
 		

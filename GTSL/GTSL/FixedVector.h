@@ -17,14 +17,14 @@ namespace GTSL
 	 * \tparam T Type of the object this KeepVector will store.
 	 */
 	template<typename T, class ALLOCATOR>
-	class KeepVector
+	class FixedVector
 	{
 	public:
 		using length_type = uint32;
 
-		KeepVector() = default;
+		FixedVector() = default;
 
-		explicit KeepVector(const length_type min, const ALLOCATOR& allocatorReference) : allocator(allocatorReference) {
+		explicit FixedVector(const length_type min, const ALLOCATOR& allocatorReference) : allocator(allocatorReference) {
 			data = allocate(min, &capacity);
 			InitializeBits(getIndices());
 		}
@@ -35,7 +35,7 @@ namespace GTSL
 			InitializeBits(getIndices());
 		}
 
-		~KeepVector() {
+		~FixedVector() {
 			if (data) [[likely]] {
 				Clear();
 				free();
@@ -43,16 +43,16 @@ namespace GTSL
 		}
 
 		template<typename T>
-		struct KeepVectorIterator
+		struct FixedVectorIterator
 		{
 			//begin
-			KeepVectorIterator(KeepVector* keepVector) : keepVector(keepVector) {}
+			FixedVectorIterator(FixedVector* keepVector) : keepVector(keepVector) {}
 
 			bool operator!=(const bool other) {
 				return pos != keepVector->capacity;
 			}
 
-			KeepVectorIterator& operator++() {
+			FixedVectorIterator& operator++() {
 				do {
 					++pos;
 				} while (CheckBit(modulo(pos), ~keepVector->getIndices()[pos / BITS]) && pos < keepVector->capacity);
@@ -65,17 +65,17 @@ namespace GTSL
 
 		private:
 			uint32 pos = 0;
-			KeepVector<T, ALLOCATOR>* keepVector = nullptr;
+			FixedVector<T, ALLOCATOR>* keepVector = nullptr;
 
 			static constexpr uint32 modulo(const uint32 key) { return key & (BITS - 1); }
 		};
 		
-		KeepVectorIterator<T> begin() {
-			return KeepVectorIterator<T>(this);
+		FixedVectorIterator<T> begin() {
+			return FixedVectorIterator<T>(this);
 		}
 
-		KeepVectorIterator<const T> begin() const {
-			return KeepVectorIterator<const T>(this);
+		FixedVectorIterator<const T> begin() const {
+			return FixedVectorIterator<const T>(this);
 		}
 
 		[[nodiscard]] bool end() const { return true; }
@@ -112,7 +112,7 @@ namespace GTSL
 		}
 
 		template<class ALLOC>
-		void Copy(const KeepVector<T, ALLOC>& other) {
+		void Copy(const FixedVector<T, ALLOC>& other) {
 			if (this->capacity < other.capacity) { resize(other.capacity); }
 
 			for (uint32 num = 0, num32 = 0; num < other.getIndices().ElementCount(); ++num, num32 += BITS) {
@@ -179,9 +179,9 @@ namespace GTSL
 		using type = T;
 
 	private:
-		friend struct KeepVectorIterator<T>;
+		friend struct FixedVectorIterator<T>;
 
-		friend class KeepVector;
+		friend class FixedVector;
 
 		static constexpr uint64 BITS = GTSL::Bits<length_type>();
 
@@ -237,20 +237,20 @@ namespace GTSL
 		[[nodiscard]] Range<const T*> getObjects() const { return GTSL::Range<T*>(capacity, reinterpret_cast<T*>(data)); }
 
 		template<typename TT, class ALLOC, typename L>
-		friend void ForEach(KeepVector<TT, ALLOC>& keepVector, L&& lambda);
+		friend void ForEach(FixedVector<TT, ALLOC>& keepVector, L&& lambda);
 
 		template<typename TT, class ALLOC, typename L>
-		friend void IndexedForEach(KeepVector<TT, ALLOC>& keepVector, L&& lambda);
+		friend void IndexedForEach(FixedVector<TT, ALLOC>& keepVector, L&& lambda);
 
 		template<typename TT, class ALLOC, typename L>
-		friend void IndexedForEach(const KeepVector<TT, ALLOC>& keepVector, L&& lambda);
+		friend void IndexedForEach(const FixedVector<TT, ALLOC>& keepVector, L&& lambda);
 
 		template<typename TT, class ALLOC, typename L>
-		friend void ReverseForEach(KeepVector<TT, ALLOC>& keepVector, L&& lambda);
+		friend void ReverseForEach(FixedVector<TT, ALLOC>& keepVector, L&& lambda);
 	};
 
 	template<typename T, class ALLOCATOR, typename L>
-	void ForEach(KeepVector<T, ALLOCATOR>& keepVector, L&& lambda) {
+	void ForEach(FixedVector<T, ALLOCATOR>& keepVector, L&& lambda) {
 		uint32 num = 0;
 		for (auto& index : keepVector.getIndices()) {
 			for (uint32 i = 0; i < 32; ++i) {
@@ -262,7 +262,7 @@ namespace GTSL
 	}
 
 	template<typename T, class ALLOCATOR, typename L>
-	void IndexedForEach(KeepVector<T, ALLOCATOR>& keepVector, L&& lambda)
+	void IndexedForEach(FixedVector<T, ALLOCATOR>& keepVector, L&& lambda)
 	{
 		uint32 num = 0;
 		for (auto& index : keepVector.getIndices()) {
@@ -275,7 +275,7 @@ namespace GTSL
 	}
 
 	template<typename T, class ALLOCATOR, typename L>
-	void IndexedForEach(const KeepVector<T, ALLOCATOR>& keepVector, L&& lambda)
+	void IndexedForEach(const FixedVector<T, ALLOCATOR>& keepVector, L&& lambda)
 	{
 		uint32 num = 0;
 		for (auto& index : keepVector.getIndices()) {
@@ -288,7 +288,7 @@ namespace GTSL
 	}
 
 	template<typename T, class ALLOCATOR, typename L>
-	void ReverseForEach(KeepVector<T, ALLOCATOR>& keepVector, L&& lambda)
+	void ReverseForEach(FixedVector<T, ALLOCATOR>& keepVector, L&& lambda)
 	{
 		for (int64 num = keepVector.getIndices().ElementCount() - 1, numBits = num * keepVector.BITS; num > -1; --num, numBits -= keepVector.BITS) {
 			for (int64 i = 31; i > -1; --i) {

@@ -45,16 +45,13 @@ namespace GAL
 	using MemoryType = GTSL::Flags<GTSL::uint8, struct MemoryTypeTag>;
 
 	namespace MemoryTypes {
-		static constexpr MemoryType GPU = 1;
-		static constexpr MemoryType HOST_VISIBLE = 2;
-		static constexpr MemoryType HOST_COHERENT = 4;
-		static constexpr MemoryType HOST_CACHED = 8;
+		static constexpr MemoryType GPU(1), HOST_VISIBLE(2), HOST_COHERENT(4), HOST_CACHED(8);
 	}
 	
 	struct MemoryRequirements {
 		GTSL::uint32 Size{ 0 };
-		GTSL::uint32 Alignment{ 0 };
-		MemoryType MemoryTypes;
+		GTSL::uint32 Alignment{ 0 }, MemoryTypes{ 0 };
+		//MemoryType MemoryTypes;
 	};
 	
 	using PipelineStage = GTSL::Flags<GTSL::uint32, struct PipelineStageTag>;
@@ -68,28 +65,27 @@ namespace GAL
 	}
 	
 	namespace PipelineStages {
-		static constexpr PipelineStage TOP_OF_PIPE = 1,
-			DRAW_INDIRECT = 2,
-			VERTEX_INPUT = 4,
-			VERTEX_SHADER = 8,
-			TESSELLATION_CONTROL_SHADER = 16,
-			TESSELLATION_EVALUATION_SHADER = 32,
-			GEOMETRY_SHADER = 64,
-			FRAGMENT_SHADER = 128,
-			EARLY_FRAGMENT_TESTS = 256,
-			LATE_FRAGMENT_TESTS = 512,
-			COLOR_ATTACHMENT_OUTPUT = 1024,
-			COMPUTE_SHADER = 2048,
-			TRANSFER = 4096,
-			BOTTOM_OF_PIPE = 8192,
-			HOST = 16384,
-			ALL_GRAPHICS = 32768,
-			ALL_COMMANDS = 0x00010000,
-			RAY_TRACING_SHADER = 0x00200000,
-			ACCELERATION_STRUCTURE_BUILD = 0x02000000,
-			SHADING_RATE_IMAGE = 0x00400000,
-			TASK_SHADER = 0x00080000,
-			MESH_SHADER = 0x00100000;
+		static constexpr PipelineStage TOP_OF_PIPE(1),
+			DRAW_INDIRECT(2),
+			VERTEX_INPUT(4),
+			VERTEX(8),
+			TESSELLATION_CONTROL(16),
+			TESSELLATION_EVALUATION(32),
+			GEOMETRY(64),
+			FRAGMENT(128),
+			EARLY_FRAGMENT_TESTS(256),
+			LATE_FRAGMENT_TESTS(512),
+			COLOR_ATTACHMENT_OUTPUT(1024),
+			COMPUTE(2048),
+			TRANSFER(4096),
+			BOTTOM_OF_PIPE(8192),
+			HOST(16384),
+			ALL_GRAPHICS(32768),
+			RAY_TRACING(0x00200000),
+			ACCELERATION_STRUCTURE_BUILD(0x02000000),
+			SHADING_RATE_IMAGE(0x00400000),
+			TASK(0x00080000),
+			MESH(0x00100000);
 	}
 
 	constexpr GTSL::uint8 RAY_GEN_TABLE_INDEX = 0, HIT_TABLE_INDEX = 1, MISS_TABLE_INDEX = 2, CALLABLE_TABLE_INDEX = 3;
@@ -177,67 +173,67 @@ namespace GAL
 	
 	using BindingFlag = GTSL::Flags<GTSL::uint8, struct BindingFlagTag>;
 	namespace BindingFlags {
-		static constexpr BindingFlag PARTIALLY_BOUND = 1 << 0;
+		static constexpr BindingFlag PARTIALLY_BOUND(1 << 0);
 	}
 	
 	using ShaderStage = GTSL::Flags<GTSL::uint16, struct ShaderStageTag>;
 	namespace ShaderStages {
-		static constexpr ShaderStage VERTEX = 1,
-			TESSELLATION_CONTROL = 2,
-			TESSELLATION_EVALUATION = 4,
-			GEOMETRY = 8,
-			FRAGMENT = 16,
-			COMPUTE = 32,
-			TASK = 64,
-			MESH = 128,
-			RAY_GEN = 256, ANY_HIT = 512, CLOSEST_HIT = 1024, MISS = 2048, INTERSECTION = 4096, CALLABLE = 8192;
+		static constexpr ShaderStage VERTEX(1),
+			TESSELLATION_CONTROL(2),
+			TESSELLATION_EVALUATION(4),
+			GEOMETRY(8),
+			FRAGMENT(16),
+			COMPUTE(32),
+			TASK(64),
+			MESH(128),
+			RAY_GEN(256), ANY_HIT(512), CLOSEST_HIT(1024), MISS(2048), INTERSECTION(4096), CALLABLE(8192);
 	};
 
 	using TextureUse = GTSL::Flags<GTSL::uint32, struct TextureUseTag>;
 	namespace TextureUses {
-		static constexpr TextureUse TRANSFER_SOURCE = 1, TRANSFER_DESTINATION = 2, SAMPLE = 4, STORAGE = 8, ATTACHMENT = 16, TRANSIENT_ATTACHMENT = 32, INPUT_ATTACHMENT = 64;
+		static constexpr TextureUse TRANSFER_SOURCE(1), TRANSFER_DESTINATION(2), SAMPLE(4), STORAGE(8), ATTACHMENT(16), TRANSIENT_ATTACHMENT(32), INPUT_ATTACHMENT(64);
 	}
 	
 	using QueueType = GTSL::Flags<GTSL::uint8, struct QueueTypeTag>;
 	namespace QueueTypes {
-		static constexpr QueueType GRAPHICS = 1 << 0, COMPUTE = 1 << 1, TRANSFER = 1 << 2;
+		static constexpr QueueType GRAPHICS(1 << 0), COMPUTE(1 << 1), TRANSFER(1 << 2);
 	}
 
 	using BufferUse = GTSL::Flags< GTSL::uint32, struct BufferUseFlag>;
 	namespace BufferUses {
-		static constexpr BufferUse TRANSFER_SOURCE = 1 << 0, TRANSFER_DESTINATION = 1 << 1, STORAGE = 1 << 2, ACCELERATION_STRUCTURE = 1 << 3, ADDRESS = 1 << 4, UNIFORM = 1 << 5, VERTEX = 1 << 6, INDEX = 1 << 7, SHADER_BINDING_TABLE = 1 << 8, BUILD_INPUT_READ = 1 << 9;
+		static constexpr BufferUse TRANSFER_SOURCE(1 << 0), TRANSFER_DESTINATION(1 << 1), STORAGE(1 << 2), ACCELERATION_STRUCTURE(1 << 3), ADDRESS(1 << 4), UNIFORM(1 << 5), VERTEX(1 << 6), INDEX(1 << 7), SHADER_BINDING_TABLE(1 << 8), BUILD_INPUT_READ(1 << 9);
 	};
 
 	using AllocationFlag = GTSL::Flags<GTSL::uint8, struct AllocationFlagTag>;
 	namespace AllocationFlags {
-		static constexpr AllocationFlag DEVICE_ADDRESS = 1, DEVICE_ADDRESS_CAPTURE_REPLAY = 2;
+		static constexpr AllocationFlag DEVICE_ADDRESS(1), DEVICE_ADDRESS_CAPTURE_REPLAY(2);
 	}
 
 	using AccessType = GTSL::Flags<GTSL::uint8, struct AccessTypeFlag>;
 	namespace AccessTypes {
-		static constexpr AccessType READ = 1, WRITE = 4;
+		static constexpr AccessType READ(1), WRITE(4);
 	}
 	
 	using AccessFlag = GTSL::Flags<GTSL::uint32, struct AccessFlagTag>;	
 	namespace AccessFlags {
-		static constexpr AccessFlag INDIRECT_COMMAND_READ = 1 << 0,
-		INDEX_READ = 1 << 1,
-		VERTEX_ATTRIBUTE_READ = 1 << 2,
-		UNIFORM_READ = 1 << 3,
-		INPUT_ATTACHMENT_READ = 1 << 4,
-		SHADER_READ = 1 << 5,
-		SHADER_WRITE = 1 << 6,
-		ATTACHMENT_READ = 1 << 7,
-		ATTACHMENT_WRITE = 1 << 8,
-		TRANSFER_READ = 1 << 11,
-		TRANSFER_WRITE = 1 << 12,
-		HOST_READ = 1 << 13,
-		HOST_WRITE = 1 << 14,
-		MEMORY_READ = 1 << 15,
-		MEMORY_WRITE = 1 << 16,
-		ACCELERATION_STRUCTURE_READ = 1 << 17,
-		ACCELERATION_STRUCTURE_WRITE = 1 << 18,
-		SHADING_RATE_IMAGE_READ = 1 << 19;
+		static constexpr AccessFlag INDIRECT_COMMAND_READ(1 << 0),
+		INDEX_READ(1 << 1),
+		VERTEX_ATTRIBUTE_READ(1 << 2),
+		UNIFORM_READ(1 << 3),
+		INPUT_ATTACHMENT_READ(1 << 4),
+		SHADER_READ(1 << 5),
+		SHADER_WRITE(1 << 6),
+		ATTACHMENT_READ(1 << 7),
+		ATTACHMENT_WRITE(1 << 8),
+		TRANSFER_READ(1 << 11),
+		TRANSFER_WRITE(1 << 12),
+		HOST_READ(1 << 13),
+		HOST_WRITE(1 << 14),
+		MEMORY_READ(1 << 15),
+		MEMORY_WRITE(1 << 16),
+		ACCELERATION_STRUCTURE_READ(1 << 17),
+		ACCELERATION_STRUCTURE_WRITE(1 << 18),
+		SHADING_RATE_IMAGE_READ(1 << 19);
 	}
 	
 	// IMAGE
@@ -264,12 +260,12 @@ namespace GAL
 	
 	using GeometryFlag = GTSL::Flags<GTSL::uint8, struct GeometryFlagTag>;
 	namespace GeometryFlags {
-		static constexpr GeometryFlag OPAQUE = 1 << 0;
+		static constexpr GeometryFlag OPAQUE(1 << 0);
 	}
 	
 	using AccelerationStructureFlag = GTSL::Flags<GTSL::uint8, struct AccelerationStructureFlagTag>;
 	namespace AccelerationStructureFlags {
-		static constexpr AccelerationStructureFlag ALLOW_UPDATE = 1 << 0, ALLOW_COMPACTION = 1 << 1, PREFER_FAST_TRACE = 1 << 2, PREFER_FAST_BUILD = 1 << 3, LOW_MEMORY = 1 << 4;
+		static constexpr AccelerationStructureFlag ALLOW_UPDATE(1 << 0), ALLOW_COMPACTION(1 << 1), PREFER_FAST_TRACE(1 << 2), PREFER_FAST_BUILD(1 << 3), LOW_MEMORY(1 << 4);
 	}
 	
 	enum class Tiling {
@@ -309,13 +305,15 @@ namespace GAL
 	};
 	
 	enum class ShaderType : GTSL::uint8 {
-		VERTEX_SHADER,
-		TESSELLATION_CONTROL_SHADER,
-		TESSELLATION_EVALUATION_SHADER,
-		GEOMETRY_SHADER,
-		FRAGMENT_SHADER,
+		VERTEX,
+		TESSELLATION_CONTROL,
+		TESSELLATION_EVALUATION,
+		GEOMETRY,
+		FRAGMENT,
 
-		COMPUTE_SHADER,
+		COMPUTE,
+
+		TASK, MESH,
 
 		RAY_GEN, ANY_HIT, CLOSEST_HIT, MISS, INTERSECTION, CALLABLE
 	};
@@ -351,6 +349,7 @@ namespace GAL
 	};
 
 	enum class BlendOperation : GTSL::uint8 {
+		WRITE,
 		ADD,
 		SUBTRACT,
 		REVERSE_SUBTRACT,
@@ -414,6 +413,7 @@ namespace GAL
 	enum class IndexType { UINT8, UINT16, UINT32 };
 
 	struct RenderPassTargetDescription {
+		//AccessType AccessType;
 		Operations LoadOperation, StoreOperation;
 		TextureLayout Start, End;
 		FormatDescriptor FormatDescriptor;
@@ -460,11 +460,4 @@ namespace GAL
 #if (_WIN32)
 #define GAL_DEBUG_BREAK __debugbreak();
 #endif
-	
-	class GALObject
-	{
-	protected:
-		GALObject() = default;
-		~GALObject() = default;
-	};
 }

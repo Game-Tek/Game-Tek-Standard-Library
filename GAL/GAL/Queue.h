@@ -4,13 +4,13 @@
 #include "GTSL/Core.h"
 
 namespace GAL {
-	class CommandBuffer;
+	class CommandList;
 	class Semaphore;
 
 	class Queue {
 	public:
 		struct WorkUnit final {
-			const CommandBuffer* CommandBuffer = nullptr;
+			const CommandList* CommandBuffer = nullptr;
 			const Semaphore* SignalSemaphore = nullptr;
 			const Semaphore* WaitSemaphore = nullptr;
 			GTSL::uint64 SignalValue = 0, WaitValue = 0;

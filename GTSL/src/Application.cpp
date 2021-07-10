@@ -53,7 +53,7 @@ uint8 Application::ThreadCount() noexcept {	SYSTEM_INFO system_info; GetSystemIn
 StaticString<Application::MAX_PATH_LENGTH> Application::GetPathToExecutable() const
 {
 	StaticString<Application::MAX_PATH_LENGTH> ret;
-	ret.Resize(GetModuleFileNameA(static_cast<HMODULE>(handle), ret.begin(), ret.GetCapacity()) + 1);
+	ret.Resize(GetModuleFileNameA(static_cast<HMODULE>(handle), reinterpret_cast<char*>(ret.begin()), ret.GetCapacity()) + 1);
 	//GTSL_ASSERT(GetModuleFileNameA(NULL, a, 512), "Failed to get Win32 module file name!")
 	ret.ReplaceAll('\\', '/');
 	return ret;

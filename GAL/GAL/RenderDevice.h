@@ -57,7 +57,7 @@ namespace GAL
 		
 		//struct CreateInfo
 		//{
-		//	GTSL::Range<const GTSL::UTF8> ApplicationName;
+		//	GTSL::Range<const GTSL::char8_t> ApplicationName;
 		//	GTSL::uint16 ApplicationVersion[3];
 		//	GTSL::Range<const Queue::CreateInfo> QueueCreateInfos;
 		//	GTSL::Range<Queue*> Queues;

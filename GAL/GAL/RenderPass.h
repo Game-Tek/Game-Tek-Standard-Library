@@ -6,8 +6,7 @@ namespace GAL
 {
 	constexpr GTSL::uint8 ATTACHMENT_UNUSED = 255;
 
-	class RenderPass : public GALObject
-	{
+	class RenderPass {
 	public:
 		RenderPass() = default;
 
@@ -17,16 +16,14 @@ namespace GAL
 			GTSL::uint8 Index = ATTACHMENT_UNUSED;
 			//Layout of the attachment during the sub pass.
 			TextureLayout Layout = TextureLayout::ATTACHMENT;
+			AccessType Access;
 		};
 
 		//Describes a subpass.
 		struct SubPassDescriptor
 		{
-			//Array of AttachmentsReferences for attachments which the subpass reads from.
-			GTSL::Range<const AttachmentReference*> ReadAttachments;
-
-			//Array of AttachmentsReferences for attachments which the subpass writes to.
-			GTSL::Range<const AttachmentReference*> WriteAttachments;
+			//Array of AttachmentsReferences
+			GTSL::Range<const AttachmentReference*> Attachments;
 
 			//Array of indices identifying attachments that are not used by this subpass, but whose contents MUST be preserved throughout the subpass.
 			GTSL::Range<const GTSL::uint8*> PreserveAttachments;

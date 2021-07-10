@@ -2,8 +2,6 @@
 
 #include "RenderCore.h"
 
-#include <GTSL/Array.hpp>
-
 namespace GAL
 {
 	constexpr GTSL::uint8 MAX_BINDINGS_PER_SET = 10;
@@ -16,7 +14,7 @@ namespace GAL
 	//	GTSL::uint32 DescriptorCount = 0;
 	//};
 
-	class BindingsPool : public GALObject
+	class BindingsPool
 	{
 	public:
 		//struct CreateInfo : RenderInfo

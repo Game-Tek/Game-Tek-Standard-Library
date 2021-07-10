@@ -82,7 +82,7 @@ namespace GTSL
 		static void GetSystemInfo(SystemInfo& systemInfo);
 		static Extent2D GetScreenExtent();
 
-		static void QueryParameter(const Range<const UTF8*> name) {
+		static void QueryParameter(const Range<const char8_t*> name) {
 			HKEY result;
 			auto openResult = RegOpenKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\", &result);
 			if(openResult != ERROR_SUCCESS) {}
@@ -90,8 +90,8 @@ namespace GTSL
 			openResult = RegQueryInfoKeyA(result, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, &valueCount, &maxNameLength, &maxValueLength, nullptr, nullptr);
 			if(openResult != ERROR_SUCCESS) {}
 			DWORD type = 0, index = 0, charCountValueName = 128, charBytesData = 1024;
-			UTF8 valueName[128]; byte dataBuffer[1024];
-			RegEnumValueA(result, index, valueName, &charCountValueName, nullptr, &type, dataBuffer, &charBytesData);
+			char8_t valueName[128]; byte dataBuffer[1024];
+			RegEnumValueA(result, index, reinterpret_cast<char*>(valueName), &charCountValueName, nullptr, &type, dataBuffer, &charBytesData);
 			RegCloseKey(result);
 		}
 	};

@@ -17,7 +17,7 @@
 namespace GAL
 {
 	template<typename T>
-	void setName(T* handle, const GTSL::Range<const GTSL::UTF8*> name)
+	void setName(T* handle, const GTSL::Range<const GTSL::char8_t*> name)
 	{
 		if constexpr (_DEBUG)
 		{

@@ -126,9 +126,9 @@ namespace GTSL
 	};
 
 	template<uint16 BYTES>
-	struct StackAllocator : AllocatorReference
+	struct StaticAllocator : AllocatorReference
 	{
-		StackAllocator() = default;
+		StaticAllocator() = default;
 		
 		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size)
 		{
@@ -150,5 +150,35 @@ namespace GTSL
 	private:
 		byte buffer[BYTES];
 		uint16 usedBytes = 0;
+	};
+
+	template<class A, class B>
+	class DoubleAllocator
+	{
+	public:
+		DoubleAllocator() = default;
+
+		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size)
+		{
+			if(a.Allocate(size, alignment, data, allocated_size)) {
+				allocator = true;
+			} else {
+				allocator = false;
+				b.Allocate(size, alignment, data, allocated_size);
+			}
+		}
+
+		void Deallocate(const uint64 size, uint64 alignment, void* data)
+		{
+			if(allocator) {
+				a.Deallocate(size, alignment, data);
+			} else {
+				b.Deallocate(size, alignment, data);
+			}
+		}
+
+	private:
+		bool allocator = true;
+		A a; B b;
 	};
 }

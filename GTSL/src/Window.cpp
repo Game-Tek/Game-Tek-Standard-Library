@@ -183,8 +183,7 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 			MouseMoveEventData result;
 			int32 x = pRawInput->data.mouse.lLastX, y = pRawInput->data.mouse.lLastY;
 				
-			if((pRawInput->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) == MOUSE_MOVE_ABSOLUTE)
-			{
+			if((pRawInput->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) == MOUSE_MOVE_ABSOLUTE) {
 				bool isVirtualDesktop = (pRawInput->data.mouse.usFlags & MOUSE_VIRTUAL_DESKTOP) == MOUSE_VIRTUAL_DESKTOP;
 
 				int width = GetSystemMetrics(isVirtualDesktop ? SM_CXVIRTUALSCREEN : SM_CXSCREEN);
@@ -196,8 +195,7 @@ GTSL::uint64 GTSL::Window::Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wPar
 				result.X() = absoluteX; result.Y() = absoluteY;
 			}
 
-			if((pRawInput->data.mouse.usFlags & MOUSE_MOVE_RELATIVE) == MOUSE_MOVE_RELATIVE)
-			{
+			if((pRawInput->data.mouse.usFlags & MOUSE_MOVE_RELATIVE) == MOUSE_MOVE_RELATIVE) {
 				result.X() = static_cast<float32>(x); result.Y() = static_cast<float32>(-y);
 			}
 
@@ -397,7 +395,7 @@ void GTSL::Window::BindToOS(const WindowCreateInfo& windowCreateInfo)
 	wndclass.lpszMenuName = nullptr;
 	wndclass.style = 0;
 	wndclass.cbWndExtra = 0;
-	wndclass.lpszClassName = windowCreateInfo.Name.begin();
+	wndclass.lpszClassName = reinterpret_cast<const char*>(windowCreateInfo.Name.begin());
 
 	Application::Win32NativeHandles win32NativeHandles;
 	windowCreateInfo.Application->GetNativeHandles(&win32NativeHandles);
@@ -421,7 +419,7 @@ void GTSL::Window::BindToOS(const WindowCreateInfo& windowCreateInfo)
 	windowRect.top = 0; windowRect.left = 0;
 	windowRect.bottom = windowCreateInfo.Extent.Height; windowRect.right = windowCreateInfo.Extent.Width;
 	AdjustWindowRect(&windowRect, style, false);
-	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, windowCreateInfo.Name.begin(), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), &windowsCallData);
+	windowHandle = CreateWindowExA(0, wndclass.lpszClassName, reinterpret_cast<const char*>(windowCreateInfo.Name.begin()), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, static_cast<HINSTANCE>(win32NativeHandles.HINSTANCE), &windowsCallData);
 
 	GTSL_ASSERT(windowHandle, "Window failed to create!");
 

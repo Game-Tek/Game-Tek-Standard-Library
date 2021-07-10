@@ -90,15 +90,11 @@ namespace GAL
 			renderDevice->VkCreateEvent(renderDevice->GetVkDevice(), &vkEventCreateInfo, renderDevice->GetVkAllocationCallbacks(), &event);
 		}
 		
-		void Initialize(const VulkanRenderDevice* renderDevice, const GTSL::Range<const GTSL::UTF8*> name) {
+		void Initialize(const VulkanRenderDevice* renderDevice, const GTSL::Range<const char8_t*> name) {
 			VkEventCreateInfo vkEventCreateInfo{ VK_STRUCTURE_TYPE_EVENT_CREATE_INFO };
 			renderDevice->VkCreateEvent(renderDevice->GetVkDevice(), &vkEventCreateInfo, renderDevice->GetVkAllocationCallbacks(), &event);
 
-			VkDebugUtilsObjectNameInfoEXT debug_utils_object_name_info_ext{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
-			debug_utils_object_name_info_ext.objectHandle = reinterpret_cast<GTSL::uint64>(event);
-			debug_utils_object_name_info_ext.objectType = VK_OBJECT_TYPE_EVENT;
-			debug_utils_object_name_info_ext.pObjectName = name.begin();
-			renderDevice->vkSetDebugUtilsObjectNameEXT(renderDevice->GetVkDevice(), &debug_utils_object_name_info_ext);
+			setName(renderDevice, event, VK_OBJECT_TYPE_EVENT, name);
 		}
 
 		void Set(const VulkanRenderDevice* renderDevice) {

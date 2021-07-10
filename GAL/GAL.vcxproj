@@ -11,13 +11,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GAL\DX12\DX12AccelerationStructure.hpp" />
     <ClInclude Include="GAL\DX12\DX12Bindings.h" />
     <ClInclude Include="GAL\DX12\DX12Framebuffer.h" />
     <ClInclude Include="GAL\DX12\DX12Memory.h" />
     <ClInclude Include="GAL\DX12\DX12Pipeline.h" />
     <ClInclude Include="GAL\Bindings.h" />
     <ClInclude Include="GAL\Buffer.h" />
-    <ClInclude Include="GAL\CommandBuffer.h" />
+    <ClInclude Include="GAL\CommandList.h" />
     <ClInclude Include="GAL\DX12\DX12.h" />
     <ClInclude Include="GAL\DX12\DX12Buffer.h" />
     <ClInclude Include="GAL\DX12\DX12CommandBuffer.h" />
@@ -35,15 +36,16 @@
     <ClInclude Include="GAL\RenderCore.h" />
     <ClInclude Include="GAL\RenderDevice.h" />
     <ClInclude Include="GAL\RenderPass.h" />
+    <ClInclude Include="GAL\Serialize.hpp" />
     <ClInclude Include="GAL\Synchronization.h" />
     <ClInclude Include="GAL\Texture.h" />
     <ClInclude Include="GAL\Vulkan\Vulkan.h" />
     <ClInclude Include="GAL\Vulkan\VulkanAccelerationStructures.h" />
     <ClInclude Include="GAL\Vulkan\VulkanAsyncHostOperation.h" />
+    <ClInclude Include="GAL\Vulkan\VulkanCommandList.h" />
     <ClInclude Include="GAL\Vulkan\VulkanMemory.h" />
     <ClInclude Include="GAL\Vulkan\VulkanBindings.h" />
     <ClInclude Include="GAL\Vulkan\VulkanBuffer.h" />
-    <ClInclude Include="GAL\Vulkan\VulkanCommandBuffer.h" />
     <ClInclude Include="GAL\Vulkan\VulkanFramebuffer.h" />
     <ClInclude Include="GAL\Vulkan\VulkanPipelines.h" />
     <ClInclude Include="GAL\Vulkan\VulkanQueryPool.h" />

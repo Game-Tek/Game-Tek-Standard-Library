@@ -10,7 +10,7 @@ namespace GAL
 	public:
 		DX12Memory() = default;
 
-		void Initialize(const DX12RenderDevice* renderDevice, const GTSL::Range<const GTSL::UTF8*> name, AllocationFlag flags, GTSL::uint32 size, MemoryType memoryType) {
+		void Initialize(const DX12RenderDevice* renderDevice, const GTSL::Range<const GTSL::char8_t*> name, AllocationFlag flags, GTSL::uint32 size, MemoryType memoryType) {
 			D3D12_HEAP_DESC heapDesc;
 			heapDesc.Flags = D3D12_HEAP_FLAGS(11); //D3D12_HEAP_FLAG_CREATE_NOT_ZEROED
 			heapDesc.Alignment = 1024;

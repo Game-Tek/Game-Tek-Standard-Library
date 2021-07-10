@@ -56,6 +56,11 @@ namespace GTSL
 	template<Enum E>
 	using UnderlyingType = __underlying_type(E);
 
+	template<typename... ARGS>
+	consteval size_t PackSize() {
+		return (sizeof(ARGS) + ... + 0);
+	}
+	
 	template<typename F, typename... ARGS>
 	void MultiFor(F&& function, uint32 length, ARGS&&... iterators)
 	{

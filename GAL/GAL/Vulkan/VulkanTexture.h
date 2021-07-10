@@ -58,7 +58,7 @@ namespace GAL
 	public:
 		VulkanTextureView() = default;
 
-		void Initialize(const VulkanRenderDevice* renderDevice, const GTSL::Range<const GTSL::UTF8*> name, const VulkanTexture texture, const FormatDescriptor formatDescriptor, const GTSL::Extent3D extent, const GTSL::uint8 mipLevels) {
+		void Initialize(const VulkanRenderDevice* renderDevice, const GTSL::Range<const char8_t*> name, const VulkanTexture texture, const FormatDescriptor formatDescriptor, const GTSL::Extent3D extent, const GTSL::uint8 mipLevels) {
 			VkImageViewCreateInfo vkImageViewCreateInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 			vkImageViewCreateInfo.image = texture.GetVkImage();
 			vkImageViewCreateInfo.viewType = ToVkImageViewType(extent);

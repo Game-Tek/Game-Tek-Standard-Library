@@ -15,7 +15,7 @@ namespace GAL {
 
 		void Initialize(const VulkanRenderDevice* renderDevice, const VulkanRenderDevice::QueueKey queueKey) {
 			familyIndex = queueKey.Family; queueIndex = queueKey.Queue;
-			renderDevice->getDeviceProcAddr<PFN_vkGetDeviceQueue>("vkGetDeviceQueue")(renderDevice->GetVkDevice(), familyIndex, queueIndex, &queue);
+			renderDevice->getDeviceProcAddr<PFN_vkGetDeviceQueue>(u8"vkGetDeviceQueue")(renderDevice->GetVkDevice(), familyIndex, queueIndex, &queue);
 		}
 
 		//void Wait(const class VulkanRenderDevice* renderDevice) const {

@@ -17,59 +17,9 @@ namespace GTSL {
 
 namespace GAL
 {
-	inline bool CompileShader(GTSL::Range<const GTSL::UTF8*> code, GTSL::Range<const GTSL::UTF8*> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::BufferInterface result, GTSL::BufferInterface stringResult)
-	{
-		shaderc_shader_kind shaderc_stage;
-
-		switch (shaderType)
-		{
-		case ShaderType::VERTEX_SHADER: shaderc_stage = shaderc_vertex_shader;	break;
-		case ShaderType::TESSELLATION_CONTROL_SHADER: shaderc_stage = shaderc_tess_control_shader;	break;
-		case ShaderType::TESSELLATION_EVALUATION_SHADER: shaderc_stage = shaderc_tess_evaluation_shader; break;
-		case ShaderType::GEOMETRY_SHADER: shaderc_stage = shaderc_geometry_shader;	break;
-		case ShaderType::FRAGMENT_SHADER: shaderc_stage = shaderc_fragment_shader;	break;
-		case ShaderType::COMPUTE_SHADER: shaderc_stage = shaderc_compute_shader; break;
-		case ShaderType::RAY_GEN: shaderc_stage = shaderc_raygen_shader; break;
-		case ShaderType::CLOSEST_HIT: shaderc_stage = shaderc_closesthit_shader; break;
-		case ShaderType::ANY_HIT: shaderc_stage = shaderc_anyhit_shader; break;
-		case ShaderType::INTERSECTION: shaderc_stage = shaderc_intersection_shader; break;
-		case ShaderType::MISS: shaderc_stage = shaderc_miss_shader; break;
-		case ShaderType::CALLABLE: shaderc_stage = shaderc_callable_shader; break;
-		default: GAL_DEBUG_BREAK;
-		}
-
-		const shaderc::Compiler shaderc_compiler;
-		shaderc::CompileOptions shaderc_compile_options;
-		shaderc_compile_options.SetTargetSpirv(shaderc_spirv_version_1_5);
-		shaderc_compile_options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
-
-		shaderc_source_language shaderc_source_language;
-		switch (shaderLanguage)
-		{
-		case ShaderLanguage::GLSL: shaderc_source_language = shaderc_source_language_glsl; break;
-		case ShaderLanguage::HLSL: shaderc_source_language = shaderc_source_language_hlsl; break;
-		default: GAL_DEBUG_BREAK;
-		}
-
-		shaderc_compile_options.SetSourceLanguage(shaderc_source_language);
-		shaderc_compile_options.SetOptimizationLevel(shaderc_optimization_level_performance);
-		const auto shaderc_module = shaderc_compiler.CompileGlslToSpv(static_cast<const char*>(code.begin()), code.Bytes(), shaderc_stage, shaderName.begin(), shaderc_compile_options);
-
-		if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success) {
-			auto errorString = shaderc_module.GetErrorMessage();
-			stringResult.CopyBytes(errorString.size() + 1, reinterpret_cast<const GTSL::byte*>(errorString.c_str()));
-			*(stringResult.end() - 1) = '\0';
-			return false;
-		}
-
-		result.CopyBytes((shaderc_module.end() - shaderc_module.begin()) * sizeof(GTSL::uint32), reinterpret_cast<const GTSL::byte*>(shaderc_module.begin()));
-
-		return true;
-	}
-
 	//static bool glslLangInitialized = false;
 
-	//bool GAL::VulkanShader::CompileShader(GTSL::Range<const GTSL::UTF8> code, GTSL::Range<const GTSL::UTF8> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringError)
+	//bool GAL::VulkanShader::CompileShader(GTSL::Range<const GTSL::char8_t> code, GTSL::Range<const GTSL::char8_t> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::Buffer& result, GTSL::Buffer& stringError)
 	//{
 	//	EShLanguage shaderc_stage;
 	//	
@@ -290,7 +240,7 @@ namespace GAL
 			vkGraphicsPipelineCreateInfo.pDepthStencilState = nullptr; vkGraphicsPipelineCreateInfo.pMultisampleState = &vkPipelineMultisampleStateCreateInfo;
 			vkGraphicsPipelineCreateInfo.layout = pipelineLayout.GetVkPipelineLayout();
 
-			GTSL::Buffer buffer(8192, 8, GTSL::StackAllocator<8192>());
+			GTSL::Buffer buffer(8192, 8, GTSL::StaticAllocator<8192>());
 
 			for (GTSL::uint8 ps = 0; ps < static_cast<GTSL::uint8>(pipelineStates.ElementCount()); ++ps)
 			{
@@ -415,14 +365,12 @@ namespace GAL
 					for (GTSL::uint8 i = 0; i < static_cast<GTSL::uint8>(pipelineState.Vertex.VertexDescriptor.ElementCount()); ++i) {
 						auto size = ShaderDataTypesSize(pipelineState.Vertex.VertexDescriptor[i].Type);
 
-						if (pipelineState.Vertex.VertexDescriptor[i].Enabled) {
-							auto& vertex = *buffer.AllocateStructure<VkVertexInputAttributeDescription>();
-							vertex.binding = 0; vertex.location = i; vertex.format = ToVulkan(pipelineState.Vertex.VertexDescriptor[i].Type);
-							vertex.offset = offset;
-							offset += size;
-							binding->stride += size;
-							++pointer->vertexAttributeDescriptionCount;
-						}
+						auto& vertex = *buffer.AllocateStructure<VkVertexInputAttributeDescription>();
+						vertex.binding = 0; vertex.location = i; vertex.format = ToVulkan(pipelineState.Vertex.VertexDescriptor[i].Type);
+						vertex.offset = offset;
+						offset += size;
+						binding->stride += size;
+						++pointer->vertexAttributeDescriptionCount;
 					}
 
 					vkGraphicsPipelineCreateInfo.pVertexInputState = pointer;
@@ -467,14 +415,14 @@ namespace GAL
 			//SET_NAME(pipeline, VK_OBJECT_TYPE_PIPELINE, createInfo);
 		}
 		
-		void InitializeComputePipeline(const VulkanRenderDevice* renderDevice, const GTSL::Range<const PipelineStateBlock*> pipelineStates, const ShaderInfo* stage, const VulkanPipelineLayout pipelineLayout, const VulkanPipelineCache pipelineCache) {
+		void InitializeComputePipeline(const VulkanRenderDevice* renderDevice, const GTSL::Range<const PipelineStateBlock*> pipelineStates, GTSL::Range<const ShaderInfo*> stages, const VulkanPipelineLayout pipelineLayout, const VulkanPipelineCache pipelineCache) {
 			VkComputePipelineCreateInfo computePipelineCreateInfo{ VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
 			computePipelineCreateInfo.basePipelineIndex = -1;
 			computePipelineCreateInfo.layout = pipelineLayout.GetVkPipelineLayout();
 			computePipelineCreateInfo.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			computePipelineCreateInfo.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
 			computePipelineCreateInfo.stage.pName = "main";
-			computePipelineCreateInfo.stage.module = stage->Shader.GetVkShaderModule();
+			computePipelineCreateInfo.stage.module = stages[0].Shader.GetVkShaderModule();
 
 			renderDevice->VkCreateComputePipelines(renderDevice->GetVkDevice(), pipelineCache.GetVkPipelineCache(), 1, &computePipelineCreateInfo, renderDevice->GetVkAllocationCallbacks(), &pipeline);
 		}

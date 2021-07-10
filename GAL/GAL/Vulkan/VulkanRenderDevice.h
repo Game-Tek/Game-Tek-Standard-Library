@@ -33,7 +33,7 @@ namespace GAL
 		
 		struct CreateInfo
 		{
-			GTSL::Range<const GTSL::UTF8*> ApplicationName;
+			GTSL::Range<const char8_t*> ApplicationName;
 			GTSL::uint16 ApplicationVersion[3];
 			GTSL::Range<const QueueType*> Queues;
 			GTSL::Range<QueueKey*> QueueKeys;
@@ -48,9 +48,9 @@ namespace GAL
 		[[nodiscard]] bool Initialize(const CreateInfo& createInfo) {
 			debugPrintFunction = createInfo.DebugPrintFunction;
 			
-			if (!vulkanDLL.LoadLibrary("vulkan-1")) { return false; }
+			if (!vulkanDLL.LoadLibrary(u8"vulkan-1")) { return false; }
 
-			vulkanDLL.LoadDynamicFunction("vkGetInstanceProcAddr", &VkGetInstanceProcAddr);
+			vulkanDLL.LoadDynamicFunction(u8"vkGetInstanceProcAddr", &VkGetInstanceProcAddr);
 			if (!VkGetInstanceProcAddr) { return false; }
 			
 			auto vkAllocate = [](void* data, GTSL::uint64 size, GTSL::uint64 alignment, VkSystemAllocationScope) {
@@ -94,7 +94,7 @@ namespace GAL
 				vkApplicationInfo.apiVersion = VK_MAKE_VERSION(1, 2, 0);
 				vkApplicationInfo.applicationVersion = VK_MAKE_VERSION(createInfo.ApplicationVersion[0], createInfo.ApplicationVersion[1], createInfo.ApplicationVersion[2]);
 				vkApplicationInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
-				vkApplicationInfo.pApplicationName = createInfo.ApplicationName.begin();
+				//vkApplicationInfo.pApplicationName = createInfo.ApplicationName.begin(); //todo: translate
 				vkApplicationInfo.pEngineName = "Game-Tek | GAL";
 
 				VkInstanceCreateInfo vkInstanceCreateInfo{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
@@ -198,18 +198,18 @@ namespace GAL
 				vkInstanceCreateInfo.enabledExtensionCount = instanceExtensions.GetLength();
 				vkInstanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.begin();
 
-				if (getInstanceProcAddr<PFN_vkCreateInstance>("vkCreateInstance")(&vkInstanceCreateInfo, GetVkAllocationCallbacks(), &instance) != VK_SUCCESS) { return false; }
+				if (getInstanceProcAddr<PFN_vkCreateInstance>(u8"vkCreateInstance")(&vkInstanceCreateInfo, GetVkAllocationCallbacks(), &instance) != VK_SUCCESS) { return false; }
 				
 #if (_DEBUG)
 				if (debug) {
-					getInstanceProcAddr<PFN_vkCreateDebugUtilsMessengerEXT>("vkCreateDebugUtilsMessengerEXT")(instance, &vkDebugUtilsMessengerCreateInfoExt, GetVkAllocationCallbacks(), &debugMessenger);
+					getInstanceProcAddr<PFN_vkCreateDebugUtilsMessengerEXT>(u8"vkCreateDebugUtilsMessengerEXT")(instance, &vkDebugUtilsMessengerCreateInfoExt, GetVkAllocationCallbacks(), &debugMessenger);
 				}
 #endif
 			}
 
 			{
 				uint32_t physicalDeviceCount{ 16 }; VkPhysicalDevice vkPhysicalDevices[16];
-				getInstanceProcAddr<PFN_vkEnumeratePhysicalDevices>("vkEnumeratePhysicalDevices")(instance, &physicalDeviceCount, vkPhysicalDevices);
+				getInstanceProcAddr<PFN_vkEnumeratePhysicalDevices>(u8"vkEnumeratePhysicalDevices")(instance, &physicalDeviceCount, vkPhysicalDevices);
 				physicalDevice = vkPhysicalDevices[0];
 			}
 
@@ -219,7 +219,7 @@ namespace GAL
 				{
 					VkQueueFamilyProperties vkQueueFamiliesProperties[32];
 					//Get the amount of queue families there are in the physical device.
-					getInstanceProcAddr<PFN_vkGetPhysicalDeviceQueueFamilyProperties>("vkGetPhysicalDeviceQueueFamilyProperties")(physicalDevice, &queueFamiliesCount, vkQueueFamiliesProperties);
+					getInstanceProcAddr<PFN_vkGetPhysicalDeviceQueueFamilyProperties>(u8"vkGetPhysicalDeviceQueueFamilyProperties")(physicalDevice, &queueFamiliesCount, vkQueueFamiliesProperties);
 
 					VkQueueFlags vkQueuesFlagBits[16];
 					for (GTSL::uint8 i = 0; i < static_cast<GTSL::uint8>(createInfo.Queues.ElementCount()); ++i) {
@@ -271,7 +271,7 @@ namespace GAL
 				void** lastProperty = &properties2.pNext; void** lastFeature = &features2.pNext;
 
 				{
-					GTSL::Buffer<GTSL::StackAllocator<8192>> buffer; buffer.Allocate(8192, 8, GTSL::StackAllocator<8192>());
+					GTSL::Buffer<GTSL::StaticAllocator<8192>> buffer; buffer.Allocate(8192, 8, GTSL::StaticAllocator<8192>());
 					GTSL::Array<GTSL::StaticString<32>, 32> deviceExtensions;
 
 					auto placePropertiesStructure = [&]<typename T>(T** structure, VkStructureType structureType) {
@@ -289,16 +289,16 @@ namespace GAL
 					auto getProperties = [&](void* prop) {
 						VkPhysicalDeviceProperties2 props{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
 						props.pNext = prop;
-						getInstanceProcAddr<PFN_vkGetPhysicalDeviceProperties2>("vkGetPhysicalDeviceProperties2")(physicalDevice, &props);
+						getInstanceProcAddr<PFN_vkGetPhysicalDeviceProperties2>(u8"vkGetPhysicalDeviceProperties2")(physicalDevice, &props);
 					};
 
 					auto getFeatures = [&](void* feature) {
 						VkPhysicalDeviceFeatures2 feats{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
 						feats.pNext = feature;
-						getInstanceProcAddr<PFN_vkGetPhysicalDeviceFeatures2>("vkGetPhysicalDeviceFeatures2")(physicalDevice, &feats);
+						getInstanceProcAddr<PFN_vkGetPhysicalDeviceFeatures2>(u8"vkGetPhysicalDeviceFeatures2")(physicalDevice, &feats);
 					};
 
-					[[no_discard]] auto tryAddExtension = [&](const char* extensionName) {
+					[[no_discard]] auto tryAddExtension = [&](const char8_t* extensionName) {
 						GTSL::StaticString<32> name(extensionName);
 						auto searchResult = deviceExtensions.Find(name);
 						if (!searchResult.State()) { deviceExtensions.EmplaceBack(name); return true; }
@@ -323,14 +323,14 @@ namespace GAL
 						structure->shaderUniformBufferArrayNonUniformIndexing = true;
 					}
 
-					tryAddExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+					tryAddExtension(u8"VK_KHR_swapchain");
 
 					for (GTSL::uint32 extension = 0; extension < static_cast<GTSL::uint32>(createInfo.Extensions.ElementCount()); ++extension)
 					{
 						switch (createInfo.Extensions[extension].First)
 						{
 						case Extension::RAY_TRACING: {
-							if (tryAddExtension("VK_KHR_acceleration_structure")) {
+							if (tryAddExtension(u8"VK_KHR_acceleration_structure")) {
 								{
 									VkPhysicalDeviceAccelerationStructureFeaturesKHR* features;
 									VkPhysicalDeviceAccelerationStructurePropertiesKHR* properties;
@@ -353,9 +353,9 @@ namespace GAL
 								capabilities->ScratchBuildOffsetAlignment = properties.minAccelerationStructureScratchOffsetAlignment;
 							}
 
-							tryAddExtension("VK_KHR_ray_query");
+							tryAddExtension(u8"VK_KHR_ray_query");
 
-							if (tryAddExtension("VK_KHR_ray_tracing_pipeline")) {
+							if (tryAddExtension(u8"VK_KHR_ray_tracing_pipeline")) {
 								{
 									VkPhysicalDeviceRayTracingPipelineFeaturesKHR* features;
 									VkPhysicalDeviceRayTracingPipelinePropertiesKHR* properties;
@@ -378,9 +378,9 @@ namespace GAL
 								capabilities->ShaderGroupHandleSize = properties.shaderGroupHandleSize;
 							}
 
-							if (tryAddExtension(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME)) {}
+							if (tryAddExtension(u8"VK_KHR_pipeline_library")) {}
 
-							if (tryAddExtension(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME)) {}
+							if (tryAddExtension(u8"VK_KHR_deferred_host_operations")) {}
 
 							break;
 						}
@@ -403,17 +403,17 @@ namespace GAL
 					vkDeviceCreateInfo.enabledExtensionCount = deviceExtensions.GetLength();
 
 					GTSL::Array<const char*, 32> strings; {
-						for (GTSL::uint32 i = 0; i < deviceExtensions.GetLength(); ++i) { strings.EmplaceBack(deviceExtensions[i].begin()); }
+						for (GTSL::uint32 i = 0; i < deviceExtensions.GetLength(); ++i) { strings.EmplaceBack(reinterpret_cast<const char*>(deviceExtensions[i].begin())); }
 					}
 
 					vkDeviceCreateInfo.ppEnabledExtensionNames = strings.begin();
 
-					if (getInstanceProcAddr<PFN_vkCreateDevice>("vkCreateDevice")(physicalDevice, &vkDeviceCreateInfo, GetVkAllocationCallbacks(), &device) != VK_SUCCESS) { return false; }
+					if (getInstanceProcAddr<PFN_vkCreateDevice>(u8"vkCreateDevice")(physicalDevice, &vkDeviceCreateInfo, GetVkAllocationCallbacks(), &device) != VK_SUCCESS) { return false; }
 
-					getInstanceProcAddr("vkGetDeviceProcAddr", &VkGetDeviceProcAddr);
+					getInstanceProcAddr(u8"vkGetDeviceProcAddr", &VkGetDeviceProcAddr);
 					
-					getInstanceProcAddr<PFN_vkGetPhysicalDeviceProperties2>("vkGetPhysicalDeviceProperties2")(physicalDevice, &properties2);
-					getInstanceProcAddr<PFN_vkGetPhysicalDeviceFeatures2>("vkGetPhysicalDeviceFeatures2")(physicalDevice, &features2);
+					getInstanceProcAddr<PFN_vkGetPhysicalDeviceProperties2>(u8"vkGetPhysicalDeviceProperties2")(physicalDevice, &properties2);
+					getInstanceProcAddr<PFN_vkGetPhysicalDeviceFeatures2>(u8"vkGetPhysicalDeviceFeatures2")(physicalDevice, &features2);
 
 					uniformBufferMinOffset = static_cast<GTSL::uint16>(properties2.properties.limits.minUniformBufferOffsetAlignment);
 					storageBufferMinOffset = static_cast<GTSL::uint16>(properties2.properties.limits.minStorageBufferOffsetAlignment);
@@ -421,151 +421,124 @@ namespace GAL
 				}
 			}
 
-			getInstanceProcAddr<PFN_vkGetPhysicalDeviceMemoryProperties>("vkGetPhysicalDeviceMemoryProperties")(physicalDevice, &memoryProperties);
+			getInstanceProcAddr<PFN_vkGetPhysicalDeviceMemoryProperties>(u8"vkGetPhysicalDeviceMemoryProperties")(physicalDevice, &memoryProperties);
 
-			getDeviceProcAddr("vkQueueSubmit", &VkQueueSubmit);
-			getDeviceProcAddr("vkQueuePresentKHR", &VkQueuePresent);
-
-			getInstanceProcAddr("vkCreateSwapchainKHR", &VkCreateSwapchain);
-			getInstanceProcAddr("vkGetSwapchainImagesKHR", &VkGetSwapchainImages);
-			getInstanceProcAddr("vkAcquireNextImageKHR", &VkAcquireNextImage);
-			getInstanceProcAddr("vkDestroySwapchainKHR", &VkDestroySwapchain);
-
+			getDeviceProcAddr(u8"vkQueueSubmit", &VkQueueSubmit);
+			getDeviceProcAddr(u8"vkQueuePresentKHR", &VkQueuePresent);
+			getInstanceProcAddr(u8"vkCreateSwapchainKHR", &VkCreateSwapchain);
+			getInstanceProcAddr(u8"vkGetSwapchainImagesKHR", &VkGetSwapchainImages);
+			getInstanceProcAddr(u8"vkAcquireNextImageKHR", &VkAcquireNextImage);
+			getInstanceProcAddr(u8"vkDestroySwapchainKHR", &VkDestroySwapchain);
 #if (_WIN64)
-			getInstanceProcAddr("vkCreateWin32SurfaceKHR", &VkCreateWin32Surface);
+			getInstanceProcAddr(u8"vkCreateWin32SurfaceKHR", &VkCreateWin32Surface);
 #endif
-			getInstanceProcAddr("vkDestroySurfaceKHR", &VkDestroySurface);
-
-			getInstanceProcAddr("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", &VkGetPhysicalDeviceSurfaceCapabilities);
-			getInstanceProcAddr("vkGetPhysicalDeviceSurfaceFormatsKHR", &VkGetPhysicalDeviceSurfaceFormats);
-			getInstanceProcAddr("vkGetPhysicalDeviceSurfacePresentModesKHR", &VkGetPhysicalDeviceSurfacePresentModes);
-			getInstanceProcAddr("vkGetPhysicalDeviceSurfaceSupportKHR", &VkGetPhysicalDeviceSurfaceSupport);
-
-			getDeviceProcAddr("vkCreateBuffer", &VkCreateBuffer);
-			getDeviceProcAddr("vkGetBufferDeviceAddress", &VkGetBufferDeviceAddress);
-			getDeviceProcAddr("vkDestroyBuffer", &VkDestroyBuffer);
-			getDeviceProcAddr("vkGetBufferMemoryRequirements", &VkGetBufferMemoryRequirements);
-			getDeviceProcAddr("vkBindBufferMemory", &VkBindBufferMemory);
-			
-			getDeviceProcAddr("vkCreateImage", &VkCreateImage);			
-			getDeviceProcAddr("vkDestroyImage", &VkDestroyImage);
-			getDeviceProcAddr("vkGetImageMemoryRequirements", &VkGetImageMemoryRequirements);
-			getDeviceProcAddr("vkBindImageMemory", &VkBindImageMemory);
-			
-			getDeviceProcAddr("vkCreateCommandPool", &VkCreateCommandPool);
-			getDeviceProcAddr("vkDestroyCommandPool", &VkDestroyCommandPool);
-			getDeviceProcAddr("vkResetCommandPool", &VkResetCommandPool);
-			getDeviceProcAddr("vkAllocateCommandBuffers", &VkAllocateCommandBuffers);
-			getDeviceProcAddr("vkBeginCommandBuffer", &VkBeginCommandBuffer);
-			getDeviceProcAddr("vkEndCommandBuffer", &VkEndCommandBuffer);
-			
-			getDeviceProcAddr("vkCreateRenderPass", &VkCreateRenderPass);
-			getDeviceProcAddr("vkDestroyRenderPass", &VkDestroyRenderPass);
-			getDeviceProcAddr("vkCreateFramebuffer", &VkCreateFramebuffer);
-			getDeviceProcAddr("vkDestroyFramebuffer", &VkDestroyFramebuffer);
-			
-			getDeviceProcAddr("vkCreateShaderModule", &VkCreateShaderModule);
-			getDeviceProcAddr("vkDestroyShaderModule", &VkDestroyShaderModule);
-			
-			getDeviceProcAddr("vkCreatePipelineLayout", &VkCreatePipelineLayout);
-			getDeviceProcAddr("vkDestroyPipelineLayout", &VkDestroyPipelineLayout);
-			
-			getDeviceProcAddr("vkCreatePipelineCache", &VkCreatePipelineCache);
-			getDeviceProcAddr("vkMergePipelineCaches", &VkMergePipelineCaches);
-			getDeviceProcAddr("vkGetPipelineCacheData", &VkGetPipelineCacheData);
-			getDeviceProcAddr("vkDestroyPipelineCache", &VkDestroyPipelineCache);
-			
-			getDeviceProcAddr("vkCreateDescriptorSetLayout", &VkCreateDescriptorSetLayout);
-			getDeviceProcAddr("vkDestroyDescriptorSetLayout", &VkDestroyDescriptorSetLayout);
-			
-			getDeviceProcAddr("vkCreateDescriptorPool", &VkCreateDescriptorPool);
-			getDeviceProcAddr("vkAllocateDescriptorSets", &VkAllocateDescriptorSets);
-			getDeviceProcAddr("vkUpdateDescriptorSets", &VkUpdateDescriptorSets);
-			getDeviceProcAddr("vkDestroyDescriptorPool", &VkDestroyDescriptorPool);
-			
-			getDeviceProcAddr("vkCreateFence", &VkCreateFence);
-			getDeviceProcAddr("vkWaitForFences", &VkWaitForFences);
-			getDeviceProcAddr("vkResetFences", &VkResetFences);
-			getDeviceProcAddr("vkDestroyFence", &VkDestroyFence);
-			getDeviceProcAddr("vkCreateSemaphore", &VkCreateSemaphore);
-			getDeviceProcAddr("vkDestroySemaphore", &VkDestroySemaphore);
-			getDeviceProcAddr("vkCreateEvent", &VkCreateEvent);
-			getDeviceProcAddr("vkSetEvent", &VkSetEvent);
-			getDeviceProcAddr("vkResetEvent", &VkResetEvent);
-			getDeviceProcAddr("vkDestroyEvent", &VkDestroyEvent);
-			
-			getDeviceProcAddr("vkCreateGraphicsPipelines", &VkCreateGraphicsPipelines);
-			getDeviceProcAddr("vkCreateComputePipelines", &VkCreateComputePipelines);
-			getDeviceProcAddr("vkDestroyPipeline", &VkDestroyPipeline);
-			
-			getDeviceProcAddr("vkAllocateMemory", &VkAllocateMemory);
-			getDeviceProcAddr("vkFreeMemory", &VkFreeMemory);
-			getDeviceProcAddr("vkMapMemory", &VkMapMemory);
-			getDeviceProcAddr("vkUnmapMemory", &VkUnmapMemory);
-			
-			getDeviceProcAddr("vkCreateImageView", &VkCreateImageView);
-			getDeviceProcAddr("vkDestroyImageView", &VkDestroyImageView);
-			
-			getDeviceProcAddr("vkCreateSampler", &VkCreateSampler);
-			getDeviceProcAddr("vkDestroySampler", &VkDestroySampler);
-			
-			getDeviceProcAddr("vkCreateQueryPool", &VkCreateQueryPool);
-			getDeviceProcAddr("vkGetQueryPoolResults", &VkGetQueryPoolResults);
-			getDeviceProcAddr("vkDestroyQueryPool", &VkDestroyQueryPool);
-			
-			getDeviceProcAddr("vkBeginCommandBuffer", &VkBeginCommandBuffer);
-			getDeviceProcAddr("vkEndCommandBuffer", &VkEndCommandBuffer);
-			
-			getDeviceProcAddr("vkCmdBeginRenderPass", &VkCmdBeginRenderPass);
-			getDeviceProcAddr("vkCmdNextSubpass", &VkCmdNextSubpass);
-			getDeviceProcAddr("vkCmdEndRenderPass", &VkCmdEndRenderPass);
-			
-			getDeviceProcAddr("vkCmdSetScissor", &VkCmdSetScissor);
-			getDeviceProcAddr("vkCmdSetViewport", &VkCmdSetViewport);
-			
-			getDeviceProcAddr("vkCmdBindPipeline", &VkCmdBindPipeline);
-			getDeviceProcAddr("vkCmdBindDescriptorSets", &VkCmdBindDescriptorSets);
-			getDeviceProcAddr("vkCmdPushConstants", &VkCmdPushConstants);
-			
-			getDeviceProcAddr("vkCmdBindVertexBuffers", &VkCmdBindVertexBuffers);
-			getDeviceProcAddr("vkCmdBindIndexBuffer", &VkCmdBindIndexBuffer);
-			
-			getDeviceProcAddr("vkCmdDrawIndexed", &VkCmdDrawIndexed);
-			getDeviceProcAddr("vkCmdDispatch", &VkCmdDispatch);
-			
-			getDeviceProcAddr("vkCmdCopyBuffer", &VkCmdCopyBuffer);
-			getDeviceProcAddr("vkCmdCopyBufferToImage", &VkCmdCopyBufferToImage);
-			getDeviceProcAddr("vkCmdCopyImage", &VkCmdCopyImage);
-			
-			getDeviceProcAddr("vkCmdPipelineBarrier", &VkCmdPipelineBarrier);
-			
-			getDeviceProcAddr("vkCmdSetEvent", &VkCmdSetEvent);
-			getDeviceProcAddr("vkCmdResetEvent", &VkCmdResetEvent);
+			getInstanceProcAddr(u8"vkDestroySurfaceKHR", &VkDestroySurface);
+			getInstanceProcAddr(u8"vkGetPhysicalDeviceSurfaceCapabilitiesKHR", &VkGetPhysicalDeviceSurfaceCapabilities);
+			getInstanceProcAddr(u8"vkGetPhysicalDeviceSurfaceFormatsKHR", &VkGetPhysicalDeviceSurfaceFormats);
+			getInstanceProcAddr(u8"vkGetPhysicalDeviceSurfacePresentModesKHR", &VkGetPhysicalDeviceSurfacePresentModes);
+			getInstanceProcAddr(u8"vkGetPhysicalDeviceSurfaceSupportKHR", &VkGetPhysicalDeviceSurfaceSupport);
+			getDeviceProcAddr(u8"vkCreateBuffer", &VkCreateBuffer);
+			getDeviceProcAddr(u8"vkGetBufferDeviceAddress", &VkGetBufferDeviceAddress);
+			getDeviceProcAddr(u8"vkDestroyBuffer", &VkDestroyBuffer);
+			getDeviceProcAddr(u8"vkGetBufferMemoryRequirements", &VkGetBufferMemoryRequirements);
+			getDeviceProcAddr(u8"vkBindBufferMemory", &VkBindBufferMemory);
+			getDeviceProcAddr(u8"vkCreateImage", &VkCreateImage);			
+			getDeviceProcAddr(u8"vkDestroyImage", &VkDestroyImage);
+			getDeviceProcAddr(u8"vkGetImageMemoryRequirements", &VkGetImageMemoryRequirements);
+			getDeviceProcAddr(u8"vkBindImageMemory", &VkBindImageMemory);
+			getDeviceProcAddr(u8"vkCreateCommandPool", &VkCreateCommandPool);
+			getDeviceProcAddr(u8"vkDestroyCommandPool", &VkDestroyCommandPool);
+			getDeviceProcAddr(u8"vkResetCommandPool", &VkResetCommandPool);
+			getDeviceProcAddr(u8"vkAllocateCommandBuffers", &VkAllocateCommandBuffers);
+			getDeviceProcAddr(u8"vkBeginCommandBuffer", &VkBeginCommandBuffer);
+			getDeviceProcAddr(u8"vkEndCommandBuffer", &VkEndCommandBuffer);
+			getDeviceProcAddr(u8"vkCreateRenderPass", &VkCreateRenderPass);
+			getDeviceProcAddr(u8"vkDestroyRenderPass", &VkDestroyRenderPass);
+			getDeviceProcAddr(u8"vkCreateFramebuffer", &VkCreateFramebuffer);
+			getDeviceProcAddr(u8"vkDestroyFramebuffer", &VkDestroyFramebuffer);
+			getDeviceProcAddr(u8"vkCreateShaderModule", &VkCreateShaderModule);
+			getDeviceProcAddr(u8"vkDestroyShaderModule", &VkDestroyShaderModule);
+			getDeviceProcAddr(u8"vkCreatePipelineLayout", &VkCreatePipelineLayout);
+			getDeviceProcAddr(u8"vkDestroyPipelineLayout", &VkDestroyPipelineLayout);
+			getDeviceProcAddr(u8"vkCreatePipelineCache", &VkCreatePipelineCache);
+			getDeviceProcAddr(u8"vkMergePipelineCaches", &VkMergePipelineCaches);
+			getDeviceProcAddr(u8"vkGetPipelineCacheData", &VkGetPipelineCacheData);
+			getDeviceProcAddr(u8"vkDestroyPipelineCache", &VkDestroyPipelineCache);
+			getDeviceProcAddr(u8"vkCreateDescriptorSetLayout", &VkCreateDescriptorSetLayout);
+			getDeviceProcAddr(u8"vkDestroyDescriptorSetLayout", &VkDestroyDescriptorSetLayout);
+			getDeviceProcAddr(u8"vkCreateDescriptorPool", &VkCreateDescriptorPool);
+			getDeviceProcAddr(u8"vkAllocateDescriptorSets", &VkAllocateDescriptorSets);
+			getDeviceProcAddr(u8"vkUpdateDescriptorSets", &VkUpdateDescriptorSets);
+			getDeviceProcAddr(u8"vkDestroyDescriptorPool", &VkDestroyDescriptorPool);
+			getDeviceProcAddr(u8"vkCreateFence", &VkCreateFence);
+			getDeviceProcAddr(u8"vkWaitForFences", &VkWaitForFences);
+			getDeviceProcAddr(u8"vkResetFences", &VkResetFences);
+			getDeviceProcAddr(u8"vkDestroyFence", &VkDestroyFence);
+			getDeviceProcAddr(u8"vkCreateSemaphore", &VkCreateSemaphore);
+			getDeviceProcAddr(u8"vkDestroySemaphore", &VkDestroySemaphore);
+			getDeviceProcAddr(u8"vkCreateEvent", &VkCreateEvent);
+			getDeviceProcAddr(u8"vkSetEvent", &VkSetEvent);
+			getDeviceProcAddr(u8"vkResetEvent", &VkResetEvent);
+			getDeviceProcAddr(u8"vkDestroyEvent", &VkDestroyEvent);
+			getDeviceProcAddr(u8"vkCreateGraphicsPipelines", &VkCreateGraphicsPipelines);
+			getDeviceProcAddr(u8"vkCreateComputePipelines", &VkCreateComputePipelines);
+			getDeviceProcAddr(u8"vkDestroyPipeline", &VkDestroyPipeline);
+			getDeviceProcAddr(u8"vkAllocateMemory", &VkAllocateMemory);
+			getDeviceProcAddr(u8"vkFreeMemory", &VkFreeMemory);
+			getDeviceProcAddr(u8"vkMapMemory", &VkMapMemory);
+			getDeviceProcAddr(u8"vkUnmapMemory", &VkUnmapMemory);
+			getDeviceProcAddr(u8"vkCreateImageView", &VkCreateImageView);
+			getDeviceProcAddr(u8"vkDestroyImageView", &VkDestroyImageView);
+			getDeviceProcAddr(u8"vkCreateSampler", &VkCreateSampler);
+			getDeviceProcAddr(u8"vkDestroySampler", &VkDestroySampler);
+			getDeviceProcAddr(u8"vkCreateQueryPool", &VkCreateQueryPool);
+			getDeviceProcAddr(u8"vkGetQueryPoolResults", &VkGetQueryPoolResults);
+			getDeviceProcAddr(u8"vkDestroyQueryPool", &VkDestroyQueryPool);
+			getDeviceProcAddr(u8"vkBeginCommandBuffer", &VkBeginCommandBuffer);
+			getDeviceProcAddr(u8"vkEndCommandBuffer", &VkEndCommandBuffer);
+			getDeviceProcAddr(u8"vkCmdBeginRenderPass", &VkCmdBeginRenderPass);
+			getDeviceProcAddr(u8"vkCmdNextSubpass", &VkCmdNextSubpass);
+			getDeviceProcAddr(u8"vkCmdEndRenderPass", &VkCmdEndRenderPass);
+			getDeviceProcAddr(u8"vkCmdSetScissor", &VkCmdSetScissor);
+			getDeviceProcAddr(u8"vkCmdSetViewport", &VkCmdSetViewport);
+			getDeviceProcAddr(u8"vkCmdBindPipeline", &VkCmdBindPipeline);
+			getDeviceProcAddr(u8"vkCmdBindDescriptorSets", &VkCmdBindDescriptorSets);
+			getDeviceProcAddr(u8"vkCmdPushConstants", &VkCmdPushConstants);
+			getDeviceProcAddr(u8"vkCmdBindVertexBuffers", &VkCmdBindVertexBuffers);
+			getDeviceProcAddr(u8"vkCmdBindIndexBuffer", &VkCmdBindIndexBuffer);
+			getDeviceProcAddr(u8"vkCmdDrawIndexed", &VkCmdDrawIndexed);
+			getDeviceProcAddr(u8"vkCmdDispatch", &VkCmdDispatch);
+			getDeviceProcAddr(u8"vkCmdCopyBuffer", &VkCmdCopyBuffer);
+			getDeviceProcAddr(u8"vkCmdCopyBufferToImage", &VkCmdCopyBufferToImage);
+			getDeviceProcAddr(u8"vkCmdCopyImage", &VkCmdCopyImage);
+			getDeviceProcAddr(u8"vkCmdPipelineBarrier", &VkCmdPipelineBarrier);
+			getDeviceProcAddr(u8"vkCmdSetEvent", &VkCmdSetEvent);
+			getDeviceProcAddr(u8"vkCmdResetEvent", &VkCmdResetEvent);
 
 			//if(extensionSupported())
-			getDeviceProcAddr("vkCmdDrawMeshTasksNV", &VkCmdDrawMeshTasks);
+			getDeviceProcAddr(u8"vkCmdDrawMeshTasksNV", &VkCmdDrawMeshTasks);
 			
 			for (auto e : createInfo.Extensions) {
 				switch (e.First) {
 				case Extension::RAY_TRACING: {
-					getDeviceProcAddr("vkCreateAccelerationStructureKHR", &vkCreateAccelerationStructureKHR);
-					getDeviceProcAddr("vkDestroyAccelerationStructureKHR", &vkDestroyAccelerationStructureKHR);
-					getDeviceProcAddr("vkCreateRayTracingPipelinesKHR", &vkCreateRayTracingPipelinesKHR);
-					getDeviceProcAddr("vkGetAccelerationStructureBuildSizesKHR", &vkGetAccelerationStructureBuildSizesKHR);
-					getDeviceProcAddr("vkGetRayTracingShaderGroupHandlesKHR", &vkGetRayTracingShaderGroupHandlesKHR);
-					getDeviceProcAddr("vkBuildAccelerationStructuresKHR", &vkBuildAccelerationStructuresKHR);
-					getDeviceProcAddr("vkCmdBuildAccelerationStructuresKHR", &vkCmdBuildAccelerationStructuresKHR);
-					getDeviceProcAddr("vkGetAccelerationStructureDeviceAddressKHR", &vkGetAccelerationStructureDeviceAddressKHR);
-					getDeviceProcAddr("vkCreateDeferredOperationKHR", &vkCreateDeferredOperationKHR);
-					getDeviceProcAddr("vkDeferredOperationJoinKHR", &vkDeferredOperationJoinKHR);
-					getDeviceProcAddr("vkGetDeferredOperationResultKHR", &vkGetDeferredOperationResultKHR);
-					getDeviceProcAddr("vkGetDeferredOperationMaxConcurrencyKHR", &vkGetDeferredOperationMaxConcurrencyKHR);
-					getDeviceProcAddr("vkDestroyDeferredOperationKHR", &vkDestroyDeferredOperationKHR);
-					getDeviceProcAddr("vkCmdCopyAccelerationStructureKHR", &vkCmdCopyAccelerationStructureKHR);
-					getDeviceProcAddr("vkCmdCopyAccelerationStructureToMemoryKHR", &vkCmdCopyAccelerationStructureToMemoryKHR);
-					getDeviceProcAddr("vkCmdCopyMemoryToAccelerationStructureKHR", &vkCmdCopyMemoryToAccelerationStructureKHR);
-					getDeviceProcAddr("vkCmdWriteAccelerationStructuresPropertiesKHR", &vkCmdWriteAccelerationStructuresPropertiesKHR);
-					getDeviceProcAddr("vkCmdTraceRaysKHR", &vkCmdTraceRaysKHR);
+					getDeviceProcAddr(u8"vkCreateAccelerationStructureKHR", &vkCreateAccelerationStructureKHR);
+					getDeviceProcAddr(u8"vkDestroyAccelerationStructureKHR", &vkDestroyAccelerationStructureKHR);
+					getDeviceProcAddr(u8"vkCreateRayTracingPipelinesKHR", &vkCreateRayTracingPipelinesKHR);
+					getDeviceProcAddr(u8"vkGetAccelerationStructureBuildSizesKHR", &vkGetAccelerationStructureBuildSizesKHR);
+					getDeviceProcAddr(u8"vkGetRayTracingShaderGroupHandlesKHR", &vkGetRayTracingShaderGroupHandlesKHR);
+					getDeviceProcAddr(u8"vkBuildAccelerationStructuresKHR", &vkBuildAccelerationStructuresKHR);
+					getDeviceProcAddr(u8"vkCmdBuildAccelerationStructuresKHR", &vkCmdBuildAccelerationStructuresKHR);
+					getDeviceProcAddr(u8"vkGetAccelerationStructureDeviceAddressKHR", &vkGetAccelerationStructureDeviceAddressKHR);
+					getDeviceProcAddr(u8"vkCreateDeferredOperationKHR", &vkCreateDeferredOperationKHR);
+					getDeviceProcAddr(u8"vkDeferredOperationJoinKHR", &vkDeferredOperationJoinKHR);
+					getDeviceProcAddr(u8"vkGetDeferredOperationResultKHR", &vkGetDeferredOperationResultKHR);
+					getDeviceProcAddr(u8"vkGetDeferredOperationMaxConcurrencyKHR", &vkGetDeferredOperationMaxConcurrencyKHR);
+					getDeviceProcAddr(u8"vkDestroyDeferredOperationKHR", &vkDestroyDeferredOperationKHR);
+					getDeviceProcAddr(u8"vkCmdCopyAccelerationStructureKHR", &vkCmdCopyAccelerationStructureKHR);
+					getDeviceProcAddr(u8"vkCmdCopyAccelerationStructureToMemoryKHR", &vkCmdCopyAccelerationStructureToMemoryKHR);
+					getDeviceProcAddr(u8"vkCmdCopyMemoryToAccelerationStructureKHR", &vkCmdCopyMemoryToAccelerationStructureKHR);
+					getDeviceProcAddr(u8"vkCmdWriteAccelerationStructuresPropertiesKHR", &vkCmdWriteAccelerationStructuresPropertiesKHR);
+					getDeviceProcAddr(u8"vkCmdTraceRaysKHR", &vkCmdTraceRaysKHR);
 					break;
 				}
 				default:;
@@ -577,10 +550,10 @@ namespace GAL
 			}
 
 			if constexpr (_DEBUG) {
-				getInstanceProcAddr("vkSetDebugUtilsObjectNameEXT", &vkSetDebugUtilsObjectNameEXT);
-				getInstanceProcAddr("vkCmdInsertDebugUtilsLabelEXT", &vkCmdInsertDebugUtilsLabelEXT);
-				getInstanceProcAddr("vkCmdBeginDebugUtilsLabelEXT", &vkCmdBeginDebugUtilsLabelEXT);
-				getInstanceProcAddr("vkCmdEndDebugUtilsLabelEXT", &vkCmdEndDebugUtilsLabelEXT);
+				getInstanceProcAddr(u8"vkSetDebugUtilsObjectNameEXT", &vkSetDebugUtilsObjectNameEXT);
+				getInstanceProcAddr(u8"vkCmdInsertDebugUtilsLabelEXT", &vkCmdInsertDebugUtilsLabelEXT);
+				getInstanceProcAddr(u8"vkCmdBeginDebugUtilsLabelEXT", &vkCmdBeginDebugUtilsLabelEXT);
+				getInstanceProcAddr(u8"vkCmdEndDebugUtilsLabelEXT", &vkCmdEndDebugUtilsLabelEXT);
 
 				//NVIDIA's driver have a bug when setting the name for this 3 object types, TODO. fix in the future
 				//{
@@ -623,20 +596,20 @@ namespace GAL
 			return true;
 		}
 
-		void Wait() const { getDeviceProcAddr<PFN_vkDeviceWaitIdle>("vkDeviceWaitIdle")(device); }
+		void Wait() const { getDeviceProcAddr<PFN_vkDeviceWaitIdle>(u8"vkDeviceWaitIdle")(device); }
 		
 		void Destroy() {
 			Wait();
-			getDeviceProcAddr<PFN_vkDestroyDevice>("vkDestroyDevice")(device, GetVkAllocationCallbacks());
+			getDeviceProcAddr<PFN_vkDestroyDevice>(u8"vkDestroyDevice")(device, GetVkAllocationCallbacks());
 
 #if (_DEBUG)
 			if (debug) {
-				getInstanceProcAddr<PFN_vkDestroyDebugUtilsMessengerEXT>("vkDestroyDebugUtilsMessengerEXT")(instance, debugMessenger, GetVkAllocationCallbacks());
+				getInstanceProcAddr<PFN_vkDestroyDebugUtilsMessengerEXT>(u8"vkDestroyDebugUtilsMessengerEXT")(instance, debugMessenger, GetVkAllocationCallbacks());
 			}
 			debugClear(debugMessenger);
 #endif
 
-			getInstanceProcAddr<PFN_vkDestroyInstance>("vkDestroyInstance")(instance, GetVkAllocationCallbacks());
+			getInstanceProcAddr<PFN_vkDestroyInstance>(u8"vkDestroyInstance")(instance, GetVkAllocationCallbacks());
 
 			debugClear(device); debugClear(instance);
 		}
@@ -646,9 +619,9 @@ namespace GAL
 		GPUInfo GetGPUInfo() const {
 			GPUInfo result; VkPhysicalDeviceProperties physicalDeviceProperties;
 
-			getInstanceProcAddr<PFN_vkGetPhysicalDeviceProperties>("vkGetPhysicalDeviceProperties")(physicalDevice, &physicalDeviceProperties);
+			getInstanceProcAddr<PFN_vkGetPhysicalDeviceProperties>(u8"vkGetPhysicalDeviceProperties")(physicalDevice, &physicalDeviceProperties);
 
-			result.GPUName = physicalDeviceProperties.deviceName;
+			result.GPUName = reinterpret_cast<const char8_t*>(physicalDeviceProperties.deviceName);
 			result.DriverVersion = physicalDeviceProperties.driverVersion;
 			result.APIVersion = physicalDeviceProperties.apiVersion;
 			for (auto e : physicalDeviceProperties.pipelineCacheUUID) {
@@ -692,7 +665,7 @@ namespace GAL
 			}
 
 			for (auto e : findSupportedImageFormat.Candidates) {
-				getInstanceProcAddr<PFN_vkGetPhysicalDeviceFormatProperties>("vkGetPhysicalDeviceFormatProperties")(physicalDevice, ToVulkan(MakeFormatFromFormatDescriptor(e)), &format_properties);
+				getInstanceProcAddr<PFN_vkGetPhysicalDeviceFormatProperties>(u8"vkGetPhysicalDeviceFormatProperties")(physicalDevice, ToVulkan(MakeFormatFromFormatDescriptor(e)), &format_properties);
 
 				switch (static_cast<VkImageTiling>(findSupportedImageFormat.TextureTiling))
 				{
@@ -745,20 +718,12 @@ namespace GAL
 			for (GTSL::uint8 heapIndex = 0; heapIndex < memoryProperties.memoryHeapCount; ++heapIndex) {
 				MemoryHeap memoryHeap;
 				memoryHeap.Size = GTSL::Byte(memoryProperties.memoryHeaps[heapIndex].size);
-				memoryHeap.HeapType = 0;
-
+				
 				TranslateMask<VK_MEMORY_HEAP_DEVICE_LOCAL_BIT, MemoryTypes::GPU>(memoryProperties.memoryHeaps[heapIndex].flags, memoryHeap.HeapType);
 
 				for (GTSL::uint8 memType = 0; memType < memoryProperties.memoryTypeCount; ++memType) {
 					if (memoryProperties.memoryTypes[memType].heapIndex == heapIndex) {
-						MemoryType memoryType;
-
-						TranslateMask<VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, MemoryTypes::GPU>(memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
-						TranslateMask<VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, MemoryTypes::HOST_VISIBLE>(memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
-						TranslateMask<VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, MemoryTypes::HOST_COHERENT>(memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
-						TranslateMask<VK_MEMORY_PROPERTY_HOST_CACHED_BIT, MemoryTypes::HOST_CACHED>(memoryProperties.memoryTypes[memType].propertyFlags, memoryType);
-
-						memoryHeap.MemoryTypes.EmplaceBack(memoryType);
+						memoryHeap.MemoryTypes.EmplaceBack(ToGAL(memoryProperties.memoryTypes[memType].propertyFlags));
 					}
 				}
 
@@ -780,15 +745,15 @@ namespace GAL
 		PFN_vkGetInstanceProcAddr VkGetInstanceProcAddr; PFN_vkGetDeviceProcAddr VkGetDeviceProcAddr;
 
 		template<typename FT>
-		FT getInstanceProcAddr(const GTSL::UTF8* name) const { return reinterpret_cast<FT>(VkGetInstanceProcAddr(instance, name)); }
+		FT getInstanceProcAddr(const char8_t* name) const { return reinterpret_cast<FT>(VkGetInstanceProcAddr(instance, reinterpret_cast<const char*>(name))); }
 		template<typename FT>
-		void getInstanceProcAddr(const GTSL::UTF8* name, FT* function) const { *function = *reinterpret_cast<FT>(VkGetInstanceProcAddr(instance, name)); }
+		void getInstanceProcAddr(const char8_t* name, FT* function) const { *function = *reinterpret_cast<FT>(VkGetInstanceProcAddr(instance, reinterpret_cast<const char*>(name))); }
 		
 		template<typename FT>
-		void getDeviceProcAddr(const GTSL::UTF8* name, FT* function) const { *function = *reinterpret_cast<FT>(VkGetDeviceProcAddr(device, name)); }
+		void getDeviceProcAddr(const char8_t* name, FT* function) const { *function = *reinterpret_cast<FT>(VkGetDeviceProcAddr(device, reinterpret_cast<const char*>(name))); }
 
 		template<typename FT>
-		FT getDeviceProcAddr(const GTSL::UTF8* name) const { return reinterpret_cast<FT>(VkGetDeviceProcAddr(device, name)); }
+		FT getDeviceProcAddr(const char8_t* name) const { return reinterpret_cast<FT>(VkGetDeviceProcAddr(device, reinterpret_cast<const char*>(name))); }
 		
 		PFN_vkCmdBeginRenderPass VkCmdBeginRenderPass; PFN_vkCmdNextSubpass VkCmdNextSubpass; PFN_vkCmdEndRenderPass VkCmdEndRenderPass;
 		PFN_vkCmdDrawIndexed VkCmdDrawIndexed;
@@ -902,12 +867,12 @@ namespace GAL
 	};
 
 	template<typename T>
-	void setName(const VulkanRenderDevice* renderDevice, T handle, const VkObjectType objectType, const GTSL::Range<const GTSL::UTF8*> text) {
+	void setName(const VulkanRenderDevice* renderDevice, T handle, const VkObjectType objectType, const GTSL::Range<const char8_t*> text) {
 		if constexpr (_DEBUG) {
 			VkDebugUtilsObjectNameInfoEXT vkDebugUtilsObjectNameInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
 			vkDebugUtilsObjectNameInfo.objectHandle = reinterpret_cast<GTSL::uint64>(handle);
 			vkDebugUtilsObjectNameInfo.objectType = objectType;
-			vkDebugUtilsObjectNameInfo.pObjectName = text.begin();
+			vkDebugUtilsObjectNameInfo.pObjectName = reinterpret_cast<const char*>(text.begin());
 			renderDevice->vkSetDebugUtilsObjectNameEXT(renderDevice->GetVkDevice(), &vkDebugUtilsObjectNameInfo);
 		}
 	}

@@ -30,9 +30,6 @@
     <ClInclude Include="GTSL\Extent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\FlatHashMap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\FlipFlop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -84,7 +81,7 @@
     <ClInclude Include="GTSL\Gamepad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\KeepVector.h">
+    <ClInclude Include="GTSL\FixedVector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\Assert.h">
@@ -216,9 +213,6 @@
     <ClInclude Include="GTSL\DataSizes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\DynamicType.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Filesystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -258,15 +252,15 @@
     <ClInclude Include="GTSL\GamepadQuery.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GTSL\HashMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\System.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Memory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Sockets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Math\AxisAngle.cpp">
@@ -290,16 +284,10 @@
     <ClCompile Include="src\Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\File.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Console.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\StringCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Filesystem.cpp">
@@ -320,5 +308,6 @@
     <ClCompile Include="src\Gamepad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GTSL\MappedFile.hpp" />
   </ItemGroup>
 </Project>

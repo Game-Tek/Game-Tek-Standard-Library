@@ -223,24 +223,23 @@ namespace GAL
 		TranslateMask<PipelineStages::TOP_OF_PIPE, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT>(pipelineStage, vkPipelineStageFlags);
 		TranslateMask<PipelineStages::DRAW_INDIRECT, VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT>(pipelineStage, vkPipelineStageFlags);
 		TranslateMask<PipelineStages::VERTEX_INPUT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT>(pipelineStage, vkPipelineStageFlags);
-		TranslateMask<PipelineStages::VERTEX_SHADER, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT>(pipelineStage, vkPipelineStageFlags);
-		TranslateMask<PipelineStages::TESSELLATION_CONTROL_SHADER, VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT>(pipelineStage, vkPipelineStageFlags);
-		TranslateMask<PipelineStages::TESSELLATION_EVALUATION_SHADER, VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT>(pipelineStage, vkPipelineStageFlags);
-		TranslateMask<PipelineStages::GEOMETRY_SHADER, VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT>(pipelineStage, vkPipelineStageFlags);
-		TranslateMask<PipelineStages::FRAGMENT_SHADER, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT>(pipelineStage, vkPipelineStageFlags);
+		TranslateMask<PipelineStages::VERTEX, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT>(pipelineStage, vkPipelineStageFlags);
+		TranslateMask<PipelineStages::TESSELLATION_CONTROL, VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT>(pipelineStage, vkPipelineStageFlags);
+		TranslateMask<PipelineStages::TESSELLATION_EVALUATION, VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT>(pipelineStage, vkPipelineStageFlags);
+		TranslateMask<PipelineStages::GEOMETRY, VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT>(pipelineStage, vkPipelineStageFlags);
+		TranslateMask<PipelineStages::FRAGMENT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT>(pipelineStage, vkPipelineStageFlags);
 		TranslateMask<PipelineStages::EARLY_FRAGMENT_TESTS, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT>(pipelineStage, vkPipelineStageFlags);
 		TranslateMask<PipelineStages::LATE_FRAGMENT_TESTS, VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT>(pipelineStage, vkPipelineStageFlags);
 		TranslateMask<PipelineStages::COLOR_ATTACHMENT_OUTPUT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT>(pipelineStage, vkPipelineStageFlags);
-		TranslateMask<PipelineStages::COMPUTE_SHADER, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT>(pipelineStage, vkPipelineStageFlags);
+		TranslateMask<PipelineStages::COMPUTE, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT>(pipelineStage, vkPipelineStageFlags);
 		TranslateMask<PipelineStages::TRANSFER, VK_PIPELINE_STAGE_TRANSFER_BIT>(pipelineStage, vkPipelineStageFlags);
 		TranslateMask<PipelineStages::BOTTOM_OF_PIPE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT>(pipelineStage, vkPipelineStageFlags);
 		TranslateMask<PipelineStages::HOST, VK_PIPELINE_STAGE_HOST_BIT>(pipelineStage, vkPipelineStageFlags);
 		TranslateMask<PipelineStages::ALL_GRAPHICS, VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT>(pipelineStage, vkPipelineStageFlags);
-		TranslateMask<PipelineStages::ALL_COMMANDS, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT>(pipelineStage, vkPipelineStageFlags);
-		TranslateMask<PipelineStages::RAY_TRACING_SHADER, VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR>(pipelineStage, vkPipelineStageFlags);
+		TranslateMask<PipelineStages::RAY_TRACING, VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR>(pipelineStage, vkPipelineStageFlags);
 		TranslateMask<PipelineStages::ACCELERATION_STRUCTURE_BUILD, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR>(pipelineStage, vkPipelineStageFlags);
-		TranslateMask<PipelineStages::TASK_SHADER, VK_PIPELINE_STAGE_TASK_SHADER_BIT_NV>(pipelineStage, vkPipelineStageFlags);
-		TranslateMask<PipelineStages::MESH_SHADER, VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV>(pipelineStage, vkPipelineStageFlags);
+		TranslateMask<PipelineStages::TASK, VK_PIPELINE_STAGE_TASK_SHADER_BIT_NV>(pipelineStage, vkPipelineStageFlags);
+		TranslateMask<PipelineStages::MESH, VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV>(pipelineStage, vkPipelineStageFlags);
 		return vkPipelineStageFlags;
 	}
 
@@ -265,12 +264,14 @@ namespace GAL
 
 	inline VkShaderStageFlagBits ToVulkan(const ShaderType shaderType) {
 		switch (shaderType) {
-		case ShaderType::VERTEX_SHADER: return VK_SHADER_STAGE_VERTEX_BIT;
-		case ShaderType::TESSELLATION_CONTROL_SHADER: return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-		case ShaderType::TESSELLATION_EVALUATION_SHADER: return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-		case ShaderType::GEOMETRY_SHADER: return VK_SHADER_STAGE_GEOMETRY_BIT;
-		case ShaderType::FRAGMENT_SHADER: return VK_SHADER_STAGE_FRAGMENT_BIT;
-		case ShaderType::COMPUTE_SHADER: return VK_SHADER_STAGE_COMPUTE_BIT;
+		case ShaderType::VERTEX: return VK_SHADER_STAGE_VERTEX_BIT;
+		case ShaderType::TESSELLATION_CONTROL: return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+		case ShaderType::TESSELLATION_EVALUATION: return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+		case ShaderType::GEOMETRY: return VK_SHADER_STAGE_GEOMETRY_BIT;
+		case ShaderType::FRAGMENT: return VK_SHADER_STAGE_FRAGMENT_BIT;
+		case ShaderType::COMPUTE: return VK_SHADER_STAGE_COMPUTE_BIT;
+		case ShaderType::TASK: return VK_SHADER_STAGE_TASK_BIT_NV;
+		case ShaderType::MESH: return VK_SHADER_STAGE_MESH_BIT_NV;
 		case ShaderType::RAY_GEN: return VK_SHADER_STAGE_RAYGEN_BIT_KHR;
 		case ShaderType::CLOSEST_HIT: return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 		case ShaderType::ANY_HIT: return VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
@@ -543,7 +544,7 @@ namespace GAL
 	}
 
 	inline MemoryType ToGAL(const VkMemoryPropertyFlags memoryPropertyFlags) {
-		MemoryType memoryType = 0;
+		MemoryType memoryType;
 		TranslateMask<VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, MemoryTypes::GPU>(memoryPropertyFlags, memoryType);
 		TranslateMask<VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, MemoryTypes::HOST_VISIBLE>(memoryPropertyFlags, memoryType);
 		TranslateMask<VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, MemoryTypes::HOST_COHERENT>(memoryPropertyFlags, memoryType);
