@@ -138,8 +138,9 @@ namespace GAL
 			renderDevice->VkGetPipelineCacheData(renderDevice->GetVkDevice(), pipelineCache, &data_size, nullptr);
 			size = static_cast<GTSL::uint32>(data_size);
 		}
-		
-		void GetCache(const VulkanRenderDevice* renderDevice, GTSL::BufferInterface buffer) const {
+
+		template<class B>
+		void GetCache(const VulkanRenderDevice* renderDevice, B& buffer) const {
 			GTSL::uint64 data_size;
 			renderDevice->VkGetPipelineCacheData(renderDevice->GetVkDevice(), pipelineCache, &data_size, buffer.begin());
 			buffer.Resize(data_size);

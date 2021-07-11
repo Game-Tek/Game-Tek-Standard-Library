@@ -63,38 +63,40 @@ namespace GTSL
 			return bytes;
 		}
 		
-		uint32 Write(BufferInterface buffer) const {
+		template<class B>
+		uint32 Write(B& buffer) const {
 			DWORD bytes{ 0 };
 			WriteFile(fileHandle, buffer.begin(), static_cast<uint32>(buffer.GetLength()), &bytes, nullptr);
-			//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
-			buffer.AddResize(-(int64)bytes);
+			buffer.AddBytes(-static_cast<int64>(bytes));
 			return bytes;
 		}
 		
 		[[nodiscard]] uint32 Read(const Range<byte*> buffer) const
 		{
 			DWORD bytes{ 0 };
-			ReadFile(static_cast<HANDLE>(fileHandle), buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
+			ReadFile(fileHandle, buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
 			auto w = GetLastError();
 			//GTSL_ASSERT(w , "Win32 Error!");
 			return bytes;
 		}
-		
-		uint32 Read(BufferInterface buffer) const {
+
+		template<class B>
+		uint32 Read(B& buffer) const {
 			DWORD bytes{ 0 };
+			buffer.AddResize(GetSize());
 			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), GetSize(), &bytes, nullptr);
+			buffer.AddBytes(GetSize());
 			auto w = GetLastError();
-			//GTSL_ASSERT(w , "Win32 Error!");
-			buffer.AddResize(bytes);
 			return bytes;
 		}
 		
-		uint32 Read(uint64 size, BufferInterface buffer) const {
+		template<class B>
+		uint32 Read(uint64 size, B& buffer) const {
 			DWORD bytes{ 0 };
-			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), static_cast<uint32>(size), &bytes, nullptr);
-			auto w = GetLastError();
-			//GTSL_ASSERT(w , "Win32 Error!");
 			buffer.AddResize(bytes);
+			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), static_cast<uint32>(size), &bytes, nullptr);
+			buffer.AddBytes(GetSize());
+			auto w = GetLastError();
 			return bytes;
 		}
 		

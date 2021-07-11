@@ -161,7 +161,8 @@ namespace GAL
 	public:
 	};
 
-	inline bool CompileShader(GTSL::Range<const char8_t*> code, GTSL::Range<const char8_t*> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, GTSL::BufferInterface result, GTSL::BufferInterface stringResult)
+	template<class BUF, class STR>
+	bool CompileShader(GTSL::Range<const char8_t*> code, GTSL::Range<const char8_t*> shaderName, ShaderType shaderType, ShaderLanguage shaderLanguage, BUF& result, STR& stringResult)
 	{
 		shaderc_shader_kind shaderc_stage;
 
@@ -201,8 +202,7 @@ namespace GAL
 
 		if (shaderc_module.GetCompilationStatus() != shaderc_compilation_status_success) {
 			auto errorString = shaderc_module.GetErrorMessage();
-			stringResult.CopyBytes(errorString.size() + 1, reinterpret_cast<const GTSL::byte*>(errorString.c_str()));
-			*(stringResult.end() - 1) = '\0';
+			stringResult += GTSL::Range<const char8_t*>(errorString.size() + 1, reinterpret_cast<const char8_t*>(errorString.c_str()));
 			return false;
 		}
 

@@ -24,7 +24,7 @@ namespace GTSL
 	class HashMap
 	{
 	public:
-		HashMap() = default;
+		HashMap() = delete;
 
 		HashMap(const uint32 size, const ALLOCATOR& allocatorReference) : bucketCount(NextPowerOfTwo(size)), maxBucketLength(bucketCount / 2), allocator(allocatorReference)
 		{
@@ -51,21 +51,6 @@ namespace GTSL
 			other.data = nullptr; other.bucketCount = 0;
 		}
 
-		void Initialize(const uint32 size, const ALLOCATOR& allocatorReference)
-		{
-			this->bucketCount = NextPowerOfTwo(size);
-			this->allocator = allocatorReference;
-			this->maxBucketLength = bucketCount / 2;
-
-			while (maxBucketLength == 0) {
-				bucketCount *= 2;
-				maxBucketLength = bucketCount / 2;
-			}
-			
-			this->data = allocate(bucketCount, maxBucketLength);
-			initializeBuckets();
-		}
-
 		void Free()
 		{
 			for (uint32 i = 0; i < this->bucketCount; ++i) {
@@ -76,8 +61,7 @@ namespace GTSL
 			this->data = nullptr;
 		}
 		
-		~HashMap()
-		{
+		~HashMap() {
 			if (this->data) { Free(); }
 		}
 

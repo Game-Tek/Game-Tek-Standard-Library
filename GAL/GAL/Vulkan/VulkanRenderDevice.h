@@ -271,7 +271,7 @@ namespace GAL
 				void** lastProperty = &properties2.pNext; void** lastFeature = &features2.pNext;
 
 				{
-					GTSL::Buffer<GTSL::StaticAllocator<8192>> buffer; buffer.Allocate(8192, 8, GTSL::StaticAllocator<8192>());
+					GTSL::Buffer buffer(8192, 8, GTSL::StaticAllocator<8192>());
 					GTSL::Array<GTSL::StaticString<32>, 32> deviceExtensions;
 
 					auto placePropertiesStructure = [&]<typename T>(T** structure, VkStructureType structureType) {

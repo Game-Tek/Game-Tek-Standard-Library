@@ -9,55 +9,22 @@
 
 namespace GTSL
 {	
-	class BufferInterface
-	{
-	public:
-		void CopyBytes(const uint64 size, const byte* from)
-		{
-			GTSL_ASSERT(*length + size <= *capacity, "Buffer can't fit more!");
-			MemCopy(size, from, *data + *length); *length += size;
-		}
-
-		byte* begin() { return *data; }
-		byte* end() { return *data; }
-
-		uint64 GetLength() const { return *length; }
-		
-		void Resize(uint64 newSize)
-		{
-			*length = newSize;
-		}
-
-		void AddResize(int64 delta)
-		{
-			*length += delta;
-		}
-	
-	private:
-		byte** data;
-		uint64* length;
-		uint64* capacity;
-
-		template<class ALLOCATOR>
-		friend class Buffer;
-		
-		BufferInterface(byte** d, uint64* len, uint64* cap) : data(d), length(len), capacity(cap) {}
-	};
-	
 	template<class ALLOCATOR>
 	class Buffer
 	{
 	public:
-		Buffer() = default;
+		Buffer() = delete;
 
+		Buffer(const ALLOCATOR& allocator) : allocator(allocator) {
+		}
+		
 		Buffer(uint32 size, uint32 alignment, const ALLOCATOR& allocator) {
 			Allocate(size, alignment, allocator);
 		}
 		
 		~Buffer()
 		{
-			if (data)
-			{
+			if (data) {
 				allocator.Deallocate(capacity, alignment, data); data = nullptr;
 			}
 		}
@@ -72,7 +39,7 @@ namespace GTSL
 		T* AllocateStructure() {
 			void* ret = data + length;
 			length += sizeof(T);
-			return reinterpret_cast<T*>(ret);
+			return static_cast<T*>(ret);
 		}
 
 		Buffer(Buffer&& buffer) noexcept : data(buffer.data), capacity(buffer.capacity), length(buffer.length), readPos(buffer.readPos)
@@ -92,8 +59,14 @@ namespace GTSL
 		}
 
 		void Resize(const uint64 size) { length = size; }
-		void AddResize(const int64 delta) { length += delta; }
-		void SetReadPosition(const uint64 pos) { readPos = pos; }
+		
+		void AddResize(const int64 delta) {
+			tryResize(delta);
+		}
+
+		void AddBytes(const int64 bytes) {
+			length += bytes;
+		}
 
 		void CopyBytes(const uint64 size, const byte* from)
 		{
@@ -111,26 +84,38 @@ namespace GTSL
 		[[nodiscard]] uint64 GetLength() const { return length; }
 		[[nodiscard]] uint64 GetReadPosition() const { return readPos; }
 		[[nodiscard]] byte* GetData() const { return data; }
+
+		[[nodiscard]] byte* begin() const { return data; }
+		[[nodiscard]] byte* end() const { return data + length; }
 		
-		operator Range<byte*>() const { return Range<byte*>(length, data); }
-		operator Range<const byte*>() const { return Range<const byte*>(length, data); }
+		explicit operator Range<byte*>() const { return Range<byte*>(length, data); }
+		explicit operator Range<const byte*>() const { return Range<const byte*>(length, data); }
 
 		Range<byte*> GetRange() { return Range<byte*>(length, data); }
 		Range<const byte*> GetRange() const { return Range<const byte*>(length, data); }
-		
-		BufferInterface GetBufferInterface() { return BufferInterface(&data, &length, &capacity); }
 	
 	private:
 		byte* data{ nullptr };
-		uint32 alignment = 0;
+		uint32 alignment = 16;
 		uint64 capacity = 0;
 		uint64 length = 0;
 		uint64 readPos = 0;
 
-		void tryResize(const uint64 deltaSize)
-		{
-			GTSL_ASSERT(length + deltaSize <= capacity, "Buffer can't fit more!");
-			if (length + deltaSize > capacity) { /*TODO: RESIZE*/ }
+		void tryResize(const int64 deltaSize) {
+			if (length + deltaSize > capacity) {
+				auto allocSize = (capacity + deltaSize) * 2ll; uint64 allocatedSize = 0;
+				void* newAlloc = nullptr;
+				allocator.Allocate(allocSize, alignment, &newAlloc, &allocatedSize);
+
+				if (data) {
+					MemCopy(length, data, newAlloc);
+					allocator.Deallocate(capacity, alignment, reinterpret_cast<void*>(data));
+				}
+				
+				data = static_cast<byte*>(newAlloc);
+				
+				capacity = allocatedSize;
+			}
 		}
 		
 		[[no_unique_address]] ALLOCATOR allocator;
