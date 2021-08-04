@@ -37,19 +37,20 @@ namespace GTSL
 	public:
 		PagedVector() = default;
 
-		void Initialize(const uint32 minPages, const uint32 minPageLength, const ALLOCATOR& allocator)
+		//PagedVector(const ALLOCATOR& allocator) : dataAllocator(allocator)
+		//{
+		//}
+		
+		PagedVector(const uint32 minPages, const uint32 minPageLength, const ALLOCATOR& allocator) : dataAllocator(allocator), PAGE_LENGTH(NextPowerOfTwo(minPageLength))
 		{
 			GTSL_ASSERT(pages == nullptr, "")
-			dataAllocator = allocator;
 
 			uint64 allocatedSize = 0;
-			PAGE_LENGTH = NextPowerOfTwo(minPageLength);
 			
 			dataAllocator.Allocate(sizeof(T*) * minPages, alignof(T*), reinterpret_cast<void**>(&pages), &allocatedSize);
-			allocatedPages = allocatedSize / sizeof(T*);
+			allocatedPages = static_cast<uint32>(allocatedSize / sizeof(T*));
 
-			for (uint32 p = 0; p < allocatedPages; ++p)
-			{
+			for (uint32 p = 0; p < allocatedPages; ++p) {
 				dataAllocator.Allocate(sizeof(T) * PAGE_LENGTH, alignof(T), reinterpret_cast<void**>(&pages[p]), &allocatedSize);
 			}
 		}
@@ -119,13 +120,13 @@ namespace GTSL
 
 		[[nodiscard]] bool end() const { return true; }
 	private:
+		ALLOCATOR dataAllocator;
+		
 		T** pages = nullptr;
 		//is a power of 2
 		uint32 PAGE_LENGTH = 0;
 		uint32 allocatedPages = 0;
-		uint32 length = 0;
-		
-		ALLOCATOR dataAllocator;
+		uint32 length = 0;		
 
 		static constexpr uint32 modulo(const uint32 key, const uint32 size) { return key & (size - 1); }
 		

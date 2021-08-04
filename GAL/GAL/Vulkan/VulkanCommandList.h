@@ -67,7 +67,7 @@ namespace GAL
 			}
 
 			vkRenderPassBeginInfo.pClearValues = vkClearValues;
-			vkRenderPassBeginInfo.clearValueCount = renderPassTargetDescriptions.ElementCount();
+			vkRenderPassBeginInfo.clearValueCount = static_cast<GTSL::uint32>(renderPassTargetDescriptions.ElementCount());
 			vkRenderPassBeginInfo.framebuffer = framebuffer.GetVkFramebuffer();
 			vkRenderPassBeginInfo.renderArea.extent = ToVulkan(renderArea);
 			vkRenderPassBeginInfo.renderArea.offset = { 0, 0 };
@@ -121,7 +121,8 @@ namespace GAL
 		}
 
 		void UpdatePushConstant(const VulkanRenderDevice* renderDevice, VulkanPipelineLayout pipelineLayout, GTSL::uint32 offset, GTSL::Range<const GTSL::byte*> data, ShaderStage shaderStages) {
-			renderDevice->VkCmdPushConstants(commandBuffer, pipelineLayout.GetVkPipelineLayout(), ToVulkan(shaderStages), offset, data.Bytes(), data.begin());
+			GTSL_ASSERT(data.ElementCount() < 128, "Data size is larger than can be pushed.");
+			renderDevice->VkCmdPushConstants(commandBuffer, pipelineLayout.GetVkPipelineLayout(), ToVulkan(shaderStages), offset, static_cast<GTSL::uint32>(data.Bytes()), data.begin());
 		}
 		
 		void DrawIndexed(const VulkanRenderDevice* renderDevice, uint32_t indexCount, uint32_t instanceCount = 0) const {
@@ -132,21 +133,21 @@ namespace GAL
 			renderDevice->VkCmdDrawMeshTasks(commandBuffer, taskCount, 0);
 		}
 		
-		void TraceRays(const VulkanRenderDevice* renderDevice, GTSL::Array<ShaderTableDescriptor, 4> shaderTableDescriptors, GTSL::Extent3D dispatchSize) {
+		void TraceRays(const VulkanRenderDevice* renderDevice, GTSL::StaticVector<ShaderTableDescriptor, 4> shaderTableDescriptors, GTSL::Extent3D dispatchSize) {
 			VkStridedDeviceAddressRegionKHR raygenSBT, hitSBT, missSBT, callableSBT;
-			raygenSBT.deviceAddress = shaderTableDescriptors[RAY_GEN_TABLE_INDEX].Address;
+			raygenSBT.deviceAddress = static_cast<GTSL::uint64>(shaderTableDescriptors[RAY_GEN_TABLE_INDEX].Address);
 			raygenSBT.size = shaderTableDescriptors[RAY_GEN_TABLE_INDEX].Entries * shaderTableDescriptors[RAY_GEN_TABLE_INDEX].EntrySize;
 			raygenSBT.stride = shaderTableDescriptors[RAY_GEN_TABLE_INDEX].EntrySize;
 
-			hitSBT.deviceAddress = shaderTableDescriptors[HIT_TABLE_INDEX].Address;
+			hitSBT.deviceAddress = static_cast<GTSL::uint64>(shaderTableDescriptors[HIT_TABLE_INDEX].Address);
 			hitSBT.size = shaderTableDescriptors[HIT_TABLE_INDEX].Entries * shaderTableDescriptors[HIT_TABLE_INDEX].EntrySize;
 			hitSBT.stride = shaderTableDescriptors[HIT_TABLE_INDEX].EntrySize;
 
-			missSBT.deviceAddress = shaderTableDescriptors[MISS_TABLE_INDEX].Address;
+			missSBT.deviceAddress = static_cast<GTSL::uint64>(shaderTableDescriptors[MISS_TABLE_INDEX].Address);
 			missSBT.size = shaderTableDescriptors[MISS_TABLE_INDEX].Entries * shaderTableDescriptors[MISS_TABLE_INDEX].EntrySize;
 			missSBT.stride = shaderTableDescriptors[MISS_TABLE_INDEX].EntrySize;
 
-			callableSBT.deviceAddress = shaderTableDescriptors[CALLABLE_TABLE_INDEX].Address;
+			callableSBT.deviceAddress = static_cast<GTSL::uint64>(shaderTableDescriptors[CALLABLE_TABLE_INDEX].Address);
 			callableSBT.size = shaderTableDescriptors[CALLABLE_TABLE_INDEX].Entries * shaderTableDescriptors[CALLABLE_TABLE_INDEX].EntrySize;
 			callableSBT.stride = shaderTableDescriptors[CALLABLE_TABLE_INDEX].EntrySize;
 
@@ -173,22 +174,24 @@ namespace GAL
 
 		void BindBindingsSets(const VulkanRenderDevice* renderDevice, ShaderStage shaderStage, GTSL::Range<const VulkanBindingsSet*> bindingsSets, GTSL::Range<const GTSL::uint32*> offsets, VulkanPipelineLayout pipelineLayout, GTSL::uint32 firstSet) {
 
-			GTSL::Array<VkDescriptorSet, 16> vkDescriptorSets;
+			GTSL::StaticVector<VkDescriptorSet, 16> vkDescriptorSets;
 			for (auto e : bindingsSets) { vkDescriptorSets.EmplaceBack(e.GetVkDescriptorSet()); }
+
+			const GTSL::uint32 bindingSetCount = static_cast<GTSL::uint32>(bindingsSets.ElementCount()), offsetCount = static_cast<GTSL::uint32>(offsets.ElementCount());
 			
 			if (shaderStage & (ShaderStages::VERTEX | ShaderStages::FRAGMENT | ShaderStages::MESH)) {
-				renderDevice->VkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout.GetVkPipelineLayout(), firstSet, bindingsSets.ElementCount(),
-					reinterpret_cast<const VkDescriptorSet*>(bindingsSets.begin()), static_cast<GTSL::uint32>(offsets.ElementCount()), offsets.begin());
+				renderDevice->VkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout.GetVkPipelineLayout(), firstSet, bindingSetCount,
+					reinterpret_cast<const VkDescriptorSet*>(bindingsSets.begin()), offsetCount, offsets.begin());
 			}
 			
 			if (shaderStage & ShaderStages::COMPUTE) {
-				renderDevice->VkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout.GetVkPipelineLayout(), firstSet, bindingsSets.ElementCount(),
-					reinterpret_cast<const VkDescriptorSet*>(bindingsSets.begin()), static_cast<GTSL::uint32>(offsets.ElementCount()), offsets.begin());
+				renderDevice->VkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout.GetVkPipelineLayout(), firstSet, bindingSetCount,
+					reinterpret_cast<const VkDescriptorSet*>(bindingsSets.begin()), offsetCount, offsets.begin());
 			}
 			
 			if(shaderStage & ShaderStages::RAY_GEN) {
-				renderDevice->VkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, pipelineLayout.GetVkPipelineLayout(), firstSet, bindingsSets.ElementCount(),
-					reinterpret_cast<const VkDescriptorSet*>(bindingsSets.begin()), static_cast<GTSL::uint32>(offsets.ElementCount()), offsets.begin());
+				renderDevice->VkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, pipelineLayout.GetVkPipelineLayout(), firstSet, bindingSetCount,
+					reinterpret_cast<const VkDescriptorSet*>(bindingsSets.begin()), offsetCount, offsets.begin());
 			}
 		}
 
@@ -313,8 +316,8 @@ namespace GAL
 			for (GTSL::uint32 accStrInfoIndex = 0; accStrInfoIndex < infos.ElementCount(); ++accStrInfoIndex) {
 				auto& source = infos[accStrInfoIndex];
 
-				geoPerAccStructure.EmplaceBack().Initialize(source.Geometries.ElementCount(), allocator);
-				buildRangesPerAccelerationStructure.EmplaceBack().Initialize(source.Geometries.ElementCount(), allocator);
+				geoPerAccStructure.EmplaceBack(source.Geometries.ElementCount(), allocator);
+				buildRangesPerAccelerationStructure.EmplaceBack(source.Geometries.ElementCount(), allocator);
 				buildRangesRangePerAccelerationStructure.EmplaceBack(buildRangesPerAccelerationStructure[accStrInfoIndex].begin());
 
 				for (GTSL::uint32 i = 0; i < source.Geometries.ElementCount(); ++i)
@@ -333,7 +336,7 @@ namespace GAL
 				buildGeometryInfo.pGeometries = geoPerAccStructure[accStrInfoIndex].begin();
 				buildGeometryInfo.ppGeometries = nullptr;
 				buildGeometryInfo.geometryCount = geoPerAccStructure[accStrInfoIndex].GetLength();
-				buildGeometryInfo.scratchData.deviceAddress = source.ScratchBufferAddress;
+				buildGeometryInfo.scratchData.deviceAddress = static_cast<GTSL::uint64>(source.ScratchBufferAddress);
 				buildGeometryInfo.mode = source.SourceAccelerationStructure.GetVkAccelerationStructure() ? VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR : VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
 				buildGeometryInfos.EmplaceBack(buildGeometryInfo);
 			}

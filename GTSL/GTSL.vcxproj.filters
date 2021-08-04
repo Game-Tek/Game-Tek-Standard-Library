@@ -21,9 +21,6 @@
     <ClInclude Include="GTSL\Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\Array.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\BlockingQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -69,7 +66,7 @@
     <ClInclude Include="GTSL\Memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\Serialize.h">
+    <ClInclude Include="GTSL\Serialize.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GTSL\Bitfield.h">
@@ -165,9 +162,6 @@
     <ClInclude Include="GTSL\Math\Math.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\StaticString.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GTSL\Delegate.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -249,10 +243,7 @@
     <ClInclude Include="GTSL\SlottedVector.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GTSL\GamepadQuery.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GTSL\HashMap.h">
+    <ClInclude Include="GTSL\HashMap.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -278,36 +269,14 @@
     <ClCompile Include="src\Math\Rotator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Application.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Thread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Console.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Filesystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Allocator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Math\Vectors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Math\Math.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GTSL\StaticMap.hpp" />
     <ClCompile Include="GTSL\ArrayCommon.hpp" />
     <ClCompile Include="GTSL\ShortString.hpp" />
-    <ClCompile Include="src\Gamepad.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GTSL\MappedFile.hpp" />
   </ItemGroup>
 </Project>

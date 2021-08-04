@@ -31,12 +31,12 @@ void GTSL::MemCopy(Range<byte*> range, void* to)
 	std::memcpy(to, range.begin(), range.Bytes());
 }
 
-void GTSL::SetMemory(const uint64 size, void* data, const int64 value)
+void GTSL::SetMemory(const uint64 size, void* data, const int32 value)
 {
 	std::memset(data, value, size);
 }
 
-void GTSL::SetMemory(Range<byte*> range, const int64 value)
+void GTSL::SetMemory(Range<byte*> range, const int32 value)
 {
 	std::memset(range.begin(), value, range.Bytes());
 }

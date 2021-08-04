@@ -93,12 +93,19 @@ namespace GAL
 	enum class ComponentType : GTSL::uint8 { INT, UINT, FLOAT, NON_LINEAR };
 	enum class TextureType : GTSL::uint8 { COLOR, DEPTH };
 
-	using DeviceAddress = GTSL::uint64;
+	struct DeviceAddress {
+		DeviceAddress() = default;
+		explicit DeviceAddress(const GTSL::uint64 add) : address(add) {}
+		
+		explicit operator GTSL::uint64() const { return address; }
+		DeviceAddress operator+(const GTSL::uint64 add) const { return DeviceAddress(address + add); }
+	private:
+		GTSL::uint64 address = 0;
+	};
 	
 	struct ShaderHandle {
 		ShaderHandle() = default;
-		ShaderHandle(void* data, GTSL::uint32 size, GTSL::uint32 alignedSize) : Data(data), Size(size), AlignedSize(alignedSize) {}
-		void* Data; GTSL::uint32 Size, AlignedSize;
+		GTSL::byte size[32];
 	};
 
 	inline GTSL::uint32 SizeFromExtent(const GTSL::Extent3D extent) {
@@ -130,16 +137,15 @@ namespace GAL
 		GTSL::uint8 BitDepth : 3;        //16
 		TextureType Type : 2;            //19
 
-		[[nodiscard]] GTSL::uint8 GetBitDepth() const { return 1 << BitDepth; }
+		[[nodiscard]] GTSL::uint8 GetBitDepth() const { return static_cast<GTSL::uint8>(1) << BitDepth; }
 		[[nodiscard]] GTSL::uint8 GetSize() const { return GetBitDepth() / 8 * ComponentCount; }
 
-		[[nodiscard]] constexpr GTSL::uint32 AsUint() const {
+		[[nodiscard]] constexpr operator GTSL::uint32() const {
 			return static_cast<GTSL::UnderlyingType<ComponentType>>(Component) | ComponentCount << 4 | A << 8 | B << 10 | C << 12 | D << 14 | BitDepth << 16 | static_cast<GTSL::UnderlyingType<TextureType>>(Type) << 19;
 		}
 	};
 	
-	namespace FORMATS
-	{
+	namespace FORMATS {
 		static constexpr auto RGB_I8 = FormatDescriptor(ComponentType::INT, 3, 8, TextureType::COLOR, 0, 1, 2, 3);
 		static constexpr auto BGRA_I8 = FormatDescriptor(ComponentType::INT, 4, 8, TextureType::COLOR, 2, 1, 0, 3);
 		static constexpr auto BGRA_NONLINEAR8 = FormatDescriptor(ComponentType::NON_LINEAR, 4, 8, TextureType::COLOR, 2, 1, 0, 3);
@@ -152,17 +158,16 @@ namespace GAL
 		SRGB_NONLINEAR, DISPLAY_P3_LINEAR, DISPLAY_P3_NONLINEAR, HDR10_ST2048, DOLBY_VISION, HDR10_HLG, ADOBERGB_LINEAR, ADOBERGB_NONLINEAR, PASS_THROUGH
 	};
 	
-	enum class Format
-	{
-		RGB_I8 = FORMATS::RGB_I8.AsUint(),
-		RGBA_I8 = FORMATS::RGBA_I8.AsUint(),
-		RGBA_F16 = FORMATS::RGBA_F16.AsUint(),
-		BGRA_I8 = FORMATS::BGRA_I8.AsUint(),
-		DEPTH32 = FORMATS::DEPTH_F32.AsUint()
+	enum class Format {
+		RGB_I8 = FORMATS::RGB_I8,
+		RGBA_I8 = FORMATS::RGBA_I8,
+		RGBA_F16 = FORMATS::RGBA_F16,
+		BGRA_I8 = FORMATS::BGRA_I8,
+		DEPTH32 = FORMATS::DEPTH_F32
 	};
 
 	constexpr Format MakeFormatFromFormatDescriptor(const FormatDescriptor formatDescriptor) {
-		return static_cast<Format>(formatDescriptor.AsUint());
+		return static_cast<Format>(static_cast<GTSL::uint32>(formatDescriptor));
 	}
 
 	//constexpr FormatDescriptor MakeFormatDescriptorFromFormat(const Format format) {

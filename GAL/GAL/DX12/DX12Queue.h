@@ -22,7 +22,7 @@ namespace GAL {
 		
 		void Submit(const GTSL::Range<const GTSL::Range<const WorkUnit*>*> submitInfos, const DX12Fence fence) const {
 			for(auto& s : submitInfos) {
-				GTSL::Array<ID3D12CommandList*, 16> commandLists;
+				GTSL::StaticVector<ID3D12CommandList*, 16> commandLists;
 
 				for(auto& e : s) {
 					commandLists.EmplaceBack(static_cast<const DX12CommandBuffer*>(e.CommandBuffer)->GetID3D12CommandList());

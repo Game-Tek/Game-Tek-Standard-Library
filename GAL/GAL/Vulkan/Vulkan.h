@@ -106,7 +106,7 @@ namespace GAL
 		switch (tiling) {
 		case Tiling::OPTIMAL: return VK_IMAGE_TILING_OPTIMAL;
 		case Tiling::LINEAR: return VK_IMAGE_TILING_LINEAR;
-		default: VK_IMAGE_TILING_MAX_ENUM;
+		default: return VK_IMAGE_TILING_MAX_ENUM;
 		}
 	}
 
@@ -160,33 +160,6 @@ namespace GAL
 		default: return VK_IMAGE_LAYOUT_MAX_ENUM;
 		}
 	}
-
-	//inline VkFormat ToVulkan(const FormatDescriptor formatDescriptor) {
-	//	switch (formatDescriptor.Type) {
-	//	case TextureType::COLOR: {
-	//		switch (formatDescriptor.BitDepth) {
-	//		//8 bits
-	//		case 3: {
-	//			switch (formatDescriptor.ComponentType) {
-	//			case ComponentType::INT: {
-	//				switch (formatDescriptor.ComponentCount) {
-	//					
-	//				}
-	//				break;
-	//			}
-	//			case ComponentType::UINT: break;
-	//			case ComponentType::FLOAT: break;
-	//			default: ;
-	//			}
-	//		}
-	//		}
-	//	}
-	//	case TextureType::DEPTH: {
-	//		
-	//	}
-	//	default: ;
-	//	}
-	//}
 	
 	inline VkFormat ToVulkan(const Format format) {
 		switch (format) {
@@ -195,15 +168,15 @@ namespace GAL
 		case Format::BGRA_I8: return VK_FORMAT_B8G8R8A8_UNORM;
 		case Format::DEPTH32: return VK_FORMAT_D32_SFLOAT;
 		case Format::RGB_I8: return VK_FORMAT_R8G8B8_UNORM;
+		default: return VK_FORMAT_MAX_ENUM;
 		}
-
-		GAL_DEBUG_BREAK;
 	}
 
 	inline VkImageAspectFlags TextureAspectToVkImageAspectFlags(const TextureType textureType) {
 		switch (textureType) {
 		case TextureType::COLOR: return VK_IMAGE_ASPECT_COLOR_BIT;
 		case TextureType::DEPTH: return VK_IMAGE_ASPECT_DEPTH_BIT;
+		default: return VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM;
 		}
 	}
 
@@ -250,8 +223,8 @@ namespace GAL
 		case BindingType::COMBINED_IMAGE_SAMPLER: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		case BindingType::SAMPLED_IMAGE: return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		case BindingType::STORAGE_IMAGE: return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-		case BindingType::UNIFORM_TEXEL_BUFFER: break;
-		case BindingType::STORAGE_TEXEL_BUFFER: break;
+		case BindingType::UNIFORM_TEXEL_BUFFER: return VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+		case BindingType::STORAGE_TEXEL_BUFFER: return VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
 		case BindingType::UNIFORM_BUFFER: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		case BindingType::STORAGE_BUFFER: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		case BindingType::UNIFORM_BUFFER_DYNAMIC: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;

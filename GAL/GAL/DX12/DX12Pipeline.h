@@ -4,9 +4,11 @@
 #include "DX12RenderDevice.h"
 #include "GAL/Pipelines.h"
 #include "GAL/RenderCore.h"
-#include "GTSL/Array.hpp"
-#include "GTSL/Buffer.hpp"
-#include "GTSL/Extent.h"
+
+#include <GTSL/Buffer.hpp>
+#include <GTSL/Extent.h>
+
+#include "GTSL/Vector.hpp"
 
 namespace GAL
 {
@@ -42,17 +44,17 @@ namespace GAL
 
 		struct BindingDescriptor
 		{
-			DX12BindingType BindingType;
-			DX12ShaderStage ShaderStage;
+			BindingType BindingType;
+			ShaderStage ShaderStage;
 			GTSL::uint32 UniformCount = 0;
-			DX12BindingFlags Flags;
+			BindingFlag Flags;
 		};
 
 		struct ImageBindingDescriptor : BindingDescriptor
 		{
 			GTSL::Range<const DX12TextureView*> ImageViews;
 			GTSL::Range<const DX12Sampler*> Samplers;
-			GTSL::Range<const DX12TextureLayout*> Layouts;
+			GTSL::Range<const TextureLayout*> Layouts;
 		};
 
 		struct BufferBindingDescriptor : BindingDescriptor
@@ -63,7 +65,7 @@ namespace GAL
 		};
 
 		void Initialize(const CreateInfo& info) {
-			GTSL::Array<D3D12_ROOT_PARAMETER, 12> rootParameters;
+			GTSL::StaticVector<D3D12_ROOT_PARAMETER, 12> rootParameters;
 
 			if (info.PushConstant) {
 				auto& pushConstant = rootParameters.EmplaceBack();
@@ -139,10 +141,10 @@ namespace GAL
 			GTSL::uint32 SubPass = 0;
 		};
 		void Initialize(const CreateInfo& info) {
-			GTSL::Buffer<GTSL::StackAllocator<1024>> buffer;
+			GTSL::Buffer<GTSL::StaticAllocator<1024>> buffer(1024, 16);
 			//buffer.Allocate(1024, 8, allocator);
 
-			GTSL::Array<D3D12_INPUT_ELEMENT_DESC, 12> vertexElements;
+			GTSL::StaticVector<D3D12_INPUT_ELEMENT_DESC, 12> vertexElements;
 
 			D3D12_PIPELINE_STATE_SUBOBJECT_TYPE type;
 

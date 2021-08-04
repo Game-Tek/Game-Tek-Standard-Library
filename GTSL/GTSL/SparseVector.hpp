@@ -26,6 +26,8 @@ namespace GTSL
 		 */
 		uint32 ElementCount = 0;
 
+		uint32 Capacity = 0;
+
 		T& operator[](const uint32 i) { return Elements[i]; }
 
 		Pair<uint32, T&> At(const uint32 i) { return Pair<uint32, T&>(First + i, Elements[i]); }
@@ -71,34 +73,33 @@ namespace GTSL
 		static constexpr uint8 IS_INSIDE = 4;
 		
 	public:
-		SparseVector() = default;
-
-		SparseVector(const uint32 maxElements, const ALLOCATOR& allo) : allocator(allo)
+		SparseVector(const uint32 maxElements, const ALLOCATOR& allo = ALLOCATOR()) : allocator(allo)
 		{
 			uint64 allocatedSize;
-			capacity = maxElements;
+			allocator.Allocate(sizeof(Group<T>) * maxElements, alignof(Group<T>), reinterpret_cast<void**>(&groups), &allocatedSize);
+			allocatedGroups = static_cast<uint32>(allocatedSize / sizeof(Group<T>));
+		}
 
-			allocator.Allocate(sizeof(Group<T>) * capacity, alignof(Group<T>), reinterpret_cast<void**>(&groups), &allocatedSize);
-
+		SparseVector(SparseVector&& other) noexcept : allocator(MoveRef(other.allocator)), groups(other.groups), allocatedGroups(other.allocatedGroups), groupCount(other.groupCount)
+		{
+			other.groups = nullptr;
 		}
 		
 		~SparseVector()
 		{
-			if (groups) [[likely]]
+			if (groups)
 			{
-				Clear();
-				allocator.Deallocate(sizeof(Group<T>) * capacity, alignof(Group<T>), groups);
+				for (uint32 i = 0; i < groupCount; ++i) {
+					for(uint32 j = 0; j < groups[i].ElementCount; ++j) {
+						Destroy(groups[i].Elements[j]);
+					}
+
+					allocator.Deallocate(sizeof(T) * groups[i].Capacity, alignof(T), reinterpret_cast<void*>(groups[i].Elements));
+				}
+				
+				allocator.Deallocate(sizeof(Group<T>) * allocatedGroups, alignof(Group<T>), groups);
 				groups = nullptr;
 			}
-		}
-		
-		void Initialize(const uint32 maxElements, const ALLOCATOR& allo)
-		{
-			uint64 allocatedSize;
-			capacity = maxElements;
-			
-			allocator = allo;
-			allocator.Allocate(sizeof(Group<T>) * capacity, alignof(Group<T>), reinterpret_cast<void**>(&groups), &allocatedSize);
 		}
 
 		template<typename... ARGS>
@@ -143,12 +144,13 @@ namespace GTSL
 			{
 				uint64 allocatedSize;
 
-				GTSL_ASSERT(groupCount != capacity, "No more allocated groups!")
+				GTSL_ASSERT(groupCount != allocatedGroups, "No more allocated groups!")
 				
 				Group<T>& group = groups[groupCount]; //TODO: GUARANTEE ORDERING
 				group.First = pos;
 				group.ElementCount = 1;
-				allocator.Allocate(sizeof(T) * capacity, alignof(T), reinterpret_cast<void**>(&group.Elements), &allocatedSize);
+				group.Capacity = 4;
+				allocator.Allocate(sizeof(T) * 4, alignof(T), reinterpret_cast<void**>(&group.Elements), &allocatedSize);
 
 				auto* obj = new(group.Elements + (pos - group.First)) T(GTSL::ForwardRef<ARGS>(args)...);
 				
@@ -166,10 +168,8 @@ namespace GTSL
 
 				if (group.Elements)
 				{
-					for (uint32 j = 0; j < group.ElementCount; ++j) { group.Elements[j].~T(); }
-
-					allocator.Deallocate(sizeof(T) * capacity, alignof(T), group.Elements);
-					group.Elements = nullptr;
+					for (uint32 j = 0; j < group.ElementCount; ++j) { Destroy(group.Elements[j]); }
+					group.ElementCount = 0;
 				}
 			}
 
@@ -218,15 +218,14 @@ namespace GTSL
 		const ALLOCATOR& GetAllocator() const { return allocator; }
 	
 	private:
-		Group<T>* groups;
+		ALLOCATOR allocator;
+		Group<T>* groups = nullptr;
 
 		friend struct SparseVectorIterator<T>;
 		friend class SparseVector;
 		
-		uint32 capacity = 0;
+		uint32 allocatedGroups = 0;
 		uint32 groupCount = 0;
-
-		ALLOCATOR allocator;
 
 		template<typename TT, class ALLOC, typename L>
 		friend void ForEach(const SparseVector<TT, ALLOC>& keepVector, L&& lambda);

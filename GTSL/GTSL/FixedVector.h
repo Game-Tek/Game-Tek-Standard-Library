@@ -24,13 +24,10 @@ namespace GTSL
 
 		FixedVector() = default;
 
-		explicit FixedVector(const length_type min, const ALLOCATOR& allocatorReference) : allocator(allocatorReference) {
-			data = allocate(min, &capacity);
-			InitializeBits(getIndices());
+		FixedVector(const ALLOCATOR& allocatorReference) : allocator(allocatorReference) {
 		}
 
-		void Initialize(const length_type min, const ALLOCATOR& allocatorReference) {
-			allocator = allocatorReference;
+		FixedVector(const length_type min, const ALLOCATOR& allocatorReference) : allocator(allocatorReference) {
 			data = allocate(min, &capacity);
 			InitializeBits(getIndices());
 		}
@@ -105,10 +102,10 @@ namespace GTSL
 		 * \return Index At which it was emplaced.
 		 */
 		template <typename... ARGS>
-		void EmplaceAt(length_type index, ARGS&&... args) {
-			if(index < capacity) { resize(index + 1); }
+		T& EmplaceAt(length_type index, ARGS&&... args) {
+			if(index > capacity) { resize(index + 1); }
 			SetAsOccupied(getIndices(), index);
-			new(getObjects().begin() + index) T(GTSL::ForwardRef<ARGS>(args)...);
+			return *new(getObjects().begin() + index) T(GTSL::ForwardRef<ARGS>(args)...);
 		}
 
 		template<class ALLOC>
@@ -124,24 +121,13 @@ namespace GTSL
 			}
 		}
 
-		//[[nodiscard]] Result<uint32> GetFirstFreeIndex() const
-		//{
-		//	uint32 elementIndex = 0;
-		//	for (auto& e : getIndices()) {
-		//		if (auto bit = FindFirstClearBit(e); bit.State()) { return Result(elementIndex + bit.Get(), true); }
-		//		elementIndex += BITS;
-		//	}
-		//
-		//	return Result(MoveRef(elementIndex), false);
-		//}
-
 		/**
 		 * \brief Destroys the object At the specified index which makes space for another object to take it's Place.
 		 * \param index Index of the object to remove.
 		 */
 		void Pop(const length_type index) {
 			GTSL::Destroy(getObjects().begin()[index]);
-			GTSL::SetAsFree(getIndices(), index);
+			SetAsFree(getIndices(), index);
 		}
 
 		[[nodiscard]] bool IsSlotOccupied(const uint32 index) const {
@@ -160,7 +146,7 @@ namespace GTSL
 
 		T& operator[](const uint32 i) {
 			if constexpr (_DEBUG) {
-				const auto number = i / BITS; const auto bit = i % BITS;
+				const auto number = i / BITS; const auto bit = static_cast<uint8>(i % BITS);
 				auto c = getIndices()[number];
 				GTSL_ASSERT(CheckBit(bit, getIndices()[number]), "No valid value in that slot!")
 			}
@@ -169,7 +155,7 @@ namespace GTSL
 
 		const T& operator[](const uint32 i) const {
 			if constexpr (_DEBUG) {
-				const auto number = i / BITS; const auto bit = i % BITS;
+				const auto number = i / BITS; const auto bit = static_cast<uint8>(i % BITS);
 				auto c = getIndices()[number];
 				GTSL_ASSERT(CheckBit(bit, getIndices()[number]), "No valid value in that slot!")
 			}
@@ -183,7 +169,7 @@ namespace GTSL
 
 		friend class FixedVector;
 
-		static constexpr uint64 BITS = GTSL::Bits<length_type>();
+		static constexpr uint8 BITS = static_cast<uint8>(GTSL::Bits<length_type>());
 
 		ALLOCATOR allocator;
 		uint32 capacity = 0;

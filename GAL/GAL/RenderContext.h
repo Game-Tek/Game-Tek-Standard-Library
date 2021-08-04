@@ -6,14 +6,6 @@ namespace GAL
 	class RenderDevice;
 	class Queue;
 	class RenderTarget;
-
-#if (_WIN32)
-	struct WindowsWindowData
-	{
-		void* WindowHandle{nullptr};
-		void* InstanceHandle{nullptr};
-	};
-#endif
 	
 	class Surface
 	{

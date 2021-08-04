@@ -11,8 +11,8 @@ namespace GAL {
 	public:
 		struct WorkUnit final {
 			const CommandList* CommandBuffer = nullptr;
-			const Semaphore* SignalSemaphore = nullptr;
-			const Semaphore* WaitSemaphore = nullptr;
+			Semaphore* SignalSemaphore = nullptr;
+			Semaphore* WaitSemaphore = nullptr;
 			GTSL::uint64 SignalValue = 0, WaitValue = 0;
 			/**
 			 * \brief Pipeline stages at which each corresponding semaphore wait will occur.

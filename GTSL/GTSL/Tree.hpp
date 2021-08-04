@@ -11,25 +11,25 @@ namespace GTSL
 		struct Node {
 			T Data;
 			Vector<struct Node*, ALLOCATOR> Nodes;
+
+			template<typename... ARGS>
+			Node(const ALLOCATOR& allocator, ARGS&&... args) : Data(GTSL::ForwardRef<ARGS>(args)...), Nodes(4, allocator) {}
 		};
 
-		Tree() = default;
+		Tree() = delete;
 
-		void Initialize(const ALLOCATOR& allocator)
+		Tree(const ALLOCATOR& alloc) : allocator(allocator), nodes(4, allocator)
 		{
-			this->allocator = allocator;
-			nodes.Initialize(4, this->allocator);
 		}
 
-		Node* AddChild(Node* parent) {
+		template<typename... ARGS>
+		Node* AddChild(Node* parent, ARGS&&... args) {
 			if (parent) {
-				Node* newNode = New<Node>(allocator);
-				newNode->Nodes.Initialize(4, allocator);
+				Node* newNode = New<Node>(allocator, allocator, GTSL::ForwardRef<ARGS>(args)...);
 				parent->Nodes.EmplaceBack(newNode);
 				return newNode;
 			} else  {
-				Node* newNode = New<Node>(allocator);
-				newNode->Nodes.Initialize(4, allocator);
+				Node* newNode = New<Node>(allocator, allocator, GTSL::ForwardRef<ARGS>(args)...);
 				nodes.EmplaceBack(newNode);
 				return newNode;
 			}
@@ -54,8 +54,7 @@ namespace GTSL
 		auto end() const { return nodes.end(); }
 	
 	private:
-		Vector<Node*, ALLOCATOR> nodes;
-
 		ALLOCATOR allocator;
+		Vector<Node*, ALLOCATOR> nodes;
 	};
 }

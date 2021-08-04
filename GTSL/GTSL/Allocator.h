@@ -3,6 +3,8 @@
 #include "Algorithm.h"
 #include "Core.h"
 #include "Assert.h"
+#include "FunctionPointer.hpp"
+#include "Memory.h"
 
 namespace GTSL
 {
@@ -52,8 +54,14 @@ namespace GTSL
 		DefaultAllocatorReference& operator=(const DefaultAllocatorReference&) = default;
 		DefaultAllocatorReference& operator=(DefaultAllocatorReference&&) = default;
 
-		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size);
-		void Deallocate(uint64 size, uint64 alignment, void* data);
+		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size) {
+			GTSL::Allocate(size, data);
+			*allocated_size = size;
+		}
+		
+		void Deallocate(uint64 size, uint64 alignment, void* data) {
+			GTSL::Deallocate(size, data);
+		}
 	};
 
 	template<typename T, class ALLOCATOR, typename... ARGS>
@@ -77,24 +85,56 @@ namespace GTSL
 	struct SmartPointer
 	{
 		SmartPointer() = default;
+			
+		template<typename... ARGS>
+		SmartPointer(const ALLOCATOR& alloc, ARGS&&... args) : allocator(alloc) {
+			uint64 allocatedSize = 0;
+			allocator.Allocate(sizeof(T), alignof(T), reinterpret_cast<void**>(&data), &allocatedSize);
+			size = static_cast<uint32>(allocatedSize);
+			alignment = static_cast<uint32>(alignof(T));
+			::new(data) T(ForwardRef<ARGS>(args)...);
 
-		SmartPointer(SmartPointer&& other) noexcept : size(other.size), alignment(other.alignment), data(other.data)
+			auto dest = [](void* data) {
+				Destroy(*static_cast<T*>(data));
+			};
+			
+			destructor = dest;
+		}
+		
+		template<typename TT>
+		SmartPointer(SmartPointer<TT, ALLOCATOR>&& other) noexcept : allocator(MoveRef(other.allocator)), size(other.size), alignment(other.alignment), data(reinterpret_cast<T*>(other.data)), destructor(other.destructor)
+		{
+			other.data = nullptr;
+		}
+		
+		SmartPointer(SmartPointer&& other) noexcept : allocator(MoveRef(other.allocator)), size(other.size), alignment(other.alignment), data(other.data), destructor(other.destructor)
 		{
 			other.data = nullptr;
 		}
 
 		bool TryFree() { if (data) { Free(); return true; } return false; }
+		
 		void Free() {
-			Destroy(*data);
+			destructor(data);
 			allocator.Deallocate(size, alignment, reinterpret_cast<void*>(data));
 			data = nullptr;
 		}
 		
 		~SmartPointer() { TryFree(); }
 
+		template<typename TT>
+		SmartPointer& operator=(SmartPointer<TT, ALLOCATOR>&& other) noexcept
+		{
+			TryFree();
+			size = other.size; alignment = other.alignment; data = reinterpret_cast<T*>(other.data); destructor = other.destructor;
+			other.data = nullptr;
+			return *this;
+		}
+		
 		SmartPointer& operator=(SmartPointer&& other) noexcept
 		{
-			size = other.size; alignment = other.alignment; data = other.data;
+			TryFree();
+			allocator = MoveRef(other.allocator); size = other.size; alignment = other.alignment; data = other.data; destructor = other.destructor;
 			other.data = nullptr;
 			return *this;
 		}
@@ -104,27 +144,29 @@ namespace GTSL
 		T& operator*() const { return *data; }
 
 		T* GetData() const { return data; }
-		
-		template<typename TT, typename... ARGS>
-		static SmartPointer<T, ALLOCATOR> Create(const ALLOCATOR& allocatorReference, ARGS&&... args)
-		{
-			auto d = New<TT>(allocatorReference, GTSL::ForwardRef<ARGS>(args)...);
-			return SmartPointer<T, ALLOCATOR>(sizeof(TT), alignof(TT), reinterpret_cast<T*>(d), allocatorReference);
-		}
-
+	
 	private:
-		SmartPointer(const uint32 size, const uint32 alignment, T* object, const ALLOCATOR& allocatorReference) : size(size), alignment(alignment), data(object), allocator(allocatorReference)
-		{}
+#pragma warning(disable : 4648)
+		[[no_unique_address]] ALLOCATOR allocator;
+#pragma warning(default : 4648)
 		
 		uint32 size{ 0 };
 		uint32 alignment{ 0 };
 		T* data{ nullptr };
+		void(*destructor)(void*) = nullptr;
 
-#pragma warning(disable : 4648)
-		[[no_unique_address]] ALLOCATOR allocator;
-#pragma warning(default : 4648)
+		friend struct SmartPointer;
+	
+	public:
+		friend SmartPointer<T, ALLOCATOR> Create(const T& obj, const ALLOCATOR& allocator = ALLOCATOR());
 	};
 
+	//template<typename T, class ALLOCATOR>
+	//inline SmartPointer<T, ALLOCATOR> Create(const T& obj, const ALLOCATOR& allocator = ALLOCATOR())
+	//{
+	//	return SmartPointer<T, ALLOCATOR>(allocator).make<T>(obj);
+	//}
+	
 	template<uint16 BYTES>
 	struct StaticAllocator : AllocatorReference
 	{
@@ -132,53 +174,65 @@ namespace GTSL
 		
 		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size)
 		{
-			GTSL_ASSERT(usedBytes <= BYTES, "Allocated more than available")
-			
+			GTSL_ASSERT(size <= BYTES, "Static space is less than being requested!");
 			*data = buffer;
 			*allocated_size = BYTES;
-
-			usedBytes += BYTES;
 		}
 		
 		void Deallocate(const uint64 size, uint64 alignment, void* data)
 		{
-			GTSL_ASSERT(size <= BYTES, "Freed more bytes than could be given")
-			GTSL_ASSERT(size <= usedBytes, "Freed more bytes than could be given")
-			usedBytes -= size;
 		}
+
+		StaticAllocator(const StaticAllocator& other)
+		{
+			for(uint32 i = 0; i < BYTES; ++i) {
+				buffer[i] = other.buffer[i];
+			}
+		}
+
+		StaticAllocator& operator=(const StaticAllocator& other) { return *this; }
+		StaticAllocator(StaticAllocator&& other) = delete;
 		
 	private:
 		byte buffer[BYTES];
-		uint16 usedBytes = 0;
 	};
 
-	template<class A, class B>
+	template<uint32 BYTES, class A>
 	class DoubleAllocator
 	{
 	public:
 		DoubleAllocator() = default;
 
+		DoubleAllocator(const A& alloc = A()) : a(alloc) {}
+
+		DoubleAllocator(const DoubleAllocator& other) : allocator(other.allocator), a(other.a)
+		{
+			for (uint32 i = 0; i < BYTES; ++i) {
+				buffer[i] = other.buffer[i];
+			}
+		}
+		
 		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size)
 		{
-			if(a.Allocate(size, alignment, data, allocated_size)) {
+			if(size <= BYTES) {
+				*data = buffer;
+				*allocated_size = BYTES;
 				allocator = true;
 			} else {
 				allocator = false;
-				b.Allocate(size, alignment, data, allocated_size);
+				a.Allocate(size, alignment, data, allocated_size);
 			}
 		}
 
 		void Deallocate(const uint64 size, uint64 alignment, void* data)
 		{
-			if(allocator) {
+			if(!allocator) {
 				a.Deallocate(size, alignment, data);
-			} else {
-				b.Deallocate(size, alignment, data);
 			}
 		}
 
 	private:
 		bool allocator = true;
-		A a; B b;
+		byte buffer[BYTES]; A a;
 	};
 }

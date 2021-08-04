@@ -17,10 +17,8 @@
 namespace GAL
 {
 	template<typename T>
-	void setName(T* handle, const GTSL::Range<const GTSL::char8_t*> name)
-	{
-		if constexpr (_DEBUG)
-		{
+	void setName(T* handle, const GTSL::Range<const char8_t*> name) {
+		if constexpr (_DEBUG) {
 			if (name.ElementCount() != 0)
 				handle->SetPrivateData(WKPDID_D3DDebugObjectName, name.ElementCount() - 1, name.begin());
 		}
@@ -90,7 +88,7 @@ namespace GAL
 		default: return DXGI_FORMAT_UNKNOWN;
 		}
 	}
-		
+	
 	inline DXGI_FORMAT ToDX12(const Format format) {
 		switch (format)
 		{
@@ -98,10 +96,13 @@ namespace GAL
 		case Format::RGBA_I8: return DXGI_FORMAT_R8G8B8A8_UNORM;
 		case Format::RGBA_F16: return DXGI_FORMAT_R16G16B16A16_FLOAT;
 		case Format::BGRA_I8: return DXGI_FORMAT_B8G8R8A8_UNORM;
-		case Format::RGBA_F32: break;
-		case Format::F32: return DXGI_FORMAT_D32_FLOAT;
+		case Format::DEPTH32: return DXGI_FORMAT_D32_FLOAT;
 		default: return DXGI_FORMAT_UNKNOWN;
 		}
+	}
+
+	inline DXGI_FORMAT ToDX12(const FormatDescriptor format) {
+		return ToDX12(MakeFormatFromFormatDescriptor(format));
 	}
 
 	inline D3D12_RESOURCE_DIMENSION ToDX12Type(const GTSL::Extent3D extent)

@@ -6,11 +6,12 @@
 
 #include <GTSL/Pair.h>
 
-#include "GTSL/Array.hpp"
 #include "GTSL/Buffer.hpp"
 #include "GTSL/Allocator.h"
 #include "GTSL/DataSizes.h"
 #include "GTSL/DLL.h"
+#include "GTSL/HashMap.hpp"
+#include "GTSL/Vector.hpp"
 
 namespace GAL
 {
@@ -26,24 +27,6 @@ namespace GAL
 		};
 
 		VulkanRenderDevice() = default;
-
-		struct QueueKey {
-			GTSL::uint32 Family, Queue;
-		};
-		
-		struct CreateInfo
-		{
-			GTSL::Range<const char8_t*> ApplicationName;
-			GTSL::uint16 ApplicationVersion[3];
-			GTSL::Range<const QueueType*> Queues;
-			GTSL::Range<QueueKey*> QueueKeys;
-			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
-			bool Debug = false;
-			bool PerformanceValidation = false;
-			bool SynchronizationValidation = false;
-			GTSL::Range<const GTSL::Pair<Extension, void*>*> Extensions;
-			AllocationInfo AllocationInfo;
-		};
 
 		[[nodiscard]] bool Initialize(const CreateInfo& createInfo) {
 			debugPrintFunction = createInfo.DebugPrintFunction;
@@ -112,13 +95,13 @@ namespace GAL
 					vkInstanceCreateInfo.pNext = newPointer;
 				};
 
-				GTSL::Array<const char*, 8> instanceLayers;
+				GTSL::StaticVector<const char*, 8> instanceLayers;
 
 				if constexpr (_DEBUG) {
 					if (debug) { instanceLayers.EmplaceBack("VK_LAYER_KHRONOS_validation"); }
 				}
 
-				GTSL::Array<const char*, 16> instanceExtensions{
+				GTSL::StaticVector<const char*, 16> instanceExtensions{
 			#if(_DEBUG)
 					VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 			#endif
@@ -145,8 +128,8 @@ namespace GAL
 				}
 
 #if (_DEBUG)
-				GTSL::Array<VkValidationFeatureEnableEXT, 8> enables;
-				if (createInfo.SynchronizationValidation) { enables.EmplaceBack(VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT); };
+				GTSL::StaticVector<VkValidationFeatureEnableEXT, 8> enables;
+				if (createInfo.SynchronizationValidation) { enables.EmplaceBack(VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT); }
 				if (createInfo.PerformanceValidation) { enables.EmplaceBack(VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT); }
 				VkValidationFeaturesEXT features = {};
 				features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
@@ -155,13 +138,13 @@ namespace GAL
 
 				setInstancepNext(&features);
 
-				auto VKAPI_CALL debugCallback = [](const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) -> VkBool32
+				auto debugCallback = [](VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) -> VkBool32
 				{
-					auto* deviceCallback = static_cast<GAL::VulkanRenderDevice*>(pUserData);
+					auto* deviceCallback = static_cast<VulkanRenderDevice*>(pUserData);
 
 					switch (messageSeverity) {
 					case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: {
-						//device->GetDebugPrintFunction()(pCallbackData->pMessage, GAL::RenderDevice::MessageSeverity::MESSAGE);
+						deviceCallback->GetDebugPrintFunction()(pCallbackData->pMessage, MessageSeverity::MESSAGE);
 						break;
 					}
 					case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: {
@@ -177,7 +160,7 @@ namespace GAL
 						break;
 					}
 					case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT: break;
-					default:;
+					default: __debugbreak(); break;
 					}
 
 					return VK_FALSE;
@@ -185,7 +168,7 @@ namespace GAL
 				
 				VkDebugUtilsMessengerCreateInfoEXT vkDebugUtilsMessengerCreateInfoExt{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
 				vkDebugUtilsMessengerCreateInfoExt.pNext = nullptr;
-				vkDebugUtilsMessengerCreateInfoExt.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+				vkDebugUtilsMessengerCreateInfoExt.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 				vkDebugUtilsMessengerCreateInfoExt.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 				vkDebugUtilsMessengerCreateInfoExt.pfnUserCallback = debugCallback;
 				vkDebugUtilsMessengerCreateInfoExt.pUserData = this;
@@ -214,7 +197,7 @@ namespace GAL
 			}
 
 			{
-				GTSL::Array<VkDeviceQueueCreateInfo, 8> vkDeviceQueueCreateInfos; GTSL::uint32 queueFamiliesCount = 32;
+				GTSL::StaticVector<VkDeviceQueueCreateInfo, 8> vkDeviceQueueCreateInfos; GTSL::uint32 queueFamiliesCount = 32;
 				
 				{
 					VkQueueFamilyProperties vkQueueFamiliesProperties[32];
@@ -226,15 +209,18 @@ namespace GAL
 						vkQueuesFlagBits[i] = ToVulkan(createInfo.Queues[i]);
 					}
 
-					GTSL::Array<GTSL::Array<GTSL::float32, 8>, 8> familiesPriorities;
+					GTSL::float32 familiesPriorities[8][8]{ 0.0f };
 
 					GTSL::uint8 queuesPerFamily[16]{ 0 };
-					
+
+					GTSL::StaticMap<GTSL::uint64, GTSL::uint8, 16> familyMap;
+						
 					for (GTSL::uint8 queue = 0; queue < static_cast<GTSL::uint8>(createInfo.Queues.ElementCount()); ++queue) {
 						for (GTSL::uint8 family = 0; family < queueFamiliesCount; ++family) {
 							if (vkQueueFamiliesProperties[family].queueCount > 0 && vkQueueFamiliesProperties[family].queueFlags & vkQueuesFlagBits[queue]) { //if family has vk_queue_flags_bits[FAMILY] create queue from this family
-								if(!queuesPerFamily[family]) {
-									auto& familyPriorities = familiesPriorities.EmplaceBack();
+								auto res = familyMap.TryEmplace(family, vkDeviceQueueCreateInfos.GetLength());
+
+								if (res) {
 									auto& queueCreateInfo = vkDeviceQueueCreateInfos.EmplaceBack();
 
 									queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -242,13 +228,12 @@ namespace GAL
 									queueCreateInfo.flags = 0;
 									queueCreateInfo.queueFamilyIndex = family;
 									queueCreateInfo.queueCount = 0;
-									queueCreateInfo.pQueuePriorities = familyPriorities.begin();
+									queueCreateInfo.pQueuePriorities = familiesPriorities[res.Get()];
 								}
-
+								
 								createInfo.QueueKeys[queue].Queue = queuesPerFamily[family];
 								createInfo.QueueKeys[queue].Family = family;
-								++vkDeviceQueueCreateInfos[family].queueCount;
-								familiesPriorities[family].EmplaceBack(1.0f);
+								++vkDeviceQueueCreateInfos[res.Get()].queueCount;
 								++queuesPerFamily[family];
 								
 								break;
@@ -265,14 +250,14 @@ namespace GAL
 				features2.features.shaderUniformBufferArrayDynamicIndexing = true;
 				features2.features.shaderStorageBufferArrayDynamicIndexing = true;
 				features2.features.shaderInt16 = true; features2.features.shaderInt64 = true;
-				features2.features.robustBufferAccess = createInfo.Debug;
+				features2.features.robustBufferAccess = false;
 				features2.features.shaderStorageImageReadWithoutFormat = true; features2.features.shaderStorageImageWriteWithoutFormat = true;
 
 				void** lastProperty = &properties2.pNext; void** lastFeature = &features2.pNext;
 
 				{
 					GTSL::Buffer buffer(8192, 8, GTSL::StaticAllocator<8192>());
-					GTSL::Array<GTSL::StaticString<32>, 32> deviceExtensions;
+					GTSL::StaticVector<GTSL::StaticString<32>, 32> deviceExtensions;
 
 					auto placePropertiesStructure = [&]<typename T>(T** structure, VkStructureType structureType) {
 						auto* newStructure = buffer.AllocateStructure<T>(); *lastProperty = static_cast<void*>(newStructure);
@@ -298,7 +283,7 @@ namespace GAL
 						getInstanceProcAddr<PFN_vkGetPhysicalDeviceFeatures2>(u8"vkGetPhysicalDeviceFeatures2")(physicalDevice, &feats);
 					};
 
-					[[no_discard]] auto tryAddExtension = [&](const char8_t* extensionName) {
+					auto tryAddExtension = [&](const char8_t* extensionName) {
 						GTSL::StaticString<32> name(extensionName);
 						auto searchResult = deviceExtensions.Find(name);
 						if (!searchResult.State()) { deviceExtensions.EmplaceBack(name); return true; }
@@ -402,7 +387,7 @@ namespace GAL
 					vkDeviceCreateInfo.pEnabledFeatures = nullptr;
 					vkDeviceCreateInfo.enabledExtensionCount = deviceExtensions.GetLength();
 
-					GTSL::Array<const char*, 32> strings; {
+					GTSL::StaticVector<const char*, 32> strings; {
 						for (GTSL::uint32 i = 0; i < deviceExtensions.GetLength(); ++i) { strings.EmplaceBack(reinterpret_cast<const char*>(deviceExtensions[i].begin())); }
 					}
 
@@ -472,6 +457,7 @@ namespace GAL
 			getDeviceProcAddr(u8"vkDestroyDescriptorPool", &VkDestroyDescriptorPool);
 			getDeviceProcAddr(u8"vkCreateFence", &VkCreateFence);
 			getDeviceProcAddr(u8"vkWaitForFences", &VkWaitForFences);
+			getDeviceProcAddr(u8"vkGetFenceStatus", &VkGetFenceStatus);
 			getDeviceProcAddr(u8"vkResetFences", &VkResetFences);
 			getDeviceProcAddr(u8"vkDestroyFence", &VkDestroyFence);
 			getDeviceProcAddr(u8"vkCreateSemaphore", &VkCreateSemaphore);
@@ -506,6 +492,7 @@ namespace GAL
 			getDeviceProcAddr(u8"vkCmdPushConstants", &VkCmdPushConstants);
 			getDeviceProcAddr(u8"vkCmdBindVertexBuffers", &VkCmdBindVertexBuffers);
 			getDeviceProcAddr(u8"vkCmdBindIndexBuffer", &VkCmdBindIndexBuffer);
+			getDeviceProcAddr(u8"vkCmdDraw", &VkCmdDraw);
 			getDeviceProcAddr(u8"vkCmdDrawIndexed", &VkCmdDrawIndexed);
 			getDeviceProcAddr(u8"vkCmdDispatch", &VkCmdDispatch);
 			getDeviceProcAddr(u8"vkCmdCopyBuffer", &VkCmdCopyBuffer);
@@ -709,11 +696,11 @@ namespace GAL
 			GTSL::Byte Size;
 			MemoryType HeapType;
 
-			GTSL::Array<MemoryType, 16> MemoryTypes;
+			GTSL::StaticVector<MemoryType, 16> MemoryTypes;
 		};
 		
-		GTSL::Array<MemoryHeap, 16> GetMemoryHeaps() const {
-			GTSL::Array<MemoryHeap, 16> memoryHeaps;
+		GTSL::StaticVector<MemoryHeap, 16> GetMemoryHeaps() const {
+			GTSL::StaticVector<MemoryHeap, 16> memoryHeaps;
 
 			for (GTSL::uint8 heapIndex = 0; heapIndex < memoryProperties.memoryHeapCount; ++heapIndex) {
 				MemoryHeap memoryHeap;
@@ -756,7 +743,7 @@ namespace GAL
 		FT getDeviceProcAddr(const char8_t* name) const { return reinterpret_cast<FT>(VkGetDeviceProcAddr(device, reinterpret_cast<const char*>(name))); }
 		
 		PFN_vkCmdBeginRenderPass VkCmdBeginRenderPass; PFN_vkCmdNextSubpass VkCmdNextSubpass; PFN_vkCmdEndRenderPass VkCmdEndRenderPass;
-		PFN_vkCmdDrawIndexed VkCmdDrawIndexed;
+		PFN_vkCmdDrawIndexed VkCmdDrawIndexed; PFN_vkCmdDraw VkCmdDraw;
 		PFN_vkAcquireNextImageKHR VkAcquireNextImage;
 		PFN_vkResetCommandPool VkResetCommandPool;
 		PFN_vkCreateBuffer VkCreateBuffer; PFN_vkDestroyBuffer VkDestroyBuffer;
@@ -816,9 +803,10 @@ namespace GAL
 		PFN_vkDestroySurfaceKHR VkDestroySurface;
 		PFN_vkCreateFence VkCreateFence; PFN_vkDestroyFence VkDestroyFence;
 		PFN_vkWaitForFences VkWaitForFences; PFN_vkResetFences VkResetFences;
+		PFN_vkGetFenceStatus VkGetFenceStatus;
 		PFN_vkCreateSemaphore VkCreateSemaphore; PFN_vkDestroySemaphore VkDestroySemaphore;
 		PFN_vkCreateEvent VkCreateEvent; PFN_vkDestroyEvent VkDestroyEvent;
-		PFN_vkSetEvent VkSetEvent; PFN_vkResetEvent VkResetEvent;
+		PFN_vkSetEvent VkSetEvent; PFN_vkResetEvent VkResetEvent;		
 		
 		PFN_vkCreateAccelerationStructureKHR vkCreateAccelerationStructureKHR = nullptr;
 		PFN_vkDestroyAccelerationStructureKHR vkDestroyAccelerationStructureKHR = nullptr;

@@ -55,37 +55,18 @@ Vector3 Quaternion::operator*(const Vector3 other) const
 Vector4 Quaternion::GetXBasisVector() const
 {
 	//return (*this) * GTSL::Math::Right;
-	return GTSL::Matrix4(*this).GetXBasisVector();
+	return Matrix4(*this).GetXBasisVector();
 }
 
 Vector4 Quaternion::GetYBasisVector() const
 {
-	return (*this) * GTSL::Math::Up;
+	return (*this) * Math::Up;
 }
 
 Vector4 Quaternion::GetZBasisVector() const
 {
-	return (*this) * GTSL::Math::Forward;
+	return (*this) * Math::Forward;
 }
-
-//stack overflow?
-
-//Quaternion& Quaternion::operator*=(const Quaternion& other)
-//{
-//	X() = W() * other.X() + X() * other.W() + Y() * other.Z() - Z() * other.Y();
-//	Y() = W() * other.Y() + Y() * other.W() + Z() * other.X() - X() * other.Z();
-//	Z() = W() * other.Z() + Z() * other.W() + X() * other.Y() - Y() * other.X();
-//	W() = W() * other.W() - X() * other.X() - Y() * other.Y() - Z() * other.Z();
-//	
-//	return *this;
-//}
-
-//public final void mul(Quat4d q1, Quat4d q2) {
-//	x   = q1.x  * q2.w + q1.y * q2.z - q1.z * q2.y + q1.w * q2.x;
-//	y   = -q1.x * q2.z + q1.y * q2.w + q1.z * q2.x + q1.w * q2.y;
-//	z   = q1.x  * q2.y - q1.y * q2.x + q1.z * q2.w + q1.w * q2.z;
-//	w   = -q1.x * q2.x - q1.y * q2.y - q1.z * q2.z + q1.w * q2.w;
-//}
 
 //https://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
 

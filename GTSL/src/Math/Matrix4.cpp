@@ -105,7 +105,7 @@ void Matrix4::Transpose()
 {
 	auto a{ SIMD128<float32>(AlignedPointer<const float32, 16>(array[0])) }, b{ SIMD128<float32>(AlignedPointer<const float32, 16>(array[1])) }, c{ SIMD128<float32>(AlignedPointer<const float32, 16>(array[2])) }, d{ SIMD128<float32>(AlignedPointer<const float32, 16>(array[3])) };
 	SIMD128<float32>::Transpose(a, b, c, d);
-	a.CopyTo(UnalignedPointer<float32>(array[0])); b.CopyTo(UnalignedPointer<float32>(array[1])); c.CopyTo(UnalignedPointer<float32>(array[2])); d.CopyTo(UnalignedPointer<float32>(array[3]));
+	a.CopyTo(UnalignedPointer(array[0])); b.CopyTo(UnalignedPointer(array[1])); c.CopyTo(UnalignedPointer(array[2])); d.CopyTo(UnalignedPointer(array[3]));
 }
 
 Vector4 Matrix4::operator*(const Vector4& other) const

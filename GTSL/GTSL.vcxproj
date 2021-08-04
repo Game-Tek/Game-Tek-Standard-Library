@@ -14,7 +14,6 @@
     <ClInclude Include="GTSL\Algorithm.h" />
     <ClInclude Include="GTSL\Allocator.h" />
     <ClInclude Include="GTSL\Application.h" />
-    <ClInclude Include="GTSL\Array.hpp" />
     <ClInclude Include="GTSL\Assert.h" />
     <ClInclude Include="GTSL\Atomic.hpp" />
     <ClInclude Include="GTSL\Bitfield.h" />
@@ -35,8 +34,7 @@
     <ClInclude Include="GTSL\Extent.h" />
     <ClInclude Include="GTSL\FlipFlop.h" />
     <ClInclude Include="GTSL\FunctionPointer.hpp" />
-    <ClInclude Include="GTSL\GamepadQuery.h" />
-    <ClInclude Include="GTSL\HashMap.h" />
+    <ClInclude Include="GTSL\HashMap.hpp" />
     <ClInclude Include="GTSL\PagedVector.h" />
     <ClInclude Include="GTSL\SlottedVector.hpp" />
     <ClInclude Include="GTSL\SparseVector.hpp" />
@@ -53,7 +51,6 @@
     <ClInclude Include="GTSL\Result.h" />
     <ClInclude Include="GTSL\SIMD\SIMD128.hpp" />
     <ClInclude Include="GTSL\SIMD\SIMD.hpp" />
-    <ClInclude Include="GTSL\StaticString.hpp" />
     <ClInclude Include="GTSL\String.hpp" />
     <ClInclude Include="GTSL\Gamepad.h" />
     <ClInclude Include="GTSL\StringCommon.h" />
@@ -71,7 +68,7 @@
     <ClInclude Include="GTSL\Range.h" />
     <ClInclude Include="GTSL\RGB.h" />
     <ClInclude Include="GTSL\Semaphore.h" />
-    <ClInclude Include="GTSL\Serialize.h" />
+    <ClInclude Include="GTSL\Serialize.hpp" />
     <ClInclude Include="GTSL\System.h" />
     <ClInclude Include="GTSL\TextureCoordinates.h" />
     <ClInclude Include="GTSL\Thread.h" />
@@ -93,15 +90,9 @@
     <ClInclude Include="Math\Vector4.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GTSL\StaticMap.hpp" />
     <ClCompile Include="GTSL\ShortString.hpp" />
     <ClCompile Include="GTSL\MappedFile.hpp" />
-    <ClCompile Include="src\Allocator.cpp" />
     <ClCompile Include="GTSL\ArrayCommon.hpp" />
-    <ClCompile Include="src\Console.cpp" />
-    <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\Filesystem.cpp" />
-    <ClCompile Include="src\Gamepad.cpp" />
     <ClCompile Include="src\Math\AxisAngle.cpp" />
     <ClCompile Include="src\Math\Math.cpp" />
     <ClCompile Include="src\Math\Matrix4.cpp" />
@@ -111,8 +102,6 @@
     <ClCompile Include="src\Math\Vectors.cpp" />
     <ClCompile Include="src\Memory.cpp" />
     <ClCompile Include="src\System.cpp" />
-    <ClCompile Include="src\Thread.cpp" />
-    <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

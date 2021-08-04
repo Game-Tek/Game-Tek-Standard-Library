@@ -3,10 +3,15 @@
 #include "DX12.h"
 #include <dxgi1_6.h>
 
+#include "DX12Queue.h"
 #include "GAL/RenderContext.h"
 #include "GAL/RenderCore.h"
 #include "GTSL/Extent.h"
 #include "GAL/DX12/DX12RenderDevice.h"
+#include <wrl.h>
+
+#include "GTSL/Application.h"
+#include "GTSL/Window.h"
 
 namespace GAL
 {
@@ -15,17 +20,13 @@ namespace GAL
 	class DX12Surface
 	{
 	public:
-		struct CreateInfo final : DX12CreateInfo
-		{
-			WindowsWindowData* SystemData;
-		};
-		void Initialize(const CreateInfo& info) {
-			handle = info.SystemData->WindowHandle;
+		void Initialize(const DX12RenderDevice* render_device, const GTSL::Application& application, const GTSL::Window& window) {
+			handle = window.GetHWND();
 		}
 
-		[[nodiscard]] void* GetHWND() const { return handle; }
+		[[nodiscard]] HWND GetHWND() const { return handle; }
 	private:
-		void* handle = nullptr;
+		HWND handle = nullptr;
 	};
 
 	class DX12RenderContext
@@ -33,22 +34,16 @@ namespace GAL
 	public:
 		DX12RenderContext() = default;
 
-		struct CreateInfo : DX12CreateInfo
-		{
-			GTSL::Extent2D SurfaceArea;
-			GTSL::uint8 DesiredFramesInFlight = 0;
-			PresentModes PresentMode;
-			DX12TextureFormat Format;
-			//VulkanColorSpace ColorSpace;
-			//VulkanTextureUses TextureUses;
-			const DX12Surface* Surface = nullptr;
-			const DX12Queue* Queue = nullptr;
-		};
-		void Initialize(const CreateInfo& info) {
+		bool InitializeOrRecreate(const DX12RenderDevice* renderDevice, const DX12Queue queue, const DX12Surface surface, GTSL::Extent2D extent, FormatDescriptor format, ColorSpace colorSpace,
+			TextureUse textureUse, PresentModes presentMode, GTSL::uint8 desiredFramesInFlight) {
+			
+			if(swapChain4) {				
+				return swapChain4->ResizeBuffers(desiredFramesInFlight, extent.Width, extent.Height, ToDX12(format), tear ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0) == S_OK;
+			}
+
 			IDXGIFactory4* factory4; GTSL::uint32 factoryFlags = 0;
 
-			if constexpr (_DEBUG)
-			{
+			if constexpr (_DEBUG) {
 				factoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 			}
 
@@ -66,37 +61,39 @@ namespace GAL
 				factory5->Release();
 			}
 
-			vSync = info.PresentMode == PresentModes::SWAP ? true : false;
+			vSync = presentMode == PresentModes::SWAP ? true : false;
 			tear = static_cast<bool>(allowTearing);
-
+			
 			DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-			swapChainDesc.Width = info.SurfaceArea.Width;
-			swapChainDesc.Height = info.SurfaceArea.Height;
-			swapChainDesc.Format = static_cast<DXGI_FORMAT>(info.Format);
+			swapChainDesc.Width = extent.Width;
+			swapChainDesc.Height = extent.Height;
+			swapChainDesc.Format = ToDX12(format);
 			swapChainDesc.Stereo = FALSE;
 			swapChainDesc.SampleDesc = { 1, 0 };
 			swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-			swapChainDesc.BufferCount = info.DesiredFramesInFlight;
+			swapChainDesc.BufferCount = desiredFramesInFlight;
 			swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
 			swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 			swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 			// It is recommended to always allow tearing if tearing support is available.
-			swapChainDesc.Flags |= allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+			swapChainDesc.Flags |= tear ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 			IDXGISwapChain1* swapChain1;
 
-			DX_CHECK(factory4->CreateSwapChainForHwnd(info.Queue->GetID3D12CommandQueue(), static_cast<HWND>(info.Surface->GetHWND()), &swapChainDesc, nullptr, nullptr, &swapChain1))
+			DX_CHECK(factory4->CreateSwapChainForHwnd(queue.GetID3D12CommandQueue(), static_cast<HWND>(surface.GetHWND()), &swapChainDesc, nullptr, nullptr, &swapChain1))
 
-			DX_CHECK(factory4->MakeWindowAssociation(static_cast<HWND>(info.Surface->GetHWND()), DXGI_MWA_NO_ALT_ENTER))
+			DX_CHECK(factory4->MakeWindowAssociation(static_cast<HWND>(surface.GetHWND()), DXGI_MWA_NO_ALT_ENTER))
 
 			DX_CHECK(swapChain1->QueryInterface(__uuidof(IDXGISwapChain4), reinterpret_cast<void**>(&swapChain4)))
 
 			swapChain1->Release();
 
 			factory4->Release();
+
+			return true;
 		}
 
-		void Destory(const DX12RenderDevice* renderDevice) {
+		void Destroy(const DX12RenderDevice* renderDevice) {
 			swapChain4->Release();
 			debugClear(swapChain4);
 		}

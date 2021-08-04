@@ -1,5 +1,7 @@
 #pragma once
 
+#include <concepts>
+
 #include "Core.h"
 
 #include "Memory.h"
@@ -7,9 +9,11 @@
 #include <new>
 
 #include "Algorithm.h"
+#include "Allocator.h"
 #include "ArrayCommon.hpp"
 #include "Bitman.h"
 #include "Result.h"
+#include "Serialize.hpp"
 
 #if (_DEBUG)
 #include "Assert.h"
@@ -17,36 +21,35 @@
 
 namespace GTSL
 {
-	template<class ALLOCATOR>
-	class Buffer;
-	
 	template<typename K, typename V, Allocator ALLOCATOR>
 	class HashMap
 	{
 	public:
-		HashMap() = delete;
+		HashMap(const ALLOCATOR& allocatorReference = ALLOCATOR()) : HashMap(2, allocatorReference)
+		{
+		}
 
-		HashMap(const uint32 size, const ALLOCATOR& allocatorReference) : bucketCount(NextPowerOfTwo(size)), maxBucketLength(bucketCount / 2), allocator(allocatorReference)
+		HashMap(const uint32 size, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference), bucketCount(NextPowerOfTwo(size)), maxBucketLength(bucketCount / 2)
 		{
 			while (maxBucketLength == 0) {
 				bucketCount *= 2;
 				maxBucketLength = bucketCount / 2;
 			}
 			
-			this->data = allocate(bucketCount, maxBucketLength); initializeBuckets();
+			data = allocate(bucketCount, maxBucketLength); initializeBuckets();
 		}
 
-		HashMap(const uint32 size, const float32 loadFactor, const ALLOCATOR& allocatorReference) : bucketCount(NextPowerOfTwo(size)), maxBucketLength(bucketCount * loadFactor), allocator(allocatorReference)
+		HashMap(const uint32 size, const float32 loadFactor, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference), bucketCount(NextPowerOfTwo(size)), maxBucketLength(static_cast<uint32>(bucketCount * loadFactor))
 		{
 			while (maxBucketLength == 0) {
 				bucketCount *= 2;
 				maxBucketLength = bucketCount / 2;
 			}
 			
-			this->data = allocate(bucketCount, maxBucketLength); initializeBuckets();
+			data = allocate(bucketCount, maxBucketLength); initializeBuckets();
 		}
 
-		HashMap(HashMap&& other) noexcept : data(other.data), bucketCount(other.bucketCount), maxBucketLength(other.maxBucketLength), allocator(MoveRef(other.allocator))
+		HashMap(HashMap&& other) noexcept requires std::move_constructible<ALLOCATOR> : allocator(MoveRef(other.allocator)), data(other.data), bucketCount(other.bucketCount), maxBucketLength(other.maxBucketLength)
 		{
 			other.data = nullptr; other.bucketCount = 0;
 		}
@@ -71,12 +74,17 @@ namespace GTSL
 		public:
 			Iterator(HashMap* hashMap) : map(hashMap)
 			{
+				while (bucketIndex < map->bucketCount) {
+					if (map->getKeysBucket(bucketIndex).ElementCount()) {
+						break;
+					}
+
+					++bucketIndex;
+				}
 			}
 
 			Iterator operator++()
 			{
-				auto range = map->getValuesBucket(bucketIndex);
-
 				while (bucketIndex < map->bucketCount) {
 					if (++bucketElement < map->getKeysBucket(bucketIndex).ElementCount()) {
 						return *this;
@@ -147,7 +155,7 @@ namespace GTSL
 		}
 
 		template<typename... ARGS>
-		GTSL::Result<V&> TryEmplace(const K key, ARGS&&... args)
+		Result<V&> TryEmplace(const K key, ARGS&&... args)
 		{
 			auto result = TryGet(key);
 
@@ -209,10 +217,10 @@ namespace GTSL
 	private:
 		friend class Iterator<V>;
 
+		[[no_unique_address]] ALLOCATOR allocator;
 		byte* data = nullptr;
 		uint32 bucketCount = 0;
 		uint32 maxBucketLength = 0;
-		[[no_unique_address]] ALLOCATOR allocator;
 
 		[[nodiscard]] uint64* findKeyInBucket(const uint32 keys_bucket, const K key) const
 		{
@@ -231,9 +239,9 @@ namespace GTSL
 			for (auto& e : getKeysBucket(keys_bucket)) { if (e == static_cast<uint64>(key)) { return &e; } } return nullptr;
 		}
 
-		[[nodiscard]] GTSL::Result<uint32> getIndexForKeyInBucket(const uint32 bucketIndex, const K& key) const
+		[[nodiscard]] Result<uint32> getIndexForKeyInBucket(const uint32 bucketIndex, const K& key) const
 		{
-			for (auto& e : getKeysBucket(bucketIndex)) { if (e == static_cast<uint64>(key)) { return GTSL::Result<uint32>(static_cast<uint32>(&e - getKeysBucket(bucketIndex).begin()), true); } }
+			for (auto& e : getKeysBucket(bucketIndex)) { if (e == static_cast<uint64>(key)) { return GTSL::Result(static_cast<uint32>(&e - getKeysBucket(bucketIndex).begin()), true); } }
 			return GTSL::Result<uint32>(0, false);
 		}
 
@@ -248,22 +256,21 @@ namespace GTSL
 		void resize()
 		{
 			auto newBucketCount = this->bucketCount * 2;
-			auto newMaxBucketLength = this->maxBucketLength * 2;
+			auto newMaxBucketLength = this->maxBucketLength * 2u;
 			auto* newAlloc = allocate(newBucketCount, newMaxBucketLength);
 			copy(newBucketCount, newMaxBucketLength, newAlloc);
 			deallocate();
 			this->data = newAlloc; this->bucketCount = newBucketCount; this->maxBucketLength = newMaxBucketLength;
-			initializeBuckets(this->bucketCount / 2 /*old capacity*/); //intialize new upper half
+			initializeBuckets(this->bucketCount / 2u /*old capacity*/); //intialize new upper half
 
 			for (uint32 currentBucketIndex = 0; currentBucketIndex < this->bucketCount / 2; ++currentBucketIndex) //rehash lower half only since it's the only part that has elements
 			{
 				// Do rehash in reverse because elements at the top of the bucket require less data copying when moved, as we only have to move those elements on top of them
-				for (uint32 currentElementIndex = getBucketLength(currentBucketIndex) - 1, i = 0; i < getBucketLength(currentBucketIndex); ++i, --currentElementIndex)
+				for (uint32 currentElementIndex = static_cast<uint32>(getBucketLength(currentBucketIndex)) - 1u, i = 0u; i < static_cast<uint32>(getBucketLength(currentBucketIndex)); ++i, --currentElementIndex)
 				{
 					auto newBucketIndex = modulo(getKeysBucket(currentBucketIndex)[currentElementIndex], this->bucketCount);
 
-					if (newBucketIndex != currentBucketIndex) //If after rehash element has to go to a new bucket, move it (elements tend keep their original modulo, specially as the map grows)
-					{
+					if (newBucketIndex != currentBucketIndex) { //If after rehash element has to go to a new bucket, move it (elements tend keep their original modulo, specially as the map grows)
 						auto& currentBucketLength = getBucketLength(currentBucketIndex); auto& newBucketLength = getBucketLength(newBucketIndex);
 
 						if (newBucketLength + 1 > newMaxBucketLength) { resize(); return; } //if pushing one more element into the current bucket would exhaust it's space trigger another resize
@@ -298,10 +305,10 @@ namespace GTSL
 			return static_cast<byte*>(memory);
 		}
 
-		void deallocate() const { allocator.Deallocate(getTotalAllocationSize(this->bucketCount, maxBucketLength), alignof(V), this->data); }
+		void deallocate() { allocator.Deallocate(getTotalAllocationSize(this->bucketCount, maxBucketLength), alignof(V), this->data); }
 
 		void initializeBuckets() { for (uint32 i = 0; i < this->bucketCount; ++i) { getBucketLength(i) = 0; } }
-		void initializeBuckets(const uint32 oldCapacity) { for (uint32 i = oldCapacity - 1; i < this->bucketCount; ++i) { getBucketLength(i) = 0; } }
+		void initializeBuckets(const uint32 oldCapacity) { for (uint32 i = oldCapacity; i < this->bucketCount; ++i) { getBucketLength(i) = 0; } }
 
 		void copy(const uint32 newCapacity, const uint32 newMaxBucketLength, byte* to)
 		{
@@ -332,12 +339,42 @@ namespace GTSL
 		template<typename KK, typename VV, class ALLOCATOR, typename L>
 		friend void ForEachKey(HashMap<KK, VV, ALLOCATOR>& collection, L&& lambda);
 
-		template<typename KK, typename VV, class ALLOCATOR1, class ALLOCATOR2>
-		friend void Insert(const HashMap<KK, VV, ALLOCATOR1>&, Buffer<ALLOCATOR2>& buffer);
-		template<typename KK, typename VV, class ALLOCATOR1, class ALLOCATOR2>
-		friend void Extract(HashMap<KK, VV, ALLOCATOR1>&, Buffer<ALLOCATOR2>& buffer);
-	};
+	public:
+		friend void Insert(const HashMap& map, auto& buffer)
+		{
+			Insert(map.bucketCount, buffer);
+			Insert(map.maxBucketLength, buffer);
+		
+			for (uint32 bucket = 0; bucket < map.bucketCount; ++bucket)
+			{
+				Insert(map.getBucketLength(bucket), buffer);
+				auto keysBucket = map.getKeysBucket(bucket);
+				for (auto e : keysBucket) { Insert(e, buffer); }
+				auto valuesBucket = map.getValuesBucket(bucket);
+				for (auto& e : valuesBucket) { Insert(e, buffer); }
+			}
+		}
 
+		friend void Extract(HashMap& map, auto& buffer)
+		{
+			uint32 capacity{ 0 }, maxBucketLength = 0;
+			Extract(capacity, buffer);
+			Extract(maxBucketLength, buffer);
+		
+			for (uint32 bucket = 0; bucket < capacity; ++bucket)
+			{
+				Extract(map.getBucketLength(bucket), buffer);
+				auto keysBucket = map.getKeysBucket(bucket);
+				for (auto& e : keysBucket) { Extract(e, buffer); }
+				auto valuesBucket = map.getValuesBucket(bucket);
+				for (auto& e : valuesBucket) { Extract(e, buffer); }
+			}
+		}
+	};
+	
+	template<typename K, typename V, uint64 N>
+	using StaticMap = HashMap<K, V, StaticAllocator<N * sizeof(uint64) * N + N * sizeof(V) * N>>;
+	
 	template<typename K, typename V, class ALLOCATOR, typename L>
 	void ForEach(HashMap<K, V, ALLOCATOR>& collection, L&& lambda)
 	{

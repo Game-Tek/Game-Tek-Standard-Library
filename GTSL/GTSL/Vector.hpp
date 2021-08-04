@@ -2,122 +2,85 @@
 
 #include "Core.h"
 
-#include "Memory.h"
+#include <concepts>
+
 #include "Assert.h"
 #include "Algorithm.h"
 #include <initializer_list>
 #include <new>
 #include "Range.h"
 #include "Result.h"
+#include "Allocator.h"
 
 namespace GTSL
-{
-	template<class ALLOCATOR>
-	class Buffer;
-	
+{	
 	template <typename T, class ALLOCATOR>
 	class Vector
 	{
 	public:
 		typedef uint32 length_type;
-
+		typedef ALLOCATOR allocator_t;
 		typedef T* iterator;
 		typedef const T* const_iterator;
 		typedef T value_type;
 
-		Vector() = default;
-
-		explicit Vector(const ALLOCATOR& allocator) : allocator(allocator) {}
+		Vector(const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {}
 		
 		/**
 		 * \brief Constructs a Vector with enough space to accomodate capacity T elements.
 		 * \param capacity Number of T objects to allocate space for.
 		 */
-		explicit Vector(const length_type capacity, const ALLOCATOR& allocatorReference) : allocator(allocatorReference),
+		Vector(const length_type capacity, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference),
 		capacity(capacity), data(this->allocate(this->capacity, this->capacity))
 		{
 		}
 
 		/**
 		 * \brief Constructs a Vector with enough space to accomodate capacity T elements, and considers length elements already occupied.
-		 * \param capacity Number of T objects to allocate space for.
-		 * \param length Number of elements to consider being already placed in vector.
 		 */
-		explicit Vector(const length_type capacity, const length_type length, const ALLOCATOR& allocatorReference) : allocator(allocatorReference), capacity(capacity),
-		length(length), data(this->allocate(this->capacity, this->capacity))
+		Vector(const Range<const T*> ranger, const ALLOCATOR& allocatorReference = ALLOCATOR()) requires std::copy_constructible<T> : allocator(allocatorReference),
+		length(static_cast<uint32>(ranger.ElementCount())), data(allocate(length, capacity))
 		{
-		}
-
-		/**
-		 * \brief Constructs a Vector with enough space to accomodate capacity T elements, and considers length elements already occupied.
-		 */
-		explicit Vector(const Range<const T*> ranger, const ALLOCATOR& allocatorReference) : allocator(allocatorReference),
-		capacity(static_cast<uint32>(ranger.ElementCount())), length(static_cast<uint32>(ranger.ElementCount())), data(this->allocate(this->capacity, this->capacity))
-		{
+			buildCopyArray(ranger.begin(), data, length);
 		}
 
 		/**
 		 * \brief Constructs a Vector and copies it's elements from initializerList.
 		 * \param initializerList Initializer list to take elements from.
 		 */
-		constexpr Vector(const std::initializer_list<T>& initializerList) : capacity(static_cast<uint32>(initializerList.end() - initializerList.begin())),
-		length(this->capacity), data(this->allocate(this->capacity, this->capacity))
+		constexpr Vector(const std::initializer_list<T>& initializerList) requires std::copy_constructible<T> : length(static_cast<uint32>(initializerList.size())),
+		capacity(static_cast<uint32>(initializerList.size())), data(allocate(length, capacity))
 		{
-			copyArray(initializerList.begin(), this->data, this->length);
+			buildCopyArray(initializerList.begin(), data, length);
 		}
 
 		/**
 		 * \brief Constructs a Vector from a reference to another Vector.
 		 * \param other Reference to another Vector.
 		 */
-		Vector(const Vector& other) : allocator(other.allocator), capacity(other.capacity),
-		length(other.length), data(this->allocate(this->capacity, this->capacity))
+		Vector(const Vector& other) requires std::copy_constructible<T> : allocator(other.allocator), length(other.length),
+		capacity(other.capacity), data(allocate(this->capacity, this->capacity))
 		{
-			for (auto& e : other) { ::new(this->data + GTSL::RangeForIndex(e, other)) T(e); }
-		}
-
-		/**
-		 * \brief Constructs a Vector from a reference to another Vector.
-		 * \param other Reference to another Vector.
-		 */
-		template<class ALLOC>
-		Vector(Vector<T, ALLOC>&& other, const ALLOCATOR& allocatorReference) : allocator(allocatorReference), capacity(other.capacity), length(other.length), data(other.data)
-		{
-			other.data = nullptr;
-		}
-
-		/**
-		 * \brief Constructs a Vector from a reference to another Vector.
-		 * \param other Reference to another Vector.
-		 */
-		template<class ALLOC>
-		Vector(const Vector<T, ALLOC>& other, const ALLOCATOR& allocatorReference) : allocator(allocatorReference), capacity(other.capacity),
-		length(other.length), data(this->allocate(this->capacity, this->capacity))
-		{
-			for (auto& e : other) { ::new(this->data + GTSL::RangeForIndex(e, other)) T(e); }
+			buildCopyArray(other.begin(), data, length);
 		}
 
 		/**
 		 * \brief Constructs a Vector from an r-value reference to another Vector.
 		 * \param other R-Value reference to other Vector to transfer from.
 		 */
-		Vector(Vector&& other) noexcept : allocator(GTSL::MoveRef(other.allocator)), capacity(other.capacity), length(other.length), data(other.data)
+		Vector(Vector&& other) noexcept requires std::move_constructible<ALLOCATOR> : allocator(GTSL::MoveRef(other.allocator)), length(other.length), capacity(other.capacity), data(other.data)
 		{
 			other.data = nullptr;
 		}
 
-		/**
-		 * \brief Copies the data of other Vector to this Vector.
-		 * \param other Reference to other Vector.
-		 * \return Reference to self.
-		 */
-		template<class OTHER_ALLOCATOR>
-		Vector& operator=(const Vector<T, OTHER_ALLOCATOR>& other)
+		Vector& operator=(const Vector& other) requires std::copyable<T>
 		{
 			GTSL_ASSERT(this != &other, "Assigning to self is not allowed!");
-			if (other.length > this->length) { reallocate(); };
-			for (auto& e : other) { this->data[GTSL::RangeForIndex(e, other)] = e; }
-			this->length = other.length;
+			TryFree();
+			allocator = other.allocator;
+			data = allocate(other.length, capacity);
+			copyArray(other.data, data, other.length);
+			length = other.length;
 			return *this;
 		}
 
@@ -126,10 +89,11 @@ namespace GTSL
 		 * \param other Reference to other Vector.
 		 * \return Reference to self.
 		 */
-		Vector& operator=(Vector&& other) noexcept
+		Vector& operator=(Vector&& other) noexcept requires std::move_constructible<ALLOCATOR>
 		{
 			GTSL_ASSERT(this != &other, "Assigning to self is not allowed!");
 			TryFree();
+			allocator = GTSL::MoveRef(other);
 			capacity = other.capacity;
 			length = other.length;
 			data = other.data;
@@ -142,7 +106,7 @@ namespace GTSL
 			if (this->data) [[likely]] {
 				for (auto& e : *this) { Destroy(e); }
 				deallocate();
-				if constexpr (_DEBUG) { data = nullptr; }
+				data = nullptr;
 			}
 		}
 		
@@ -208,39 +172,12 @@ namespace GTSL
 		 */
 		void Resize(const length_type count)
 		{
-			if (count > this->capacity) { reallocate(); }			
-			for(uint32 i = count; i < this->length; ++i) { GTSL::Destroy(this->data[i]); }
-			this->length = count;
-		}
-		
-		/**
-		 * \brief Initializes the Vector with space for count elements. Useful for when Vector was initialized with no allocation. Calling this function when the array is not Empty will lead to a memory leak.
-		 * \param count Number of T elements to allocate space for.
-		 */
-		void Initialize(const length_type count)
-		{
-			GTSL_ASSERT(!this->data, "Array pointer is not null!")
-			this->data = allocate(count, this->capacity);
-			this->length = 0;
-		}
-
-		void Initialize(const length_type count, const ALLOCATOR& allocator)
-		{
-			GTSL_ASSERT(!this->data, "Array pointer is not null!")
-			this->allocator = allocator;
-			this->data = allocate(count, this->capacity);
-			this->length = 0;
-		}
-		
-		/**
-		* \brief Initializes the Vector with space for count elements and copies data to it's array. Useful for when Vector was initialized with no allocation. Calling this function when the array is not Empty will lead to a memory leak.
-		*/
-		void Initialize(const Range<const T*> range, const ALLOCATOR& allocatorReference)
-		{
-			this->allocator = allocatorReference;
-			this->data = allocate(range.ElementCount(), this->capacity);
-			copyArray(range.begin(), this->data, range.ElementCount());
-			this->length = range.ElementCount();
+			if (count > length) {
+				tryReallocate(count - length);
+			} else {
+				for (uint32 i = count; i < length; ++i) { GTSL::Destroy(data[i]); }
+				length = count;
+			}
 		}
 
 		/**
@@ -249,64 +186,19 @@ namespace GTSL
 		 */
 		void Shrink(const length_type count)
 		{
-			for (auto begin = this->begin() + count; begin != this->end(); ++begin) { begin->~T(); }
+			for (auto* begin = begin() + count; begin != end(); ++begin) { GTSL::Destroy(*begin); }
 			length_type new_capacity;
 			T* buffer = allocate(count, new_capacity);
-			copyArray(this->data, buffer, this->length);
+			copyArray(data, buffer, length);
 			deallocate();
-			this->capacity = new_capacity; this->data = buffer; this->length = count;
+			capacity = new_capacity; data = buffer; length = count;
 		}
 
-		/**
-		 * \brief Places a copy of obj At the back of the vector.
-		 * \param obj Object to Insert back.
-		 * \return Length of vector after inserting, also index At which obj was inserted.
-		 */
-		length_type PushBack(const T& obj)
+		void PushBack(const Range<const T*> other)
 		{
-			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
-			::new(static_cast<void*>(this->data + this->length)) T(obj);
-			return this->length++;
-		}
-
-		/**
-		 * \brief Places a copy of obj At the back of the vector.
-		 * \param obj Object to Insert back.
-		 * \return Index At which obj was inserted.
-		 */
-		length_type PushBack(T&& obj)
-		{
-			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
-			::new(static_cast<void*>(this->data + this->length)) T(GTSL::MoveRef(obj));
-			return this->length++;
-		}
-
-		length_type PushBack(const Range<T*> ranger)
-		{
-			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(); }
-			for (auto& e : ranger) { this->data[GTSL::RangeForIndex(e, ranger)] = e; }
-			return static_cast<uint32>((this->length += static_cast<uint32>(ranger.ElementCount())) - ranger.ElementCount());
-		}
-
-		length_type PushBack(const Range<const T*> ranger)
-		{
-			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(); }
-			for (auto& e : ranger) { this->data[GTSL::RangeForIndex(e, ranger)] = e; }
-			return static_cast<uint32>((this->length += static_cast<uint32>(ranger.ElementCount())) - ranger.ElementCount());
-		}
-
-		/**
-		 * \brief Places a copy of the elements from the passed in Vector At the end of the vector.
-		 * \param other Vector to copy elements from.
-		 * \return Length of vector after inserting other's elements.
-		 */
-		template<class ALLOC>
-		void PushBack(const Vector<T, ALLOC>& other)
-		{
-			const auto newLength = this->length + other.GetLength();
-			if (newLength > this->capacity) { reallocate(); }
-			for (uint32 i = this->length, o_i = 0; o_i < other.GetLength(); ++i, ++o_i) { this->data[i] = other.data[o_i]; }
-			this->length = newLength;
+			tryReallocate(static_cast<int32>(other.ElementCount()));
+			copyArray(other.begin(), data + length, static_cast<uint32>(other.ElementCount()));
+			length += static_cast<uint32>(other.ElementCount());
 		}
 
 		/**
@@ -318,8 +210,8 @@ namespace GTSL
 		template <typename... ARGS>
 		T& EmplaceBack(ARGS&&... args)
 		{
-			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
-			return *::new(static_cast<void*>(this->data + this->length++)) T(GTSL::ForwardRef<ARGS>(args)...);
+			tryReallocate(1);
+			return *::new(static_cast<void*>(data + length++)) T(GTSL::ForwardRef<ARGS>(args)...);
 		}
 
 		/**
@@ -328,8 +220,8 @@ namespace GTSL
 		void PopBack()
 		{
 			GTSL_ASSERT(this->length != 0, "Cannot pop back, there are no more elements!")
-			this->data[this->length].~T();
-			this->length -= 1;
+			Destroy(data[length]);
+			length -= 1;
 		}
 
 		/**
@@ -340,47 +232,11 @@ namespace GTSL
 		template<typename... ARGS>
 		T& Insert(const length_type index, ARGS&&... args)
 		{
-			if (this->length + 1 > this->capacity) [[unlikely]] { reallocate(); }
+			tryReallocate(1);
 			copyArray(getIterator(index), getIterator(index + 1), this->length - index);
 			auto* data = ::new(getIterator(index)) T(ForwardRef<ARGS>(args)...);
 			this->length += 1;
 			return *data;
-		}
-
-		/**
-		 * \brief Copies obj to index.
-		 * \param index Index At which to Place the object.
-		 * \param obj Object to copy.
-		 */
-		void Place(const length_type index, const T& obj)
-		{
-			this->data[index].~T();
-			::new(static_cast<void*>(this->data + index)) T(obj);
-		}
-
-		/**
-		 * \brief Copies obj to index.
-		 * \param index Index At which to Place the object.
-		 */
-		void Insert(const length_type index, const Range<const T*> ranger)
-		{
-			if (this->length + ranger.ElementCount() > this->capacity) { reallocate(); }
-			MemCopy(sizeof(T) * ranger.ElementCount(), getIterator(index), getIterator(static_cast<uint32>(index + ranger.ElementCount())));
-			this->length += static_cast<uint32>(ranger.ElementCount());
-			MemCopy(sizeof(T) * ranger.ElementCount(), ranger, getIterator(index));
-		}
-
-		/**
-		 * \brief Emplaces(constructs) an object At index.
-		 * \tparam ARGS Type/s of args.
-		 * \param index Index At which to Emplace the object.
-		 * \param args Argument list to forward to the object constructor.
-		 */
-		template <typename... ARGS>
-		void Emplace(const length_type index, ARGS&&... args)
-		{
-			this->data[index].~T();
-			::new(static_cast<void*>(this->data + index)) T(GTSL::ForwardRef<ARGS>(args) ...);
 		}
 
 		/**
@@ -389,9 +245,9 @@ namespace GTSL
 		 */
 		void Pop(const length_type index)
 		{
-			this->data[index].~T();
-			copyArray(getIterator(index + 1), getIterator(index), this->length - index);
-			this->length -= 1;
+			Destroy(data[index]);
+			length -= 1;
+			MemCopy((length - index) * sizeof(T), getIterator(index + 1), getIterator(index));
 		}
 
 		/**
@@ -505,11 +361,16 @@ namespace GTSL
 		[[nodiscard]] operator Range<T*>() const noexcept { return Range<T*>(this->data, this->data + this->length); }
 		[[nodiscard]] operator Range<const T*>() const noexcept { return Range<const T*>(this->data, this->data + this->length); }
 
+		void SetLength(const uint32 newLength) {
+			length = newLength;
+			Resize(newLength);
+		}
+	
 	private:
 #pragma warning(disable : 4648)
 		[[no_unique_address]] ALLOCATOR allocator;
-		length_type capacity{ 0 };
 		length_type length{ 0 };
+		length_type capacity{ 0 };
 		T* data{ nullptr };
 #pragma warning(default : 4648)
 
@@ -519,9 +380,18 @@ namespace GTSL
 		 * \param to Pointer to write the data to.
 		 * \param elementCount How many elements of this vector's T to write to to.
 		 */
-		static void copyArray(const T* from, T* to, const length_type elementCount)
+		static void copyArray(const T* from, T* to, const length_type elementCount) requires std::copyable<T>
 		{
-			MemCopy(elementCount * sizeof(T), from, to);
+			for (uint32 i = 0; i < elementCount; ++i) {
+				to[i] = from[i];
+			}
+		}
+
+		static void buildCopyArray(const T* from, T* to, const length_type elementCount) requires std::copy_constructible<T>
+		{
+			for (uint32 i = 0; i < elementCount; ++i) {
+				::new(to + i) T(from[i]);
+			}
 		}
 
 		/**
@@ -529,18 +399,18 @@ namespace GTSL
 		 * \param elementCount How many elements of this vector's T to allocate space for.
 		 * \return T pointer to the newly allocated memory.
 		 */
-		T* allocate(const length_type elementCount, length_type& newCapacity)
+		T* allocate(const length_type elementCount, uint32& cc)
 		{
 			T* data{ nullptr }; uint64 allocated_size{ 0 };
-			this->allocator.Allocate(elementCount * sizeof(T), alignof(T), reinterpret_cast<void**>(&data), &allocated_size);
-			newCapacity = static_cast<length_type>(allocated_size / sizeof(T));
+			allocator.Allocate(elementCount * sizeof(T), alignof(T), reinterpret_cast<void**>(&data), &allocated_size);
+			cc = static_cast<length_type>(allocated_size / sizeof(T));
 			return data;
 		}
 
 		/**
 		 * \brief Deletes the data found At this vector's data and sets data as nullptr.
 		 */
-		void deallocate() { this->allocator.Deallocate(this->capacity * sizeof(T), alignof(T), static_cast<void*>(this->data)); }
+		void deallocate() { allocator.Deallocate(capacity * sizeof(T), alignof(T), static_cast<void*>(data)); }
 
 		/**
 		 * \brief Reallocates this->data to a new array if (this->length + additionalElements) exceeds the allocated space.\n
@@ -548,13 +418,18 @@ namespace GTSL
 		 * Growth of the array is geometric.
 		 * Number can be negative.
 		 */
-		void reallocate()
-		{
-			length_type new_capacity = this->length * 2;
-			T* new_data = this->allocate(new_capacity, new_capacity);
-			copyArray(this->data, new_data, this->length);
-			deallocate();
-			this->data = new_data; this->capacity = new_capacity;
+		void tryReallocate(const int32 deltaElements) {
+			if (length + deltaElements > capacity) {
+				length_type new_capacity = (length + deltaElements) * 2u;
+				T* new_data = allocate(new_capacity, new_capacity);
+
+				if (data) {
+					MemCopy(length * sizeof(T), data, new_data);
+					deallocate();
+				}
+				
+				data = new_data; capacity = new_capacity;
+			}
 		}
 
 		/**
@@ -566,9 +441,34 @@ namespace GTSL
 
 		friend class Vector;
 
-		template<class ALLOC>
-		friend void Insert(const Vector&, Buffer<ALLOC>&);
-		template<class ALLOC>
-		friend void Extract(Vector&, Buffer<ALLOC>&);
+	public:
+		template<typename TT, class AA>
+		friend void Insert(const Vector<TT, AA>& vector, auto& buffer);
+		
+		template<typename TT, class AA>
+		friend void Extract(Vector<TT, AA>& vector, auto& buffer);
 	};
+
+	template<typename T, class ALLOCATOR>
+	void Insert(const Vector<T, ALLOCATOR>& vector, auto& buffer) {
+		Insert(vector.GetLength(), buffer);
+		for (const auto& e : vector) { Insert(e, buffer); }
+	}
+
+	template<typename T, class ALLOCATOR>
+	void Extract(Vector<T, ALLOCATOR>& vector, auto& buffer) {
+		uint32 length{ 0 };
+		Extract(length, buffer);
+		::new(&vector) Vector<T, ALLOCATOR>(length);
+		vector.length = length;
+		for (uint32 i = 0; i < length; ++i) {
+			Extract(vector.data[i], buffer);
+		}
+	}
+	
+	template<typename T, uint64 N>
+	using StaticVector = Vector<T, StaticAllocator<N * sizeof(T)>>;
+
+	template<typename T, uint64 N, class B>
+	using SemiVector = Vector<T, DoubleAllocator<N * sizeof(T), B>>;
 }

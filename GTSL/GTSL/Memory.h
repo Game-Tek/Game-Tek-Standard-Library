@@ -12,8 +12,8 @@ namespace GTSL
 	void Deallocate(uint64 size, void* data);
 	void MemCopy(uint64 size, const void* from, void* to);
 	void MemCopy(Range<byte*> range, void* to);
-	void SetMemory(uint64 size, void* data, int64 value = 0);
-	void SetMemory(Range<byte*> range, int64 value = 0);
+	void SetMemory(uint64 size, void* data, int32 value = 0);
+	void SetMemory(Range<byte*> range, int32 value = 0);
 
 	void Copy_M_32(uint64 size, const void* from, void* to);
 	void Copy_M_64(uint64 size, const void* from, void* to);

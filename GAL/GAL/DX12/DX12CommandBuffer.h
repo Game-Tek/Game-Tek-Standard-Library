@@ -5,10 +5,11 @@
 #include "DX12Framebuffer.h"
 #include "DX12Pipeline.h"
 #include "DX12Texture.h"
-#include "GTSL/Array.hpp"
-#include "GTSL/RGB.h"
 #include "DX12RenderDevice.h"
 #include "GAL/CommandList.h"
+
+#include <GTSL/RGB.h>
+#include <GTSL/Vector.hpp>
 
 #undef MemoryBarrier
 
@@ -30,7 +31,7 @@ namespace GAL
 		
 		void BeginRenderPass(const DX12RenderDevice* renderDevice, DX12RenderPass renderPass, DX12Framebuffer framebuffer,
 			GTSL::Extent2D renderArea, GTSL::Range<const RenderPassTargetDescription*> renderPassTargetDescriptions) {
-			GTSL::Array<D3D12_RENDER_PASS_RENDER_TARGET_DESC, 16> renderPassRenderTargetDescs;
+			GTSL::StaticVector<D3D12_RENDER_PASS_RENDER_TARGET_DESC, 16> renderPassRenderTargetDescs;
 			D3D12_RENDER_PASS_DEPTH_STENCIL_DESC renderPassDepthStencilDesc;
 
 			for(GTSL::uint8 i = 0; i < renderPassTargetDescriptions.ElementCount(); ++i) {
@@ -93,7 +94,7 @@ namespace GAL
 		
 		template<class ALLOCATOR>
 		void AddPipelineBarrier(const DX12RenderDevice* renderDevice, GTSL::Range<const BarrierData*> barriers, ShaderStage initialStage, ShaderStage finalStage, const ALLOCATOR& allocator) {
-			GTSL::Array<D3D12_RESOURCE_BARRIER, 64> resourceBarriers;
+			GTSL::StaticVector<D3D12_RESOURCE_BARRIER, 64> resourceBarriers;
 
 			for(auto& e : barriers) {
 				switch (e.Type) {
@@ -170,7 +171,7 @@ namespace GAL
 			commandList->DrawIndexedInstanced(indexCount, instanceCount, 0, 0, 0);
 		}
 
-		void TraceRays(const DX12RenderDevice* renderDevice, GTSL::Array<ShaderTableDescriptor, 4> shaderTableDescriptors, GTSL::Extent3D dispatchSize) {
+		void TraceRays(const DX12RenderDevice* renderDevice, GTSL::StaticVector<ShaderTableDescriptor, 4> shaderTableDescriptors, GTSL::Extent3D dispatchSize) {
 			ID3D12GraphicsCommandList4* t = nullptr;
 			commandList->QueryInterface(__uuidof(ID3D12GraphicsCommandList4), reinterpret_cast<void**>(&t));
 			D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc;
@@ -196,7 +197,7 @@ namespace GAL
 			t->Release();
 		}
 
-		void AddLabel(const DX12RenderDevice* renderDevice, GTSL::Range<const GTSL::char8_t*> name) {
+		void AddLabel(const DX12RenderDevice* renderDevice, GTSL::Range<const char8_t*> name) {
 			//commandList->SetMarker(METADA)
 		}
 

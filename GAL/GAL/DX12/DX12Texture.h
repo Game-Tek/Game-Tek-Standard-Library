@@ -71,7 +71,7 @@ namespace GAL
 	public:
 		DX12TextureView() = default;
 
-		void Initialize(const DX12RenderDevice* renderDevice, const GTSL::Range<const GTSL::char8_t*> name, const DX12Texture texture, const FormatDescriptor formatDescriptor, const GTSL::Extent3D extent, const GTSL::uint8 mipLevels)
+		void Initialize(const DX12RenderDevice* renderDevice, const GTSL::Range<const char8_t*> name, const DX12Texture texture, const FormatDescriptor formatDescriptor, const GTSL::Extent3D extent, const GTSL::uint8 mipLevels)
 		{
 			D3D12_CPU_DESCRIPTOR_HANDLE cpu_descriptor_handle;
 			

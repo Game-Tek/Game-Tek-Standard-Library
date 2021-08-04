@@ -12,29 +12,14 @@ namespace GAL
 {
 	class DX12RenderDevice : public RenderDevice
 	{
-	public:
-		struct QueueKey {
-			QueueType QueueType;
-		};
-		
-		struct CreateInfo
-		{
-			GTSL::Range<const GTSL::char8_t*> ApplicationName;
-			GTSL::uint16 ApplicationVersion[3];
-			GTSL::Range<const QueueType*> QueueTypes;
-			GTSL::Range<QueueKey*> QueueKeys;
-#if (_DEBUG)
-			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
-#endif
-			GTSL::Range<const Extension*> Extensions;
-			GTSL::Range<void**> ExtensionCapabilities;
-			AllocationInfo AllocationInfo;
-		};
+	public:		
 		void Initialize(const CreateInfo& info) {
 			IDXGIFactory4* factory4; GTSL::uint32 factoryFlags = 0;
 
 			if constexpr (_DEBUG) {
-				factoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+				if (info.Debug) {
+					factoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+				}
 			}
 
 			DX_CHECK(CreateDXGIFactory2(factoryFlags, IID_IDXGIFactory4, reinterpret_cast<void**>(&factory4)))
@@ -62,8 +47,7 @@ namespace GAL
 				//setName(device, info);
 			}
 
-			if constexpr (_DEBUG)
-			{
+			if constexpr (_DEBUG) {
 				ID3D12InfoQueue* infoQueue;
 				DX_CHECK(device->QueryInterface(IID_ID3D12InfoQueue, reinterpret_cast<void**>(&infoQueue)));
 
@@ -75,8 +59,7 @@ namespace GAL
 				//D3D12_MESSAGE_CATEGORY Categories[] = {};
 
 				// Suppress messages based on their severity level
-				D3D12_MESSAGE_SEVERITY severities[] =
-				{
+				D3D12_MESSAGE_SEVERITY severities[] = {
 					D3D12_MESSAGE_SEVERITY_INFO
 				};
 
@@ -101,7 +84,7 @@ namespace GAL
 			}
 
 			for (GTSL::uint32 i = 0; i < info.QueueKeys.ElementCount(); ++i) {
-				info.QueueKeys[i].QueueType = info.QueueTypes[i];
+				info.QueueKeys[i].Type = info.Queues[i];
 			}
 		}
 

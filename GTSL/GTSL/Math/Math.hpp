@@ -699,6 +699,7 @@ namespace GTSL
 		inline float32 DotProduct(const Vector4& a, const Vector4& b) { return a.X() * b.X() + a.Y() * b.Y() + a.Z() * b.Z() + a.W() * b.W(); }
 
 		inline Vector3 Cross(const Vector3& a, const Vector3& b) { return Vector3(a.Y() * b.Z() - a.Z() * b.Y(), a.Z() * b.X() - a.X() * b.Z(), a.X() * b.Y() - a.Y() * b.X()); }
+		inline Vector3 TripleProduct(const Vector3& a, const Vector3& b) { return Cross(Cross(a, b), b); }
 
 		inline Vector2 Abs(const Vector2 a) { return Vector2(Abs(a.X()), Abs(a.Y())); }
 		inline Vector3 Abs(const Vector3 a) { return Vector3(Abs(a.X()), Abs(a.Y()), Abs(a.Z())); }
@@ -928,6 +929,24 @@ namespace GTSL
 			
 			return matrix;
 		}
+		
+		inline Matrix4 BuildInversePerspectiveMatrix(const float32 fov, const float32 aspectRatio, const float32 nearPlane, const float32 farPlane) {
+			Matrix4 matrix;
+
+			const auto yScale = 1.0f / Tangent(fov * 0.5f);
+			const auto xScale = yScale / aspectRatio;
+
+			matrix[0][0] = 1 / xScale; matrix[1][1] = 1 / yScale;
+			auto z0 = farPlane / (farPlane - nearPlane);
+			auto z1 = (nearPlane * farPlane) / (nearPlane - farPlane);
+
+			matrix[3][2] = 1 / z1;
+			matrix[2][3] = 1.0f;
+			
+			matrix[3][3] = z0 / z1;
+			
+			return matrix;
+		}
 
 		inline Matrix4 MakeOrthoMatrix(const float32 right, const float32 left, const float32 top, const float32 bottom, const float32 nearPlane, const float32 farPlane) {
 			Matrix4 matrix;
@@ -955,7 +974,7 @@ namespace GTSL
 			return point - plane.Normal * T;
 		}
 
-		inline float64 DistanceFromPointToPlane(const Vector3& point, const Plane& plane)
+		inline float32 DistanceFromPointToPlane(const Vector3& point, const Plane& plane)
 		{
 			// return Dot(q, p.n) - p.d; if plane equation normalized (||p.n||==1)
 			return (DotProduct(plane.Normal, point) - plane.D) / DotProduct(plane.Normal, plane.Normal);
@@ -1006,11 +1025,11 @@ namespace GTSL
 			return a + AB * t;
 		}
 
-		inline float64 SquaredDistancePointToSegment(const Vector3& _A, const Vector3& _B, const Vector3& _C)
+		inline float32 SquaredDistancePointToSegment(const Vector3& a, const Vector3& b, const Vector3& c)
 		{
-			const Vector3 AB = _B - _A;
-			const Vector3 AC = _C - _A;
-			const Vector3 BC = _C - _B;
+			const Vector3 AB = b - a;
+			const Vector3 AC = c - a;
+			const Vector3 BC = c - b;
 			const float32 E = DotProduct(AC, AB);
 			// Handle cases where c projects outside ab
 			if (E <= 0.0f) return DotProduct(AC, AC);
@@ -1031,55 +1050,55 @@ namespace GTSL
 			u = 1.0f - s - t;
 		}
 
-		inline Vector3 ClosestPointOnTriangleToPoint(const Vector3& _A, const Vector3& _P1, const Vector3& _P2, const Vector3& _P3)
+		inline Vector3 ClosestPointOnTriangleToPoint(const Vector3& a, const Vector3& p1, const Vector3& p2, const Vector3& p3)
 		{
 			// Check if P in vertex region outside A
-			const Vector3 AP = _A - _P1;
-			const Vector3 AB = _P2 - _P1;
-			const Vector3 AC = _P3 - _P1;
+			const Vector3 AP = a - p1;
+			const Vector3 AB = p2 - p1;
+			const Vector3 AC = p3 - p1;
 
 			const float32 D1 = DotProduct(AB, AP);
 			const float32 D2 = DotProduct(AC, AP);
-			if (D1 <= 0.0f && D2 <= 0.0f) return _P1; // barycentric coordinates (1,0,0)
+			if (D1 <= 0.0f && D2 <= 0.0f) return p1; // barycentric coordinates (1,0,0)
 
 			// Check if P in vertex region outside B
-			const Vector3 BP = _A - _P2;
+			const Vector3 BP = a - p2;
 			const float32 D3 = DotProduct(AB, BP);
 			const float32 D4 = DotProduct(AC, BP);
-			if (D3 >= 0.0f && D4 <= D3) return _P2; // barycentric coordinates (0,1,0)
+			if (D3 >= 0.0f && D4 <= D3) return p2; // barycentric coordinates (0,1,0)
 
 			// Check if P in edge region of AB, if so return projection of P onto AB
 			const float32 VC = D1 * D4 - D3 * D2;
 			if (VC <= 0.0f && D1 >= 0.0f && D3 <= 0.0f) {
 				const float32 V = D1 / (D1 - D3);
-				return _P1 + AB * V; // barycentric coordinates (1-v,v,0)
+				return p1 + AB * V; // barycentric coordinates (1-v,v,0)
 			}
 
 			// Check if P in vertex region outside C
-			const Vector3 CP = _A - _P3;
+			const Vector3 CP = a - p3;
 			const float32 D5 = DotProduct(AB, CP);
 			const float32 D6 = DotProduct(AC, CP);
-			if (D6 >= 0.0f && D5 <= D6) return _P3; // barycentric coordinates (0,0,1)
+			if (D6 >= 0.0f && D5 <= D6) return p3; // barycentric coordinates (0,0,1)
 
 			// Check if P in edge region of AC, if so return projection of P onto AC
 			const float32 VB = D5 * D2 - D1 * D6;
 			if (VB <= 0.0f && D2 >= 0.0f && D6 <= 0.0f) {
 				const float32 W = D2 / (D2 - D6);
-				return _P1 + AC * W; // barycentric coordinates (1-w,0,w)
+				return p1 + AC * W; // barycentric coordinates (1-w,0,w)
 			}
 
 			// Check if P in edge region of BC, if so return projection of P onto BC
 			const float32 VA = D3 * D6 - D5 * D4;
 			if (VA <= 0.0f && (D4 - D3) >= 0.0f && (D5 - D6) >= 0.0f) {
 				const float32 W = (D4 - D3) / ((D4 - D3) + (D5 - D6));
-				return _P2 + (_P3 - _P2) * W; // barycentric coordinates (0,1-w,w)
+				return p2 + (p3 - p2) * W; // barycentric coordinates (0,1-w,w)
 			}
 
 			// P inside face region. Compute Q through its barycentric coordinates (u,v,w)
 			const float32 Denom = 1.0f / (VA + VB + VC);
 			const float32 V = VB * Denom;
 			const float32 W = VC * Denom;
-			return _P1 + AB * V + AC * W; // = u*a + v*b + w*c, u = va * denom = 1.0f - v - w
+			return p1 + AB * V + AC * W; // = u*a + v*b + w*c, u = va * denom = 1.0f - v - w
 		}
 
 		inline bool PointOutsideOfPlane(const Vector3& p, const Vector3& a, const Vector3& b, const Vector3& c)

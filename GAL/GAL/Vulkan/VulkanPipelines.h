@@ -9,7 +9,6 @@
 #include "Vulkan.h"
 #include "VulkanBindings.h"
 #include "VulkanRenderPass.h"
-#include "GTSL/Array.hpp"
 
 namespace GTSL {
 	class BufferInterface;
@@ -180,7 +179,7 @@ namespace GAL
 		void Initialize(const VulkanRenderDevice* renderDevice, const PushConstant* pushConstant, const GTSL::Range<const VulkanBindingsSetLayout*> bindingsSetLayouts) {
 			VkPipelineLayoutCreateInfo vkPipelineLayoutCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
 
-			GTSL::Array<VkDescriptorSetLayout, 16> vkDescriptorSetLayouts;
+			GTSL::StaticVector<VkDescriptorSetLayout, 16> vkDescriptorSetLayouts;
 			for (auto& e : bindingsSetLayouts) { vkDescriptorSetLayouts.EmplaceBack(e.GetVkDescriptorSetLayout()); }
 			
 			VkPushConstantRange vkPushConstantRange;
@@ -241,7 +240,7 @@ namespace GAL
 			vkGraphicsPipelineCreateInfo.pDepthStencilState = nullptr; vkGraphicsPipelineCreateInfo.pMultisampleState = &vkPipelineMultisampleStateCreateInfo;
 			vkGraphicsPipelineCreateInfo.layout = pipelineLayout.GetVkPipelineLayout();
 
-			GTSL::Buffer buffer(8192, 8, GTSL::StaticAllocator<8192>());
+			GTSL::Buffer<GTSL::StaticAllocator<8192>> buffer(8192, 8);
 
 			for (GTSL::uint8 ps = 0; ps < static_cast<GTSL::uint8>(pipelineStates.ElementCount()); ++ps)
 			{
@@ -388,11 +387,11 @@ namespace GAL
 			}
 
 			VkPipelineDynamicStateCreateInfo vkPipelineDynamicStateCreateInfo{ VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
-			GTSL::Array<VkDynamicState, 4> vkDynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+			GTSL::StaticVector<VkDynamicState, 4> vkDynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 			vkPipelineDynamicStateCreateInfo.dynamicStateCount = vkDynamicStates.GetLength();
 			vkPipelineDynamicStateCreateInfo.pDynamicStates = vkDynamicStates.begin();
 
-			GTSL::Array<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vkPipelineShaderStageCreateInfos;
+			GTSL::StaticVector<VkPipelineShaderStageCreateInfo, MAX_SHADER_STAGES> vkPipelineShaderStageCreateInfos;
 
 			for (GTSL::uint8 i = 0; i < static_cast<GTSL::uint8>(stages.ElementCount()); ++i) {
 				auto& stage = vkPipelineShaderStageCreateInfos.EmplaceBack();
@@ -429,7 +428,7 @@ namespace GAL
 		}
 		
 		void InitializeRayTracePipeline(const VulkanRenderDevice* renderDevice, const GTSL::Range<const PipelineStateBlock*> pipelineStates, GTSL::Range<const ShaderInfo*> stages, const VulkanPipelineLayout pipelineLayout, const VulkanPipelineCache pipelineCache) {
-			GTSL::Array<VkRayTracingShaderGroupCreateInfoKHR, 16> vkRayTracingShaderGroupCreateInfoKhrs;
+			GTSL::StaticVector<VkRayTracingShaderGroupCreateInfoKHR, 16> vkRayTracingShaderGroupCreateInfoKhrs;
 
 			VkRayTracingPipelineCreateInfoKHR vkRayTracingPipelineCreateInfo{ VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR };
 			vkRayTracingPipelineCreateInfo.basePipelineIndex = -1;
@@ -466,7 +465,7 @@ namespace GAL
 				}
 			}
 
-			GTSL::Array<VkPipelineShaderStageCreateInfo, 32> vkPipelineShaderStageCreateInfos;
+			GTSL::StaticVector<VkPipelineShaderStageCreateInfo, 32> vkPipelineShaderStageCreateInfos;
 
 			for (GTSL::uint32 i = 0; i < static_cast<GTSL::uint32>(stages.ElementCount()); ++i)
 			{
@@ -500,8 +499,10 @@ namespace GAL
 		[[nodiscard]] VkPipeline GetVkPipeline() const { return pipeline; }
 		[[nodiscard]] GTSL::uint64 GetHandle() const { return reinterpret_cast<uint64_t>(pipeline); }
 
-		void GetShaderGroupHandles(VulkanRenderDevice* renderDevice, GTSL::uint32 firstGroup, GTSL::uint32 groupCount, GTSL::Range<GTSL::byte*> buffer) {
-			renderDevice->vkGetRayTracingShaderGroupHandlesKHR(renderDevice->GetVkDevice(), pipeline, firstGroup, groupCount, buffer.Bytes(), buffer.begin());
+		template<class ALLOCATOR>
+		void GetShaderGroupHandles(VulkanRenderDevice* renderDevice, GTSL::uint32 firstGroup, GTSL::uint32 groupCount, GTSL::Vector<ShaderHandle, ALLOCATOR>& vector) {
+			vector.SetLength(groupCount);
+			renderDevice->vkGetRayTracingShaderGroupHandlesKHR(renderDevice->GetVkDevice(), pipeline, firstGroup, groupCount, groupCount * 32u, vector.begin());
 		}
 	protected:
 		VkPipeline pipeline = nullptr;

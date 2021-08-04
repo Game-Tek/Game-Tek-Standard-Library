@@ -9,7 +9,7 @@
 namespace GTSL
 {
 	template<Integral T>
-	uint32 GetAllocationSize(const uint32 numElementToBeSupported) {
+	uint64 GetAllocationSize(const uint32 numElementToBeSupported) {
 		return ((numElementToBeSupported / Bits<T>()) + 1) * sizeof(T);
 	}
 	
@@ -20,19 +20,19 @@ namespace GTSL
 
 	template<Integral T>
 	void SetAsOccupied(Range<T*> bits, const uint32 pos) {
-		GTSL_ASSERT(!CheckBit(pos % Bits<T>(), bits[pos / Bits<T>()]), "Slot is already occupied")
-		GTSL::SetBit(pos % Bits<T>(), bits[pos / Bits<T>()]);
+		GTSL_ASSERT(!CheckBit(uint8(pos % Bits<T>()), bits[pos / Bits<T>()]), "Slot is already occupied")
+		GTSL::SetBit(static_cast<uint8>(pos % Bits<T>()), bits[pos / Bits<T>()]);
 	}
 
 	template<Integral T>
 	void SetAsFree(Range<T*> bits, const uint32 pos) {
-		GTSL_ASSERT(CheckBit(pos % Bits<T>(), bits[pos / Bits<T>()]), "Slot is not occupied")
-		GTSL::ClearBit(pos % Bits<T>(), bits[pos / Bits<T>()]);
+		GTSL_ASSERT(CheckBit(static_cast<uint8>(pos % Bits<T>()), bits[pos / Bits<T>()]), "Slot is not occupied")
+		GTSL::ClearBit(static_cast<uint8>(pos % Bits<T>()), bits[pos / Bits<T>()]);
 	}
 
 	template<Integral T>
 	Result<uint32> OccupyFirstFreeSlot(Range<T*> bits, uint32 maxLength) {
-		for (uint32 i = 0, iBits = 0; i < bits.ElementCount(); ++i, iBits += Bits<T>()) {
+		for (uint32 i = 0, iBits = 0; i < static_cast<uint32>(bits.ElementCount()); ++i, iBits += static_cast<uint32>(Bits<T>())) {
 			if (auto bit = FindFirstClearBit(bits[i]); bit) {
 				if (bit.Get() < maxLength) {
 					GTSL::SetBit(bit.Get(), bits[i]);
@@ -48,6 +48,6 @@ namespace GTSL
 
 	template<Integral T>
 	bool IsSlotOccupied(Range<const T*> bits, uint32 pos) {
-		return GTSL::CheckBit(pos % Bits<T>(), bits[pos / Bits<T>()]);
+		return GTSL::CheckBit(static_cast<uint8>(pos % Bits<T>()), bits[pos / Bits<T>()]);
 	}
 }

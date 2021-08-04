@@ -38,7 +38,7 @@ namespace GAL
 		[[nodiscard]] DeviceAddress GetAddress(const VulkanRenderDevice* renderDevice) const {
 			VkBufferDeviceAddressInfo vkBufferDeviceAddressInfo{ VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO };
 			vkBufferDeviceAddressInfo.buffer = buffer;
-			return renderDevice->VkGetBufferDeviceAddress(renderDevice->GetVkDevice(), &vkBufferDeviceAddressInfo);
+			return DeviceAddress(renderDevice->VkGetBufferDeviceAddress(renderDevice->GetVkDevice(), &vkBufferDeviceAddressInfo));
 		}
 
 		void Destroy(const VulkanRenderDevice* renderDevice) {

@@ -13,17 +13,14 @@ namespace GTSL
 	class Buffer
 	{
 	public:
-		Buffer() = delete;
-
-		Buffer(const ALLOCATOR& allocator) : allocator(allocator) {
+		Buffer(const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {
 		}
 		
-		Buffer(uint32 size, uint32 alignment, const ALLOCATOR& allocator) {
-			Allocate(size, alignment, allocator);
+		Buffer(uint32 size, uint32 alignment, const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {
+			Allocate(size, alignment);
 		}
 		
-		~Buffer()
-		{
+		~Buffer() {
 			if (data) {
 				allocator.Deallocate(capacity, alignment, data); data = nullptr;
 			}
@@ -42,35 +39,40 @@ namespace GTSL
 			return static_cast<T*>(ret);
 		}
 
-		Buffer(Buffer&& buffer) noexcept : data(buffer.data), capacity(buffer.capacity), length(buffer.length), readPos(buffer.readPos)
+		Buffer(Buffer&& buffer) noexcept : allocator(MoveRef(buffer.allocator)), data(buffer.data), capacity(buffer.capacity), length(buffer.length), readPos(buffer.readPos)
 		{
 			buffer.data = nullptr;
 		}
 		
-		void Allocate(const uint64 bytes, const uint32 alignment, const ALLOCATOR& allocatorReference)
+		void Allocate(const uint64 bytes, const uint32 algn)
 		{
 			uint64 allocated_size{ 0 };
-			this->allocator = allocatorReference;
-			this->allocator.Allocate(bytes, alignment, reinterpret_cast<void**>(&data), &allocated_size);
+			allocator.Allocate(bytes, alignment, reinterpret_cast<void**>(&data), &allocated_size);
 			capacity = allocated_size;
-			this->alignment = alignment;
-			this->length = 0;
-			this->readPos = 0;
+			alignment = algn;
+			length = 0;
+			readPos = 0;
 		}
 
-		void Resize(const uint64 size) { length = size; }
+		void Clear() {
+			length = 0;
+			readPos = 0;
+		}
+		
+		void Resize(const uint64 size) {
+			tryResize(size);
+		}
 		
 		void AddResize(const int64 delta) {
-			tryResize(delta);
+			tryDeltaResize(delta);
 		}
 
 		void AddBytes(const int64 bytes) {
 			length += bytes;
 		}
 
-		void CopyBytes(const uint64 size, const byte* from)
-		{
-			tryResize(size);
+		void CopyBytes(const uint64 size, const byte* from) {
+			tryDeltaResize(size);
 			MemCopy(size, from, data + length); length += size;
 		}
 
@@ -82,6 +84,7 @@ namespace GTSL
 		
 		[[nodiscard]] uint64 GetCapacity() const { return capacity; }
 		[[nodiscard]] uint64 GetLength() const { return length; }
+		[[nodiscard]] uint64 GetSize() const { return length; }
 		[[nodiscard]] uint64 GetReadPosition() const { return readPos; }
 		[[nodiscard]] byte* GetData() const { return data; }
 
@@ -95,13 +98,32 @@ namespace GTSL
 		Range<const byte*> GetRange() const { return Range<const byte*>(length, data); }
 	
 	private:
+		[[no_unique_address]] ALLOCATOR allocator;
+		
 		byte* data{ nullptr };
 		uint32 alignment = 16;
 		uint64 capacity = 0;
 		uint64 length = 0;
 		uint64 readPos = 0;
 
-		void tryResize(const int64 deltaSize) {
+		void tryResize(const uint64 newSize) {
+			if (newSize > capacity) {
+				auto allocSize = (capacity + newSize) * 2ll; uint64 allocatedSize = 0;
+				void* newAlloc = nullptr;
+				allocator.Allocate(allocSize, alignment, &newAlloc, &allocatedSize);
+
+				if (data) {
+					MemCopy(length, data, newAlloc);
+					allocator.Deallocate(capacity, alignment, reinterpret_cast<void*>(data));
+				}
+				
+				data = static_cast<byte*>(newAlloc);
+				
+				capacity = allocatedSize;
+			}
+		}
+
+		void tryDeltaResize(const int64 deltaSize) {
 			if (length + deltaSize > capacity) {
 				auto allocSize = (capacity + deltaSize) * 2ll; uint64 allocatedSize = 0;
 				void* newAlloc = nullptr;
@@ -118,6 +140,5 @@ namespace GTSL
 			}
 		}
 		
-		[[no_unique_address]] ALLOCATOR allocator;
 	};
 }

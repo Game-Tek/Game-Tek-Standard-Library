@@ -88,7 +88,7 @@ namespace GAL
 
 		struct ShaderTableDescriptor
 		{
-			DeviceAddress Address = 0;
+			DeviceAddress Address;
 
 			/**
 			 * \brief Number of entries in the shader group.

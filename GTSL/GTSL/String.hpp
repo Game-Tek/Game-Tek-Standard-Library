@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Array.hpp"
-#include "Core.h"
+#include <concepts>
 
-#include "Vector.hpp"
+#include "Core.h"
 #include "StringCommon.h"
+#include "Allocator.h"
 
 namespace GTSL
 {
@@ -13,39 +13,84 @@ namespace GTSL
 	{
 	public:
 		using string_type = char8_t;
-		using length_type = typename Vector<string_type, ALLOCATOR>::length_type;
 		
 		String() = default;
 
 		/**
 		 * \brief Creates an String with enough space allocated for length elements.
-		 * \param length Amount of elements to allocate.
+		 * \param initialCapacity Amount of elements to allocate.
 		 */
-		explicit String(const length_type length, const ALLOCATOR& allocatorReference) : allocator(allocatorReference)
+		String(const uint32 initialCapacity, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference)
 		{
 			uint64 allocatedSize = 0;
-			allocator.Allocate(length, 16, reinterpret_cast<void**>(&data), &allocatedSize);
+			allocator.Allocate(initialCapacity, 16, reinterpret_cast<void**>(&data), &allocatedSize);
 			capacity = static_cast<uint32>(allocatedSize / sizeof(string_type));
 		}
 		
-		String(const char8_t* cstring, const ALLOCATOR& allocatorReference) : String(StringLength(cstring), allocatorReference)
+		String(const char8_t* cstring, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(StringLength(cstring), allocatorReference)
 		{
 			auto stringLength = StringLength(cstring);
 			copy(stringLength, cstring);
 			length = stringLength - 1;
 		}
 
-		String(const String& other) = default;
-		String(String&& other) noexcept = default;
-		String& operator=(const String& other) = default;
-		String& operator=(String&& other) noexcept = default;
-		
-		~String()
+		String(const Range<const char8_t*> range, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(static_cast<uint32>(range.ElementCount()), allocatorReference)
 		{
-			if (data) { allocator.Deallocate(capacity, 16, data); }
-		};
+			auto stringLength = static_cast<uint32>(range.ElementCount());
+			copy(stringLength, range.begin());
+			length = stringLength - 1;
+		}
 
-		string_type operator[](const length_type i) const noexcept { return data[i]; }
+		String(const String& other) : allocator(other.allocator)
+		{
+			uint64 allocatedSize = 0;
+			allocator.Allocate(other.length + 1, 16, reinterpret_cast<void**>(&data), &allocatedSize);
+			capacity = static_cast<uint32>(allocatedSize / sizeof(string_type));
+			copy(other.length, other.data);
+			length = other.length;
+			data[length] = u8'\0';
+		}
+		
+		template<class B>
+		String(const String<B>& other, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference)
+		{
+			uint64 allocatedSize = 0;
+			allocator.Allocate(other.length + 1, 16, reinterpret_cast<void**>(&data), &allocatedSize);
+			capacity = static_cast<uint32>(allocatedSize / sizeof(string_type));
+			copy(other.length, other.data);
+			length = other.length;
+			data[length] = u8'\0';
+		}
+		
+		String(String&& other) noexcept requires std::move_constructible<ALLOCATOR> : allocator(MoveRef(other.allocator)), data(other.data), length(other.length), capacity(other.capacity) {
+			other.data = nullptr;
+		}
+		
+		String& operator=(const String& other)
+		{
+			length = 0; //reset length
+			tryResize(other.length); //test if new string exceeds available storage
+			allocator = other.allocator;
+			copy(other.length + 1, other.data);
+			length = other.length;
+			return *this;
+		}
+		
+		String& operator=(String&& other) noexcept requires std::move_constructible<ALLOCATOR>
+		{
+			//free current
+			allocator = MoveRef(other.allocator);
+			data = other.data;
+			length = other.length;
+			capacity = other.capacity;
+			return *this;
+		}
+		
+		~String() {
+			if (data) { allocator.Deallocate(capacity, 16, data); }
+		}
+
+		string_type operator[](const uint32 i) const noexcept { return data[i]; }
 
 		auto begin() noexcept { return data; }
 		[[nodiscard]] auto begin() const noexcept { return data; }
@@ -53,13 +98,21 @@ namespace GTSL
 		[[nodiscard]] auto end() const noexcept { return data + length + 1; }
 
 		//Returns true if the two String's contents are the same. Comparison is case sensitive.
-		bool operator==(const String& other) const
+		template<class ALLOCATOR>
+		bool operator==(const String<ALLOCATOR>& other) const
 		{
 			//Discard if Length of strings is not equal, first because it helps us discard before even starting, second because we can't compare strings of different sizes.
 			if (length != other.length) return false;
+			for (uint32 i = 0; i < length; ++i) { if (data[i] != other.data[i]) { return false; } }
+			return true;
+		}
 
-			length_type i = 0;
-			for (const auto& c : data) { if (c != other.data[i]) { return false; } ++i; }
+		bool operator==(const char8_t* text) const
+		{
+			auto l = StringLength(text) - 1;
+			//Discard if Length of strings is not equal, first because it helps us discard before even starting, second because we can't compare strings of different sizes.
+			if (length != l) return false;
+			for (uint32 i = 0; i < length; ++i) { if (data[i] != text[i]) { return false; } }
 			return true;
 		}
 
@@ -81,13 +134,15 @@ namespace GTSL
 		[[nodiscard]] const char8_t* c_str() const { return data; }
 
 		//Return the length of this String. Does not take into account the null terminator character.
-		[[nodiscard]] length_type GetLength() const { return length + 1; }
+		[[nodiscard]] uint32 GetLength() const { return length + 1; }
+		[[nodiscard]] uint32 GetCapacity() const { return capacity; }
 		//Returns whether this String is empty.
 		[[nodiscard]] bool IsEmpty() const { return !length; }
 
 		String& operator+=(const char8_t* string)
 		{
 			auto stringLength = StringLength(string);
+			tryResize(stringLength);
 			copy(stringLength, string);
 			length += stringLength - 1;
 			return *this;
@@ -95,54 +150,39 @@ namespace GTSL
 
 		String& operator+=(Range<const char8_t*> range)
 		{
-			auto stringLength = range.ElementCount();
+			auto stringLength = static_cast<uint32>(range.ElementCount());
+			tryResize(stringLength);
 			copy(stringLength, range.begin());
 			length += stringLength - 1;
 			return *this;
 		}
 
+
 		String& operator+=(char8_t character)
 		{
-			data[length] = character;
-			++length;
+			tryResize(1);
+			data[length++] = character;
+			data[length] = '\0';
 			return *this;
-		}
-		
-		/**
-		* \brief Returns an index to the first char in the string that is equal to c. If no such character is found npos() is returned.
-		* \param c Char to Find.
-		* \return Index to found char.
-		*/
-		[[nodiscard]] Result<length_type> FindFirst(char8_t c) const
-		{
-			length_type i = 0;
-			for (const auto& e : data) { if (e == c) { return Result<length_type>(MoveRef(i), true); } ++i; }
-			return Result<length_type>(false);
-		}
-
-		/**
-		 * \brief Returns an index to the last char in the string that is equal to c. If no such character is found npos() is returned.
-		 * \param c Char to Find.
-		 * \return Index to found char.
-		 */
-		[[nodiscard]] Result<Pair<length_type, uint32>> FindLast(char8_t c) const
-		{
-			length_type i = 1, t = GetLength();
-			for (const auto& e : data) { if (e == c) { return Result<Pair<length_type, uint32>>(Pair<length_type, uint32>(i, t), true); } ++i; --t; }
-			return Result<Pair<length_type, uint32>>(false);
 		}
 
 		/**
 		 * \brief Drops/removes the parts of the string from from forward.
 		 * \param from index to cut forward from.
 		 */
-		void Drop(length_type from)
-		{
+		void Drop(uint32 from) {
+			length = from; data[from] = '\0';
 		}
 
 		void ReplaceAll(char8_t a, char8_t with)
 		{
-			for (auto& c : data) { if (c == a) { c = with; } }
+			for (uint32 i = 0; i < length; ++i) { if (data[i] == a) { data[i] = with; } }
+		}
+
+		void Resize(const uint32 newLength) {
+			tryResize(length - newLength);
+			length = newLength;
+			data[newLength] = '\0';
 		}
 		
 		//void ReplaceAll(const char* a, const char* with)
@@ -202,15 +242,62 @@ namespace GTSL
 		//		}
 		//	}
 		//}
-		
-	private:
-		char8_t* data = nullptr; uint32 length = 0, capacity = 0;
-		[[no_unique_address]] ALLOCATOR allocator;
 
+		/**
+		 * \brief Returns an index to the last char in the string that is equal to c. If no such character is found npos() is returned.
+		 * \param c Char to Find.
+		 * \return Index to found char.
+		 */
+		[[nodiscard]] friend Result<uint32> FindLast(const String& string, char8_t c)
+		{
+			for (uint32 i = string.length; i < string.GetLength(); --i) { if (string.data[i] == c) { return Result(MoveRef(i), true); } }
+			return Result<uint32>(false);
+		}
+
+		/**
+		* \brief Returns an index to the first char in the string that is equal to c. If no such character is found npos() is returned.
+		* \param c Char to Find.
+		* \return Index to found char.
+		*/
+		friend Result<uint32> FindFirst(const String& string, char8_t c) {
+			for (uint32 i = 0; i < string.length; ++i) { if (string.data[i] == c) { return Result(MoveRef(i), true); } }
+			return Result<uint32>(false);
+		}
+	
+	private:
+		[[no_unique_address]] ALLOCATOR allocator;
+		char8_t* data = nullptr; uint32 length = 0, capacity = 0;
+
+		void tryResize(int64 delta)
+		{
+			if (length + delta > capacity) {
+				uint64 allocatedSize = 0; void* newData = nullptr;
+				
+				if(data) {
+					allocator.Allocate((length + delta) * 2, 16, &newData, &allocatedSize);
+					for (uint32 i = 0; i < length; ++i) { static_cast<char8_t*>(newData)[i] = data[i]; }					
+					allocator.Deallocate(length, 16, static_cast<void*>(data));
+				} else {
+					allocator.Allocate(length + delta, 16, &newData, &allocatedSize);
+				}
+
+				capacity = static_cast<uint32>(allocatedSize / sizeof(char8_t));
+				data = static_cast<char8_t*>(newData);
+			}
+		}
+		
 		void copy(uint32 stringLength, const string_type* string)
 		{
 			GTSL_ASSERT(stringLength + length < capacity, "Not enough space");
 			for (uint32 i = 0, t = length; i < stringLength; ++i, ++t) { data[t] = string[i]; }
 		}
+
+		friend class String;
 	};
+	
+	template<uint64 N>
+	using StaticString = String<StaticAllocator<N>>;
+
+	template<class ALLOC, uint64 N>
+	using SemiString = String<DoubleAllocator<N, ALLOC>>;
 }

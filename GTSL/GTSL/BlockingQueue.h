@@ -23,22 +23,24 @@ namespace GTSL
 			ready.NotifyOne();
 		}
 
-		void Push(T&& item)
+		template<typename... ARGS>
+		void Push(ARGS&&... args)
 		{
 			{
 				Lock lock(mutex);
-				queue.emplace(GTSL::ForwardRef<T>(item));
+				queue.emplace(GTSL::ForwardRef<ARGS>(args)...);
 			}
 
 			ready.NotifyOne();
 		}
 
-		bool TryPush(T&& item)
+		template<typename... ARGS>
+		bool TryPush(ARGS&&... args)
 		{
 			if (mutex.TryLock())
 			{
 				if (working) { mutex.Unlock(); return false; }
-				queue.emplace(GTSL::ForwardRef<T>(item));
+				queue.emplace(GTSL::ForwardRef<ARGS>(args)...);
 				mutex.Unlock();
 				ready.NotifyOne();
 				return true;
@@ -53,7 +55,7 @@ namespace GTSL
 			
 			while (queue.empty() && !done) { ready.Wait(mutex); }
 			if (queue.empty()) { return false; }
-			item = queue.front();
+			item = GTSL::MoveRef(queue.front());
 			queue.pop();
 			working = true;
 			
@@ -65,7 +67,7 @@ namespace GTSL
 			if (mutex.TryLock())
 			{
 				if (queue.empty()) { mutex.Unlock(); return false; }
-				item = queue.front();
+				item = GTSL::MoveRef(queue.front());
 				queue.pop();
 				working = true;
 				mutex.Unlock();

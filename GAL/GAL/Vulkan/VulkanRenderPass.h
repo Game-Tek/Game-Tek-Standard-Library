@@ -5,7 +5,6 @@
 #include "GAL/Vulkan/Vulkan.h"
 #include "GAL/Vulkan/VulkanRenderDevice.h"
 #include <GTSL/Range.h>
-#include <GTSL/Array.hpp>
 
 namespace GAL
 {
@@ -16,7 +15,7 @@ namespace GAL
 		
 		void Initialize(const VulkanRenderDevice* renderDevice, GTSL::Range<const RenderPassTargetDescription*> attachments,
 			GTSL::Range<const SubPassDescriptor*> subPasses, const GTSL::Range<const SubPassDependency*> subPassDependencies) {
-			GTSL::Array<VkAttachmentDescription, 32> vkAttachmentDescriptions;
+			GTSL::StaticVector<VkAttachmentDescription, 32> vkAttachmentDescriptions;
 
 			for (GTSL::uint32 i = 0; i < static_cast<GTSL::uint32>(attachments.ElementCount()); ++i) {
 				auto& attachmentDescription = vkAttachmentDescriptions.EmplaceBack();
@@ -32,10 +31,10 @@ namespace GAL
 				attachmentDescription.finalLayout = ToVulkan(attachments[i].End, attachments[i].FormatDescriptor);
 			}
 
-			GTSL::Array<GTSL::Array<VkAttachmentReference, 16>, 16> writeAttachmentsReferences;
-			GTSL::Array<GTSL::Array<VkAttachmentReference, 16>, 16> readAttachmentsReferences;
-			GTSL::Array<GTSL::Array<GTSL::uint32, 16>, 16> preserveAttachmentsIndices;
-			GTSL::Array<VkAttachmentReference, 16> vkDepthAttachmentReferences;
+			GTSL::StaticVector<GTSL::StaticVector<VkAttachmentReference, 16>, 16> writeAttachmentsReferences;
+			GTSL::StaticVector<GTSL::StaticVector<VkAttachmentReference, 16>, 16> readAttachmentsReferences;
+			GTSL::StaticVector<GTSL::StaticVector<GTSL::uint32, 16>, 16> preserveAttachmentsIndices;
+			GTSL::StaticVector<VkAttachmentReference, 16> vkDepthAttachmentReferences;
 
 			for (GTSL::uint32 s = 0; s < static_cast<GTSL::uint32>(subPasses.ElementCount()); ++s) {
 				writeAttachmentsReferences.EmplaceBack(); readAttachmentsReferences.EmplaceBack(); preserveAttachmentsIndices.EmplaceBack();
@@ -70,7 +69,7 @@ namespace GAL
 				}
 			}
 
-			GTSL::Array<VkSubpassDescription, 32> vkSubpassDescriptions;
+			GTSL::StaticVector<VkSubpassDescription, 32> vkSubpassDescriptions;
 
 			for (GTSL::uint32 s = 0; s < static_cast<GTSL::uint32>(subPasses.ElementCount()); ++s) {
 				auto& description = vkSubpassDescriptions.EmplaceBack();
@@ -86,7 +85,7 @@ namespace GAL
 				description.pDepthStencilAttachment = &vkDepthAttachmentReferences[s];
 			}
 
-			GTSL::Array<VkSubpassDependency, 32> vkSubpassDependencies;
+			GTSL::StaticVector<VkSubpassDependency, 32> vkSubpassDependencies;
 			for (GTSL::uint32 s = 0; s < static_cast<GTSL::uint32>(subPassDependencies.ElementCount()); ++s) {
 				auto& dependency = vkSubpassDependencies.EmplaceBack();
 				dependency.srcSubpass = subPassDependencies[s].SourceSubPass == EXTERNAL ? VK_SUBPASS_EXTERNAL : subPassDependencies[s].SourceSubPass;

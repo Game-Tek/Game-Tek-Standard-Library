@@ -5,7 +5,9 @@
 #include "RenderCore.h"
 #include "GTSL/Delegate.hpp"
 
-#include "GTSL/StaticString.hpp"
+#include <GTSL/String.hpp>
+
+#include "GTSL/Pair.h"
 
 #undef ERROR
 
@@ -54,15 +56,26 @@ namespace GAL
 
 			void* UserData;
 		};
+
+		struct QueueKey {
+			QueueType Type;
+			GTSL::uint32 Family, Queue;
+		};
 		
-		//struct CreateInfo
-		//{
-		//	GTSL::Range<const GTSL::char8_t> ApplicationName;
-		//	GTSL::uint16 ApplicationVersion[3];
-		//	GTSL::Range<const Queue::CreateInfo> QueueCreateInfos;
-		//	GTSL::Range<Queue*> Queues;
-		//	GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
-		//};
+		struct CreateInfo
+		{
+			GTSL::Range<const char8_t*> ApplicationName;
+			GTSL::uint16 ApplicationVersion[3];
+			GTSL::Range<const QueueType*> Queues;
+			GTSL::Range<QueueKey*> QueueKeys;
+			GTSL::Delegate<void(const char*, MessageSeverity)> DebugPrintFunction;
+			bool Debug = false;
+			bool PerformanceValidation = false;
+			bool SynchronizationValidation = false;
+			GTSL::Range<const GTSL::Pair<Extension, void*>*> Extensions;
+			AllocationInfo AllocationInfo;
+		};
+		
 		RenderDevice(GTSL::Delegate<void(const char*, MessageSeverity)> pDelegate) : debugPrintFunction(pDelegate)
 		{
 		}

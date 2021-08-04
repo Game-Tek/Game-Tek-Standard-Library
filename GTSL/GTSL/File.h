@@ -14,13 +14,8 @@
 #undef ERROR
 #endif
 
-
-namespace GTSL
-{
-	class BufferInterface;
-
-	class File
-	{		
+namespace GTSL {
+	class File {
 	public:
 		File() = default;
 		
@@ -84,7 +79,7 @@ namespace GTSL
 		uint32 Read(B& buffer) const {
 			DWORD bytes{ 0 };
 			buffer.AddResize(GetSize());
-			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), GetSize(), &bytes, nullptr);
+			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), static_cast<DWORD>(GetSize()), &bytes, nullptr);
 			buffer.AddBytes(GetSize());
 			auto w = GetLastError();
 			return bytes;
@@ -132,7 +127,7 @@ namespace GTSL
 			return size.QuadPart;
 		}
 
-		explicit operator bool() const { return fileHandle && GetSize(); }
+		explicit operator bool() const { return fileHandle; }
 	
 	private:
 		void* fileHandle{ nullptr };

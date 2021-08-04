@@ -17,7 +17,7 @@ namespace GAL
 			vk_fence_create_info.flags = isSignaled;
 
 			renderDevice->VkCreateFence(renderDevice->GetVkDevice(), &vk_fence_create_info, renderDevice->GetVkAllocationCallbacks(), &fence);
-				//SET_NAME(fence, VK_OBJECT_TYPE_FENCE, createInfo)
+			counter = isSignaled ? 1 : 0;
 		}
 
 		void Destroy(const VulkanRenderDevice* renderDevice) {
@@ -27,32 +27,33 @@ namespace GAL
 		
 		[[nodiscard]] VkFence GetVkFence() const { return fence; }
 
-		void Wait(const VulkanRenderDevice* renderDevice) const {
-			renderDevice->VkWaitForFences(renderDevice->GetVkDevice(), 1u, &fence, true, 0xFFFFFFFFFFFFFFFF);
+		void Wait(const VulkanRenderDevice* renderDevice) {
+			if (State()) {
+				renderDevice->VkWaitForFences(renderDevice->GetVkDevice(), 1u, &fence, true, 0xFFFFFFFFFFFFFFFF);
+			}
 		}
-		void Reset(const VulkanRenderDevice* renderDevice) const {
+
+		void Reset(const VulkanRenderDevice* renderDevice) {
 			renderDevice->VkResetFences(renderDevice->GetVkDevice(), 1u, &fence);
+			Release();
 		}
 		
-		//[[nodiscard]] bool GetStatus(const VulkanRenderDevice* renderDevice) const {
-		//	return vkGetFenceStatus(renderDevice->GetVkDevice(), fence) == VK_SUCCESS;
-		//}
-		
-		//struct WaitForFencesInfo final : VulkanRenderInfo
-		//{
-		//	GTSL::Range<const VulkanFence*> Fences;
-		//	GTSL::uint64 Timeout;
-		//	bool WaitForAll{ true };
-		//};
-		//static void WaitForFences(const WaitForFencesInfo& waitForFencesInfo);
-		//
-		//struct ResetFencesInfo final : VulkanRenderInfo
-		//{
-		//	GTSL::Range<const VulkanFence*> Fences;
-		//};
-		//static void ResetFences(const ResetFencesInfo& resetFencesInfo);
+		[[nodiscard]] bool GetStatus(const VulkanRenderDevice* renderDevice) const {
+			return renderDevice->VkGetFenceStatus(renderDevice->GetVkDevice(), fence) == VK_SUCCESS;
+		}
+
+		void Signal() {
+			++counter;
+		}
+
+		void Release() {
+			--counter;
+		}
+
+		bool State() const { return counter; }
 	private:
 		VkFence fence = nullptr;
+		GTSL::uint64 counter = 0;
 	};
 
 	class VulkanSemaphore final : public Semaphore
@@ -75,9 +76,15 @@ namespace GAL
 			renderDevice->VkDestroySemaphore(renderDevice->GetVkDevice(), semaphore, renderDevice->GetVkAllocationCallbacks());
 			debugClear(semaphore);
 		}
+		
 		[[nodiscard]] VkSemaphore GetVkSemaphore() const { return semaphore; }
+
+		void Signal() { ++counter; }
+		void Reset() { --counter; }
+		bool IsSignaled() const { return counter; }
 	private:
 		VkSemaphore semaphore{ nullptr };
+		GTSL::uint64 counter = 0;
 	};
 
 	class VulkanEvent final : public Fence

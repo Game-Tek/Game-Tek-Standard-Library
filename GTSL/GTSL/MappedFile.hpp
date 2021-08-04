@@ -3,53 +3,53 @@
 
 #include <GTSL/Core.h>
 #include <GTSL/Range.h>
-#include <Windows.h>
 
-//export module MappedFile;
+#include "File.h"
+#include "Math/Math.hpp"
+
+#if (_WIN64)
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <memoryapi.h>
+#endif
 
 namespace GTSL {
 	class MappedFile {
 	public:
 		MappedFile() = default;
 
-		bool Open(const Range<const char8_t*> path) {
+		bool Open(const Range<const char8_t*> path, uint64 fileSize, File::AccessMode access_mode) {
 
 			DWORD shareMode = 0; /*exlusive use*/
-			DWORD desiredAccess = GENERIC_READ;
-			DWORD creationDisposition = OPEN_EXISTING;
+			DWORD desiredAccess = GENERIC_READ; /*can be or'd*/
+			DWORD creationDisposition = OPEN_ALWAYS;
+			ULONG flProtect = PAGE_READONLY;
+			ULONG mapViewOfFileDesiredAccess = FILE_MAP_READ;			
+			
+			if(access_mode & File::WRITE) {
+				flProtect = PAGE_READWRITE;
+				desiredAccess |= GENERIC_WRITE;
+				mapViewOfFileDesiredAccess |= FILE_MAP_WRITE;
+			} else {
+			}
+			
 			file = CreateFileA(reinterpret_cast<const char*>(path.begin()), desiredAccess, shareMode, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
+			auto createRes = GetLastError();
 			if (!file) { return false; }
 
-			LARGE_INTEGER large_integer;
-			GetFileSizeEx(file, &large_integer);
-			size = large_integer.QuadPart;
+			if(access_mode & File::WRITE) {
+				size = fileSize;				
+			} else {
+				GetFileSizeEx(file, reinterpret_cast<PLARGE_INTEGER>(&size));
+			}
 			
-			fileMapping = CreateFileMappingA(file, nullptr, PAGE_READONLY, 0, 0, nullptr);
+			fileMapping = CreateFileMappingA(file, nullptr, flProtect, 0, size, nullptr);
+			auto fileMapRes = GetLastError();
 			if (!fileMapping) { return false; }
 
-			data = MapViewOfFile(fileMapping, FILE_MAP_READ, 0, 0, 0);
-			if (!data) { return false; }
-
-			return true;
-		}
-
-		bool Open(const Range<const char8_t*> path, uint64 fileSize) {
-
-			DWORD shareMode = 0; /*exlusive use*/
-			DWORD desiredAccess = GENERIC_READ | GENERIC_WRITE;
-			DWORD creationDisposition = OPEN_EXISTING;
-			file = CreateFileA(reinterpret_cast<const char*>(path.begin()), desiredAccess, shareMode, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
-			if (!file) { return false; }
-
-			size = fileSize;
-
-			ULONG desiredAccess2 = FILE_MAP_READ | FILE_MAP_WRITE;
-			
-			fileMapping = CreateFileMapping2(file, nullptr, desiredAccess2, PAGE_READWRITE, 0, size, nullptr, nullptr, 0);
-			if (!fileMapping) { return false; }
-
-			data = MapViewOfFile(fileMapping, FILE_MAP_READ, 0, 0, size);
-			if (!data) { return false; }
+			data = MapViewOfFile(fileMapping, mapViewOfFileDesiredAccess, 0, 0, size);
+			auto mapViewRes = GetLastError();
+			if (!data) { return false; }			
 
 			return true;
 		}
@@ -58,8 +58,7 @@ namespace GTSL {
 			return static_cast<byte*>(data);
 		}
 
-		void Resize(const uint64 newSize)
-		{
+		void Resize(const uint64 newSize) {
 			size = newSize;
 		}
 		
