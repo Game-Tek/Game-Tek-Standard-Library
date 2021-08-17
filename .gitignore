@@ -344,7 +344,6 @@ ASALocalRun/
 healthchecksdb
 
 #dirs
-bin/
-bin-int/
+out/
 
 *.ifc

@@ -19,6 +19,8 @@ namespace GTSL
 	class Gamepad
 	{
 	protected:
+		friend class Window;
+
 #if (_WIN64)
 		uint8 controllerId{ 0 };
 
@@ -32,9 +34,17 @@ namespace GTSL
 		bool leftShoulder : 1 = false, rightShoulder : 1 = false;
 		bool a : 1 = false, b : 1 = false, x : 1 = false, y : 1 = false;
 #endif
-		template<typename BF, typename FF, typename VF>
-		friend bool Update(Gamepad& gamepadQuery, BF&& buttonFunction, FF&& floatFunction, VF&& vectorFunction, uint8 controllerId) noexcept
-		{
+	public:
+		enum class SourceNames : uint8 {
+			TRIGGER, SHOULDER, THUMB, MIDDLE_BUTTONS, DPAD, FACE_BUTTONS, THUMB_BUTTONS
+		};
+
+		enum class Side : uint8 {
+			UP, RIGHT, DOWN, LEFT
+		};
+
+		template<typename F>
+		static bool Update(Gamepad& gamepadQuery, F&& updateFunction, uint8 controllerId) noexcept {
 			XINPUT_STATE xinput_state;
 
 			if (XInputGetState(controllerId, &xinput_state) != ERROR_SUCCESS) { return false; }
@@ -43,108 +53,115 @@ namespace GTSL
 			gamepadQuery.packetNumber = xinput_state.dwPacketNumber;
 
 			if (xinput_state.Gamepad.bLeftTrigger != gamepadQuery.leftTrigger) {
-				floatFunction(Side::LEFT, static_cast<float>(xinput_state.Gamepad.bLeftTrigger) / 255.0f);
+				const auto value = static_cast<float>(xinput_state.Gamepad.bLeftTrigger) / 255.0f;
+				updateFunction(SourceNames::TRIGGER, Side::LEFT, &value);
 				gamepadQuery.leftTrigger = xinput_state.Gamepad.bLeftTrigger;
 			}
 
 			if (xinput_state.Gamepad.bRightTrigger != gamepadQuery.rightTrigger) {
-				floatFunction(Side::RIGHT, static_cast<float>(xinput_state.Gamepad.bRightTrigger) / 255.0f);
+				const auto value = static_cast<float>(xinput_state.Gamepad.bRightTrigger) / 255.0f;
+				updateFunction(SourceNames::TRIGGER, Side::RIGHT, &value);
 				gamepadQuery.rightTrigger = xinput_state.Gamepad.bRightTrigger;
 			}
 
 			if (xinput_state.Gamepad.sThumbLX != gamepadQuery.thumbLX || xinput_state.Gamepad.sThumbLY != gamepadQuery.thumbLY) {
-				vectorFunction(Side::LEFT, { static_cast<float>(xinput_state.Gamepad.sThumbLX) / 32768.f, static_cast<float>(xinput_state.Gamepad.sThumbLY) / 32768.f });
+				const auto value = Vector2(static_cast<float>(xinput_state.Gamepad.sThumbLX) / 32768.f, static_cast<float>(xinput_state.Gamepad.sThumbLY) / 32768.f);
+				updateFunction(SourceNames::THUMB, Side::LEFT, &value);
 				gamepadQuery.thumbLX = xinput_state.Gamepad.sThumbLX; gamepadQuery.thumbLY = xinput_state.Gamepad.sThumbLY;
 			}
 
 			if (xinput_state.Gamepad.sThumbRX != gamepadQuery.thumbRX || xinput_state.Gamepad.sThumbRY != gamepadQuery.thumbRY) {
-				vectorFunction(Side::RIGHT, { static_cast<float>(xinput_state.Gamepad.sThumbRX) / 32768.f, static_cast<float>(xinput_state.Gamepad.sThumbRY) / 32768.f });
+				const auto value = Vector2(static_cast<float>(xinput_state.Gamepad.sThumbRX) / 32768.f, static_cast<float>(xinput_state.Gamepad.sThumbRY) / 32768.f);
+				updateFunction(SourceNames::THUMB, Side::RIGHT, &value);
 				gamepadQuery.thumbRX = xinput_state.Gamepad.sThumbRX; gamepadQuery.thumbRY = xinput_state.Gamepad.sThumbRY;
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != gamepadQuery.dpadUp) {
-				gamepadQuery.dpadUp = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP);
-				buttonFunction(GamepadButtonPosition::DPAD_UP, gamepadQuery.dpadUp);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP);
+				gamepadQuery.dpadUp = value;
+				updateFunction(SourceNames::DPAD, Side::UP, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != gamepadQuery.dpadDown) {
-				gamepadQuery.dpadDown = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
-				buttonFunction(GamepadButtonPosition::DPAD_DOWN, gamepadQuery.dpadDown);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
+				gamepadQuery.dpadDown = value;
+				updateFunction(SourceNames::DPAD, Side::DOWN, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) != gamepadQuery.dpadLeft) {
-				gamepadQuery.dpadLeft = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
-				buttonFunction(GamepadButtonPosition::DPAD_LEFT, gamepadQuery.dpadLeft);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
+				gamepadQuery.dpadLeft = value;
+				updateFunction(SourceNames::DPAD, Side::LEFT, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) != gamepadQuery.dpadRight) {
-				gamepadQuery.dpadRight = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
-				buttonFunction(GamepadButtonPosition::DPAD_RIGHT, gamepadQuery.dpadRight);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
+				gamepadQuery.dpadRight = value;
+				updateFunction(SourceNames::DPAD, Side::RIGHT, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START) != gamepadQuery.start) {
-				gamepadQuery.start = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START);
-				buttonFunction(GamepadButtonPosition::HOME, gamepadQuery.start);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_START);
+				gamepadQuery.start = value;
+				updateFunction(SourceNames::MIDDLE_BUTTONS, Side::RIGHT, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK) != gamepadQuery.back) {
-				gamepadQuery.back = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK);
-				buttonFunction(GamepadButtonPosition::BACK, gamepadQuery.back);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK);
+				gamepadQuery.back = value;
+				updateFunction(SourceNames::MIDDLE_BUTTONS, Side::LEFT, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB) != gamepadQuery.leftThumb) {
-				gamepadQuery.leftThumb = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB);
-				buttonFunction(GamepadButtonPosition::LEFT_STICK, gamepadQuery.leftThumb);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB);
+				gamepadQuery.leftThumb = value;
+				updateFunction(SourceNames::THUMB_BUTTONS, Side::LEFT, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) != gamepadQuery.rightThumb) {
-				gamepadQuery.rightThumb = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB);
-				buttonFunction(GamepadButtonPosition::RIGHT_STICK, gamepadQuery.rightThumb);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB);
+				gamepadQuery.rightThumb = value;
+				updateFunction(SourceNames::THUMB_BUTTONS, Side::RIGHT, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) != gamepadQuery.leftShoulder) {
-				gamepadQuery.leftShoulder = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
-				buttonFunction(GamepadButtonPosition::LEFT_SHOULDER, gamepadQuery.leftShoulder);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
+				gamepadQuery.leftShoulder = value;
+				updateFunction(SourceNames::SHOULDER, Side::LEFT, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) != gamepadQuery.rightShoulder) {
-				gamepadQuery.rightShoulder = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
-				buttonFunction(GamepadButtonPosition::RIGHT_SHOULDER, gamepadQuery.rightShoulder);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
+				gamepadQuery.rightShoulder = value;
+				updateFunction(SourceNames::SHOULDER, Side::RIGHT, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A) != gamepadQuery.a) {
-				gamepadQuery.a = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A);
-				buttonFunction(GamepadButtonPosition::BOTTOM, gamepadQuery.a);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_A);
+				gamepadQuery.a = value;
+				updateFunction(SourceNames::FACE_BUTTONS, Side::DOWN, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B) != gamepadQuery.b) {
-				gamepadQuery.b = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B);
-				buttonFunction(GamepadButtonPosition::RIGHT, gamepadQuery.b);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_B);
+				gamepadQuery.b = value;
+				updateFunction(SourceNames::FACE_BUTTONS, Side::RIGHT, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X) != gamepadQuery.x) {
-				gamepadQuery.x = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X);
-				buttonFunction(GamepadButtonPosition::LEFT, gamepadQuery.x);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_X);
+				gamepadQuery.x = value;
+				updateFunction(SourceNames::FACE_BUTTONS, Side::LEFT, &value);
 			}
 
 			if (static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y) != gamepadQuery.y) {
-				gamepadQuery.y = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y);
-				buttonFunction(GamepadButtonPosition::TOP, gamepadQuery.y);
+				const auto value = static_cast<bool>(xinput_state.Gamepad.wButtons & XINPUT_GAMEPAD_Y);
+				gamepadQuery.y = value;
+				updateFunction(SourceNames::FACE_BUTTONS, Side::UP, &value);
 			}
 
 			return true;
 		}
-	public:
-		enum class GamepadButtonPosition : uint8
-		{
-			TOP, RIGHT, BOTTOM, LEFT, BACK, HOME, DPAD_UP, DPAD_RIGHT, DPAD_DOWN, DPAD_LEFT, LEFT_SHOULDER, RIGHT_SHOULDER,
-			LEFT_STICK, RIGHT_STICK
-		};
-
-		enum class Side : uint8
-		{
-			RIGHT, LEFT
-		};
 
 		/**
 		 * \brief Sets the level of vibration on the gamepad controllers.

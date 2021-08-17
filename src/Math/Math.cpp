@@ -30,4 +30,4 @@ float32 Math::ArcCosine(const float32 A) { return acos(A); }
 
 float32 Math::ArcTangent(const float32 A) { return atan(A); }
 
-float32 Math::ArcTan2(const float32 X, const float32 Y) { return atan2(Y, X); }
+float32 Math::ArcTan2(const float32 y, const float32 x) { return atan2(y, x); }

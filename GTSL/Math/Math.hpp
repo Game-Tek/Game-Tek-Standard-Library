@@ -367,7 +367,7 @@ namespace GTSL
 		* \brief Returns the arctangent of Y / X in degrees.
 		* \return Degrees of Y / X
 		*/
-		float32 ArcTan2(float32 X, float32 Y);
+		float32 ArcTan2(float32 y, float32 x);
 
 		inline void Sine(Range<float32*> n) {
 			using SIMD = SIMD128<float32>;
@@ -453,42 +453,6 @@ namespace GTSL
 				return -1;
 
 			return 0;
-		}
-		
-		inline Quaternion Slerp(Quaternion a, Quaternion b, float32 alpha) {
-			//Implementation from assimp
-			
-			// quaternion to return
-			// Calculate angle between them.
-			
-			float32 cosom = a.X() * b.X() + a.Y() * b.Y() + a.Z() * b.Z() + a.W() * b.W();
-			
-			if (cosom < 0.0f) {
-				b.X() = -b.X(); b.Y() = -b.Y(); b.Z() = -b.Z(); b.W() = -b.W();
-				cosom = -cosom;
-			}
-
-			float32 sclp, sclq;
-			
-			// Calculate coefficients
-			if ((static_cast<float32>(1.0) - cosom) > static_cast<float32>(0.0001)) { // 0.0001 -> some epsillon
-				// Standard case (slerp)
-				float32 omega, sinom;
-				omega = ArcCosine(cosom); // extract theta from dot product's cos theta
-				sinom = Sine(omega);
-				sclp = Sine((static_cast<float32>(1.0) - alpha) * omega) / sinom;
-				sclq = Sine(alpha * omega) / sinom;
-			} else {
-				// Very close, do linear interp (because it's faster)
-				sclp = static_cast<float32>(1.0) - alpha;
-				sclq = alpha;
-			}
-
-			Quaternion result;
-			result.X() = sclp * a.X() + sclq * b.X();
-			result.Y() = sclp * a.Y() + sclq * b.Y();
-			result.Z() = sclp * a.Z() + sclq * b.Z();
-			result.W() = sclp * a.W() + sclq * b.W();
 		}
 		
 		//Mixes A and B by the specified values, Where Alpha 0 returns A and Alpha 1 returns B.
@@ -705,6 +669,8 @@ namespace GTSL
 		inline Vector3 Abs(const Vector3 a) { return Vector3(Abs(a.X()), Abs(a.Y()), Abs(a.Z())); }
 		inline Vector4 Abs(const Vector4 a) { return Vector4(Abs(a.X()), Abs(a.Y()), Abs(a.Z()), Abs(a.W())); }
 
+		inline void Negate(float32& a) { a *= -1.0f; }
+
 		inline Vector2 Negated(const Vector2& a) {
 			return Vector2(-a.X(), -a.Y());
 		}
@@ -733,6 +699,39 @@ namespace GTSL
 
 		inline void Conjugate(Quaternion& a) { a.X() = -a.X(); a.Y() = -a.Y(); a.Z() = -a.Z(); }
 
+		inline Quaternion Slerp(Quaternion a, Quaternion b, float32 alpha) {
+			//Implementation from assimp
+			// Calculate angle between them.
+			float32 cosom = DotProduct(a, b);
+			if (cosom < 0.0f) {
+				Negate(b);
+				Negate(cosom);
+			}
+
+			float32 sclp, sclq;
+
+			// Calculate coefficients
+			if ((static_cast<float32>(1.0) - cosom) > static_cast<float32>(0.0001)) { // 0.0001 -> some epsillon
+				// Standard case (slerp)
+				float32 omega, sinom;
+				omega = ArcCosine(cosom); // extract theta from dot product's cos theta
+				sinom = Sine(omega);
+				sclp = Sine((static_cast<float32>(1.0) - alpha) * omega) / sinom;
+				sclq = Sine(alpha * omega) / sinom;
+			} else {
+				// Very close, do linear interp (because it's faster)
+				sclp = static_cast<float32>(1.0) - alpha;
+				sclq = alpha;
+			}
+
+			Quaternion result;
+			result.X() = sclp * a.X() + sclq * b.X();
+			result.Y() = sclp * a.Y() + sclq * b.Y();
+			result.Z() = sclp * a.Z() + sclq * b.Z();
+			result.W() = sclp * a.W() + sclq * b.W();
+
+			return result;
+		}
 
 		//////////////////////////////////////////////////////////////
 		//						LOGIC								//
@@ -786,6 +785,15 @@ namespace GTSL
 		inline bool PointInBox(Vector2 min, Vector2 max, Vector2 p) { return p.X() >= min.X() && p.X() <= max.X() && p.Y() >= min.Y() && p.Y() <= max.Y(); }
 
 		inline bool PointInBoxProjection(Vector2 min, Vector2 max, Vector2 p) { return p.X() >= min.X() && p.X() <= max.X() || p.Y() >= min.Y() && p.Y() <= max.Y(); }
+
+		uint8 constexpr YAW = 0, PITCH = 1;
+
+		Vector2 ToSphericalCoordinates(const Vector3 vector3) {
+			Vector2 result;			
+			result[YAW] = ArcTan2(vector3[2], vector3[0]);
+			result[PITCH] = ArcTan2(vector3[2], vector3[1]);
+			return result;
+		}
 
 		//////////////////////////////////////////////////////////////
 		//						MATRIX MATH							//

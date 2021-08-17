@@ -20,7 +20,11 @@ namespace GTSL {
 		File() = default;
 		
 		~File() {
+#if (_WIN64)
 			if (fileHandle) { CloseHandle(fileHandle); fileHandle = nullptr; }
+#elif (__linux__)
+			if (file)
+#endif
 		}
 
 		using AccessMode = Flags<uint8, struct AccessModeFlag>;

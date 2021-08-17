@@ -183,7 +183,16 @@ namespace GTSL
 
 		Vector4 operator*(const Vector4& other) const;
 
-		friend Vector4 operator*(const Vector4& vector, const Matrix4& matrix);
+		friend Vector4 operator*(const Vector4& vector, const Matrix4& matrix) {
+			GTSL::Vector4 result;
+
+			result.X() = vector.X() * matrix.array[0][0] + vector.Y() * matrix.array[1][0] + vector.Z() * matrix.array[2][0] + vector.W() * matrix.array[3][0];
+			result.Y() = vector.X() * matrix.array[0][1] + vector.Y() * matrix.array[1][1] + vector.Z() * matrix.array[2][1] + vector.W() * matrix.array[3][1];
+			result.Z() = vector.X() * matrix.array[0][2] + vector.Y() * matrix.array[1][2] + vector.Z() * matrix.array[2][2] + vector.W() * matrix.array[3][2];
+			result.W() = vector.X() * matrix.array[0][3] + vector.Y() * matrix.array[1][3] + vector.Z() * matrix.array[2][3] + vector.W() * matrix.array[3][3];
+
+			return result;
+		}
 
 		Matrix4 operator*(const Matrix4& other) const;
 

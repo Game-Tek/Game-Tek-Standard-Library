@@ -227,8 +227,7 @@ Matrix3x4& Matrix3x4::operator*=(const Matrix3x4& other)
 
 	SIMD128<float32> this_x, this_y, this_z, this_w, row;
 
-	for (uint8 i = 0; i < 3; ++i)
-	{
+	for (uint8 i = 0; i < 3; ++i) {
 		this_x = array[i][0]; this_y = array[i][1]; this_z = array[i][2]; this_w = array[i][3];
 
 		row = this_x * other_row_1 + this_y * other_row_2 + this_z * other_row_3 + this_w * other_row_4;
@@ -237,16 +236,4 @@ Matrix3x4& Matrix3x4::operator*=(const Matrix3x4& other)
 	}
 
 	return *this;
-}
-
-Vector4 GTSL::operator*(const Vector4& vector, const Matrix4& matrix)
-{
-	GTSL::Vector4 result;
-	
-	result.X() = vector.X() * matrix.array[0][0] + vector.Y() * matrix.array[1][0] + vector.Z() * matrix.array[2][0] + vector.W() * matrix.array[3][0];
-	result.Y() = vector.X() * matrix.array[0][1] + vector.Y() * matrix.array[1][1] + vector.Z() * matrix.array[2][1] + vector.W() * matrix.array[3][1];
-	result.Z() = vector.X() * matrix.array[0][2] + vector.Y() * matrix.array[1][2] + vector.Z() * matrix.array[2][2] + vector.W() * matrix.array[3][2];
-	result.W() = vector.X() * matrix.array[0][3] + vector.Y() * matrix.array[1][3] + vector.Z() * matrix.array[2][3] + vector.W() * matrix.array[3][3];
-
-	return result;
 }
