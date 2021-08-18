@@ -788,7 +788,7 @@ namespace GTSL
 
 		uint8 constexpr YAW = 0, PITCH = 1;
 
-		Vector2 ToSphericalCoordinates(const Vector3 vector3) {
+		inline Vector2 ToSphericalCoordinates(const Vector3 vector3) {
 			Vector2 result;			
 			result[YAW] = ArcTan2(vector3[2], vector3[0]);
 			result[PITCH] = ArcTan2(vector3[2], vector3[1]);
