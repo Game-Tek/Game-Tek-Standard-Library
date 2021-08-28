@@ -4,7 +4,6 @@
 #include "Range.h"
 
 #if (_WIN64)
-#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
 
@@ -13,6 +12,10 @@ namespace GTSL
 	class Console
 	{
 	public:
+		static void SetConsoleInputModeAsUTF8() {
+			SetConsoleOutputCP(CP_UTF8);
+		}
+
 		static void Print(const Range<const char8_t*> text) {
 			DWORD chars_written{ 0 };
 			WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), text.begin(), text.Bytes(), &chars_written, nullptr);

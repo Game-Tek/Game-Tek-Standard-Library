@@ -36,7 +36,10 @@ if(GTSL_TESTS_ENABLED)
 	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 	FetchContent_MakeAvailable(googletest)
 	
-	add_executable(GTSL_Test "${PROJECT_SOURCE_DIR}/test/TestMath.cpp")
+	add_executable(GTSL_Test
+	"${PROJECT_SOURCE_DIR}/test/TestMain.cpp"
+	"${PROJECT_SOURCE_DIR}/test/TestMath.cpp"
+	"${PROJECT_SOURCE_DIR}/test/TestString.cpp")
 	target_include_directories(GTSL_Test PUBLIC "${PROJECT_SOURCE_DIR}")
 	target_link_libraries(GTSL_Test gtest_main)
 endif()

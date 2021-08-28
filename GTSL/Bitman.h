@@ -59,8 +59,36 @@ namespace GTSL
 	}
 	
 	inline Result<uint8> FindLastSetBit(const uint32 number) {
+#ifdef WIN32
 		unsigned long setBit{ 0 }; const bool anySetBit = _BitScanReverse(&setBit, number);
 		return Result(static_cast<uint8>(setBit), anySetBit);
+#endif // WIN64
+#ifdef __linux__
+		__builtin_clz();
+#endif // __linux__
+
+	}
+	
+	inline Result<uint8> FindLastClearBit(const uint8 number) {
+#ifdef WIN32
+		unsigned long setBit{ 0 }; const bool anySetBit = _BitScanReverse(&setBit, (uint32)~number);
+		return Result(static_cast<uint8>(setBit), anySetBit);
+#endif // WIN64
+#ifdef __linux__
+		__builtin_clz();
+#endif // __linux__
+
+	}
+
+	inline Result<uint8> FindLastClearBit(const uint32 number) {
+#ifdef WIN32
+		unsigned long setBit{ 0 }; const bool anySetBit = _BitScanReverse(&setBit, ~number);
+		return Result(static_cast<uint8>(setBit), anySetBit);
+#endif // WIN64
+#ifdef __linux__
+		__builtin_clz();
+#endif // __linux__
+
 	}
 
 	inline Result<uint8> FindLastSetBit(const uint64 number) {

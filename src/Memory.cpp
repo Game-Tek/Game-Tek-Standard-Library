@@ -11,16 +11,6 @@
 
 using namespace GTSL;
 
-void GTSL::Allocate(const uint64 size, void** data)
-{
-	*data = std::malloc(size);
-}
-
-void GTSL::Deallocate(uint64 size, void* data)
-{
-	std::free(data);
-}
-
 void GTSL::MemCopy(const uint64 size, const void* from, void* to)
 {
 	std::memcpy(to, from, size);

@@ -5,12 +5,13 @@
 #include "Core.h"
 #include "StringCommon.h"
 #include "Allocator.h"
+#include "Unicode.hpp"
 
 namespace GTSL
 {
+	//UTF-8
 	template<class ALLOCATOR>
-	class String
-	{
+	class String {
 	public:
 		using string_type = char8_t;
 		
@@ -23,22 +24,23 @@ namespace GTSL
 		String(const uint32 initialCapacity, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference)
 		{
 			uint64 allocatedSize = 0;
-			allocator.Allocate(initialCapacity, 16, reinterpret_cast<void**>(&data), &allocatedSize);
+			auto size = Math::RoundUp(initialCapacity + 1, 4);
+			allocator.Allocate(size, 16, reinterpret_cast<void**>(&data), &allocatedSize);
 			capacity = static_cast<uint32>(allocatedSize / sizeof(string_type));
 		}
 		
-		String(const char8_t* cstring, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(StringLength(cstring), allocatorReference)
+		String(const char8_t* cstring, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(StringByteLength(cstring), allocatorReference)
 		{
-			auto stringLength = StringLength(cstring);
-			copy(stringLength, cstring);
-			length = stringLength - 1;
+			auto stringLength = StringLengths(cstring);
+			copy(stringLength.First, cstring);
+			bytes = stringLength.First; codePoints = stringLength.Second;
 		}
 
 		String(const Range<const char8_t*> range, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(static_cast<uint32>(range.ElementCount()), allocatorReference)
 		{
-			auto stringLength = static_cast<uint32>(range.ElementCount());
-			copy(stringLength, range.begin());
-			length = stringLength - 1;
+			auto stringLength = StringLengths(range.begin());
+			copy(stringLength.First, range.begin());
+			bytes = stringLength.First; codePoints = stringLength.Second;
 		}
 
 		String(const String& other) : allocator(other.allocator)
@@ -46,33 +48,36 @@ namespace GTSL
 			uint64 allocatedSize = 0;
 			allocator.Allocate(other.length + 1, 16, reinterpret_cast<void**>(&data), &allocatedSize);
 			capacity = static_cast<uint32>(allocatedSize / sizeof(string_type));
-			copy(other.length, other.data);
-			length = other.length;
-			data[length] = u8'\0';
+			copy(other.bytes, other.data);
+			bytes = other.bytes;
+			codePoints = other.codePoints;
+			data[bytes] = u8'\0';
 		}
 		
 		template<class B>
 		String(const String<B>& other, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference)
 		{
 			uint64 allocatedSize = 0;
-			allocator.Allocate(other.length + 1, 16, reinterpret_cast<void**>(&data), &allocatedSize);
+			allocator.Allocate(other.bytes + 1, 16, reinterpret_cast<void**>(&data), &allocatedSize);
 			capacity = static_cast<uint32>(allocatedSize / sizeof(string_type));
-			copy(other.length, other.data);
-			length = other.length;
-			data[length] = u8'\0';
+			copy(other.bytes, other.data);
+			bytes = other.bytes;
+			codePoints = other.codePoints;
+			data[bytes] = u8'\0';
 		}
 		
-		String(String&& other) noexcept requires std::move_constructible<ALLOCATOR> : allocator(MoveRef(other.allocator)), data(other.data), length(other.length), capacity(other.capacity) {
+		String(String&& other) noexcept requires std::move_constructible<ALLOCATOR> : allocator(MoveRef(other.allocator)), data(other.data), bytes(other.bytes), codePoints(other.codePoints), capacity(other.capacity) {
 			other.data = nullptr;
 		}
 		
 		String& operator=(const String& other)
 		{
-			length = 0; //reset length
-			tryResize(other.length); //test if new string exceeds available storage
+			bytes = 0; //reset length
+			tryResize(other.bytes); //test if new string exceeds available storage
 			allocator = other.allocator;
-			copy(other.length + 1, other.data);
-			length = other.length;
+			copy(other.bytes + 1, other.data);
+			bytes = other.bytes;
+			codePoints = other.codePoints;
 			return *this;
 		}
 		
@@ -81,7 +86,8 @@ namespace GTSL
 			//free current
 			allocator = MoveRef(other.allocator);
 			data = other.data;
-			length = other.length;
+			bytes = other.bytes;
+			codePoints = other.codePoints;
 			capacity = other.capacity;
 			return *this;
 		}
@@ -90,29 +96,32 @@ namespace GTSL
 			if (data) { allocator.Deallocate(capacity, 16, data); }
 		}
 
-		string_type operator[](const uint32 i) const noexcept { return data[i]; }
+		char32_t operator[](const uint32 cp) const noexcept {
+			auto pos = getByteAndLengthForCodePoint(cp);
+			return utf8_decode(data + pos.First, pos.Second).Get();
+		}
 
 		auto begin() noexcept { return data; }
 		[[nodiscard]] auto begin() const noexcept { return data; }
-		auto end() noexcept { return data + length + 1; }
-		[[nodiscard]] auto end() const noexcept { return data + length + 1; }
+		auto end() noexcept { return data + bytes + 1; }
+		[[nodiscard]] auto end() const noexcept { return data + bytes + 1; }
 
 		//Returns true if the two String's contents are the same. Comparison is case sensitive.
 		template<class ALLOCATOR>
 		bool operator==(const String<ALLOCATOR>& other) const
 		{
 			//Discard if Length of strings is not equal, first because it helps us discard before even starting, second because we can't compare strings of different sizes.
-			if (length != other.length) return false;
-			for (uint32 i = 0; i < length; ++i) { if (data[i] != other.data[i]) { return false; } }
+			if (codePoints != other.codePoints or bytes != other.bytes) return false;
+			for (uint32 i = 0; i < bytes; ++i) { if (data[i] != other.data[i]) { return false; } }
 			return true;
 		}
 
 		bool operator==(const char8_t* text) const
 		{
-			auto l = StringLength(text) - 1;
+			auto l = StringByteLength(text) - 1;
 			//Discard if Length of strings is not equal, first because it helps us discard before even starting, second because we can't compare strings of different sizes.
-			if (length != l) return false;
-			for (uint32 i = 0; i < length; ++i) { if (data[i] != text[i]) { return false; } }
+			if (bytes != l) return false;
+			for (uint32 i = 0; i < bytes; ++i) { if (data[i] != text[i]) { return false; } }
 			return true;
 		}
 
@@ -133,56 +142,63 @@ namespace GTSL
 
 		[[nodiscard]] const char8_t* c_str() const { return data; }
 
-		//Return the length of this String. Does not take into account the null terminator character.
-		[[nodiscard]] uint32 GetLength() const { return length + 1; }
+		//Return the length of this String.
+		[[nodiscard]] uint32 GetBytes() const { return bytes; }
+		[[nodiscard]] uint32 GetCodepoints() const { return codePoints; }
 		[[nodiscard]] uint32 GetCapacity() const { return capacity; }
 		//Returns whether this String is empty.
-		[[nodiscard]] bool IsEmpty() const { return !length; }
+		[[nodiscard]] bool IsEmpty() const { return !bytes; }
 
 		String& operator+=(const char8_t* string)
 		{
-			auto stringLength = StringLength(string);
-			tryResize(stringLength);
-			copy(stringLength, string);
-			length += stringLength - 1;
+			auto stringLength = StringLengths(string);
+			tryResize(stringLength.First);
+			copy(stringLength.First, string);
+			bytes += stringLength.First;
+			codePoints += stringLength.Second;
 			return *this;
 		}
 
 		String& operator+=(Range<const char8_t*> range)
 		{
-			auto stringLength = static_cast<uint32>(range.ElementCount());
-			tryResize(stringLength);
-			copy(stringLength, range.begin());
-			length += stringLength - 1;
+			auto stringLength = StringLengths(range.begin());
+			tryResize(stringLength.First);
+			copy(stringLength.First, range.begin());
+			bytes += stringLength.First;
+			codePoints += stringLength.Second;
 			return *this;
 		}
-
 
 		String& operator+=(char8_t character)
 		{
 			tryResize(1);
-			data[length++] = character;
-			data[length] = '\0';
+			data[bytes++] = character; data[bytes] = u8'\0';
+			++codePoints;
 			return *this;
 		}
+
+		//String& operator+=(char32_t character) {
+		//	auto p = ToUTF8(character);
+		//	bytes += utf8_length(p[0]);
+		//	++codePoints;
+		//	return *this;
+		//}
 
 		/**
 		 * \brief Drops/removes the parts of the string from from forward.
 		 * \param from index to cut forward from.
 		 */
-		void Drop(uint32 from) {
-			length = from; data[from] = '\0';
+		void Drop(uint32 cp) {
+			auto pos = getByteAndLengthForCodePoint(cp);
+			bytes = pos.First; data[pos.First] = u8'\0';
 		}
 
-		void ReplaceAll(char8_t a, char8_t with)
-		{
-			for (uint32 i = 0; i < length; ++i) { if (data[i] == a) { data[i] = with; } }
+		void ReplaceAll(char8_t a, char8_t with) {
+			for (uint32 i = 0; i < bytes; ++i) { if (data[i] == a) { data[i] = with; } }
 		}
 
 		void Resize(const uint32 newLength) {
-			tryResize(length - newLength);
-			length = newLength;
-			data[newLength] = '\0';
+			tryResize(bytes - newLength);
 		}
 		
 		//void ReplaceAll(const char* a, const char* with)
@@ -250,7 +266,7 @@ namespace GTSL
 		 */
 		[[nodiscard]] friend Result<uint32> FindLast(const String& string, char8_t c)
 		{
-			for (uint32 i = string.length; i < string.GetLength(); --i) { if (string.data[i] == c) { return Result(MoveRef(i), true); } }
+			for (uint32 i = string.GetBytes(); i < string.GetBytes(); --i) { if (string.data[i] == c) { return Result(MoveRef(i), true); } }
 			return Result<uint32>(false);
 		}
 
@@ -260,25 +276,41 @@ namespace GTSL
 		* \return Index to found char.
 		*/
 		friend Result<uint32> FindFirst(const String& string, char8_t c) {
-			for (uint32 i = 0; i < string.length; ++i) { if (string.data[i] == c) { return Result(MoveRef(i), true); } }
+			for (uint32 i = 0; i < string.GetBytes(); ++i) { if (string.data[i] == c) { return Result(MoveRef(i), true); } }
 			return Result<uint32>(false);
 		}
 	
 	private:
 		[[no_unique_address]] ALLOCATOR allocator;
-		char8_t* data = nullptr; uint32 length = 0, capacity = 0;
+		char8_t* data = nullptr;
+		uint32 codePoints = 0, bytes = 0, capacity = 0;
+
+		uint32 getCodepoints() const { return codePoints; }
+		uint32 getBytes() const { return bytes; }
+
+		Pair<uint32, uint8> getByteAndLengthForCodePoint(uint32 cp) const {
+			uint32 codePoint = 0; uint32 byt = 0; uint8 len = 0;
+
+			while (codePoint != cp) {
+				++codePoint;
+				len = utf8_length(data[byt]);
+				byt += len;
+			}
+
+			return { byt, len };
+		}
 
 		void tryResize(int64 delta)
 		{
-			if (length + delta > capacity) {
+			if (bytes + delta > capacity) {
 				uint64 allocatedSize = 0; void* newData = nullptr;
 				
 				if(data) {
-					allocator.Allocate((length + delta) * 2, 16, &newData, &allocatedSize);
-					for (uint32 i = 0; i < length; ++i) { static_cast<char8_t*>(newData)[i] = data[i]; }					
-					allocator.Deallocate(length, 16, static_cast<void*>(data));
+					allocator.Allocate((bytes + delta) * 2, 16, &newData, &allocatedSize);
+					for (uint32 i = 0; i < bytes; ++i) { static_cast<char8_t*>(newData)[i] = data[i]; }
+					allocator.Deallocate(bytes, 16, static_cast<void*>(data));
 				} else {
-					allocator.Allocate(length + delta, 16, &newData, &allocatedSize);
+					allocator.Allocate(bytes + delta, 16, &newData, &allocatedSize);
 				}
 
 				capacity = static_cast<uint32>(allocatedSize / sizeof(char8_t));
@@ -288,13 +320,13 @@ namespace GTSL
 		
 		void copy(uint32 stringLength, const string_type* string)
 		{
-			GTSL_ASSERT(stringLength + length < capacity, "Not enough space");
-			for (uint32 i = 0, t = length; i < stringLength; ++i, ++t) { data[t] = string[i]; }
+			GTSL_ASSERT(stringLength + bytes < capacity, "Not enough space");
+			for (uint32 i = 0, t = bytes; i < stringLength; ++i, ++t) { data[t] = string[i]; }
 		}
 
 		friend class String;
 	};
-	
+
 	template<uint64 N>
 	using StaticString = String<StaticAllocator<N>>;
 

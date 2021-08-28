@@ -3,13 +3,21 @@
 #include "Core.h"
 #include "Range.h"
 
+#include <memory>
+
 namespace GTSL
 {
 	template<typename T>
 	concept Allocator = requires (T t, uint64 size, uint64 alignment, void** data, uint64 * aS, void* d) { t.Allocate(size, alignment, data, aS); t.Deallocate(size, alignment, d); };
 
-	void Allocate(uint64 size, void** data);
-	void Deallocate(uint64 size, void* data);
+	inline void Allocate(uint64 size, void** data) {
+		*data = std::malloc(size);
+	}
+
+	inline void Deallocate(uint64 size, void* data) {
+		std::free(data);
+	}
+
 	void MemCopy(uint64 size, const void* from, void* to);
 	void MemCopy(Range<byte*> range, void* to);
 	void SetMemory(uint64 size, void* data, int32 value = 0);

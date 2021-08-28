@@ -4,6 +4,7 @@
 #include "Range.h"
 #include "Result.h"
 #include "Math/Math.hpp"
+#include "Unicode.hpp"
 
 namespace GTSL
 {
@@ -12,16 +13,24 @@ namespace GTSL
 	* \param text Pointer to a c string containing the string to be measured.
 	* \return The string length including the null terminator.
 	*/
-	constexpr uint32 StringLength(const char8_t* text) noexcept { uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i + 1; }
+	constexpr uint32 StringByteLength(const char8_t* text) noexcept { uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i + 1; }
+	constexpr Pair<uint32, uint32> StringLengths(const char8_t* text) noexcept { 
+		uint32 bytes = 0, cp = 0;
+		while (text[bytes] != '\0') {
+			bytes += utf8_length(text[bytes]);
+			++cp;
+		}
+		return { bytes, cp };
+	}
 	
 	template<class S>
 	void ToString(const char* str, S& string) {
-		string += Range<const char8_t*>(StringLength(reinterpret_cast<const char8_t*>(str)), reinterpret_cast<const char8_t*>(str));
+		string += Range<const char8_t*>(StringByteLength(reinterpret_cast<const char8_t*>(str)), reinterpret_cast<const char8_t*>(str));
 	}
 
 	template<class S>
 	void ToString(const char8_t* str, S& string) {
-		string += Range<const char8_t*>(StringLength(str), str);
+		string += Range<const char8_t*>(StringByteLength(str), str);
 	}
 
 	template<class S>
