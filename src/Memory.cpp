@@ -11,11 +11,6 @@
 
 using namespace GTSL;
 
-void GTSL::MemCopy(const uint64 size, const void* from, void* to)
-{
-	std::memcpy(to, from, size);
-}
-
 void GTSL::MemCopy(Range<byte*> range, void* to)
 {
 	std::memcpy(to, range.begin(), range.Bytes());

@@ -3,6 +3,7 @@
 
 #include "Range.h"
 #include "Result.h"
+#include "Tuple.h"
 #include "Math/Math.hpp"
 #include "Unicode.hpp"
 
@@ -14,13 +15,33 @@ namespace GTSL
 	* \return The string length including the null terminator.
 	*/
 	constexpr uint32 StringByteLength(const char8_t* text) noexcept { uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i + 1; }
+
 	constexpr Pair<uint32, uint32> StringLengths(const char8_t* text) noexcept { 
 		uint32 bytes = 0, cp = 0;
-		while (text[bytes] != '\0') {
-			bytes += utf8_length(text[bytes]);
-			++cp;
-		}
+		while (text[bytes] != '\0') { bytes += UTF8CodePointLength(text[bytes]); ++cp; }
+		return { bytes + 1, cp + 1 };
+	}
+
+	constexpr Pair<uint32, uint32> StringLengths(Range<const char8_t*> text) noexcept {
+		uint32 bytes = 0, cp = 0;
+		for (; bytes < text.ElementCount();) { bytes += UTF8CodePointLength(text[bytes]); ++cp; }
 		return { bytes, cp };
+	}
+
+	inline Tuple<uint32, uint32, uint8> StringLengths2(const char8_t* text) noexcept {
+		uint32 codePoint = 0; uint32 byt = 0; uint8 len = 1;
+
+		while (text[byt] != u8'\0') {
+			++codePoint;
+			len = UTF8CodePointLength(text[byt]);
+			byt += len;
+		}
+
+		return Tuple(MoveRef(byt) + 1, MoveRef(codePoint) + 1, MoveRef(len));
+	}
+
+	inline Tuple<uint32, uint32, uint8> StringLengths2(Range<const char8_t*> text) noexcept {
+		return StringLengths2(text.begin());
 	}
 	
 	template<class S>

@@ -15,32 +15,24 @@ namespace GTSL
 	public:
 		using string_type = char8_t;
 		
-		String() = default;
+		String(const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference) {			
+		}
 
 		/**
 		 * \brief Creates an String with enough space allocated for length elements.
 		 * \param initialCapacity Amount of elements to allocate.
 		 */
-		String(const uint32 initialCapacity, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference)
+		String(const uint32 initialCapacity, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(allocatorReference)
 		{
-			uint64 allocatedSize = 0;
-			auto size = Math::RoundUp(initialCapacity + 1, 4);
-			allocator.Allocate(size, 16, reinterpret_cast<void**>(&data), &allocatedSize);
-			capacity = static_cast<uint32>(allocatedSize / sizeof(string_type));
+			tryResize(initialCapacity, 4);
 		}
 		
-		String(const char8_t* cstring, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(StringByteLength(cstring), allocatorReference)
-		{
-			auto stringLength = StringLengths(cstring);
-			copy(stringLength.First, cstring);
-			bytes = stringLength.First; codePoints = stringLength.Second;
+		String(const char8_t* cstring, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(allocatorReference) {
+			copy(cstring);
 		}
 
-		String(const Range<const char8_t*> range, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(static_cast<uint32>(range.ElementCount()), allocatorReference)
-		{
-			auto stringLength = StringLengths(range.begin());
-			copy(stringLength.First, range.begin());
-			bytes = stringLength.First; codePoints = stringLength.Second;
+		String(const Range<const char8_t*> range, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(static_cast<uint32>(range.ElementCount()), allocatorReference) {
+			copy(range);
 		}
 
 		String(const String& other) : allocator(other.allocator)
@@ -98,7 +90,8 @@ namespace GTSL
 
 		char32_t operator[](const uint32 cp) const noexcept {
 			auto pos = getByteAndLengthForCodePoint(cp);
-			return utf8_decode(data + pos.First, pos.Second).Get();
+			auto d = data + Get<0>(pos);
+			return ToUTF32(d[0], d[1], d[2], d[3], Get<2>(pos)).Get();
 		}
 
 		auto begin() noexcept { return data; }
@@ -108,16 +101,14 @@ namespace GTSL
 
 		//Returns true if the two String's contents are the same. Comparison is case sensitive.
 		template<class ALLOCATOR>
-		bool operator==(const String<ALLOCATOR>& other) const
-		{
+		bool operator==(const String<ALLOCATOR>& other) const {
 			//Discard if Length of strings is not equal, first because it helps us discard before even starting, second because we can't compare strings of different sizes.
 			if (codePoints != other.codePoints or bytes != other.bytes) return false;
 			for (uint32 i = 0; i < bytes; ++i) { if (data[i] != other.data[i]) { return false; } }
 			return true;
 		}
 
-		bool operator==(const char8_t* text) const
-		{
+		bool operator==(const char8_t* text) const {
 			auto l = StringByteLength(text) - 1;
 			//Discard if Length of strings is not equal, first because it helps us discard before even starting, second because we can't compare strings of different sizes.
 			if (bytes != l) return false;
@@ -137,41 +128,30 @@ namespace GTSL
 		//	return true;
 		//}
 
-		operator Range<char8_t*>() const { return Range<char8_t*>(begin(), end()); }
+		//operator Range<char8_t*>() const { return Range<char8_t*>(begin(), end()); }
 		operator Range<const char8_t*>() const { return Range<const char8_t*>(begin(), end()); }
 
 		[[nodiscard]] const char8_t* c_str() const { return data; }
 
 		//Return the length of this String.
-		[[nodiscard]] uint32 GetBytes() const { return bytes; }
-		[[nodiscard]] uint32 GetCodepoints() const { return codePoints; }
+		[[nodiscard]] uint32 GetBytes() const { return bytes + 1; }
+		[[nodiscard]] uint32 GetCodepoints() const { return codePoints + 1; }
 		[[nodiscard]] uint32 GetCapacity() const { return capacity; }
 		//Returns whether this String is empty.
 		[[nodiscard]] bool IsEmpty() const { return !bytes; }
 
-		String& operator+=(const char8_t* string)
-		{
-			auto stringLength = StringLengths(string);
-			tryResize(stringLength.First);
-			copy(stringLength.First, string);
-			bytes += stringLength.First;
-			codePoints += stringLength.Second;
+		String& operator+=(const char8_t* string) {
+			copy(string);
 			return *this;
 		}
 
-		String& operator+=(Range<const char8_t*> range)
-		{
-			auto stringLength = StringLengths(range.begin());
-			tryResize(stringLength.First);
-			copy(stringLength.First, range.begin());
-			bytes += stringLength.First;
-			codePoints += stringLength.Second;
+		String& operator+=(Range<const char8_t*> range) {
+			copy(range);
 			return *this;
 		}
 
-		String& operator+=(char8_t character)
-		{
-			tryResize(1);
+		String& operator+=(char8_t character) {
+			tryResize(1, 4);
 			data[bytes++] = character; data[bytes] = u8'\0';
 			++codePoints;
 			return *this;
@@ -190,7 +170,8 @@ namespace GTSL
 		 */
 		void Drop(uint32 cp) {
 			auto pos = getByteAndLengthForCodePoint(cp);
-			bytes = pos.First; data[pos.First] = u8'\0';
+			bytes = Get<0>(pos); data[Get<0>(pos)] = u8'\0';
+			codePoints = Get<1>(pos);
 		}
 
 		void ReplaceAll(char8_t a, char8_t with) {
@@ -198,11 +179,10 @@ namespace GTSL
 		}
 
 		void Resize(const uint32 newLength) {
-			tryResize(bytes - newLength);
+			tryResize(bytes - newLength, 0);
 		}
 		
-		//void ReplaceAll(const char* a, const char* with)
-		//{
+		//void ReplaceAll(const char* a, const char* with) {
 		//	Array<uint32, 24> ocurrences; //cache ocurrences so as to not perform an array Resize every time we Find a match
 		//
 		//	const auto a_length = StringLength(a) - 1;
@@ -210,8 +190,7 @@ namespace GTSL
 		//
 		//	uint32 i = 0;
 		//
-		//	while (true) //we don't know how long we will have to check for matches so keep looping until last if exits
-		//	{
+		//	while (true) { //we don't know how long we will have to check for matches so keep looping until last if exits
 		//		ocurrences.Resize(0); //every time we enter loop set occurrences to 0
 		//
 		//		while (ocurrences.GetLength() < ocurrences.GetCapacity() && i < data.GetLength() - 1) //while we don't exceed the occurrences array capacity and we are not At the end of the array(because we might hit the end in the first caching iteration)
@@ -288,21 +267,26 @@ namespace GTSL
 		uint32 getCodepoints() const { return codePoints; }
 		uint32 getBytes() const { return bytes; }
 
-		Pair<uint32, uint8> getByteAndLengthForCodePoint(uint32 cp) const {
+		//bytes to codepoint, codepoints to codepoint, length of codepoint
+		Tuple<uint32, uint32, uint8> getByteAndLengthForCodePoint(uint32 cp) const {
 			uint32 codePoint = 0; uint32 byt = 0; uint8 len = 0;
 
 			while (codePoint != cp) {
 				++codePoint;
-				len = utf8_length(data[byt]);
+				len = UTF8CodePointLength(data[byt]);
 				byt += len;
 			}
 
-			return { byt, len };
+			len = UTF8CodePointLength(data[byt]);
+
+			return Tuple(MoveRef(byt), MoveRef(codePoint), MoveRef(len));
 		}
 
-		void tryResize(int64 delta)
+		void tryResize(int64 delta, uint8 resLen)
 		{
-			if (bytes + delta > capacity) {
+			if (bytes + delta + resLen > capacity) {
+				delta += resLen;
+
 				uint64 allocatedSize = 0; void* newData = nullptr;
 				
 				if(data) {
@@ -318,13 +302,42 @@ namespace GTSL
 			}
 		}
 		
-		void copy(uint32 stringLength, const string_type* string)
-		{
-			GTSL_ASSERT(stringLength + bytes < capacity, "Not enough space");
-			for (uint32 i = 0, t = bytes; i < stringLength; ++i, ++t) { data[t] = string[i]; }
+		void copy(const Range<const char8_t*> string) {
+			auto sizes = StringLengths2(string);
+			uint8 resLen = uint8(4) - Get<2>(sizes);
+			tryResize(Get<0>(sizes), resLen);
+			for(uint32 i = 0; i < Get<0>(sizes); ++i) { data[bytes + i] = string[i]; }
+			bytes += Get<0>(sizes) - 1;
+			codePoints += Get<1>(sizes) - 1;
+			for (uint8 i = 0; i < resLen; ++i) { data[bytes + i] = u8'\0'; }
+		}
+
+		void copy(const string_type* string) {
+			auto sizes = StringLengths2(string);
+			uint8 resLen = uint8(4) - Get<2>(sizes);
+			tryResize(Get<0>(sizes), resLen);
+			for(uint32 i = 0; i < Get<0>(sizes); ++i) { data[bytes + i] = string[i]; }
+			bytes += Get<0>(sizes) - 1;
+			codePoints += Get<1>(sizes) - 1;
+			for (uint8 i = 0; i < resLen; ++i) { data[bytes + i] = u8'\0'; }
 		}
 
 		friend class String;
+
+	public:
+		friend void Insert(const String& string, auto& buffer) {
+			Insert(string.GetBytes(), buffer);
+			buffer.CopyBytes(string.GetBytes(), reinterpret_cast<const byte*>(string.begin()));
+		}
+		
+		friend void Extract(String& string, auto& buffer) {
+			uint32 bytes = 0, codepoints = 0;
+			Extract(bytes, buffer); Extract(codepoints, buffer);
+			string.Resize(bytes);
+			buffer.CopyBytes(bytes, reinterpret_cast<const byte*>(string.begin()));
+			string.bytes = bytes;
+			string.codePoints = codepoints;
+		}
 	};
 
 	template<uint64 N>

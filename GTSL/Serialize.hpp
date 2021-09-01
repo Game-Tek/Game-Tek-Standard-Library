@@ -49,12 +49,6 @@ namespace GTSL
 		Extract(pair.First, buffer); Extract(pair.Second, buffer);
 	}
 
-	template<class ALLOCATOR>
-	void Insert(const String<ALLOCATOR>& string, auto& buffer) {
-		Insert(string.GetLength(), buffer);
-		buffer.CopyBytes(string.GetLength(), reinterpret_cast<const byte*>(string.begin()));
-	}
-
 	//template<Enum T>
 	//void Insert(const T enu, auto& buffer)
 	//{

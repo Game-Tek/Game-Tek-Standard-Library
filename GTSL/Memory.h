@@ -18,7 +18,10 @@ namespace GTSL
 		std::free(data);
 	}
 
-	void MemCopy(uint64 size, const void* from, void* to);
+	inline void MemCopy(uint64 size, const void* from, void* to) {
+		std::memcpy(to, from, size);
+	}
+
 	void MemCopy(Range<byte*> range, void* to);
 	void SetMemory(uint64 size, void* data, int32 value = 0);
 	void SetMemory(Range<byte*> range, int32 value = 0);
