@@ -37,7 +37,7 @@ namespace GTSL
 		[[nodiscard]] constexpr const char8_t* end() const { return array + GetLength(); }
 		
 		constexpr ShortString(const char8_t* text) : ShortString() {
-			(*this) += Range<const char8_t*>(StringLength(text), text);
+			(*this) += Range<const char8_t*>(StringByteLength(text), text);
 		}
 
 		constexpr ShortString(const Range<const char8_t*> text) : ShortString() {
@@ -49,24 +49,30 @@ namespace GTSL
 			*this += range; return *this;
 		}
 		
-		constexpr ShortString& operator+=(const Range<const char8_t*> text)
-		{
-			auto oldSize = GetLength();
+		constexpr ShortString& operator+=(const char8_t* text) {
+			auto len = StringByteLength(text);
+			const auto toCopy = len <= array[SIZE - 1] ? len : array[SIZE - 1];
+			for (uint16 s = (SIZE - array[SIZE - 1]), i = 0; i < toCopy; ++i, ++s) { array[s] = text[i]; }
+			array[SIZE - 1] -= toCopy - 1;
+			return *this;
+		}
+
+		constexpr ShortString& operator+=(const Range<const char8_t*> text) {
 			const auto toCopy = text.ElementCount() <= array[SIZE - 1] ? text.ElementCount() : array[SIZE - 1];
-			for (uint8 s = GetLength(), i = 0; i < toCopy; ++i, ++s) { array[s] = text[i]; }
-			array[SIZE - 1] = static_cast<uint8>(oldSize - toCopy);
+			for (uint16 s = (SIZE - array[SIZE - 1]), i = 0; i < toCopy; ++i, ++s) { array[s] = text[i]; }
+			array[SIZE - 1] -= toCopy - 1;
 			return *this;
 		}
 
 		template<uint8 N>
 		constexpr bool operator==(const ShortString<N>& other) const {
 			if (GetLength() != other.GetLength()) { return false; }
-			for (uint8 i = 0; i < GetLength(); ++i) { if (array[i] != other.array[i]) { return false; } }
+			for (uint16 i = 0; i < GetLength(); ++i) { if (array[i] != other.array[i]) { return false; } }
 			return true;
 		}
 		
 		//WITH NULL
-		[[nodiscard]] constexpr uint8 GetLength() const { return SIZE - array[SIZE - 1]; }
+		[[nodiscard]] constexpr uint16 GetLength() const { return (SIZE - array[SIZE - 1]) + 1; }
 		
 	private:
 		char8_t array[SIZE]{ 0 };
