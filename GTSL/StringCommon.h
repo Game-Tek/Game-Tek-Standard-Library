@@ -40,6 +40,17 @@ namespace GTSL
 		return Tuple(MoveRef(byt) + 1, MoveRef(codePoint) + 1, MoveRef(len));
 	}
 
+	inline Range<const char8_t*> operator""_s(const char8_t* str, size_t size) {
+		return Range<const char8_t*>(size + 1, str);
+	}
+
+	template<uint64 N>
+	Range<const char8_t*> MakeRange(char8_t const (&string)[N]) { return Range<const char8_t*>(N, string); }
+
+	inline Range<const char8_t*> MakeRange(const char8_t* string) {
+		return { StringByteLength(string), string };
+	}
+
 	inline Tuple<uint32, uint32, uint8> StringLengths2(Range<const char8_t*> text) noexcept {
 		return StringLengths2(text.begin());
 	}

@@ -17,9 +17,9 @@ namespace GTSL
 		const I& end() const { return to; }
 
 		Range Reverse() const { return Range(end(), begin()); }
-		
+
 		using type = I;
-		
+
 	private:
 		I from, to;
 
@@ -30,22 +30,22 @@ namespace GTSL
 	struct Range<I*>
 	{
 		Range() = default;
-		
+
 		constexpr Range(I* b, I* e) : from(b), to(e) {}
 
 		constexpr Range(const uint64 length, I* b) : from(b), to(b + length) {}
-		
+
 		//template<uint64 N>
 		//Range(char8_t const(&string)[N]) : Range(N, string) {}
 
 		[[nodiscard]] constexpr I* begin() { return from; }
 		[[nodiscard]] constexpr I* end() { return to; }
-		
+
 		//[[nodiscard]] I* begin() const { return from; }
 		//[[nodiscard]] I* end() const { return to; }
 
-		[[nodiscard]] Range Reverse() const { return Range(end() - 1, begin() - 1); }	
-		
+		[[nodiscard]] Range Reverse() const { return Range(end() - 1, begin() - 1); }
+
 		[[nodiscard]] constexpr I* begin() const { return from; }
 		[[nodiscard]] constexpr I* end() const { return to; }
 
@@ -55,90 +55,28 @@ namespace GTSL
 
 		[[nodiscard]] constexpr uint64 ElementCount() const noexcept { return to - from; }
 
-		constexpr I& operator[](const uint64 i)
-		{
+		constexpr I& operator[](const uint64 i) {
 			GTSL_ASSERT((this->from + i) < to, "Unbounded access!")
-			return this->from[i];
+				return this->from[i];
 		}
 
-		constexpr I& operator[](const uint64 i) const
-		{
+		constexpr I& operator[](const uint64 i) const {
 			GTSL_ASSERT((this->from + i) < to, "Unbounded access!")
-			return this->from[i];
+				return this->from[i];
 		}
 
 		constexpr operator Range<const I*>() const { return Range<const I*>(static_cast<const I*>(this->from), static_cast<const I*>(this->to)); }
-		
 	private:
-		I* from = nullptr,* to = nullptr;
+		I* from = nullptr, * to = nullptr;
 
 		friend struct Range;
 	};
-	
-	template<uint64 N>
-	Range<const char8_t*> MakeRange(char8_t const (&string)[N]) { return Range<const char8_t*>(N, string); }
 
 	template<typename A, typename B>
-	inline bool CompareContents(const GTSL::Range<const A*> a, const Range<const B*> b)
+	inline bool CompareContents(const Range<const A*> a, const Range<const B*> b)
 	{
 		if (a.ElementCount() != b.ElementCount()) { return false; }
 		for (uint64 i = 0; i < a.ElementCount(); ++i) { if (a[i] != b[i]) { return false; } }
 		return true;
 	}
-
-	inline Range<const char8_t*> operator""_s(const char8_t* str, size_t size) {
-		return Range<const char8_t*>(size, str);
-	}
-	
-	//template<typename T>
-	//class Ranger
-	//{
-	//public:
-	//	using type = T;
-	//	using type_pointer = T*;
-	//
-	//	Ranger() = default;
-	//
-	//	Ranger(const Ranger& other) noexcept : from(other.from), to(other.to) {}
-	//	
-	//	constexpr Ranger(T* start, T* end) noexcept : from(start), to(end)
-	//	{
-	//	}
-	//
-	//	constexpr Ranger(uint64 length, T* start) noexcept : from(start), to(start + length)
-	//	{
-	//	}
-	//
-	//	//template<typename TT>
-	//	//Ranger(const Ranger<TT>& other) noexcept : from(static_cast<T*>(other.begin())), to(static_cast<T*>(other.end())) {}
-	//	
-	//	constexpr T* begin() noexcept { return from; }
-	//	constexpr T* end() noexcept { return to; }
-	//	[[nodiscard]] constexpr T* begin() const noexcept { return from; }
-	//	[[nodiscard]] constexpr T* end() const noexcept { return to; }
-	//
-	//	[[nodiscard]] constexpr uint64 Bytes() const noexcept { return ((to - from) * sizeof(type)); }
-	//
-	//	[[nodiscard]] constexpr uint64 ElementCount() const { return to - from; }
-	//
-	//	//T* operator+(const uint64 i) const { return this->from + i; }
-	//	T* operator*(const uint64 i) const { return this->from * i; }
-	//	T* operator/(const uint64 i) const { return this->from / i; }
-	//
-	//	operator T*() { return this->from; }
-	//	operator T*() const { return this->from; }
-	//	
-	//	T& operator[](const uint64 i)
-	//	{
-	//		GTSL_ASSERT((this->from + i) < to, "Unbounded access!")
-	//		return this->from[i];
-	//	}
-	//	//T& operator[](const uint64 i) const { return this->from[i]; }
-	//
-	//	operator Ranger<const T>() const { return Ranger<const T>(static_cast<const T*>(this->from), static_cast<const T*>(this->to)); }
-	//
-	//protected:
-	//	T* from = nullptr, * to = nullptr;
-	//	friend class Ranger;
-	//};
 }

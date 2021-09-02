@@ -7,54 +7,31 @@
 
 namespace GTSL
 {
+	inline constexpr uint64 Hash(const Range<const char8_t*> string) {
+		uint64 primary_hash(525201411107845655ull);
+
+		for (uint32 i = 0; i < string.ElementCount() - 1; ++i) {
+			primary_hash ^= string[i]; primary_hash *= 0x5bd1e9955bd1e995; primary_hash ^= primary_hash >> 47;
+		}
+
+		return primary_hash;
+	}
+
 	class Id64
 	{
 	public:
 		using HashType = uint64;
 
-	protected:
-		static constexpr HashType hashString(const Range<const char8_t*>& ranger) noexcept
-		{
-			HashType primary_hash(525201411107845655ull);
-			HashType secondary_hash(0xAAAAAAAAAAAAAAAAull);
-
-			for (uint32 i = 0; i < ranger.ElementCount() - 1; ++i)
-			{
-				primary_hash ^= ranger[i];			secondary_hash ^= ranger[i];
-				primary_hash *= 0x5bd1e9955bd1e995; secondary_hash *= 0x80638e;
-				primary_hash ^= primary_hash >> 47; secondary_hash ^= secondary_hash >> 35;
-			}
-
-			return (primary_hash & 0xFF00FF00FF00FF00ull) ^ (secondary_hash & 0x00FF00FF00FF00FFull);
-		}
-
-		//template<char8_t... str>
-		//static constexpr HashType hashString() noexcept
-		//{
-		//	HashType primary_hash(525201411107845655ull);
-		//	HashType secondary_hash(0xAAAAAAAAAAAAAAAAull);
-		//
-		//	for (uint32 i = 0; i < ranger.ElementCount() - 1; ++i)
-		//	{
-		//		primary_hash ^= ranger[i];			secondary_hash ^= ranger[i];
-		//		primary_hash *= 0x5bd1e9955bd1e995; secondary_hash *= 0x80638e;
-		//		primary_hash ^= primary_hash >> 47; secondary_hash ^= secondary_hash >> 35;
-		//	}
-		//
-		//	return (primary_hash & 0xFF00FF00FF00FF00ull) ^ (secondary_hash & 0x00FF00FF00FF00FFull);
-		//}
-		
-	public:
 		constexpr Id64() = default;
 
 		template<uint64 N>
-		constexpr Id64(const char8_t(&string)[N]) noexcept : hashValue(hashString(GTSL::Range<const char8_t*>(N, string))) {}
+		constexpr Id64(const char8_t(&string)[N]) noexcept : hashValue(Hash(GTSL::Range<const char8_t*>(N, string))) {}
 
 		//template<char8_t... str>
 		//constexpr Id64() noexcept : hashValue(hashString<str...>()) {}
 		
-		constexpr Id64(const Range<const char8_t*>& ranger) noexcept : hashValue(hashString(ranger)) {}
-		constexpr Id64(const char8_t* text) noexcept : hashValue(hashString(GTSL::Range<const char8_t*>(StringLength(text), text))) {}
+		constexpr Id64(const Range<const char8_t*>& ranger) noexcept : hashValue(Hash(ranger)) {}
+		constexpr Id64(const char8_t* text) noexcept : hashValue(Hash(MakeRange(text))) {}
 		constexpr Id64(const Id64& other) noexcept = default;
 		constexpr explicit Id64(uint64 value) noexcept : hashValue(value) {}
 
@@ -85,13 +62,9 @@ namespace GTSL
 	};
 
 	inline constexpr uint64 operator""_hash(const char8_t* text, size_t length) { return Id64(Range<const char8_t*>(length, text)).GetID(); }
-
-	//template<char... str>
-	//inline constexpr uint64 operator"" _hash() { return Id64<str...>().GetID(); }
 	
 	template<uint64 N>
 	inline constexpr uint64 Hash(char const(&string)[N]) { return Id64(string).GetID(); }
 
-	inline constexpr uint64 Hash(const Range<const char8_t*> string) { return Id64(string)(); }
 	inline constexpr uint64 Hash(Id64 id) { return id(); }
 }

@@ -62,3 +62,17 @@ TEST(Unicode, Wellformed) {
 	char8_t good[] = { 0b11110000, 0b10011111 ,0b10001101 ,0b10001100 };
 	ASSERT_EQ(ToUTF32(good[0], good[1], good[2], good[3], 4).State(), true);
 }
+
+TEST(Unicode, Ranges) {
+	auto a = MakeRange(u8"Build a range.");
+
+	GTEST_ASSERT_EQ(a.ElementCount(), 15);
+	GTEST_ASSERT_EQ(a.Bytes(), 15);
+
+	auto b = u8"Build a range."_s;
+
+	GTEST_ASSERT_EQ(b.ElementCount(), 15);
+	GTEST_ASSERT_EQ(b.Bytes(), 15);
+
+	GTEST_ASSERT_EQ(b[14], u8'\0');
+}
