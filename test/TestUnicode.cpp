@@ -19,6 +19,13 @@ TEST(Unicode, StringLength) {
 	GTEST_ASSERT_EQ(Get<0>(sl2_1), 1); //bytes
 	GTEST_ASSERT_EQ(Get<1>(sl2_1), 1); //codepoints
 	GTEST_ASSERT_EQ(Get<2>(sl2_1), 1); //last non null codepoint length
+
+	const auto range = Range(u8"Test the length of the string. \U0001f975");
+
+	auto sl2_2 = StringLengths2(range);
+	GTEST_ASSERT_EQ(Get<0>(sl2_2), 36); //bytes
+	GTEST_ASSERT_EQ(Get<1>(sl2_2), 33); //codepoints
+	GTEST_ASSERT_EQ(Get<2>(sl2_2), 4); //last non null codepoint length
 }
 
 TEST(Unicode, CodepointLength) {
@@ -64,15 +71,8 @@ TEST(Unicode, Wellformed) {
 }
 
 TEST(Unicode, Ranges) {
-	auto a = MakeRange(u8"Build a range.");
+	const auto a = Range(u8"Build a range.");
 
-	GTEST_ASSERT_EQ(a.ElementCount(), 15);
-	GTEST_ASSERT_EQ(a.Bytes(), 15);
-
-	auto b = u8"Build a range."_s;
-
-	GTEST_ASSERT_EQ(b.ElementCount(), 15);
-	GTEST_ASSERT_EQ(b.Bytes(), 15);
-
-	GTEST_ASSERT_EQ(b[14], u8'\0');
+	GTEST_ASSERT_EQ(a.GetBytes(), 15);
+	GTEST_ASSERT_EQ(a.GetCodepoints(), 15);
 }

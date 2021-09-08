@@ -2,7 +2,7 @@
 #pragma once
 
 #include <GTSL/Core.h>
-#include <GTSL/Range.h>
+#include <GTSL/Range.hpp>
 
 #include "File.h"
 #include "Math/Math.hpp"

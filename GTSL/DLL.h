@@ -2,7 +2,7 @@
 
 #include "Core.h"
 #include "FunctionPointer.hpp"
-#include "Range.h"
+#include "Range.hpp"
 
 #if (_WIN64)
 #include <Windows.h>

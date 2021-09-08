@@ -2,7 +2,7 @@
 #include "Core.h"
 #include "DataSizes.h"
 #include "Extent.h"
-#include "Range.h"
+#include "Range.hpp"
 
 #ifdef _WIN64
 #define WIN32_LEAN_AND_MEAN

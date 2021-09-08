@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Core.h"
-#include "Range.h"
+#include "Range.hpp"
 #include "StringCommon.h"
 
 //export module ShortString;
@@ -37,7 +37,7 @@ namespace GTSL
 		[[nodiscard]] constexpr const char8_t* end() const { return array + GetLength(); }
 		
 		constexpr ShortString(const char8_t* text) : ShortString() {
-			(*this) += Range<const char8_t*>(StringByteLength(text), text);
+			(*this) += Range<const char8_t*>(text);
 		}
 
 		constexpr ShortString(const Range<const char8_t*> text) : ShortString() {
@@ -58,7 +58,7 @@ namespace GTSL
 		}
 
 		constexpr ShortString& operator+=(const Range<const char8_t*> text) {
-			const auto toCopy = text.ElementCount() <= array[SIZE - 1] ? text.ElementCount() : array[SIZE - 1];
+			const auto toCopy = text.GetBytes() <= array[SIZE - 1] ? text.GetBytes() : array[SIZE - 1];
 			for (uint16 s = (SIZE - array[SIZE - 1]), i = 0; i < toCopy; ++i, ++s) { array[s] = text[i]; }
 			array[SIZE - 1] -= toCopy - 1;
 			return *this;

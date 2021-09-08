@@ -11,7 +11,7 @@
 #include "Plane.h"
 #include "Rotator.h"
 #include "GTSL/Assert.h"
-#include "GTSL/Range.h"
+#include "GTSL/Range.hpp"
 #include <GTSL/Extent.h>
 
 #include "GTSL/SIMD/SIMD128.hpp"

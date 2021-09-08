@@ -2,15 +2,15 @@
 
 #include "Core.h"
 
-#include "Range.h"
+#include "Range.hpp"
 #include "StringCommon.h"
 
 namespace GTSL
 {
-	inline constexpr uint64 Hash(const Range<const char8_t*> string) {
+	constexpr uint64 Hash(const Range<const char8_t*> string) {
 		uint64 primary_hash(525201411107845655ull);
 
-		for (uint32 i = 0; i < string.ElementCount() - 1; ++i) {
+		for (uint32 i = 0; i < string.GetBytes() - 1; ++i) {
 			primary_hash ^= string[i]; primary_hash *= 0x5bd1e9955bd1e995; primary_hash ^= primary_hash >> 47;
 		}
 
@@ -31,7 +31,7 @@ namespace GTSL
 		//constexpr Id64() noexcept : hashValue(hashString<str...>()) {}
 		
 		constexpr Id64(const Range<const char8_t*>& ranger) noexcept : hashValue(Hash(ranger)) {}
-		constexpr Id64(const char8_t* text) noexcept : hashValue(Hash(MakeRange(text))) {}
+		constexpr Id64(const char8_t* text) noexcept : hashValue(Hash(text)) {}
 		constexpr Id64(const Id64& other) noexcept = default;
 		constexpr explicit Id64(uint64 value) noexcept : hashValue(value) {}
 
@@ -61,10 +61,10 @@ namespace GTSL
 		constexpr operator uint32() const noexcept { return hash; }
 	};
 
-	inline constexpr uint64 operator""_hash(const char8_t* text, size_t length) { return Id64(Range<const char8_t*>(length, text)).GetID(); }
+	//inline constexpr uint64 operator""_hash(const char8_t* text, size_t length) { return Id64((length, text)).GetID(); }
 	
 	template<uint64 N>
-	inline constexpr uint64 Hash(char const(&string)[N]) { return Id64(string).GetID(); }
+	constexpr uint64 Hash(char const(&string)[N]) { return Id64(string).GetID(); }
 
-	inline constexpr uint64 Hash(Id64 id) { return id(); }
+	constexpr uint64 Hash(Id64 id) { return id(); }
 }

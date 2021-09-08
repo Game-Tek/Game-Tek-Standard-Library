@@ -1,7 +1,7 @@
 #pragma once
 #include <GTSL/Core.h>
 
-#include "Range.h"
+#include "Range.hpp"
 #include "Result.h"
 #include "Tuple.h"
 #include "Math/Math.hpp"
@@ -22,11 +22,42 @@ namespace GTSL
 		return { bytes + 1, cp + 1 };
 	}
 
-	constexpr Pair<uint32, uint32> StringLengths(Range<const char8_t*> text) noexcept {
-		uint32 bytes = 0, cp = 0;
-		for (; bytes < text.ElementCount();) { bytes += UTF8CodePointLength(text[bytes]); ++cp; }
-		return { bytes, cp };
-	}
+	template<>
+	struct Range<const char8_t*>
+	{
+		constexpr Range(const char8_t* string) : data(string) {
+			auto lengths = StringLengths(string);
+			bytes = lengths.First;
+			codepoints = lengths.Second;
+		}
+
+		template<uint64 N>
+		Range(char8_t const (&string)[N]) : data(string) {
+			auto lengths = StringLengths(string);
+			bytes = lengths.First;
+			codepoints = lengths.Second;
+		}
+
+		constexpr Range(const uint32 bytes, const uint32 codePoints, const char8_t* string) : data(string), codepoints(codePoints), bytes(bytes) {
+		}
+
+		[[nodiscard]] constexpr uint32 GetBytes() const { return bytes; }
+		[[nodiscard]] constexpr uint32 GetCodepoints() const { return codepoints; }
+
+		[[nodiscard]] const char8_t* GetData() const { return data; }
+
+		char8_t operator[](const uint32 index) const { //TODO: FIX
+			return data[index];
+		}
+
+		const char8_t* begin() const { return data; }
+		const char8_t* end() const { return data + bytes; }
+
+	private:
+		const char8_t* data = nullptr; uint32 codepoints = 0, bytes = 0;
+	};
+
+	Range(const char8_t*) -> Range<const char8_t*>;
 
 	inline Tuple<uint32, uint32, uint8> StringLengths2(const char8_t* text) noexcept {
 		uint32 codePoint = 0; uint32 byt = 0; uint8 len = 1;
@@ -40,29 +71,23 @@ namespace GTSL
 		return Tuple(MoveRef(byt) + 1, MoveRef(codePoint) + 1, MoveRef(len));
 	}
 
-	inline Range<const char8_t*> operator""_s(const char8_t* str, size_t size) {
-		return Range<const char8_t*>(size + 1, str);
-	}
-
-	template<uint64 N>
-	Range<const char8_t*> MakeRange(char8_t const (&string)[N]) { return Range<const char8_t*>(N, string); }
-
-	inline Range<const char8_t*> MakeRange(const char8_t* string) {
-		return { StringByteLength(string), string };
-	}
-
 	inline Tuple<uint32, uint32, uint8> StringLengths2(Range<const char8_t*> text) noexcept {
-		return StringLengths2(text.begin());
-	}
-	
-	template<class S>
-	void ToString(const char* str, S& string) {
-		string += Range<const char8_t*>(StringByteLength(reinterpret_cast<const char8_t*>(str)), reinterpret_cast<const char8_t*>(str));
+		uint8 lcl = 0; uint32 i = text.GetBytes() - 1;
+
+		char8_t lc = u8'\0';
+
+		do {
+			lc = text.GetData()[i];
+			lcl = UTF8CodePointLength(lc);
+			--i;
+		} while (lcl == 0 || lc == u8'\0');
+
+		return Tuple(text.GetBytes(), text.GetCodepoints(), MoveRef(lcl));
 	}
 
 	template<class S>
 	void ToString(const char8_t* str, S& string) {
-		string += Range<const char8_t*>(StringByteLength(str), str);
+		string += Range(str);
 	}
 
 	template<class S>
@@ -84,7 +109,7 @@ namespace GTSL
 			++len;
 		} while (num);
 
-		string += GTSL::Range<const char8_t*>(len + 1, str + i + 1);
+		string += Range<const char8_t*>(len + 1, len + 1, str + i + 1);
 	}
 
 	template<class S>
@@ -100,7 +125,7 @@ namespace GTSL
 			++len;
 		} while (num);
 
-		string += GTSL::Range<const char8_t*>(len + 1, str + i + 1);
+		string += GTSL::Range<const char8_t*>(len + 1, len + 1, str + i + 1);
 	}
 
 	template<class S>
@@ -119,7 +144,7 @@ namespace GTSL
 
 		if (num < 0) { str[i--] = '-'; ++len; }
 
-		string += GTSL::Range<const char8_t*>(len + 1, str + i + 1);
+		string += GTSL::Range<const char8_t*>(len + 1, len + 1, str + i + 1);
 	}
 
 	template<class S>
@@ -164,7 +189,7 @@ namespace GTSL
 
 		if (isNegative) { str[i--] = '-'; ++len; }
 
-		string += GTSL::Range<const char8_t*>(len + 1, str + i + 1);
+		string += GTSL::Range<const char8_t*>(len + 1, len + 1, str + i + 1);
 	}
 
 	
@@ -181,7 +206,7 @@ namespace GTSL
 	inline Result<uint32> ToNumber(Range<const char8_t*> numberString) {
 		uint32 value = 0, mult = 1;
 
-		for (uint64 j = 0, c = numberString.ElementCount() - 1; j < numberString.ElementCount(); ++j, --c) {
+		for (uint64 j = 0, c = numberString.GetBytes() - 1; j < numberString.GetBytes(); ++j, --c) {
 			uint8 num;
 
 			switch (numberString[c]) {
@@ -211,7 +236,7 @@ namespace GTSL
 	inline Result<int32> ToNumber(Range<const char8_t*> numberString) {
 		int32 value = 0, mult = 1;
 
-		for (uint64 j = 0, c = numberString.ElementCount() - 1; j < numberString.ElementCount(); ++j, --c) {
+		for (uint64 j = 0, c = numberString.GetBytes() - 1; j < numberString.GetBytes(); ++j, --c) {
 			uint8 num;
 
 			switch (numberString[c]) {
@@ -240,7 +265,7 @@ namespace GTSL
 
 	template<>
 	inline Result<float32> ToNumber(Range<const char8_t*> numberString) {
-		float32 value = 0; uint64 c = numberString.ElementCount() - 1/*because of inverse parse*/; uint64 dot;
+		float32 value = 0; uint64 c = numberString.GetBytes() - 1/*because of inverse parse*/; uint64 dot;
 
 		{
 			float32 div = 1.0f;
@@ -315,29 +340,9 @@ namespace GTSL
 	inline bool CompareCaseInsensitive(const char8_t a, const char8_t b) {
 		return a == ToLowerCase(b) || a == ToUpperCase(b);
 	}
-	
-	//inline bool IsLetter(const char8_t character)
-	//{
-	//	switch (character)
-	//	{
-	//	case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-	//	case '{': case '}': case '!': case '?': case '#': case '[': case ']':
-	//	case '+': case '-': case '*': case '/': case '%':
-	//	case '.': case ',': case ';':
-	//	case '_':
-	//	case '\"': case '\'':
-	//	case '|': case '&': case '=': case '^': case '~': case '<': case '>':
-	//	case ' ': case '	':
-	//	case '\n': case '\0': case '\r': case '\\': case '\f': case '\b':
-	//		return false;
-	//	}
-	//
-	//	return true;
-	//}
 
 	inline bool IsLetter(const char8_t character) {
-		switch (character)
-		{
+		switch (character) {
 		case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J':
 		case 'K': case 'L': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U':
 		case 'V': case 'W': case 'X': case 'Y': case 'Z':
@@ -370,8 +375,7 @@ namespace GTSL
 
 	inline bool IsSymbol(const char8_t character)
 	{
-		switch (character)
-		{
+		switch (character) {
 		case '!': case '\"': case '#': case '|': case '\'': case '$': case '%': case '&': case '/': case '(': case ')':
 		case '=': case '?': case '[': case ']': case '^': case '*': case '{': case '}': case ',': case '.': case ';':
 		case '<': case '>': case '_': case '~': case '-': case '+':

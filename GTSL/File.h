@@ -4,7 +4,7 @@
 #include "Core.h"
 #include "Flags.h"
 
-#include "Range.h"
+#include "Range.hpp"
 
 #if (_WIN64)
 #define WIN32_LEAN_AND_MEAN

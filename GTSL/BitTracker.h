@@ -4,7 +4,7 @@
 #include "Core.h"
 #include "Result.h"
 #include "Algorithm.h"
-#include "Range.h"
+#include "Range.hpp"
 
 namespace GTSL
 {
