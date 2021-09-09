@@ -14,7 +14,9 @@
 #include "GTSL/Range.hpp"
 #include <GTSL/Extent.h>
 
-#include "GTSL/SIMD/SIMD128.hpp"
+#include "GTSL/SIMD/SIMD.hpp"
+
+#include <cmath>
 
 namespace GTSL
 {
@@ -196,14 +198,18 @@ namespace GTSL
 		 * \param y exponent
 		 * \return x ^ y
 		 */
-		float32 Power(float32 x, float32 y);
+		inline float32 Power(float32 x, float32 y) {
+			return powf(x, y);
+		}
 
 		/**
 		 * \brief Returns the base 10 logarithm of x.
 		 * \param x number
 		 * \return Base 10 logarithm of x
 		 */
-		float32 Log10(float32 x);
+		inline float32 Log10(float32 x) {
+			return log10f(x);
+		}
 
 		template<typename T>
 		constexpr T Square(const T a) { return a * a; }
@@ -256,8 +262,10 @@ namespace GTSL
 		inline uint64 Abs(const int64 a) { return static_cast<uint64>(a < 0.0f ? -a : a); }
 
 		inline float32 Abs(const float32 a) { return a < 0.0f ? -a : a; }
-		
-		float32 Sine(float32 x);
+
+		inline float32 Sine(float32 x) {
+			return sinf(x);
+		}
 		
 		//inline float32 Sine(float32 x) {
 		//	constexpr float32 B = 4.0f / PI, C = -4.0f / Square(PI), P = 0.225f;
@@ -304,14 +312,19 @@ namespace GTSL
 		 * \param radians Angle in radians.
 		 * \return Sine of radians
 		 */
-		float64 Sine(float64 radians);
+		inline float64 Sine(float64 radians) {
+			return ::sin(radians);
+		}
 
 		/**
 		* \brief Returns the cosine of an angle.
 		* \param radians Angle in radians.
 		* \return Cosine of radians
 		*/
-		float32 Cosine(float32 x);
+		inline float32 Cosine(float32 x) {
+			return cosf(x);
+		}
+
 		//inline float32 Cosine(float32 x) {
 		//	x = (x > 0) ? -x : x;
 		//	return Sine(x + static_cast<float32>(PI) * 0.5f);
@@ -322,7 +335,9 @@ namespace GTSL
 		* \param radians Angle in radians.
 		* \return Cosine of radians
 		*/
-		float64 Cosine(float64 radians);
+		inline float64 Cosine(float64 radians) {
+			return ::cos(radians);
+		}
 
 		/**
 		* \brief Returns the tangent of an angle.
@@ -333,44 +348,56 @@ namespace GTSL
 			//return Sine(x) / Cosine(x);
 		//}
 
-		float32 Tangent(float32 x);
+		inline float32 Tangent(float32 x) {
+			return tanf(x);
+		}
 		
 		/**
 		* \brief Returns the tangent of an angle.
 		* \param radians Angle in radians.
 		* \return Tangent of radians
 		*/
-		float64 Tangent(float64 radians);
+		inline float64 Tangent(float64 radians) {
+			return tan(radians);
+		}
 
 		/**
 		* \brief Returns the arcsine of A in radians.
 		* \param A value
 		* \return Radians of A
 		*/
-		float32 ArcSine(float32 A);
+		inline float32 ArcSine(float32 A) {
+			return asin(A);
+		}
 
 		/**
 		* \brief Returns the arccosine of A in radians.
 		* \param A value
 		* \return Radians of A
 		*/
-		float32 ArcCosine(float32 A);
+		inline float32 ArcCosine(float32 A) {
+			return acos(A);
+		}
 
 		/**
 		* \brief Returns the arctangent of A in radians.
 		* \param A value
 		* \return Radians of A
 		*/
-		float32 ArcTangent(float32 A);
+		inline float32 ArcTangent(float32 A) {
+			return atan(A);
+		}
 
 		/**
 		* \brief Returns the arctangent of Y / X in degrees.
 		* \return Degrees of Y / X
 		*/
-		float32 ArcTan2(float32 y, float32 x);
+		inline float32 ArcTan2(float32 y, float32 x) {
+			return atan2(y, x);
+		}
 
 		inline void Sine(Range<float32*> n) {
-			using SIMD = SIMD128<float32>;
+			using SIMD = SIMD<float32, 4>;
 
 			uint32 i = 0;
 
@@ -671,32 +698,18 @@ namespace GTSL
 
 		inline void Negate(float32& a) { a *= -1.0f; }
 
-		inline Vector2 Negated(const Vector2& a) {
-			return Vector2(-a.X(), -a.Y());
-		}
-
+		inline Vector2 Negated(const Vector2& a) { return Vector2(-a.X(), -a.Y()); }
 		inline void Negate(Vector2& a) { a.X() = -a.X(); a.Y() = -a.Y(); }
-
-		inline Vector3 Negated(const Vector3& a) {
-			return Vector3(-a.X(), -a.Y(), -a.Z());
-		}
-
+		inline Vector3 Negated(const Vector3& a) { return Vector3(-a.X(), -a.Y(), -a.Z()); }
 		inline void Negate(Vector3& a) { a.X() = -a.X(); a.Y() = -a.Y(); a.Z() = -a.Z(); }
-
-		inline Vector4 Negated(const Vector4& a) {
-			return Vector4(-a.X(), -a.Y(), -a.Z(), -a.W());
-		}
-
-		inline void Negate(Vector4& a) {
-			a.X() = -a.X(); a.Y() = -a.Y(); a.Z() = -a.Z(); a.W() = -a.W();
-		}
+		inline Vector4 Negated(const Vector4& a) { return Vector4(-a.X(), -a.Y(), -a.Z(), -a.W()); }
+		inline void Negate(Vector4& a) { a.X() = -a.X(); a.Y() = -a.Y(); a.Z() = -a.Z(); a.W() = -a.W(); }
 
 		//////////////////////////////////////////////////////////////
 		//						QUATERNION MATH						//
 		//////////////////////////////////////////////////////////////
 
 		inline Quaternion Conjugated(const Quaternion& a) { return Quaternion(-a.X(), -a.Y(), -a.Z(), a.W()); }
-
 		inline void Conjugate(Quaternion& a) { a.X() = -a.X(); a.Y() = -a.Y(); a.Z() = -a.Z(); }
 
 		inline Quaternion Slerp(Quaternion a, Quaternion b, float32 alpha) {
@@ -738,8 +751,7 @@ namespace GTSL
 		//////////////////////////////////////////////////////////////
 
 		//Compares float numbers with adaptive epsilon based on the scale of the numbers
-		inline bool Compare(float32 f1, float32 f2)
-		{
+		inline bool Compare(float32 f1, float32 f2) {
 			static constexpr auto epsilon = 1.0e-05f;
 			if (Abs(f1 - f2) <= epsilon)
 				return true;
@@ -759,23 +771,11 @@ namespace GTSL
 		}
 
 		inline bool IsNearlyEqual(const Vector3& A, const Vector3& Target, const float32 Tolerance) {
-			if (IsNearlyEqual(A.X(), Target.X(), Tolerance))
-				if (IsNearlyEqual(A.Y(), Target.Y(), Tolerance))
-					if (IsNearlyEqual(A.Z(), Target.Z(), Tolerance))
-						return true;
-			
-			return false;
+			return IsNearlyEqual(A.X(), Target.X(), Tolerance) && IsNearlyEqual(A.Y(), Target.Y(), Tolerance) && IsNearlyEqual(A.Z(), Target.Z(), Tolerance);
 		}
 
-		inline bool IsNearlyEqual(const Vector4& a, const Vector4& b, const float32 tolerance)
-		{
-			if (IsNearlyEqual(a.X(), b.X(), tolerance))
-				if (IsNearlyEqual(a.Y(), b.Y(), tolerance))
-					if (IsNearlyEqual(a.Z(), b.Z(), tolerance))
-						if (IsNearlyEqual(a.W(), b.W(), tolerance))
-							return true;
-
-			return false;
+		inline bool IsNearlyEqual(const Vector4& a, const Vector4& b, const float32 tolerance) {
+			return IsNearlyEqual(a.X(), b.X(), tolerance) && IsNearlyEqual(a.Y(), b.Y(), tolerance) && IsNearlyEqual(a.Z(), b.Z(), tolerance) && IsNearlyEqual(a.W(), b.W(), tolerance);
 		}
 
 		inline bool AreVectorComponentsGreater(const Vector3& A, const Vector3& B) {
@@ -818,50 +818,23 @@ namespace GTSL
 		}
 
 		inline void SetRotation(Matrix4& matrix, const Quaternion quaternion) {
-			const auto xx = quaternion.X() * quaternion.X();
-			const auto xy = quaternion.X() * quaternion.Y();
-			const auto xz = quaternion.X() * quaternion.Z();
-			const auto xw = quaternion.X() * quaternion.W();
-			const auto yy = quaternion.Y() * quaternion.Y();
-			const auto yz = quaternion.Y() * quaternion.Z();
-			const auto yw = quaternion.Y() * quaternion.W();
-			const auto zz = quaternion.Z() * quaternion.Z();
+			const auto xx = quaternion.X() * quaternion.X(); const auto xy = quaternion.X() * quaternion.Y();
+			const auto xz = quaternion.X() * quaternion.Z(); const auto xw = quaternion.X() * quaternion.W();
+			const auto yy = quaternion.Y() * quaternion.Y(); const auto yz = quaternion.Y() * quaternion.Z();
+			const auto yw = quaternion.Y() * quaternion.W(); const auto zz = quaternion.Z() * quaternion.Z();
 			const auto zw = quaternion.Z() * quaternion.W();
 
-			matrix[0][0] = 1 - 2 * (yy + zz);
-			matrix[0][1] = 2 * (xy - zw);
-			matrix[0][2] = 2 * (xz + yw);
-			matrix[1][0] = 2 * (xy + zw);
-			matrix[1][1] = 1 - 2 * (xx + zz);
-			matrix[1][2] = 2 * (yz - xw);
-			matrix[2][0] = 2 * (xz - yw);
-			matrix[2][1] = 2 * (yz + xw);
-			matrix[2][2] = 1 - 2 * (xx + yy);
+			matrix[0][0] = 1 - 2 * (yy + zz); matrix[0][1] = 2 * (xy - zw); matrix[0][2] = 2 * (xz + yw);
+			matrix[1][0] = 2 * (xy + zw); matrix[1][1] = 1 - 2 * (xx + zz); matrix[1][2] = 2 * (yz - xw);
+			matrix[2][0] = 2 * (xz - yw); matrix[2][1] = 2 * (yz + xw); matrix[2][2] = 1 - 2 * (xx + yy);
 		}
 		
-		inline void AddRotation(Matrix3x4& matrix, const Quaternion quaternion) {
-			matrix *= Matrix3x4(quaternion);
-		}
-
-		inline void SetRotation(Matrix3x4& matrix, const Quaternion quaternion) {
-			matrix *= Matrix3x4(quaternion);
-		}
-
-		inline void AddRotation(Matrix4& matrix, const AxisAngle axisAngle) {
-			matrix *= Matrix4(axisAngle);
-		}
-
-		inline void SetRotation(Matrix4& matrix, const AxisAngle axisAngle) {
-			matrix *= Matrix4(axisAngle);
-		}
-
-		inline void AddRotation(Matrix4& matrix, const Rotator rotator) {
-			matrix *= Matrix4(rotator);
-		}
-
-		inline void SetRotation(Matrix4& matrix, const Rotator rotator) {
-			matrix *= Matrix4(rotator);
-		}
+		inline void AddRotation(Matrix3x4& matrix, const Quaternion quaternion) { matrix *= Matrix3x4(quaternion); }
+		inline void SetRotation(Matrix3x4& matrix, const Quaternion quaternion) { matrix *= Matrix3x4(quaternion); }
+		inline void AddRotation(Matrix4& matrix, const AxisAngle axisAngle) { matrix *= Matrix4(axisAngle); }
+		inline void SetRotation(Matrix4& matrix, const AxisAngle axisAngle) { matrix *= Matrix4(axisAngle); }
+		inline void AddRotation(Matrix4& matrix, const Rotator rotator) { matrix *= Matrix4(rotator); }
+		inline void SetRotation(Matrix4& matrix, const Rotator rotator) { matrix *= Matrix4(rotator); }
 		
 		//Modifies the given matrix to make it a translation matrix.
 		inline void AddScale(Matrix4& matrix, const Vector3 vector) {
@@ -1172,134 +1145,80 @@ namespace GTSL
 			Vector3 w = (1.f / m) * Cross(u, v);
 			return Quaternion(w.X(), w.Y(), w.Z(), 0.5f * m);
 		}
-		
-		constexpr auto MakeShuffleMask(uint8 x, uint8 y, uint8 z, uint8 w) {
-			return (x | (y << 2) | (z << 4) | (w << 6));
-		}
 
-		template<int MASK>
-		auto VecSwizzleMask(__m128 vec) {
-			return  _mm_castsi128_ps(_mm_shuffle_epi32(_mm_castps_si128(vec), MASK));
-		}
-
-		template<uint8 X, uint8 Y, uint8 Z, uint8 W>
-		auto VecSwizzle(__m128 vec1) { return VecSwizzleMask<MakeShuffleMask(X, Y, Z, W)>(vec1); }
-		
-		template<uint8 X>
-		auto VecSwizzle1(__m128 vec1) { return VecSwizzleMask<MakeShuffleMask(X, X, X, X)>(vec1); }
-// special swizzle
-		inline auto VecSwizzle_0022(__m128 vec1) { return _mm_moveldup_ps(vec1); }
-		inline auto VecSwizzle_1133(__m128 vec1) { return _mm_movehdup_ps(vec1); }
-
-		inline auto VecShuffle(__m128 vec1, __m128 vec2) { return _mm_movelh_ps(vec1, vec2); }
-		
-		template<uint8 X, uint8 Y, uint8 Z, uint8 W>
-		inline auto VecShuffle(__m128 vec1, __m128 vec2) {
-			return _mm_shuffle_ps(vec1, vec2, MakeShuffleMask(X, Y, Z, W));
-		}
-		
-		inline auto VecShuffle_0101(__m128 vec1, __m128 vec2) { return _mm_movelh_ps(vec1, vec2); }
-		inline auto VecShuffle_2323(__m128 vec1, __m128 vec2) { return _mm_movehl_ps(vec1, vec2); }
-
-// for row major matrix
-// we use __m128 to represent 2x2 matrix as A = | A0  A1 |
-//                                              | A2  A3 |
-// 2x2 row major Matrix multiply A*B
-		__forceinline __m128 Mat2Mul(__m128 vec1, __m128 vec2)
-		{
-			return
-				_mm_add_ps(_mm_mul_ps(vec1, VecSwizzle<0, 3, 0, 3>(vec2)),
-					_mm_mul_ps(VecSwizzle<1, 0, 3, 2>(vec1), VecSwizzle<2, 1, 2, 1>(vec2)));
-		}
-		// 2x2 row major Matrix adjugate multiply (A#)*B
-		__forceinline __m128 Mat2AdjMul(__m128 vec1, __m128 vec2) {
-			return
-				_mm_sub_ps(_mm_mul_ps(VecSwizzle<3, 3, 0, 0>(vec1), vec2),
-					_mm_mul_ps(VecSwizzle<1, 1, 2, 2>(vec1), VecSwizzle<2, 3, 0, 1>(vec2)));
-
-		}
-		// 2x2 row major Matrix multiply adjugate A*(B#)
-		__forceinline __m128 Mat2MulAdj(__m128 vec1, __m128 vec2)
-		{
-			return
-				_mm_sub_ps(_mm_mul_ps(vec1, VecSwizzle<3, 0, 3, 0>(vec2)),
-					_mm_mul_ps(VecSwizzle<1, 0, 3, 2>(vec1), VecSwizzle<2, 1, 2, 1>(vec2)));
-		}
-		
 		//https://lxjk.github.io/2017/09/03/Fast-4x4-Matrix-Inverse-with-SSE-SIMD-Explained.html
+		// Inverse function is the same no matter column major or row major
+		// this version treats it as row major
 		inline Matrix4 Inverse(const Matrix4& matrix) {
 			// use block matrix method
 			// A is a matrix, then i(A) or iA means inverse of A, A# (or A_ in code) means adjugate of A, |A| (or detA in code) is determinant, tr(A) is trace
+			auto vec0 = float4x(matrix[0]); auto vec1 = float4x(matrix[1]);	auto vec2 = float4x(matrix[2]); auto vec3 = float4x(matrix[3]);
 
 			// sub matrices
-			auto vec0 = _mm_load_ps(matrix[0]);
-			auto vec1 = _mm_load_ps(matrix[1]);
-			auto vec2 = _mm_load_ps(matrix[2]);
-			auto vec3 = _mm_load_ps(matrix[3]);
-
-			__m128 A = VecShuffle_0101(vec0, vec1);
-			__m128 B = VecShuffle_2323(vec0, vec1);
-			__m128 C = VecShuffle_0101(vec2, vec3);
-			__m128 D = VecShuffle_2323(vec2, vec3);
+			auto A = float4x::LH(vec0, vec1); auto B = float4x::HL(vec1, vec0);
+			auto C = float4x::LH(vec2, vec3); auto D = float4x::HL(vec3, vec2);
 
 			// determinant as (|A| |B| |C| |D|)
-			__m128 detSub = _mm_sub_ps(
-				_mm_mul_ps(VecShuffle<0, 2, 0, 2>(vec0, vec2), VecShuffle<1, 3, 1, 3>(vec1, vec3)),
-				_mm_mul_ps(VecShuffle<1, 3, 1, 3>(vec0, vec2), VecShuffle<0, 2, 0, 2>(vec1, vec3))
-			);
-			__m128 detA = VecSwizzle1<0>(detSub); __m128 detB = VecSwizzle1<1>(detSub);
-			__m128 detC = VecSwizzle1<2>(detSub); __m128 detD = VecSwizzle1<3>(detSub);
+			auto detSub = float4x::Shuffle<2, 0, 2, 0>(vec0, vec2) * float4x::Shuffle<3, 1, 3, 1>(vec1, vec3) - float4x::Shuffle<3, 1, 3, 1>(vec0, vec2) * float4x::Shuffle<2, 0, 2, 0>(vec1, vec3);
+			auto detA = float4x::Shuffle<0, 0, 0, 0>(detSub); auto detB = float4x::Shuffle<1, 1, 1, 1>(detSub);
+			auto detC = float4x::Shuffle<2, 2, 2, 2>(detSub); auto detD = float4x::Shuffle<3, 3, 3, 3>(detSub);
+
+			// for row major matrix
+			// we use __m128 to represent 2x2 matrix as A = | A0  A1 |
+			//                                              | A2  A3 |
+			// 2x2 row major Matrix multiply A*B
+			auto Mat2Mul = [](float4x vec1, float4x vec2) {
+				return vec1 * float4x::Shuffle<3, 0, 3, 0>(vec2) + float4x::Shuffle<2, 3, 0, 1>(vec1) * float4x::Shuffle<1, 2, 1, 2>(vec2);
+			};
+			// 2x2 row major Matrix adjugate multiply (A#)*B
+			auto Mat2AdjMul = [](float4x vec1, float4x vec2) {
+				return float4x::Shuffle<0, 0, 3, 3>(vec1) * vec2 - float4x::Shuffle<2, 2, 1, 1>(vec1) * float4x::Shuffle<1, 0, 3, 2>(vec2);
+			};
+			// 2x2 row major Matrix multiply adjugate A*(B#)
+			auto Mat2MulAdj = [](float4x vec1, float4x vec2) {
+				return vec1 * float4x::Shuffle<0, 3, 0, 3>(vec2) - float4x::Shuffle<2, 3, 0, 1>(vec1) * float4x::Shuffle<1, 2, 1, 2>(vec2);
+			};
 
 			// let iM = 1/|M| * | X  Y |
 			//                  | Z  W |
 
-			// D#C
-			__m128 D_C = Mat2AdjMul(D, C);
-			// A#B
-			__m128 A_B = Mat2AdjMul(A, B);
-			// X# = |D|A - B(D#C)
-			__m128 X_ = _mm_sub_ps(_mm_mul_ps(detD, A), Mat2Mul(B, D_C));
-			// W# = |A|D - C(A#B)
-			__m128 W_ = _mm_sub_ps(_mm_mul_ps(detA, D), Mat2Mul(C, A_B));
+			// D#C								A#B
+			auto D_C = Mat2AdjMul(D, C); auto A_B = Mat2AdjMul(A, B);
+			// X# = |D|A - B(D#C)								// W# = |A|D - C(A#B)
+			auto X_ = detD * A - Mat2Mul(B, D_C);	auto W_ = detA * D - Mat2Mul(C, A_B);
 
 			// |M| = |A|*|D| + ... (continue later)
-			__m128 detM = _mm_mul_ps(detA, detD);
+			auto detM = detA * detD;
 
-			// Y# = |B|C - D(A#B)#
-			__m128 Y_ = _mm_sub_ps(_mm_mul_ps(detB, C), Mat2MulAdj(D, A_B));
-			// Z# = |C|B - A(D#C)#
-			__m128 Z_ = _mm_sub_ps(_mm_mul_ps(detC, B), Mat2MulAdj(A, D_C));
+			// Y# = |B|C - D(A#B)#									// Z# = |C|B - A(D#C)#
+			auto Y_ = detB * C - Mat2MulAdj(D, A_B);	auto Z_ = detC * B - Mat2MulAdj(A, D_C);
 
 			// |M| = |A|*|D| + |B|*|C| ... (continue later)
-			detM = _mm_add_ps(detM, _mm_mul_ps(detB, detC));
+			detM = detM + detB * detC;
 
 			// tr((A#B)(D#C))
-			__m128 tr = _mm_mul_ps(A_B, VecSwizzle<0, 2, 1, 3>(D_C));
-			tr = _mm_hadd_ps(tr, tr);
-			tr = _mm_hadd_ps(tr, tr);
+			auto tr = A_B * float4x::Shuffle<3, 1, 2, 0>(D_C);
+			tr = float4x::HorizontalAdd(tr, tr); tr = float4x::HorizontalAdd(tr, tr);
 			// |M| = |A|*|D| + |B|*|C| - tr((A#B)(D#C)
-			detM = _mm_sub_ps(detM, tr);
+			detM = detM - tr;
 
-			const __m128 adjSignMask = _mm_setr_ps(1.f, -1.f, -1.f, 1.f);
+			const auto adjSignMask = float4x(1.f, -1.f, -1.f, 1.f);
 			// (1/|M|, -1/|M|, -1/|M|, 1/|M|)
-			__m128 rDetM = _mm_div_ps(adjSignMask, detM);
+			auto rDetM = adjSignMask / detM;
 
-			X_ = _mm_mul_ps(X_, rDetM);
-			Y_ = _mm_mul_ps(Y_, rDetM);
-			Z_ = _mm_mul_ps(Z_, rDetM);
-			W_ = _mm_mul_ps(W_, rDetM);
+			X_ = X_ * rDetM; Y_ = Y_ * rDetM; Z_ = Z_ * rDetM; W_ = W_ * rDetM;
 
-			Matrix4 result;
+			Matrix4 r;
 
 			// apply adjugate and store, here we combine adjugate shuffle and store shuffle
-			_mm_store_ps(result[0], VecShuffle<3, 1, 3, 1>(X_, Y_)); _mm_store_ps(result[1], VecShuffle<2, 0, 2, 0>(X_, Y_));
-			_mm_store_ps(result[2], VecShuffle<3, 1, 3, 1>(Z_, W_)); _mm_store_ps(result[3], VecShuffle<2, 0, 2, 0>(Z_, W_));
+			float4x::Shuffle<1, 3, 1, 3>(X_, Y_).CopyTo(r[0]); float4x::Shuffle<0, 2, 0, 2>(X_, Y_).CopyTo(r[1]);
+			float4x::Shuffle<1, 3, 1, 3>(Z_, W_).CopyTo(r[2]); float4x::Shuffle<0, 2, 0, 2>(Z_, W_).CopyTo(r[3]);
 
-			return result;
+			return r;
 		}
 
 		template<typename T1, typename T2, typename MF, typename SF>
-		inline void MultiplesFor(const Range<T1*> range1, const Range<T2*> range2, const uint64 multiple, const MF& multiplesFunction, const SF& singlesFunction)
+		void MultiplesFor(const Range<T1*> range1, const Range<T2*> range2, const uint64 multiple, const MF& multiplesFunction, const SF& singlesFunction)
 		{
 			GTSL_ASSERT(range1.ElementCount() == range2.ElementCount(), "Element count is not equal!")
 			
@@ -1313,7 +1232,76 @@ namespace GTSL
 			for (auto begin = range1.end() - remainder; begin != range1.end(); ++begin) { singlesFunction(range1.begin() + i, range2.begin() + i); i += multiple; }
 		}
 	}
-	
+
+	inline Matrix4::Matrix4(const Rotator& rotator) {
+		//Heading = rotation about y axis
+		//Attitude = rotation about z axis
+		//Bank = rotation about x axis
+
+		float32 ch = Math::Cosine(rotator.Y); float32 sh = Math::Sine(rotator.Y);
+		float32 ca = Math::Cosine(rotator.Z); float32 sa = Math::Sine(rotator.Z);
+		float32 cb = Math::Cosine(rotator.X); float32 sb = Math::Sine(rotator.X);
+
+		(*this)(0, 0) = ch * ca;
+		(*this)(0, 1) = sh * sb - ch * sa * cb;
+		(*this)(0, 2) = ch * sa * sb + sh * cb;
+		(*this)(1, 0) = sa;
+		(*this)(1, 1) = ca * cb;
+		(*this)(1, 2) = -ca * sb;
+		(*this)(2, 0) = -sh * ca;
+		(*this)(2, 1) = sh * sa * cb + ch * sb;
+		(*this)(2, 2) = -sh * sa * sb + ch * cb;
+	}
+
+	inline Matrix4::Matrix4(const Quaternion& quaternion) {
+		const auto xx = quaternion.X() * quaternion.X(); const auto xy = quaternion.X() * quaternion.Y();
+		const auto xz = quaternion.X() * quaternion.Z(); const auto xw = quaternion.X() * quaternion.W();
+		const auto yy = quaternion.Y() * quaternion.Y(); const auto yz = quaternion.Y() * quaternion.Z();
+		const auto yw = quaternion.Y() * quaternion.W(); const auto zz = quaternion.Z() * quaternion.Z();
+		const auto zw = quaternion.Z() * quaternion.W();
+
+		array[0][0] = 1 - 2 * (yy + zz); array[0][1] = 2 * (xy - zw); array[0][2] = 2 * (xz + yw);
+		array[1][0] = 2 * (xy + zw); array[1][1] = 1 - 2 * (xx + zz); array[1][2] = 2 * (yz - xw);
+		array[2][0] = 2 * (xz - yw); array[2][1] = 2 * (yz + xw); array[2][2] = 1 - 2 * (xx + yy);
+		array[0][3] = array[1][3] = array[2][3] = array[3][0] = array[3][1] = array[3][2] = 0;
+		array[3][3] = 1;
+	}
+
+	inline Matrix4::Matrix4(const AxisAngle& axisAngle) {
+		const float32 c = Math::Cosine(axisAngle.Angle); const float32 s = Math::Sine(axisAngle.Angle); const float32 t = 1.0f - c;
+		const float32 xx = axisAngle.X * axisAngle.X; const float32 xy = axisAngle.X * axisAngle.Y;
+		const float32 xz = axisAngle.X * axisAngle.Z; const float32 yy = axisAngle.Y * axisAngle.Y;
+		const float32 yz = axisAngle.Y * axisAngle.Z; const float32 zz = axisAngle.Z * axisAngle.Z;
+
+		// build rotation matrix
+		array[0][0] = c + xx * t; array[1][1] = c + yy * t; array[2][2] = c + zz * t;
+
+		auto tmp1 = xy * t; auto tmp2 = axisAngle.Z * s;
+
+		array[1][0] = tmp1 + tmp2; array[0][1] = tmp1 - tmp2;
+
+		tmp1 = xz * t; tmp2 = -axisAngle.Y * s;
+
+		array[2][0] = tmp1 - tmp2; array[0][2] = tmp1 + tmp2;
+
+		tmp1 = yz * t; tmp2 = axisAngle.X * s;
+
+		array[2][1] = tmp1 + tmp2; array[1][2] = tmp1 - tmp2;
+	}
+
+	inline Matrix3x4::Matrix3x4(const Quaternion& quaternion) {
+		const auto xx = quaternion.X() * quaternion.X(); const auto xy = quaternion.X() * quaternion.Y();
+		const auto xz = quaternion.X() * quaternion.Z(); const auto xw = quaternion.X() * quaternion.W();
+		const auto yy = quaternion.Y() * quaternion.Y(); const auto yz = quaternion.Y() * quaternion.Z();
+		const auto yw = quaternion.Y() * quaternion.W(); const auto zz = quaternion.Z() * quaternion.Z();
+		const auto zw = quaternion.Z() * quaternion.W();
+
+		array[0][0] = 1 - 2 * (yy + zz); array[0][1] = 2 * (xy - zw); array[0][2] = 2 * (xz + yw);
+		array[1][0] = 2 * (xy + zw); array[1][1] = 1 - 2 * (xx + zz); array[1][2] = 2 * (yz - xw);
+		array[2][0] = 2 * (xz - yw); array[2][1] = 2 * (yz + xw); array[2][2] = 1 - 2 * (xx + yy);
+		array[0][3] = array[1][3] = array[2][3] = 0;
+	}
+
 	// +  float32
 // += float32
 // +  type

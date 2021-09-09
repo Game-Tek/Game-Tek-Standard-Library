@@ -11,11 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(GTSL STATIC
-"${PROJECT_SOURCE_DIR}/src/Memory.cpp"
-"${PROJECT_SOURCE_DIR}/src/System.cpp"
-"${PROJECT_SOURCE_DIR}/src/Math/Math.cpp"
 "${PROJECT_SOURCE_DIR}/src/Math/AxisAngle.cpp"
-"${PROJECT_SOURCE_DIR}/src/Math/Matrix4.cpp"
 "${PROJECT_SOURCE_DIR}/src/Math/Plane.cpp"
 "${PROJECT_SOURCE_DIR}/src/Math/Quaternion.cpp"
 "${PROJECT_SOURCE_DIR}/src/Math/Rotator.cpp"

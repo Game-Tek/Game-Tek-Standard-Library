@@ -18,13 +18,15 @@ namespace GTSL
 
 	constexpr Pair<uint32, uint32> StringLengths(const char8_t* text) noexcept { 
 		uint32 bytes = 0, cp = 0;
-		while (text[bytes] != '\0') { bytes += UTF8CodePointLength(text[bytes]); ++cp; }
+		while (text[bytes] != u8'\0') { bytes += UTF8CodePointLength(text[bytes]); ++cp; }
 		return { bytes + 1, cp + 1 };
 	}
 
 	template<>
 	struct Range<const char8_t*>
 	{
+		Range() : Range(1, 1, u8"") {}
+
 		constexpr Range(const char8_t* string) : data(string) {
 			auto lengths = StringLengths(string);
 			bytes = lengths.First;
@@ -32,7 +34,7 @@ namespace GTSL
 		}
 
 		template<uint64 N>
-		Range(char8_t const (&string)[N]) : data(string) {
+		constexpr Range(char8_t const (&string)[N]) : data(string) {
 			auto lengths = StringLengths(string);
 			bytes = lengths.First;
 			codepoints = lengths.Second;

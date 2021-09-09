@@ -24,7 +24,7 @@ namespace GTSL {
 		{ 0b00000111, 0b11110000, 0200000, 04177777, 3 },
 	};
 
-	inline uint8_t UTF8CodePointLength(const char8_t buf) {
+	inline constexpr uint8_t UTF8CodePointLength(const char8_t buf) {
 		constexpr uint8 lengths[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0 };
 		uint8 len = lengths[buf >> 3];
 		return len;

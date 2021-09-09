@@ -23,8 +23,7 @@ namespace GTSL
 		bool DoQuery() {
 			WIN32_FIND_DATAA find_data;
 
-			if (!handle)
-			{
+			if (!handle) {
 				const auto handle_res = FindFirstFileA(reinterpret_cast<const char*>(query.begin()), &find_data);
 
 				if (reinterpret_cast<uint64>(handle_res) != ERROR_FILE_NOT_FOUND && handle_res != INVALID_HANDLE_VALUE)
@@ -34,8 +33,7 @@ namespace GTSL
 				}
 
 				return false;
-			}
-			else {
+			} else {
 				const auto handle_res = FindNextFileA(handle, &find_data);
 
 				if (handle_res) {

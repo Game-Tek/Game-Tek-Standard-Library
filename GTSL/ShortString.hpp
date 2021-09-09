@@ -30,8 +30,7 @@ namespace GTSL
 			(*this) += string;
 		}
 		
-		constexpr operator Range<char8_t*>() { return Range<char8_t*>(GetLength(), array); }
-		constexpr operator Range<const char8_t*>() const { return Range<const char8_t*>(GetLength(), array); }
+		constexpr operator Range<const char8_t*>() const { return Range<const char8_t*>(array); }
 
 		[[nodiscard]] constexpr const char8_t* begin() const { return array; }
 		[[nodiscard]] constexpr const char8_t* end() const { return array + GetLength(); }
@@ -47,14 +46,6 @@ namespace GTSL
 		constexpr ShortString& operator=(const Range<const char8_t*> range) {
 			array[SIZE - 1] = SIZE;
 			*this += range; return *this;
-		}
-		
-		constexpr ShortString& operator+=(const char8_t* text) {
-			auto len = StringByteLength(text);
-			const auto toCopy = len <= array[SIZE - 1] ? len : array[SIZE - 1];
-			for (uint16 s = (SIZE - array[SIZE - 1]), i = 0; i < toCopy; ++i, ++s) { array[s] = text[i]; }
-			array[SIZE - 1] -= toCopy - 1;
-			return *this;
 		}
 
 		constexpr ShortString& operator+=(const Range<const char8_t*> text) {

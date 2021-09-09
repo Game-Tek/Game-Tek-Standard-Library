@@ -226,11 +226,11 @@ namespace GTSL
 		{
 			//const auto simd_elements = modulo(getBucketLength(bucket), this->capacity);
 			//
-			//SIMD128<K> key_vector(key);
+			//SIMD<K> key_vector(key);
 			//
 			//for (uint32 i = 0; i < simd_elements; ++i)
 			//{
-			//	SIMD128<K> keys(UnalignedPointer<uint64>(getKeysBucket(bucket)));
+			//	SIMD<K> keys(UnalignedPointer<uint64>(getKeysBucket(bucket)));
 			//	auto res = keys == key_vector;
 			//	auto bb = res.GetElement<0>();
 			//	if(bb & key || cc & key)

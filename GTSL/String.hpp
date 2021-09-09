@@ -290,16 +290,6 @@ namespace GTSL
 			for (uint8 i = 0; i < resLen; ++i) { data[bytes + i] = u8'\0'; }
 		}
 
-		void copy(const string_type* string) {
-			auto sizes = StringLengths2(string);
-			uint8 resLen = uint8(4) - Get<2>(sizes);
-			tryResize(Get<0>(sizes) + resLen);
-			for(uint32 i = 0; i < Get<0>(sizes); ++i) { data[bytes + i] = string[i]; }
-			bytes += Get<0>(sizes) - 1;
-			codePoints += Get<1>(sizes) - 1;
-			for (uint8 i = 0; i < resLen; ++i) { data[bytes + i] = u8'\0'; }
-		}
-
 		friend class String;
 
 	public:

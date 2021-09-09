@@ -1,7 +1,7 @@
 #include "GTSL/Math/AxisAngle.h"
 
 #include "GTSL/Math/Math.hpp"
-#include "GTSL/SIMD/SIMD128.hpp"
+#include "GTSL/SIMD/SIMD.hpp"
 
 using namespace GTSL;
 
@@ -11,8 +11,8 @@ AxisAngle::AxisAngle(const Vector3& vector, const float32 angle) : X(vector.X())
 
 AxisAngle::AxisAngle(const Quaternion& quaternion) : Angle(2.0f * Math::ArcCosine(quaternion.W()))
 {
-	SIMD128<float32> components(quaternion.X(), quaternion.Y(), quaternion.Z(), quaternion.W());
-	const SIMD128<float32> sqrt(1 - quaternion.W() * quaternion.W());
+	float4x components(quaternion.X(), quaternion.Y(), quaternion.Z(), quaternion.W());
+	const float4x sqrt(1 - quaternion.W() * quaternion.W());
 	components /= sqrt;
 	alignas(16) float data[4];
 	components.CopyTo(AlignedPointer<float32, 16>(data));

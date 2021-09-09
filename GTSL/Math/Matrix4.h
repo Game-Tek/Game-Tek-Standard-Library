@@ -3,6 +3,7 @@
 #include "GTSL/Core.h"
 
 #include "Vectors.h"
+#include "GTSL/SIMD/SIMD.hpp"
 
 //Index increases in row order.
 
@@ -88,7 +89,9 @@ namespace GTSL
 		~Matrix4() = default;
 
 		explicit Matrix4(const class Quaternion& quaternion);
+
 		explicit Matrix4(const class AxisAngle& axisAngle);
+
 		explicit Matrix4(const Vector3 position);
 
 		explicit Matrix4(const class Matrix3x4& matrix);
@@ -116,7 +119,12 @@ namespace GTSL
 		[[nodiscard]] Vector4 GetZBasisVector() const { return Vector4(array[2][0], array[2][1], array[2][2], array[2][3]); }
 		[[nodiscard]] Vector4 GetWBasisVector() const { return Vector4(array[3][0], array[3][1], array[3][2], array[3][3]); }
 		
-		void Transpose();
+		void Transpose() {
+
+			auto a{ float4x(AlignedPointer<const float32, 16>(array[0])) }, b{ float4x(AlignedPointer<const float32, 16>(array[1])) }, c{ float4x(AlignedPointer<const float32, 16>(array[2])) }, d{ float4x(AlignedPointer<const float32, 16>(array[3])) };
+			float4x::Transpose(a, b, c, d);
+			a.CopyTo(UnalignedPointer(array[0])); b.CopyTo(UnalignedPointer(array[1])); c.CopyTo(UnalignedPointer(array[2])); d.CopyTo(UnalignedPointer(array[3]));
+		}
 
 		Matrix4& operator+=(const float32 other)
 		{
@@ -158,16 +166,15 @@ namespace GTSL
 			return *this;
 		}
 
-		Matrix4 operator*(const float other) const
-		{
-			Matrix4 Result;
+		Matrix4 operator*(const float other) const {
+			Matrix4 result(*this);
 
-			Result[0][0] *= other; Result[0][1] *= other; Result[0][2] *= other; Result[0][3] *= other;
-			Result[1][0] *= other; Result[1][1] *= other; Result[1][2] *= other; Result[1][3] *= other;
-			Result[2][0] *= other; Result[2][1] *= other; Result[2][2] *= other; Result[2][3] *= other;
-			Result[3][0] *= other; Result[3][1] *= other; Result[3][2] *= other; Result[3][3] *= other;
+			result[0][0] *= other; result[0][1] *= other; result[0][2] *= other; result[0][3] *= other;
+			result[1][0] *= other; result[1][1] *= other; result[1][2] *= other; result[1][3] *= other;
+			result[2][0] *= other; result[2][1] *= other; result[2][2] *= other; result[2][3] *= other;
+			result[3][0] *= other; result[3][1] *= other; result[3][2] *= other; result[3][3] *= other;
 
-			return Result;
+			return result;
 		}
 
 		Vector3 operator*(const Vector3& other) const
@@ -181,24 +188,74 @@ namespace GTSL
 			return result;
 		}
 
-		Vector4 operator*(const Vector4& other) const;
+		Vector4 operator*(const Vector4& other) const {
+			Vector4 result;
 
-		friend Vector4 operator*(const Vector4& vector, const Matrix4& matrix) {
-			GTSL::Vector4 result;
+			const auto xxxx = float4x(other.X()); const auto yyyy = float4x(other.Y());
+			const auto zzzz = float4x(other.Z()); const auto wwww = float4x(other.W());
 
-			result.X() = vector.X() * matrix.array[0][0] + vector.Y() * matrix.array[1][0] + vector.Z() * matrix.array[2][0] + vector.W() * matrix.array[3][0];
-			result.Y() = vector.X() * matrix.array[0][1] + vector.Y() * matrix.array[1][1] + vector.Z() * matrix.array[2][1] + vector.W() * matrix.array[3][1];
-			result.Z() = vector.X() * matrix.array[0][2] + vector.Y() * matrix.array[1][2] + vector.Z() * matrix.array[2][2] + vector.W() * matrix.array[3][2];
-			result.W() = vector.X() * matrix.array[0][3] + vector.Y() * matrix.array[1][3] + vector.Z() * matrix.array[2][3] + vector.W() * matrix.array[3][3];
+			const auto p0 = xxxx * float4x(array[0][0], array[1][0], array[2][0], array[3][0]);
+			const auto p1 = yyyy * float4x(array[0][1], array[1][1], array[2][1], array[3][1]);
+			const auto p2 = zzzz * float4x(array[0][2], array[1][2], array[2][2], array[3][2]);
+			const auto p3 = wwww * float4x(array[0][3], array[1][3], array[2][3], array[3][3]);
+
+			auto res = p0 + p1 + p2 + p3; res.CopyTo(AlignedPointer<float32, 16>(result.GetData()));
+
+			//result.X() = other.X() * array[0]  + other.Y() * array[1]  + other.Z() * array[2]  + other.W() * array[3];
+			//result.Y() = other.X() * array[4]  + other.Y() * array[5]  + other.Z() * array[6]  + other.W() * array[7];
+			//result.Z() = other.X() * array[8]  + other.Y() * array[9]  + other.Z() * array[10] + other.W() * array[11];
+			//result.W() = other.X() * array[12] + other.Y() * array[13] + other.Z() * array[14] + other.W() * array[15];
 
 			return result;
 		}
 
-		Matrix4 operator*(const Matrix4& other) const;
+		Matrix4 operator*(const Matrix4& other) const {
+			Matrix4 Result;
+			auto Row1 = float4x(AlignedPointer<const float32, 16>(other.array[0]));
+			auto Row2 = float4x(AlignedPointer<const float32, 16>(other.array[1]));
+			auto Row3 = float4x(AlignedPointer<const float32, 16>(other.array[2]));
+			auto Row4 = float4x(AlignedPointer<const float32, 16>(other.array[3]));
+			float4x Bro1, Bro2, Bro3, Bro4, Row;
+			for (uint8 i = 0; i < 4; ++i) {
+				Bro1 = array[i][0]; Bro2 = array[i][1]; Bro3 = array[i][2]; Bro4 = array[i][3];
+				Row = Bro1 * Row1 + Bro2 * Row2 + Bro3 * Row3 + Bro4 * Row4;
+				Row.CopyTo(AlignedPointer<float32, 16>(Result.array[i]));
+			}
+			return Result;
+		}
 
-		Matrix4& operator*=(float other);
+		Matrix4& operator*=(float32 other) {
+			const auto brod = float4x(other);
 
-		Matrix4& operator*=(const Matrix4& other);
+			for (uint8 i = 0; i < 4; ++i) {
+				auto row = float4x(AlignedPointer<const float32, 16>(array[i]));
+				row *= brod;
+				row.CopyTo(AlignedPointer<float32, 16>(array[i]));
+			}
+
+			return *this;
+		}
+
+		Matrix4& operator*=(const Matrix4& other) {
+			//https://codereview.stackexchange.com/questions/101144/simd-matrix-multiplication
+
+			const auto other_row_1 = float4x(AlignedPointer<const float32, 16>(other.array[0]));
+			const auto other_row_2 = float4x(AlignedPointer<const float32, 16>(other.array[1]));
+			const auto other_row_3 = float4x(AlignedPointer<const float32, 16>(other.array[2]));
+			const auto other_row_4 = float4x(AlignedPointer<const float32, 16>(other.array[3]));
+
+			float4x this_x, this_y, this_z, this_w, row;
+
+			for (uint8 i = 0; i < 4; ++i) {
+				this_x = array[i][0]; this_y = array[i][1]; this_z = array[i][2]; this_w = array[i][3];
+
+				row = this_x * other_row_1 + this_y * other_row_2 + this_z * other_row_3 + this_w * other_row_4;
+
+				row.CopyTo(AlignedPointer<float32, 16>(array[i]));
+			}
+
+			return *this;
+		}
 
 		float32& operator()(const uint8 row, const uint8 column) { return array[row][column]; }
 		float32 operator()(const uint8 row, const uint8 column) const { return array[row][column]; }
@@ -226,13 +283,35 @@ namespace GTSL
 		float32* operator[](const uint8 index) { return array[index]; }
 		const float32* operator[](const uint8 index) const { return array[index]; }
 
-		Matrix3x4& operator*=(const Matrix3x4& other);
+		Matrix3x4& operator*=(const Matrix3x4& other) {
+			//https://codereview.stackexchange.com/questions/101144/simd-matrix-multiplication
+
+			const auto other_row_1 = float4x(AlignedPointer<const float32, 16>(other.array[0]));
+			const auto other_row_2 = float4x(AlignedPointer<const float32, 16>(other.array[1]));
+			const auto other_row_3 = float4x(AlignedPointer<const float32, 16>(other.array[2]));
+			const auto other_row_4 = float4x(1.0f);
+
+			float4x this_x, this_y, this_z, this_w, row;
+
+			for (uint8 i = 0; i < 3; ++i) {
+				this_x = array[i][0]; this_y = array[i][1]; this_z = array[i][2]; this_w = array[i][3];
+
+				row = this_x * other_row_1 + this_y * other_row_2 + this_z * other_row_3 + this_w * other_row_4;
+
+				row.CopyTo(AlignedPointer<float32, 16>(array[i]));
+			}
+
+			return *this;
+		}
 	private:
 		float32 array[3][4]{ { 1, 0, 0, 0 }, { 0, 1, 0, 0 }, { 0, 0, 1, 0 } };
 
 		friend Matrix4;
 	};
 
+	inline Matrix4::Matrix4(const Vector3 position) {
+		(*this)(0, 3) = position.X(); (*this)(1, 3) = position.Y(); (*this)(2, 3) = position.Z();
+	}
 
 	inline Matrix4::Matrix4(const Matrix3x4& matrix) : array{
 		matrix.array[0][0], matrix.array[0][1], matrix.array[0][2], matrix.array[0][3],
