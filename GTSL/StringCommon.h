@@ -29,15 +29,13 @@ namespace GTSL
 
 		constexpr Range(const char8_t* string) : data(string) {
 			auto lengths = StringLengths(string);
-			bytes = lengths.First;
-			codepoints = lengths.Second;
+			bytes = lengths.First; codepoints = lengths.Second;
 		}
 
 		template<uint64 N>
 		constexpr Range(char8_t const (&string)[N]) : data(string) {
 			auto lengths = StringLengths(string);
-			bytes = lengths.First;
-			codepoints = lengths.Second;
+			bytes = lengths.First; codepoints = lengths.Second;
 		}
 
 		constexpr Range(const uint32 bytes, const uint32 codePoints, const char8_t* string) : data(string), codepoints(codePoints), bytes(bytes) {
@@ -52,8 +50,14 @@ namespace GTSL
 			return data[index];
 		}
 
-		const char8_t* begin() const { return data; }
-		const char8_t* end() const { return data + bytes; }
+		[[nodiscard]] const char8_t* begin() const { return data; }
+		[[nodiscard]] const char8_t* end() const { return data + bytes; }
+
+		auto operator==(const Range<const char8_t*> other) const {
+			if (codepoints != other.codepoints || bytes != other.bytes) { return false; }
+			for (uint32 i = 0; i < bytes; ++i) { if (data[i] != other.data[i]) { return false; } }
+			return true;
+		}
 
 	private:
 		const char8_t* data = nullptr; uint32 codepoints = 0, bytes = 0;
@@ -88,25 +92,24 @@ namespace GTSL
 	}
 
 	template<class S>
-	void ToString(const char8_t* str, S& string) {
+	void ToString(S& string, const char8_t* str) {
 		string += Range(str);
 	}
 
 	template<class S>
-	void ToString(const Range<const char8_t*> str, S& string) {
+	void ToString(S& string, const Range<const char8_t*> str) {
 		string += str;
 	}
 
-	template<class S>
-	void ToString(uint32 num, S& string)
-	{
+	template<std::unsigned_integral S>
+	void ToString(S& string, uint32 num) {
 		uint8 i = 30, len = 0;
 
 		char8_t str[32]; str[31] = '\0';
 
 		do {
 			// Process individual digits 
-			str[i--] = (num % 10) + '0';
+			str[i--] = (num % 10) + u8'0';
 			num /= 10;
 			++len;
 		} while (num);
@@ -114,46 +117,29 @@ namespace GTSL
 		string += Range<const char8_t*>(len + 1, len + 1, str + i + 1);
 	}
 
-	template<class S>
-	void ToString(uint64 num, S& string) {
+	template<std::signed_integral S>
+	void ToString(S& string, int32 num)
+	{
 		uint8 i = 30, len = 0;
 
-		char8_t str[32]; str[31] = '\0';
+		char8_t str[32]; str[31] = u8'\0';
 
 		do {
 			// Process individual digits 
-			str[i--] = (num % 10) + '0';
+			str[i--] = (num % 10) + u8'0';
 			num /= 10;
 			++len;
 		} while (num);
+
+		if (num < 0) { str[i--] = u8'-'; ++len; }
 
 		string += GTSL::Range<const char8_t*>(len + 1, len + 1, str + i + 1);
 	}
 
 	template<class S>
-	void ToString(int32 num, S& string)
-	{
+	void ToString(S& string, float32 num) {
 		uint8 i = 30, len = 0;
-
-		char8_t str[32]; str[31] = '\0';
-
-		do {
-			// Process individual digits 
-			str[i--] = (num % 10) + '0';
-			num /= 10;
-			++len;
-		} while (num);
-
-		if (num < 0) { str[i--] = '-'; ++len; }
-
-		string += GTSL::Range<const char8_t*>(len + 1, len + 1, str + i + 1);
-	}
-
-	template<class S>
-	void ToString(float32 num, S& string)
-	{
-		uint8 i = 30, len = 0;
-		char8_t str[32]; str[31] = '\0'; bool isNegative = false;
+		char8_t str[32]; str[31] = u8'\0'; bool isNegative = false;
 
 		if (num < 0.0f) { num = -num; isNegative = true; }
 
@@ -163,11 +149,10 @@ namespace GTSL
 		// Extract floating part 
 		float32 fpart = num - static_cast<float32>(ipart);
 
-		auto intToStr = [&](int32 integer)
-		{
+		auto intToStr = [&](int32 integer) {
 			do {
 				// Process individual digits 
-				str[i--] = (integer % 10) + '0';
+				str[i--] = (integer % 10) + u8'0';
 				num /= 10;
 				++len;
 			} while (num);
@@ -182,18 +167,17 @@ namespace GTSL
 
 			intToStr(static_cast<int32>(fpart));
 
-			str[i--] = '.'; // add dot
+			str[i--] = u8'.'; // add dot
 			++len;
 		}
 
 		// convert integer part to string 
 		intToStr(ipart);
 
-		if (isNegative) { str[i--] = '-'; ++len; }
+		if (isNegative) { str[i--] = u8'-'; ++len; }
 
 		string += GTSL::Range<const char8_t*>(len + 1, len + 1, str + i + 1);
 	}
-
 	
 	/**
 	 * \brief Parses an string to return a number.
@@ -212,17 +196,17 @@ namespace GTSL
 			uint8 num;
 
 			switch (numberString[c]) {
-			case '0': num = 0; break;
-			case '1': num = 1; break;
-			case '2': num = 2; break;
-			case '3': num = 3; break;
-			case '4': num = 4; break;
-			case '5': num = 5; break;
-			case '6': num = 6; break;
-			case '7': num = 7; break;
-			case '8': num = 8; break;
-			case '9': num = 9; break;
-			case '\0': continue;
+			case u8'0': num = 0; break;
+			case u8'1': num = 1; break;
+			case u8'2': num = 2; break;
+			case u8'3': num = 3; break;
+			case u8'4': num = 4; break;
+			case u8'5': num = 5; break;
+			case u8'6': num = 6; break;
+			case u8'7': num = 7; break;
+			case u8'8': num = 8; break;
+			case u8'9': num = 9; break;
+			case u8'\0': continue;
 			default: return Result(0u, false);
 			}
 
@@ -242,18 +226,18 @@ namespace GTSL
 			uint8 num;
 
 			switch (numberString[c]) {
-			case '0': num = 0; break;
-			case '1': num = 1; break;
-			case '2': num = 2; break;
-			case '3': num = 3; break;
-			case '4': num = 4; break;
-			case '5': num = 5; break;
-			case '6': num = 6; break;
-			case '7': num = 7; break;
-			case '8': num = 8; break;
-			case '9': num = 9; break;
-			case '-': num = 0; value = -value; break;
-			case '\0': continue;
+			case u8'0': num = 0; break;
+			case u8'1': num = 1; break;
+			case u8'2': num = 2; break;
+			case u8'3': num = 3; break;
+			case u8'4': num = 4; break;
+			case u8'5': num = 5; break;
+			case u8'6': num = 6; break;
+			case u8'7': num = 7; break;
+			case u8'8': num = 8; break;
+			case u8'9': num = 9; break;
+			case u8'-': num = 0; value = -value; break;
+			case u8'\0': continue;
 			default: return Result(0, false);
 			}
 
@@ -277,17 +261,17 @@ namespace GTSL
 
 				switch (numberString[c + 1])
 				{
-				case '0': num = 0; break;
-				case '1': num = 1; break;
-				case '2': num = 2; break;
-				case '3': num = 3; break;
-				case '4': num = 4; break;
-				case '5': num = 5; break;
-				case '6': num = 6; break;
-				case '7': num = 7; break;
-				case '8': num = 8; break;
-				case '9': num = 9; break;
-				case '\0': continue;
+				case u8'0': num = 0; break;
+				case u8'1': num = 1; break;
+				case u8'2': num = 2; break;
+				case u8'3': num = 3; break;
+				case u8'4': num = 4; break;
+				case u8'5': num = 5; break;
+				case u8'6': num = 6; break;
+				case u8'7': num = 7; break;
+				case u8'8': num = 8; break;
+				case u8'9': num = 9; break;
+				case u8'\0': continue;
 				default: return Result<float32>(0, false);
 				}
 
@@ -306,18 +290,18 @@ namespace GTSL
 			uint8 num;
 
 			switch (numberString[c]) {
-			case '0': num = 0; break;
-			case '1': num = 1; break;
-			case '2': num = 2; break;
-			case '3': num = 3; break;
-			case '4': num = 4; break;
-			case '5': num = 5; break;
-			case '6': num = 6; break;
-			case '7': num = 7; break;
-			case '8': num = 8; break;
-			case '9': num = 9; break;
-			case '-': num = 0; value = -value; return Result(MoveRef(value), true);
-			case '\0': continue;
+			case u8'0': num = 0; break;
+			case u8'1': num = 1; break;
+			case u8'2': num = 2; break;
+			case u8'3': num = 3; break;
+			case u8'4': num = 4; break;
+			case u8'5': num = 5; break;
+			case u8'6': num = 6; break;
+			case u8'7': num = 7; break;
+			case u8'8': num = 8; break;
+			case u8'9': num = 9; break;
+			case u8'-': num = 0; value = -value; return Result(MoveRef(value), true);
+			case u8'\0': continue;
 			default: return Result(0.0f, false);
 			}
 
@@ -360,13 +344,11 @@ namespace GTSL
 
 	inline bool IsWhitespace(const char8_t character) { return character == ' ' || character == '	'; }
 
-	inline bool IsSpecialCharacter(const char8_t character)
-	{
+	inline bool IsSpecialCharacter(const char8_t character) {
 		return character == '\n' || character == '\0' || character == '\r' || character == '\f' || character == '\b';
 	}
 	
-	inline bool IsNumber(const char8_t character)
-	{
+	inline bool IsNumber(const char8_t character) {
 		switch (character) {
 		case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
 			return true;
@@ -375,8 +357,7 @@ namespace GTSL
 		return false;
 	}
 
-	inline bool IsSymbol(const char8_t character)
-	{
+	inline bool IsSymbol(const char8_t character) {
 		switch (character) {
 		case '!': case '\"': case '#': case '|': case '\'': case '$': case '%': case '&': case '/': case '(': case ')':
 		case '=': case '?': case '[': case ']': case '^': case '*': case '{': case '}': case ',': case '.': case ';':

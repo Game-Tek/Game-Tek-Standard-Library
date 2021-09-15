@@ -75,4 +75,7 @@ TEST(Unicode, Ranges) {
 
 	GTEST_ASSERT_EQ(a.GetBytes(), 15);
 	GTEST_ASSERT_EQ(a.GetCodepoints(), 15);
+
+	GTEST_ASSERT_EQ(Range(u8"These strings are the same."), Range(u8"These strings are the same."));
+	GTEST_ASSERT_NE(Range(u8"These strings aren't the same."), Range(u8"These strings AREN'T the same."));
 }

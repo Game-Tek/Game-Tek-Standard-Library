@@ -16,8 +16,20 @@ namespace GTSL
 		explicit Quaternion(const Rotator& rotator);
 		explicit Quaternion(const AxisAngle& axisAngle);
 
-		Quaternion& operator*=(const Quaternion& other);
-		Quaternion operator*(const Quaternion& other) const;
+		Quaternion& operator*=(const Quaternion& other) {
+			X() = X() * other.W() + Y() * other.Z() - Z() * other.Y() + W() * other.X();
+			Y() = -X() * other.Z() + Y() * other.W() + Z() * other.X() + W() * other.Y();
+			Z() = X() * other.Y() - Y() * other.X() + Z() * other.W() + W() * other.Z();
+			W() = -X() * other.X() - Y() * other.Y() - Z() * other.Z() + W() * other.W();
+
+			return *this;
+		}
+
+		Quaternion operator*(const Quaternion& other) const {
+			Quaternion result(*this);
+			return result *= other;
+		}
+
 		Vector3 operator*(const Vector3 other) const;
 
 		Vector4 GetXBasisVector() const;

@@ -1104,8 +1104,7 @@ namespace GTSL
 			float32 BestSquaredDistance = 3.402823466e+38F;
 
 			// If point outside face abc then compute closest point on abc
-			if (PointOutsideOfPlane(p, a, b, c))
-			{
+			if (PointOutsideOfPlane(p, a, b, c)) {
 				const Vector3 q = ClosestPointOnTriangleToPoint(p, a, b, c);
 				const float32 sqDist = DotProduct(q - p, q - p);
 				// Update best closest point if (squared) distance is less than current best
@@ -1113,24 +1112,21 @@ namespace GTSL
 			}
 
 			// Repeat test for face acd
-			if (PointOutsideOfPlane(p, a, c, d))
-			{
+			if (PointOutsideOfPlane(p, a, c, d)) {
 				const Vector3 q = ClosestPointOnTriangleToPoint(p, a, c, d);
 				const float32 sqDist = DotProduct(q - p, q - p);
 				if (sqDist < BestSquaredDistance) BestSquaredDistance = sqDist, ClosestPoint = q;
 			}
 
 			// Repeat test for face adb
-			if (PointOutsideOfPlane(p, a, d, b))
-			{
+			if (PointOutsideOfPlane(p, a, d, b)) {
 				const Vector3 q = ClosestPointOnTriangleToPoint(p, a, d, b);
 				const float32 sqDist = DotProduct(q - p, q - p);
 				if (sqDist < BestSquaredDistance) BestSquaredDistance = sqDist, ClosestPoint = q;
 			}
 
 			// Repeat test for face bdc
-			if (PointOutsideOfPlane(p, b, d, c))
-			{
+			if (PointOutsideOfPlane(p, b, d, c)) {
 				const Vector3 q = ClosestPointOnTriangleToPoint(p, b, d, c);
 				const float32 sqDist = DotProduct(q - p, q - p);
 				if (sqDist < BestSquaredDistance) BestSquaredDistance = sqDist, ClosestPoint = q;
@@ -1155,11 +1151,11 @@ namespace GTSL
 			auto vec0 = float4x(matrix[0]); auto vec1 = float4x(matrix[1]);	auto vec2 = float4x(matrix[2]); auto vec3 = float4x(matrix[3]);
 
 			// sub matrices
-			auto A = float4x::LH(vec0, vec1); auto B = float4x::HL(vec1, vec0);
-			auto C = float4x::LH(vec2, vec3); auto D = float4x::HL(vec3, vec2);
+			auto A = float4x::Shuffle<0, 1, 4, 5>(vec0, vec1); auto B = float4x::Shuffle<6, 7, 2, 3>(vec1, vec0);
+			auto C = float4x::Shuffle<0, 1, 4, 5>(vec2, vec3); auto D = float4x::Shuffle<6, 7, 2, 3>(vec3, vec2);
 
 			// determinant as (|A| |B| |C| |D|)
-			auto detSub = float4x::Shuffle<2, 0, 2, 0>(vec0, vec2) * float4x::Shuffle<3, 1, 3, 1>(vec1, vec3) - float4x::Shuffle<3, 1, 3, 1>(vec0, vec2) * float4x::Shuffle<2, 0, 2, 0>(vec1, vec3);
+			auto detSub=float4x::Shuffle<0, 2, 0, 2>(vec0, vec2) * float4x::Shuffle<1, 3, 1, 3>(vec1, vec3) - float4x::Shuffle<1, 3, 1, 3>(vec0, vec2) * float4x::Shuffle<0, 2, 0, 2>(vec1, vec3);
 			auto detA = float4x::Shuffle<0, 0, 0, 0>(detSub); auto detB = float4x::Shuffle<1, 1, 1, 1>(detSub);
 			auto detC = float4x::Shuffle<2, 2, 2, 2>(detSub); auto detD = float4x::Shuffle<3, 3, 3, 3>(detSub);
 
@@ -1168,15 +1164,15 @@ namespace GTSL
 			//                                              | A2  A3 |
 			// 2x2 row major Matrix multiply A*B
 			auto Mat2Mul = [](float4x vec1, float4x vec2) {
-				return vec1 * float4x::Shuffle<3, 0, 3, 0>(vec2) + float4x::Shuffle<2, 3, 0, 1>(vec1) * float4x::Shuffle<1, 2, 1, 2>(vec2);
+				return vec1 * float4x::Shuffle<0, 3, 0, 3>(vec2) + float4x::Shuffle<1, 0, 3, 2>(vec1) * float4x::Shuffle<2, 1, 2, 1>(vec2);
 			};
 			// 2x2 row major Matrix adjugate multiply (A#)*B
 			auto Mat2AdjMul = [](float4x vec1, float4x vec2) {
-				return float4x::Shuffle<0, 0, 3, 3>(vec1) * vec2 - float4x::Shuffle<2, 2, 1, 1>(vec1) * float4x::Shuffle<1, 0, 3, 2>(vec2);
+				return float4x::Shuffle<3, 3, 0, 0>(vec1) * vec2 - float4x::Shuffle<1, 1, 2, 2>(vec1) * float4x::Shuffle<2, 3, 0, 1>(vec2);
 			};
 			// 2x2 row major Matrix multiply adjugate A*(B#)
 			auto Mat2MulAdj = [](float4x vec1, float4x vec2) {
-				return vec1 * float4x::Shuffle<0, 3, 0, 3>(vec2) - float4x::Shuffle<2, 3, 0, 1>(vec1) * float4x::Shuffle<1, 2, 1, 2>(vec2);
+				return vec1 * float4x::Shuffle<3, 0, 3, 0>(vec2) - float4x::Shuffle<1, 0, 3, 2>(vec1) * float4x::Shuffle<2, 1, 2, 1>(vec2);
 			};
 
 			// let iM = 1/|M| * | X  Y |
@@ -1197,7 +1193,7 @@ namespace GTSL
 			detM = detM + detB * detC;
 
 			// tr((A#B)(D#C))
-			auto tr = A_B * float4x::Shuffle<3, 1, 2, 0>(D_C);
+			auto tr = A_B * float4x::Shuffle<0, 2, 1, 3>(D_C);
 			tr = float4x::HorizontalAdd(tr, tr); tr = float4x::HorizontalAdd(tr, tr);
 			// |M| = |A|*|D| + |B|*|C| - tr((A#B)(D#C)
 			detM = detM - tr;
@@ -1211,8 +1207,8 @@ namespace GTSL
 			Matrix4 r;
 
 			// apply adjugate and store, here we combine adjugate shuffle and store shuffle
-			float4x::Shuffle<1, 3, 1, 3>(X_, Y_).CopyTo(r[0]); float4x::Shuffle<0, 2, 0, 2>(X_, Y_).CopyTo(r[1]);
-			float4x::Shuffle<1, 3, 1, 3>(Z_, W_).CopyTo(r[2]); float4x::Shuffle<0, 2, 0, 2>(Z_, W_).CopyTo(r[3]);
+			float4x::Shuffle<3, 1, 3, 1>(X_, Y_).CopyTo(r[0]); float4x::Shuffle<2, 0, 2, 0>(X_, Y_).CopyTo(r[1]);
+			float4x::Shuffle<3, 1, 3, 1>(Z_, W_).CopyTo(r[2]); float4x::Shuffle<2, 0, 2, 0>(Z_, W_).CopyTo(r[3]);
 
 			return r;
 		}
@@ -1275,17 +1271,11 @@ namespace GTSL
 
 		// build rotation matrix
 		array[0][0] = c + xx * t; array[1][1] = c + yy * t; array[2][2] = c + zz * t;
-
 		auto tmp1 = xy * t; auto tmp2 = axisAngle.Z * s;
-
 		array[1][0] = tmp1 + tmp2; array[0][1] = tmp1 - tmp2;
-
 		tmp1 = xz * t; tmp2 = -axisAngle.Y * s;
-
 		array[2][0] = tmp1 - tmp2; array[0][2] = tmp1 + tmp2;
-
 		tmp1 = yz * t; tmp2 = axisAngle.X * s;
-
 		array[2][1] = tmp1 + tmp2; array[1][2] = tmp1 - tmp2;
 	}
 
@@ -1300,6 +1290,76 @@ namespace GTSL
 		array[1][0] = 2 * (xy + zw); array[1][1] = 1 - 2 * (xx + zz); array[1][2] = 2 * (yz - xw);
 		array[2][0] = 2 * (xz - yw); array[2][1] = 2 * (yz + xw); array[2][2] = 1 - 2 * (xx + yy);
 		array[0][3] = array[1][3] = array[2][3] = 0;
+	}
+
+	inline Quaternion::Quaternion(const Rotator& rotator) {
+		// Abbreviations for the various angular functions
+		const auto cy = Math::Cosine(rotator.Y * 0.5f); const auto sy = Math::Sine(rotator.Y * 0.5f);
+		const auto cp = Math::Cosine(rotator.X * 0.5f); const auto sp = Math::Sine(rotator.X * 0.5f);
+		const auto cr = Math::Cosine(rotator.Z * 0.5f); const auto sr = Math::Sine(rotator.Z * 0.5f);
+
+		Y() = sy * cp * cr - cy * sp * sr; X() = sy * cp * sr + cy * sp * cr;
+		Z() = cy * cp * sr - sy * sp * cr; W() = cy * cp * cr + sy * sp * sr;
+	}
+
+	inline Quaternion::Quaternion(const AxisAngle& axisAngle) {
+		auto halfAngleSine = Math::Sine(axisAngle.Angle / 2);
+		X() = axisAngle.X * halfAngleSine; Y() = axisAngle.Y * halfAngleSine; Z() = axisAngle.Z * halfAngleSine;
+		W() = Math::Cosine(-axisAngle.Angle / 2);
+	}
+
+	inline Vector3 Quaternion::operator*(const Vector3 other) const {
+		Vector3 u(X(), Y(), Z()); float32 s = W();
+		return u * 2.0f * Math::DotProduct(u, other) + other * (s * s - Math::DotProduct(u, u)) + Math::Cross(u, other) * 2.0f * s;
+	}
+
+	//Quaternion::Quaternion(const AxisAngle& axisAngle) : Vector4(axisAngle.X * Math::Sine(axisAngle.Angle / 2), axisAngle.Y * Math::Sine(axisAngle.Angle / 2), axisAngle.Z * Math::Sine(axisAngle.Angle / 2), Math::Cosine(axisAngle.Angle / 2))
+	//{
+	//}
+
+	inline Vector4 Quaternion::GetXBasisVector() const {
+		//return (*this) * GTSL::Math::Right;
+		return Matrix4(*this).GetXBasisVector();
+	}
+
+	inline Vector4 Quaternion::GetYBasisVector() const {
+		return (*this) * Math::Up;
+	}
+
+	inline Vector4 Quaternion::GetZBasisVector() const {
+		return (*this) * Math::Forward;
+	}
+
+	inline Plane::Plane(const Vector3& a, const Vector3& b, const Vector3& c) : Normal(Math::Normalized(Math::Cross(b - a, c - a))), D(Math::DotProduct(Normal, a)) {}
+
+	inline AxisAngle::AxisAngle(const Vector3& vector, const float32 angle) : X(vector.X()), Y(vector.Y()), Z(vector.Z()), Angle(angle) {}
+
+	inline AxisAngle::AxisAngle(const Quaternion& quaternion) : Angle(2.0f * Math::ArcCosine(quaternion.W())) {
+		float4x components(quaternion.X(), quaternion.Y(), quaternion.Z(), quaternion.W());
+		const float4x sqrt(1 - quaternion.W() * quaternion.W());
+		components /= sqrt;
+		alignas(16) float data[4];
+		components.CopyTo(AlignedPointer<float32, 16>(data));
+		X = data[0];
+		Y = data[1];
+		Z = data[2];
+	}
+
+	inline Rotator::Rotator(const Vector3& vector) : X(Math::ArcSine(vector.Y())), Y(Math::ArcSine(vector.X() / Math::Cosine(X))) {}
+
+	inline Vector3::Vector3(const Rotator& rotator) : Vector3(Math::Cosine(rotator.X)* Math::Sine(rotator.Y), Math::Sine(rotator.X), Math::Cosine(rotator.X)* Math::Cosine(rotator.Y)) {}
+
+	inline Vector3& Vector3::operator*=(const Quaternion& quaternion) {
+		// Extract the vector part of the quaternion
+		const Vector3 u(quaternion.X(), quaternion.Y(), quaternion.Z());
+
+		// Extract the scalar part of the quaternion
+		const float s = quaternion.W();
+
+		// Do the math
+		*this = u * 2.0f * Math::DotProduct(u, *this) + (s * s - Math::DotProduct(u, u)) * *this + 2.0f * s * Math::Cross(u, *this);
+
+		return *this;
 	}
 
 	// +  float32

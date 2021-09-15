@@ -10,16 +10,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_library(GTSL STATIC
-"${PROJECT_SOURCE_DIR}/src/Math/AxisAngle.cpp"
-"${PROJECT_SOURCE_DIR}/src/Math/Plane.cpp"
-"${PROJECT_SOURCE_DIR}/src/Math/Quaternion.cpp"
-"${PROJECT_SOURCE_DIR}/src/Math/Rotator.cpp"
-"${PROJECT_SOURCE_DIR}/src/Math/Vectors.cpp")
+add_library(GTSL INTERFACE)
 
-target_include_directories(GTSL PUBLIC "${PROJECT_SOURCE_DIR}")
-target_compile_options(GTSL PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wall>$<$<CXX_COMPILER_ID:MSVC>:/W4>)
-target_compile_options(GTSL PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-fno-rtti>$<$<CXX_COMPILER_ID:MSVC>:/GR->)
+target_include_directories(GTSL INTERFACE "${PROJECT_SOURCE_DIR}")
 
 install(TARGETS GTSL DESTINATION lib)
 

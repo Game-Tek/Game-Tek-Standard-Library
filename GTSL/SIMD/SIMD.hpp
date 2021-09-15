@@ -87,7 +87,7 @@ namespace GTSL
 
 		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
 		template<uint8 A, uint8 B, uint8 C, uint8 D, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
-		[[nodiscard]] static SIMD Shuffle(const SIMD& a, const SIMD& b) { return _mm_shuffle_epi8(a.vector, SIMD(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)); }
+		[[nodiscard]] static SIMD Shuffle(const SIMD& a, const SIMD& b) { return _mm_shuffle_epi8(a.vector, SIMD(P, O, N, M, L, K, J, I, H, G, F, E, D, C, B, A)); }
 
 		void Abs() { vector = _mm_abs_epi8(vector); }
 
@@ -186,7 +186,7 @@ namespace GTSL
 
 		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
 		template<uint8 A, uint8 B, uint8 C, uint8 D, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
-		[[nodiscard]] static SIMD Shuffle(const SIMD& a) { return _mm_shuffle_epi8(a.vector, SIMD(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)); }
+		[[nodiscard]] static SIMD Shuffle(const SIMD& a) { return _mm_shuffle_epi8(a.vector, SIMD(P, O, N, M, L, K, J, I, H, G, F, E, D, C, B, A)); }
 
 		void Abs() { vector = _mm_abs_epi8(vector); }
 
@@ -391,12 +391,21 @@ namespace GTSL
 		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
 		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_ps(data, vector); }
 
-		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
 		template<int32 A, int32 B, int32 C, int32 D>
-		[[nodiscard]] static SIMD Shuffle(const SIMD a) { return _mm_permute_ps(a.vector, _MM_SHUFFLE(A, B, C, D)); }
+		[[nodiscard]] static SIMD Shuffle(const SIMD a, const SIMD b) {
+			if constexpr (A == 0 and B == 1 and C == 4 and D == 5) {
+				return _mm_movelh_ps(a, b);
+			}
+
+			if constexpr (A == 6 and B == 7 and C == 2 and D == 3) {
+				return _mm_movehl_ps(a, b);
+			}
+
+			return _mm_shuffle_ps(a.vector, b.vector, _MM_SHUFFLE(D, C, B, A));
+		}
 
 		template<int32 A, int32 B, int32 C, int32 D>
-		[[nodiscard]] static SIMD Shuffle(const SIMD a, const SIMD b) { return _mm_shuffle_ps(a.vector, b.vector, _MM_SHUFFLE(A, B, C, D)); }
+		[[nodiscard]] static SIMD Shuffle(const SIMD a) { return _mm_permute_ps(a.vector, _MM_SHUFFLE(D, C, B, A)); }
 
 		void Abs() { vector = _mm_andnot_ps(vector, SIMD(1.0f)); }
 		static SIMD Abs(const SIMD& a) { return _mm_andnot_ps(a, SIMD(-0.0f)); }
@@ -423,9 +432,6 @@ namespace GTSL
 		[[nodiscard]] SIMD SquareRoot() const { return _mm_sqrt_ps(vector); }
 
 		uint8 BitMask() const { return static_cast<uint8>(_mm_movemask_ps(vector)); }
-
-		static SIMD LH(const SIMD a, const SIMD b) { return _mm_movelh_ps(a, b); }
-		static SIMD HL(const SIMD a, const SIMD b) { return _mm_movehl_ps(a, b); }
 
 		/**
 		 * \brief Computes the square root of the lower single-precision (32-bit) floating-point element, stores the result in the lower element of the return, and copies the upper 3 elements from the vector to the upper elements of the return.
@@ -623,7 +629,7 @@ namespace GTSL
 		static SIMD Max(const SIMD& a, const SIMD& b) { return _mm_max_epi32(a, b); }
 
 		template<uint8 A, uint8 B, uint8 C, uint8 D>
-		static SIMD Shuffle(const SIMD a) { return _mm_shuffle_epi32(a, _MM_SHUFFLE(A, B, C, D)); }
+		static SIMD Shuffle(const SIMD a) { return _mm_shuffle_epi32(a, _MM_SHUFFLE(D, C, B, A)); }
 
 		template<uint8 I>
 		[[nodiscard]] type GetElement() const { return _mm_extract_epi32(vector, I); }
