@@ -69,13 +69,3 @@ TEST(Unicode, Wellformed) {
 	char8_t good[] = { 0b11110000, 0b10011111 ,0b10001101 ,0b10001100 };
 	ASSERT_EQ(ToUTF32(good[0], good[1], good[2], good[3], 4).State(), true);
 }
-
-TEST(Unicode, Ranges) {
-	const auto a = Range(u8"Build a range.");
-
-	GTEST_ASSERT_EQ(a.GetBytes(), 15);
-	GTEST_ASSERT_EQ(a.GetCodepoints(), 15);
-
-	GTEST_ASSERT_EQ(Range(u8"These strings are the same."), Range(u8"These strings are the same."));
-	GTEST_ASSERT_NE(Range(u8"These strings aren't the same."), Range(u8"These strings AREN'T the same."));
-}

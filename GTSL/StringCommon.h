@@ -25,7 +25,7 @@ namespace GTSL
 	template<>
 	struct Range<const char8_t*>
 	{
-		Range() : Range(1, 1, u8"") {}
+		constexpr Range() : Range(1, 1, u8"") {}
 
 		constexpr Range(const char8_t* string) : data(string) {
 			auto lengths = StringLengths(string);
@@ -44,16 +44,16 @@ namespace GTSL
 		[[nodiscard]] constexpr uint32 GetBytes() const { return bytes; }
 		[[nodiscard]] constexpr uint32 GetCodepoints() const { return codepoints; }
 
-		[[nodiscard]] const char8_t* GetData() const { return data; }
+		[[nodiscard]] constexpr const char8_t* GetData() const { return data; }
 
-		char8_t operator[](const uint32 index) const { //TODO: FIX
+		constexpr char8_t operator[](const uint32 index) const { //TODO: FIX
 			return data[index];
 		}
 
-		[[nodiscard]] const char8_t* begin() const { return data; }
-		[[nodiscard]] const char8_t* end() const { return data + bytes; }
+		[[nodiscard]] constexpr const char8_t* begin() const { return data; }
+		[[nodiscard]] constexpr const char8_t* end() const { return data + bytes; }
 
-		auto operator==(const Range<const char8_t*> other) const {
+		constexpr auto operator==(const Range<const char8_t*> other) const {
 			if (codepoints != other.codepoints || bytes != other.bytes) { return false; }
 			for (uint32 i = 0; i < bytes; ++i) { if (data[i] != other.data[i]) { return false; } }
 			return true;
@@ -101,25 +101,8 @@ namespace GTSL
 		string += str;
 	}
 
-	template<std::unsigned_integral S>
-	void ToString(S& string, uint32 num) {
-		uint8 i = 30, len = 0;
-
-		char8_t str[32]; str[31] = '\0';
-
-		do {
-			// Process individual digits 
-			str[i--] = (num % 10) + u8'0';
-			num /= 10;
-			++len;
-		} while (num);
-
-		string += Range<const char8_t*>(len + 1, len + 1, str + i + 1);
-	}
-
-	template<std::signed_integral S>
-	void ToString(S& string, int32 num)
-	{
+	template<class S, std::unsigned_integral I>
+	void ToString(S& string, I num) {
 		uint8 i = 30, len = 0;
 
 		char8_t str[32]; str[31] = u8'\0';
@@ -131,7 +114,26 @@ namespace GTSL
 			++len;
 		} while (num);
 
-		if (num < 0) { str[i--] = u8'-'; ++len; }
+		string += Range<const char8_t*>(len + 1, len + 1, str + i + 1);
+	}
+
+	template<class S, std::signed_integral I>
+	void ToString(S& string, I num)
+	{
+		uint8 i = 30, len = 0;
+
+		char8_t str[32]; str[31] = u8'\0'; bool isNegative = false;
+
+		if (num < 0.0f) { num = -num; isNegative = true; }
+
+		do {
+			// Process individual digits 
+			str[i--] = (num % 10) + u8'0';
+			num /= 10;
+			++len;
+		} while (num);
+
+		if (isNegative) { str[i--] = u8'-'; ++len; }
 
 		string += GTSL::Range<const char8_t*>(len + 1, len + 1, str + i + 1);
 	}
@@ -153,9 +155,9 @@ namespace GTSL
 			do {
 				// Process individual digits 
 				str[i--] = (integer % 10) + u8'0';
-				num /= 10;
+				integer /= 10;
 				++len;
-			} while (num);
+			} while (integer);
 		};
 
 		// check for display option after point 
@@ -251,16 +253,15 @@ namespace GTSL
 
 	template<>
 	inline Result<float32> ToNumber(Range<const char8_t*> numberString) {
-		float32 value = 0; uint64 c = numberString.GetBytes() - 1/*because of inverse parse*/; uint64 dot;
+		float32 value = 0; uint64 c = numberString.GetBytes() - 2/*because of inverse parse*/;
 
 		{
 			float32 div = 1.0f;
 
-			while (numberString[c--] != '.') {
+			while (c <= numberString.GetBytes() - 2) {
 				uint8 num;
 
-				switch (numberString[c + 1])
-				{
+				switch (numberString[c--]) {
 				case u8'0': num = 0; break;
 				case u8'1': num = 1; break;
 				case u8'2': num = 2; break;
@@ -271,43 +272,23 @@ namespace GTSL
 				case u8'7': num = 7; break;
 				case u8'8': num = 8; break;
 				case u8'9': num = 9; break;
+				case u8'.': {
+					value /= div;
+					num = 0; div = 0.1f;
+					break;
+				}
 				case u8'\0': continue;
+				case u8'-': {
+					value *= -1; num = 0;
+					break;
+				}
+				case u8' ': 
 				default: return Result<float32>(0, false);
 				}
 
 				value += num * div;
-
 				div *= 10;
 			}
-
-			value /= div;
-			dot = c + 1;
-		}
-
-		float32 mult = 1;
-
-		for (uint64 i = 0; i < dot; ++i, --c) {
-			uint8 num;
-
-			switch (numberString[c]) {
-			case u8'0': num = 0; break;
-			case u8'1': num = 1; break;
-			case u8'2': num = 2; break;
-			case u8'3': num = 3; break;
-			case u8'4': num = 4; break;
-			case u8'5': num = 5; break;
-			case u8'6': num = 6; break;
-			case u8'7': num = 7; break;
-			case u8'8': num = 8; break;
-			case u8'9': num = 9; break;
-			case u8'-': num = 0; value = -value; return Result(MoveRef(value), true);
-			case u8'\0': continue;
-			default: return Result(0.0f, false);
-			}
-
-			value += num * mult;
-
-			mult *= 10;
 		}
 
 		return Result(MoveRef(value), true);

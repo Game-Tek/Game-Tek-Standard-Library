@@ -32,7 +32,9 @@ if(GTSL_TESTS_ENABLED)
 	"${PROJECT_SOURCE_DIR}/test/TestString.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestShortString.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestHashMap.cpp"
-	"${PROJECT_SOURCE_DIR}/test/TestUnicode.cpp")
+	"${PROJECT_SOURCE_DIR}/test/TestUnicode.cpp"
+	"${PROJECT_SOURCE_DIR}/test/TestRange.cpp"
+	"${PROJECT_SOURCE_DIR}/test/TestStringCommon.cpp")
 	target_include_directories(GTSL_Test PUBLIC "${PROJECT_SOURCE_DIR}")
 	target_link_libraries(GTSL_Test gtest_main)
 endif()

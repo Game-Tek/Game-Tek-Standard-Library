@@ -26,7 +26,7 @@ TEST(Math, Cosines) {
 	EXPECT_FLOAT_EQ(1.0f, Math::cos(0.0f));
 
 	EXPECT_NEAR(0.0f, Math::cos(-GTSL::Math::PI / 4 * 10), 0.00001f);
-	EXPECT_FLOAT_EQ(-1.0f, Math::cos(-GTSL::Math::PI / 2 * 10), 0.00001f);
+	EXPECT_FLOAT_EQ(-1.0f, Math::cos(-GTSL::Math::PI / 2 * 10));
 
 	EXPECT_FLOAT_EQ(0.7071067f, Math::cos(-GTSL::Math::PI / 4));
 	EXPECT_NEAR(0.0f, Math::cos(-GTSL::Math::PI / 2), 0.00001f);
@@ -192,116 +192,6 @@ TEST(Math, MatrixVectorMultiply) {
 	EXPECT_FLOAT_EQ(vector[0], 30); EXPECT_FLOAT_EQ(vector[1], 53); EXPECT_FLOAT_EQ(vector[2], 69); EXPECT_FLOAT_EQ(vector[3], 78);
 }
 
-// Function to get cofactor of A[p][q] in temp[][]. n is current
-// dimension of A[][]
-void getCofactor(Matrix4 A, Matrix4& temp, int p, int q, int n)
-{
-	int i = 0, j = 0;
-
-	// Looping for each element of the matrix
-	for (int row = 0; row < n; row++)
-	{
-		for (int col = 0; col < n; col++)
-		{
-			//  Copying into temporary matrix only those element
-			//  which are not in given row and column
-			if (row != p && col != q)
-			{
-				temp[i][j++] = A[row][col];
-
-				// Row is filled, so increase row index and
-				// reset col index
-				if (j == n - 1)
-				{
-					j = 0;
-					i++;
-				}
-			}
-		}
-	}
-}
-
-/* Recursive function for finding determinant of matrix.
-   n is current dimension of A[][]. */
-float32 determinant(Matrix4 A, int n)
-{
-	float32 D = 0; // Initialize result
-
-	//  Base case : if matrix contains single element
-	if (n == 1)
-		return A[0][0];
-
-	Matrix4 temp; // To store cofactors
-
-	float32 sign = 1;  // To store sign multiplier
-
-	 // Iterate for each element of first row
-	for (int f = 0; f < n; f++)
-	{
-		// Getting Cofactor of A[0][f]
-		getCofactor(A, temp, 0, f, n);
-		D += sign * A[0][f] * determinant(temp, n - 1);
-
-		// terms are to be added with alternate sign
-		sign = -sign;
-	}
-
-	return D;
-}
-
-// Function to get adjoint of A[N][N] in adj[N][N].
-void adjoint(Matrix4 A, Matrix4& adj)
-{
-	if (4 == 1)
-	{
-		adj[0][0] = 1;
-		return;
-	}
-
-	// temp is used to store cofactors of A[][]
-	float32 sign = 1;
-	Matrix4 temp;
-
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			// Get cofactor of A[i][j]
-			getCofactor(A, temp, i, j, 4);
-
-			// sign of adj[j][i] positive if sum of row
-			// and column indexes is even.
-			sign = ((i + j) % 2 == 0) ? 1 : -1;
-
-			// Interchanging rows and columns to get the
-			// transpose of the cofactor matrix
-			adj[j][i] = (sign) * (determinant(temp, 4 - 1));
-		}
-	}
-}
-
-// Function to calculate and store inverse, returns false if
-// matrix is singular
-bool inverse(Matrix4 A, Matrix4& inverse)
-{
-	// Find determinant of A[][]
-	int det = determinant(A, 4);
-	if (det == 0) {
-		return false;
-	}
-
-	// Find adjoint
-	Matrix4 adj;
-	adjoint(A, adj);
-
-	// Find Inverse using formula "inverse(A) = adj(A)/det(A)"
-	for (int i = 0; i < 4; i++)
-		for (int j = 0; j < 4; j++)
-			inverse[i][j] = adj[i][j] / float(det);
-
-	return true;
-}
-
 TEST(Math, MatrixInvert) {
 	Matrix4 matrixA(1, 2, 3, 4,
 					5, 1, 6, 7,
@@ -315,3 +205,11 @@ TEST(Math, MatrixInvert) {
 	EXPECT_FLOAT_EQ(matrix[2][0], 79/507.f); EXPECT_FLOAT_EQ(matrix[2][1], 9/338.f); EXPECT_FLOAT_EQ(matrix[2][2], -257/3042.f);  EXPECT_FLOAT_EQ(matrix[2][3], 107/3042.f);
 	EXPECT_FLOAT_EQ(matrix[3][0], 23/169.f); EXPECT_FLOAT_EQ(matrix[3][1], 5/169.f); EXPECT_FLOAT_EQ(matrix[3][2], 5/169.f); EXPECT_FLOAT_EQ(matrix[3][3], -8/169.f);
 }
+
+//TEST(Math, QuaternionMultiply) {
+//	Quaternion quaternionA(0, 0, 0, 1);
+//	Quaternion quaternionB(0, 0, 0, -1);
+//
+//	auto quaternion = quaternionA * quaternionB;
+//	EXPECT_FLOAT_EQ(quaternion[0], 1); EXPECT_FLOAT_EQ(quaternion[1], 0); EXPECT_FLOAT_EQ(quaternion[2], 0); EXPECT_FLOAT_EQ(quaternion[3], 0);
+//}

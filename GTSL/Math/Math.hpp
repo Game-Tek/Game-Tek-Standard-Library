@@ -1362,6 +1362,105 @@ namespace GTSL
 		return *this;
 	}
 
+	// Function to get cofactor of A[p][q] in temp[][]. n is current
+	// dimension of A[][]
+	inline void GetCofactor(Matrix4 A, Matrix4& temp, int p, int q, int n) {
+		int i = 0, j = 0;
+
+		// Looping for each element of the matrix
+		for (int row = 0; row < n; row++) {
+			for (int col = 0; col < n; col++) {
+				//  Copying into temporary matrix only those element
+				//  which are not in given row and column
+				if (row != p && col != q) {
+					temp[i][j++] = A[row][col];
+
+					// Row is filled, so increase row index and
+					// reset col index
+					if (j == n - 1) {
+						j = 0;
+						i++;
+					}
+				}
+			}
+		}
+	}
+
+	/* Recursive function for finding determinant of matrix.
+	   n is current dimension of A[][]. */
+	inline float32 Determinant(Matrix4 A, int n) {
+		float32 D = 0; // Initialize result
+
+		//  Base case : if matrix contains single element
+		if (n == 1)
+			return A[0][0];
+
+		Matrix4 temp; // To store cofactors
+
+		float32 sign = 1;  // To store sign multiplier
+
+		 // Iterate for each element of first row
+		for (int f = 0; f < n; f++) {
+			// Getting Cofactor of A[0][f]
+			GetCofactor(A, temp, 0, f, n);
+			D += sign * A[0][f] * Determinant(temp, n - 1);
+
+			// terms are to be added with alternate sign
+			sign = -sign;
+		}
+
+		return D;
+	}
+
+	// Function to get adjoint of A[N][N] in adj[N][N].
+	inline void Adjoint(Matrix4 A, Matrix4& adj)
+	{
+		if (4 == 1) {
+			adj[0][0] = 1;
+			return;
+		}
+
+		// temp is used to store cofactors of A[][]
+		float32 sign = 1;
+		Matrix4 temp;
+
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				// Get cofactor of A[i][j]
+				GetCofactor(A, temp, i, j, 4);
+
+				// sign of adj[j][i] positive if sum of row
+				// and column indexes is even.
+				sign = ((i + j) % 2 == 0) ? 1 : -1;
+
+				// Interchanging rows and columns to get the
+				// transpose of the cofactor matrix
+				adj[j][i] = (sign) * (Determinant(temp, 4 - 1));
+			}
+		}
+	}
+
+	// Function to calculate and store inverse, returns false if
+	// matrix is singular
+	inline bool Inverse(Matrix4 A, Matrix4& inverse) {
+		// Find determinant of A[][]
+		int det = Determinant(A, 4);
+		if (det == 0) {
+			return false;
+		}
+
+		// Find adjoint
+		Matrix4 adj;
+		Adjoint(A, adj);
+
+		// Find Inverse using formula "inverse(A) = adj(A)/det(A)"
+		for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
+				inverse[i][j] = adj[i][j] / float(det);
+
+		return true;
+	}
+
 	// +  float32
 // += float32
 // +  type
