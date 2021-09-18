@@ -17,11 +17,11 @@ namespace GTSL
 		explicit Quaternion(const AxisAngle& axisAngle);
 
 		Quaternion& operator*=(const Quaternion& other) {
-			X() = X() * other.W() + Y() * other.Z() - Z() * other.Y() + W() * other.X();
-			Y() = -X() * other.Z() + Y() * other.W() + Z() * other.X() + W() * other.Y();
-			Z() = X() * other.Y() - Y() * other.X() + Z() * other.W() + W() * other.Z();
-			W() = -X() * other.X() - Y() * other.Y() - Z() * other.Z() + W() * other.W();
-
+			auto x = X() * other.W() + Y() * other.Z() - Z() * other.Y() + W() * other.X();
+			auto y = -X() * other.Z() + Y() * other.W() + Z() * other.X() + W() * other.Y();
+			auto z = X() * other.Y() - Y() * other.X() + Z() * other.W() + W() * other.Z();
+			auto w = -X() * other.X() - Y() * other.Y() - Z() * other.Z() + W() * other.W();
+			X() = x; Y() = y; Z() = z; W() = w;
 			return *this;
 		}
 

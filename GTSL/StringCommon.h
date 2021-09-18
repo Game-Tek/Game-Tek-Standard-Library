@@ -118,8 +118,7 @@ namespace GTSL
 	}
 
 	template<class S, std::signed_integral I>
-	void ToString(S& string, I num)
-	{
+	void ToString(S& string, I num) {
 		uint8 i = 30, len = 0;
 
 		char8_t str[32]; str[31] = u8'\0'; bool isNegative = false;
@@ -190,61 +189,49 @@ namespace GTSL
 	template<typename T>
 	Result<T> ToNumber(Range<const char8_t*> numberString);
 
-	template<>
-	inline Result<uint32> ToNumber(Range<const char8_t*> numberString) {
+	template<std::unsigned_integral T>
+	Result<T> ToNumber(Range<const char8_t*> numberString) {
 		uint32 value = 0, mult = 1;
 
 		for (uint64 j = 0, c = numberString.GetBytes() - 1; j < numberString.GetBytes(); ++j, --c) {
 			uint8 num;
 
 			switch (numberString[c]) {
-			case u8'0': num = 0; break;
-			case u8'1': num = 1; break;
-			case u8'2': num = 2; break;
-			case u8'3': num = 3; break;
-			case u8'4': num = 4; break;
-			case u8'5': num = 5; break;
-			case u8'6': num = 6; break;
-			case u8'7': num = 7; break;
-			case u8'8': num = 8; break;
-			case u8'9': num = 9; break;
+			case u8'0': num = 0; break; case u8'1': num = 1; break;
+			case u8'2': num = 2; break; case u8'3': num = 3; break;
+			case u8'4': num = 4; break; case u8'5': num = 5; break;
+			case u8'6': num = 6; break; case u8'7': num = 7; break;
+			case u8'8': num = 8; break; case u8'9': num = 9; break;
 			case u8'\0': continue;
 			default: return Result(0u, false);
 			}
 
 			value += num * mult;
-
 			mult *= 10;
 		}
 
 		return Result(MoveRef(value), true);
 	}
 
-	template<>
-	inline Result<int32> ToNumber(Range<const char8_t*> numberString) {
+	template<std::signed_integral T>
+	Result<T> ToNumber(Range<const char8_t*> numberString) {
 		int32 value = 0, mult = 1;
 
 		for (uint64 j = 0, c = numberString.GetBytes() - 1; j < numberString.GetBytes(); ++j, --c) {
 			uint8 num;
 
 			switch (numberString[c]) {
-			case u8'0': num = 0; break;
-			case u8'1': num = 1; break;
-			case u8'2': num = 2; break;
-			case u8'3': num = 3; break;
-			case u8'4': num = 4; break;
-			case u8'5': num = 5; break;
-			case u8'6': num = 6; break;
-			case u8'7': num = 7; break;
-			case u8'8': num = 8; break;
-			case u8'9': num = 9; break;
+			case u8'0': num = 0; break; case u8'1': num = 1; break;
+			case u8'2': num = 2; break; case u8'3': num = 3; break;
+			case u8'4': num = 4; break; case u8'5': num = 5; break;
+			case u8'6': num = 6; break; case u8'7': num = 7; break;
+			case u8'8': num = 8; break; case u8'9': num = 9; break;
 			case u8'-': num = 0; value = -value; break;
 			case u8'\0': continue;
 			default: return Result(0, false);
 			}
 
 			value += num * mult;
-
 			mult *= 10;
 		}
 
@@ -262,16 +249,11 @@ namespace GTSL
 				uint8 num;
 
 				switch (numberString[c--]) {
-				case u8'0': num = 0; break;
-				case u8'1': num = 1; break;
-				case u8'2': num = 2; break;
-				case u8'3': num = 3; break;
-				case u8'4': num = 4; break;
-				case u8'5': num = 5; break;
-				case u8'6': num = 6; break;
-				case u8'7': num = 7; break;
-				case u8'8': num = 8; break;
-				case u8'9': num = 9; break;
+				case u8'0': num = 0; break; case u8'1': num = 1; break;
+				case u8'2': num = 2; break; case u8'3': num = 3; break;
+				case u8'4': num = 4; break; case u8'5': num = 5; break;
+				case u8'6': num = 6; break; case u8'7': num = 7; break;
+				case u8'8': num = 8; break; case u8'9': num = 9; break;
 				case u8'.': {
 					value /= div;
 					num = 0; div = 0.1f;
@@ -282,7 +264,6 @@ namespace GTSL
 					value *= -1; num = 0;
 					break;
 				}
-				case u8' ': 
 				default: return Result<float32>(0, false);
 				}
 

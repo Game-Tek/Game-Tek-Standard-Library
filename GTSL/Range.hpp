@@ -72,6 +72,9 @@ namespace GTSL
 		friend struct Range;
 	};
 
+	template<>
+	struct Range<const char8_t*>;
+
 	template<typename A, typename B>
 	inline bool CompareContents(const Range<const A*> a, const Range<const B*> b)
 	{

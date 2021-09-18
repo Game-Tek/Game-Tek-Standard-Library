@@ -22,9 +22,8 @@ namespace GTSL
 		 * \brief Creates an String with enough space allocated for length elements.
 		 * \param initialCapacity Amount of elements to allocate.
 		 */
-		String(const uint32 initialCapacity, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(allocatorReference)
-		{
-			tryResize(initialCapacity, 4);
+		String(const uint32 initialCapacity, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(allocatorReference) {
+			tryResize(initialCapacity);
 		}
 		
 		String(const char8_t* cstring, const ALLOCATOR& allocatorReference = ALLOCATOR()) : String(allocatorReference) {

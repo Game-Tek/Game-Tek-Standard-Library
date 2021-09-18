@@ -40,65 +40,65 @@ TEST(Math, Cosines) {
 	EXPECT_NEAR(0.0f, Math::cos(GTSL::Math::PI / 4 * 10), 0.00001f);
 }
 
-//TEST(Math, Vector2D) {
-//	const Vector2 vector(1, -1);
-//
-//	EXPECT_FLOAT_EQ(vector[0], 1.0f);
-//	EXPECT_FLOAT_EQ(vector.X(), 1.0f);
-//
-//	EXPECT_FLOAT_EQ(vector[1], -1.0f);
-//	EXPECT_FLOAT_EQ(vector.Y(), -1.0f);
-//
-//	{
-//		auto vector2 = vector;
-//		EXPECT_EQ(vector2 + 2, GTSL::Vector2(3, 1));
-//	}
-//
-//	{
-//		auto vector2 = vector;
-//		EXPECT_EQ(vector2 - 2, GTSL::Vector2(-1, -3));
-//	}
-//
-//	{
-//		auto vector2 = vector;
-//		EXPECT_EQ(vector2 * 2, GTSL::Vector2(2, -2));
-//	}
-//
-//	{
-//		auto vector2 = vector;
-//		EXPECT_EQ(vector2 / 2, GTSL::Vector2(0.5f, -0.5f));
-//	}
-//
-//	{
-//		auto vector2 = vector;
-//		vector2 += 2;
-//		EXPECT_EQ(vector2, GTSL::Vector2(3, -1));
-//	}
-//
-//	{
-//		auto vector2 = vector;
-//		vector2 -= 2;
-//		EXPECT_EQ(vector2, GTSL::Vector2(-1, -3));
-//	}
-//
-//	{
-//		auto vector2 = vector;
-//		vector2 *= 2;
-//		EXPECT_EQ(vector2, GTSL::Vector2(2, -2));
-//	}
-//
-//	{
-//		auto vector2 = vector;
-//		vector2 /= 2;
-//		EXPECT_EQ(vector2, GTSL::Vector2(0.5f, -0.5f));
-//	}
+TEST(Math, Vector2D) {
+	const Vector2 vector(1, -1);
+
+	EXPECT_FLOAT_EQ(vector[0], 1.0f);
+	EXPECT_FLOAT_EQ(vector.X(), 1.0f);
+
+	EXPECT_FLOAT_EQ(vector[1], -1.0f);
+	EXPECT_FLOAT_EQ(vector.Y(), -1.0f);
+
+	{
+		auto vector2 = vector + 2;
+		GTEST_ASSERT_EQ(vector2.X(), 3); GTEST_ASSERT_EQ(vector2.Y(), 1);
+	}
+
+	{
+		auto vector2 = vector - 2;
+		GTEST_ASSERT_EQ(vector2.X(), -1); GTEST_ASSERT_EQ(vector2.Y(), -3);
+	}
+	
+	{
+		auto vector2 = vector * 2;
+		GTEST_ASSERT_EQ(vector2.X(), 2); GTEST_ASSERT_EQ(vector2.Y(), -2);
+	}
+	
+	{
+		auto vector2 = vector / 2;
+		GTEST_ASSERT_EQ(vector2.X(), 0.5); GTEST_ASSERT_EQ(vector2.Y(), -0.5f);
+	}
+	
+	{
+		auto vector2 = vector;
+		vector2 += 2;
+		ASSERT_TRUE(vector2 == GTSL::Vector2(3, 1));
+	}
+	
+	{
+		auto vector2 = vector;
+		vector2 -= 2;
+		ASSERT_TRUE(vector2 == GTSL::Vector2(-1, -3));
+	}
+	
+	{
+		auto vector2 = vector;
+		vector2 *= 2;
+		ASSERT_TRUE(vector2 == GTSL::Vector2(2, -2));
+	}
+	
+	{
+		auto vector2 = vector;
+		vector2 /= 2;
+		ASSERT_TRUE(vector2 == GTSL::Vector2(0.5f, -0.5f));
+	}
+}
+
+//TEST(Math, Vector3D) {
 //}
-
-TEST(Math, Vector3D) {
-}
-
-TEST(Math, Vector4D) {
-}
+//
+//TEST(Math, Vector4D) {
+//}
 
 TEST(Math, MatrixConstruct) {
 	Matrix4 matrix( 1, 2, 3, 4,
@@ -206,10 +206,20 @@ TEST(Math, MatrixInvert) {
 	EXPECT_FLOAT_EQ(matrix[3][0], 23/169.f); EXPECT_FLOAT_EQ(matrix[3][1], 5/169.f); EXPECT_FLOAT_EQ(matrix[3][2], 5/169.f); EXPECT_FLOAT_EQ(matrix[3][3], -8/169.f);
 }
 
-//TEST(Math, QuaternionMultiply) {
-//	Quaternion quaternionA(0, 0, 0, 1);
-//	Quaternion quaternionB(0, 0, 0, -1);
-//
-//	auto quaternion = quaternionA * quaternionB;
-//	EXPECT_FLOAT_EQ(quaternion[0], 1); EXPECT_FLOAT_EQ(quaternion[1], 0); EXPECT_FLOAT_EQ(quaternion[2], 0); EXPECT_FLOAT_EQ(quaternion[3], 0);
-//}
+TEST(Math, QuaternionMultiply) {
+	{
+		Quaternion quaternionA(1, 0, 0, 0);
+		Quaternion quaternionB(1, 0, 0, 0);
+
+		auto quaternion = quaternionA * quaternionB;
+		EXPECT_FLOAT_EQ(quaternion[0], 0); EXPECT_FLOAT_EQ(quaternion[1], 0); EXPECT_FLOAT_EQ(quaternion[2], 0); EXPECT_FLOAT_EQ(quaternion[3], -1);
+	}
+
+	{
+		Quaternion quaternionA(0, 0.7071067f, 0, 0.7071067f);
+		Quaternion quaternionB(0, 0.7071067f, 0, 0.7071067f);
+	
+		auto quaternion = quaternionA * quaternionB;
+		EXPECT_FLOAT_EQ(quaternion[0], 0); EXPECT_FLOAT_EQ(quaternion[1], 1); EXPECT_FLOAT_EQ(quaternion[2], 0); EXPECT_FLOAT_EQ(quaternion[3], 0);
+	}
+}

@@ -91,13 +91,11 @@ namespace GTSL
 			return *this;
 		}
 
-		inline bool operator==(const Vector2& other)
-		{
+		bool operator==(const Vector2& other) {
 			return X() == other.X() && Y() == other.Y();
 		}
-
-		inline bool operator!=(const Vector2& other)
-		{
+		
+		bool operator!=(const Vector2& other) {
 			return X() != other.X() || Y() != other.Y();
 		}
 

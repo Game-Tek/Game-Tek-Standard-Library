@@ -4,25 +4,18 @@
 
 using namespace GTSL;
 
-TEST(String, Construct) {
+TEST(String, ConstructFromSize) {
+	String<DefaultAllocatorReference> string(32);
+	GTEST_ASSERT_EQ(string.GetCodepoints(), 1);
+	GTEST_ASSERT_EQ(string.GetBytes(), 1);
+	GTEST_ASSERT_GE(string.GetCapacity(), 32);
+}
+
+TEST(String, ConstructFromString) {
 	String<DefaultAllocatorReference> string(u8"\U0001F34C \U0001F34E");
 	GTEST_ASSERT_EQ(string.GetCodepoints(), 4);
 	GTEST_ASSERT_EQ(string.GetBytes(), 10);
-
-	string += u8't';
-
-	GTEST_ASSERT_EQ(string.GetCodepoints(), 5);
-	GTEST_ASSERT_EQ(string.GetBytes(), 11);
-
-	string += u8"\U0001f975";
-
-	GTEST_ASSERT_EQ(string.GetCodepoints(), 6);
-	GTEST_ASSERT_EQ(string.GetBytes(), 15);	
-
-	string += u8"\U0001f4A9 top";
-
-	GTEST_ASSERT_EQ(string.GetCodepoints(), 11);
-	GTEST_ASSERT_EQ(string.GetBytes(), 23);
+	GTEST_ASSERT_GE(string.GetCapacity(), 10);
 }
 
 TEST(String, CopyConstruct) {

@@ -273,7 +273,7 @@ namespace GTSL
 					if (newBucketIndex != currentBucketIndex) { //If after rehash element has to go to a new bucket, move it (elements tend keep their original modulo, specially as the map grows)
 						auto& currentBucketLength = getBucketLength(currentBucketIndex); auto& newBucketLength = getBucketLength(newBucketIndex);
 
-						if (newBucketLength + 1 > newMaxBucketLength) { resize(); return; } //if pushing one more element into the current bucket would exhaust it's space trigger another resize
+						if (newBucketLength + 1 > newMaxBucketLength) { resize(); return; } //if pushing one more element into the current bucket would exhaust it's space, trigger another resize
 
 						copyElementToBack(getKeysBucket(newBucketIndex), getKeysBucket(currentBucketIndex).begin() + currentElementIndex); //move key to new bucket
 						popElement(getKeysBucket(currentBucketIndex), currentElementIndex); //pop key from old bucket

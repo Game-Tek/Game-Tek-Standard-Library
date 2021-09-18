@@ -393,15 +393,13 @@ namespace GTSL
 
 		template<int32 A, int32 B, int32 C, int32 D>
 		[[nodiscard]] static SIMD Shuffle(const SIMD a, const SIMD b) {
-			if constexpr (A == 0 and B == 1 and C == 4 and D == 5) {
+			if constexpr (A == 0 and B == 1 and C == 0 and D == 1) {
 				return _mm_movelh_ps(a, b);
-			}
-
-			if constexpr (A == 6 and B == 7 and C == 2 and D == 3) {
+			} if constexpr (A == 2 and B == 3 and C == 2 and D == 3) {
 				return _mm_movehl_ps(a, b);
+			} else {
+				return _mm_shuffle_ps(a.vector, b.vector, _MM_SHUFFLE(D, C, B, A));				
 			}
-
-			return _mm_shuffle_ps(a.vector, b.vector, _MM_SHUFFLE(D, C, B, A));
 		}
 
 		template<int32 A, int32 B, int32 C, int32 D>

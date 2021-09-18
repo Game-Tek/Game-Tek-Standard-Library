@@ -1151,8 +1151,8 @@ namespace GTSL
 			auto vec0 = float4x(matrix[0]); auto vec1 = float4x(matrix[1]);	auto vec2 = float4x(matrix[2]); auto vec3 = float4x(matrix[3]);
 
 			// sub matrices
-			auto A = float4x::Shuffle<0, 1, 4, 5>(vec0, vec1); auto B = float4x::Shuffle<6, 7, 2, 3>(vec1, vec0);
-			auto C = float4x::Shuffle<0, 1, 4, 5>(vec2, vec3); auto D = float4x::Shuffle<6, 7, 2, 3>(vec3, vec2);
+			auto A = float4x::Shuffle<0, 1, 0, 1>(vec0, vec1); auto B = float4x::Shuffle<2, 3, 2, 3>(vec1, vec0);
+			auto C = float4x::Shuffle<0, 1, 0, 1>(vec2, vec3); auto D = float4x::Shuffle<2, 3, 2, 3>(vec3, vec2);
 
 			// determinant as (|A| |B| |C| |D|)
 			auto detSub=float4x::Shuffle<0, 2, 0, 2>(vec0, vec2) * float4x::Shuffle<1, 3, 1, 3>(vec1, vec3) - float4x::Shuffle<1, 3, 1, 3>(vec0, vec2) * float4x::Shuffle<0, 2, 0, 2>(vec1, vec3);
