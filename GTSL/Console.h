@@ -2,6 +2,7 @@
 
 #include "Core.h"
 #include "Range.hpp"
+#include "StringCommon.h"
 
 #if (_WIN64)
 #include <Windows.h>
@@ -17,25 +18,21 @@ namespace GTSL
 		}
 
 		static void Print(const Range<const char8_t*> text) {
-			DWORD chars_written{ 0 };
-			WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), text.begin(), text.Bytes(), &chars_written, nullptr);
+			WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), text.begin(), text.GetBytes() - 1, nullptr, nullptr);
 		}
 		
-		static void Read(Range<char8_t*> buffer) {
-			DWORD characters_read{ 0 };
-			ReadConsoleA(GetStdHandle(STD_INPUT_HANDLE), buffer.begin(), buffer.ElementCount(), &characters_read, nullptr);
-			buffer = Range<char8_t*>(characters_read, buffer.begin());
-		}
+		//static void Read(Range<char8_t*> buffer) {
+		//	DWORD characters_read{ 0 };
+		//	ReadConsoleA(GetStdHandle(STD_INPUT_HANDLE), buffer.begin(), buffer.ElementCount(), &characters_read, nullptr);
+		//}
 
-		enum class ConsoleTextColor : uint8
-		{
+		enum class ConsoleTextColor : uint8 {
 			WHITE, RED, YELLOW, GREEN, ORANGE, PURPLE
 		};
 		static void SetTextColor(ConsoleTextColor textColor) {
 			WORD color{ 0 };
 
-			switch (textColor)
-			{
+			switch (textColor) {
 			case ConsoleTextColor::WHITE:	color = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE; break;
 			case ConsoleTextColor::RED:		color = FOREGROUND_INTENSITY | FOREGROUND_RED; break;
 			case ConsoleTextColor::YELLOW:	color = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN; break;

@@ -2,7 +2,7 @@
 #pragma once
 
 #include <GTSL/Core.h>
-#include <GTSL/Range.hpp>
+#include "GTSL/StringCommon.h"
 
 #include "File.h"
 #include "Math/Math.hpp"
@@ -18,7 +18,7 @@ namespace GTSL {
 	public:
 		MappedFile() = default;
 
-		bool Open(const Range<const char8_t*> path, uint64 fileSize, File::AccessMode access_mode) {
+		bool Open(const StringView path, uint64 fileSize, File::AccessMode access_mode) {
 
 			DWORD shareMode = 0; /*exlusive use*/
 			DWORD desiredAccess = GENERIC_READ; /*can be or'd*/

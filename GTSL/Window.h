@@ -8,6 +8,7 @@
 #include "Range.hpp"
 #include "Vector.hpp"
 #include "Math/Vectors.h"
+#include "StringCommon.h"
 
 #if (_WIN64)
 #define WIN32_LEAN_AND_MEAN
@@ -118,9 +119,8 @@ namespace GTSL
 			bool isController = false;
 		};
 
-		struct WindowCreateInfo
-		{
-			Range<const char8_t*> Name;
+		struct WindowCreateInfo {
+			StringView Name;
 			Extent2D Extent;
 			Window* ParentWindow = nullptr;
 			class Application* Application = nullptr;

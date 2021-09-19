@@ -5,6 +5,7 @@
 #include "Flags.h"
 
 #include "Range.hpp"
+#include "StringCommon.h"
 
 #if (_WIN64)
 #define WIN32_LEAN_AND_MEAN
@@ -34,7 +35,7 @@ namespace GTSL {
 
 		enum class OpenResult { OK, CREATED, ERROR };
 		
-		[[nodiscard]] OpenResult Open(Range<const char8_t*> path, AccessMode accessMode, bool create) {
+		[[nodiscard]] OpenResult Open(StringView path, AccessMode accessMode, bool create) {
 			DWORD desiredAccess = 0;  DWORD shareMode = 0;
 
 			if (static_cast<uint8>(accessMode) & static_cast<uint8>(READ)) { desiredAccess |= GENERIC_READ; shareMode |= FILE_SHARE_READ; }

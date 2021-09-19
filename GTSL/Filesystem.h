@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Application.h"
+#include "StringCommon.h"
 #include "String.hpp"
 
 #if (_WIN64)

@@ -142,16 +142,4 @@ namespace GTSL
 	{
 		buffer.ReadBytes(sizeof(Id64), reinterpret_cast<byte*>(&id));
 	}
-
-	template<uint8 SIZE>
-	void Insert(const ShortString<SIZE>& string, auto& buffer)
-	{
-		buffer.CopyBytes(SIZE, reinterpret_cast<const byte*>((Range<const char8_t*>(string).begin())));
-	}
-
-	template<uint8 SIZE>
-	void Extract(ShortString<SIZE>& string, auto& buffer)
-	{
-		buffer.ReadBytes(SIZE, reinterpret_cast<byte*>((Range<char8_t*>(string).begin())));
-	}
 }

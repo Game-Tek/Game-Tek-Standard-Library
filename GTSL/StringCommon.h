@@ -65,6 +65,8 @@ namespace GTSL
 
 	Range(const char8_t*) -> Range<const char8_t*>;
 
+	using StringView = Range<const char8_t*>;
+
 	inline Tuple<uint32, uint32, uint8> StringLengths2(const char8_t* text) noexcept {
 		uint32 codePoint = 0; uint32 byt = 0; uint8 len = 1;
 
