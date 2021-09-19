@@ -2,7 +2,7 @@
 
 #include "Core.h"
 #include "FunctionPointer.hpp"
-#include "StringCommmon.h"
+#include "StringCommon.h"
 
 #if (_WIN64)
 #include <Windows.h>

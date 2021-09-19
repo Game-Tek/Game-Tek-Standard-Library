@@ -65,14 +65,12 @@ namespace GTSL
 		//WITH NULL
 		[[nodiscard]] constexpr uint16 GetLength() const { return (SIZE - array[SIZE - 1]) + 1; }
 
-		template<uint8 SIZE>
-		friend void Insert(const ShortString<SIZE>& string, auto& buffer) {
-			buffer.CopyBytes(SIZE, string.array);
+		friend void Insert(const ShortString& string, auto& buffer) {
+			buffer.CopyBytes(SIZE, reinterpret_cast<const byte*>(string.array));
 		}
 
-		template<uint8 SIZE>
-		friend void Extract(ShortString<SIZE>& string, auto& buffer) {
-			buffer.ReadBytes(SIZE, string.array);
+		friend void Extract(ShortString& string, auto& buffer) {
+			buffer.ReadBytes(SIZE, reinterpret_cast<byte*>(string.array));
 		}
 		
 	private:
