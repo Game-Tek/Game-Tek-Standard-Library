@@ -19,7 +19,9 @@ namespace GTSL
 		static constexpr uint16 MAX_PATH_LENGTH{ 260 };
 		
 	private:
+#ifdef _WIN32
 		HINSTANCE handle{ nullptr };
+#endif
 		
 	public:
 		struct ApplicationCreateInfo
@@ -31,31 +33,33 @@ namespace GTSL
 		
 		~Application() = default;
 		
+#ifdef _WIN32
 		HINSTANCE GetHINSTANCE() const { return handle; }
+#endif
 
 		enum class Priority : uint8
 		{
 			LOW, LOW_MID, MID, MID_HIGH, HIGH
 		};
-		void SetProcessPriority(Priority priority) noexcept
-		{
+		void SetProcessPriority(Priority priority) noexcept {
+#ifdef _WIN32
 			int32 priority_class{ NORMAL_PRIORITY_CLASS };
-			switch (priority)
-			{
+			switch (priority) {
 			case Priority::LOW: priority_class = IDLE_PRIORITY_CLASS; break;
 			case Priority::LOW_MID: priority_class = BELOW_NORMAL_PRIORITY_CLASS; break;
 			case Priority::MID: priority_class = NORMAL_PRIORITY_CLASS; break;
 			case Priority::MID_HIGH: priority_class = ABOVE_NORMAL_PRIORITY_CLASS; break;
 			case Priority::HIGH: priority_class = HIGH_PRIORITY_CLASS; break;
-			default: break;
 			}
 
 			SetPriorityClass(GetCurrentProcess(), priority_class);
+#endif
 		}
 		
-		void Close()
-		{
+		void Close() {
+#ifdef _WIN32
 			PostQuitMessage(0);
+#endif
 		}
 
 		struct NativeHandles
@@ -71,19 +75,21 @@ namespace GTSL
 #endif
 		}
 
-		static uint8 ThreadCount() noexcept
-		{
+		static uint8 ThreadCount() noexcept {
+#ifdef _WIN32
 			SYSTEM_INFO system_info; GetSystemInfo(&system_info); return static_cast<uint8>(system_info.dwNumberOfProcessors);
+#endif
 		}
 		
-		[[nodiscard]] StaticString<MAX_PATH_LENGTH> GetPathToExecutable() const
-		{
+		[[nodiscard]] StaticString<MAX_PATH_LENGTH> GetPathToExecutable() const {
+#ifdef _WIN32
 			char s[MAX_PATH_LENGTH];
 			GetModuleFileNameA(handle, s, MAX_PATH_LENGTH);
 			
-			StaticString<MAX_PATH_LENGTH> ret(reinterpret_cast<char8_t*>(s));
-			ret.ReplaceAll('\\', '/');
+			StaticString<MAX_PATH_LENGTH> ret(reinterpret_cast<const char8_t*>(s));
+			ReplaceAll(ret, u8'\\', u8'/');
 			return ret;
+#endif
 		}
 	};
 }

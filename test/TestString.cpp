@@ -11,7 +11,7 @@ TEST(String, ConstructFromSize) {
 	GTEST_ASSERT_GE(string.GetCapacity(), 32);
 }
 
-TEST(String, ConstructFromString) {
+TEST(String, ConstructFromRange) {
 	String<DefaultAllocatorReference> string(u8"\U0001F34C \U0001F34E");
 	GTEST_ASSERT_EQ(string.GetCodepoints(), 4);
 	GTEST_ASSERT_EQ(string.GetBytes(), 10);
@@ -76,6 +76,21 @@ TEST(String, CopyAssignment) {
 	for (uint32 i = 0; i < StringByteLength(testString); ++i) {
 		GTEST_ASSERT_EQ(string0.c_str()[i], testString[i]); //test original string hasn't been modified
 		GTEST_ASSERT_EQ(string0.c_str()[i], string1.c_str()[i]); //use begin() to access bytes, not codepoints
+	}
+}
+
+TEST(String, CopyRangeAssignment) {
+	auto testString = u8"\U0001F34C test \U0001F34E";
+
+	String<DefaultAllocatorReference> string0(u8"abcd");
+
+	string0 = testString;
+
+	GTEST_ASSERT_EQ(string0.GetBytes(), StringLengths(testString).First);
+	GTEST_ASSERT_EQ(string0.GetCodepoints(), StringLengths(testString).Second);
+
+	for (uint32 i = 0; i < StringByteLength(testString); ++i) {
+		GTEST_ASSERT_EQ(string0.c_str()[i], testString[i]);
 	}
 }
 

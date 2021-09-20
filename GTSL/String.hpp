@@ -38,6 +38,13 @@ namespace GTSL
 			other.data = nullptr; other.bytes = 0; other.codePoints = 0; other.capacity = 0;
 		}
 		
+		String& operator=(const StringView range) {
+			bytes = 0;
+			codePoints = 0;
+			copy(range);
+			return *this;
+		}
+
 		String& operator=(const String& other) {
 			bytes = 0; //reset length
 			codePoints = 0;
@@ -317,14 +324,14 @@ namespace GTSL
 	public:
 		friend void Insert(const String& string, auto& buffer) {
 			Insert(string.GetBytes(), buffer);
-			buffer.CopyBytes(string.GetBytes(), reinterpret_cast<const byte*>(string.begin()));
+			buffer.CopyBytes(string.GetBytes(), reinterpret_cast<const byte*>(string.c_str()));
 		}
 		
 		friend void Extract(String& string, auto& buffer) {
 			uint32 bytes = 0, codepoints = 0;
 			Extract(bytes, buffer); Extract(codepoints, buffer);
 			string.Resize(bytes);
-			buffer.CopyBytes(bytes, reinterpret_cast<const byte*>(string.begin()));
+			buffer.CopyBytes(bytes, reinterpret_cast<const byte*>(string.c_str()));
 			string.bytes = bytes;
 			string.codePoints = codepoints;
 		}
