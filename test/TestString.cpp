@@ -33,8 +33,8 @@ TEST(String, CopyConstruct) {
 	GTEST_ASSERT_EQ(string1.GetBytes(), string0.GetBytes());
 
 	for(uint32 i = 0; i < StringByteLength(testString); ++i) {
-		GTEST_ASSERT_EQ(string0.begin()[i], testString[i]); //test original string hasn't been modified
-		GTEST_ASSERT_EQ(string0.begin()[i], string1.begin()[i]); //use begin() to access bytes, not codepoints
+		GTEST_ASSERT_EQ(string0.c_str()[i], testString[i]); //test original string hasn't been modified
+		GTEST_ASSERT_EQ(string0.c_str()[i], string1.c_str()[i]);
 	}
 }
 
@@ -54,7 +54,7 @@ TEST(String, MoveConstruct) {
 	GTEST_ASSERT_EQ(string1.GetCodepoints(), string0Codepoints); GTEST_ASSERT_EQ(string1.GetBytes(), string0Bytes); GTEST_ASSERT_EQ(string1.c_str(), string0pointer); //remember static allocators DO switch pointers so this may not be a necessarily true test
 
 	for (uint32 i = 0; i < StringByteLength(testString); ++i) {
-		GTEST_ASSERT_EQ(string1.begin()[i], testString[i]); //test string has been moved correctly
+		GTEST_ASSERT_EQ(string1.c_str()[i], testString[i]); //test string has been moved correctly
 	}
 }
 
@@ -74,8 +74,8 @@ TEST(String, CopyAssignment) {
 	GTEST_ASSERT_EQ(string1.GetBytes(), string0.GetBytes());
 
 	for (uint32 i = 0; i < StringByteLength(testString); ++i) {
-		GTEST_ASSERT_EQ(string0.begin()[i], testString[i]); //test original string hasn't been modified
-		GTEST_ASSERT_EQ(string0.begin()[i], string1.begin()[i]); //use begin() to access bytes, not codepoints
+		GTEST_ASSERT_EQ(string0.c_str()[i], testString[i]); //test original string hasn't been modified
+		GTEST_ASSERT_EQ(string0.c_str()[i], string1.c_str()[i]); //use begin() to access bytes, not codepoints
 	}
 }
 
@@ -96,7 +96,7 @@ TEST(String, MoveAssignment) {
 	GTEST_ASSERT_EQ(string1.GetCodepoints(), string0Codepoints); GTEST_ASSERT_EQ(string1.GetBytes(), string0Bytes); GTEST_ASSERT_EQ(string1.c_str(), string0pointer); //remember static allocators DO switch pointers so this may not be a necessarily true test
 
 	for (uint32 i = 0; i < StringByteLength(testString); ++i) {
-		GTEST_ASSERT_EQ(string1.begin()[i], testString[i]); //test string has been moved correctly
+		GTEST_ASSERT_EQ(string1.c_str()[i], testString[i]); //test string has been moved correctly
 	}
 }
 
@@ -116,7 +116,7 @@ TEST(String, Resize) {
 	GTEST_ASSERT_GT(string.GetCapacity(), capacity);
 
 	for(uint32_t i = 0; i < StringByteLength(testString); ++i) {
-		GTEST_ASSERT_EQ(string.begin()[i], testString[i]);
+		GTEST_ASSERT_EQ(string.c_str()[i], testString[i]);
 	}
 }
 
@@ -139,4 +139,62 @@ TEST(String, Drop) {
 
 	GTEST_ASSERT_EQ(string.GetCodepoints(), 6);
 	GTEST_ASSERT_EQ(string.GetBytes(), 6);
+}
+
+TEST(String, FindFirst) {
+	String<DefaultAllocatorReference> string(u8"abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789");
+
+	auto aSearch = FindFirst(string, u8'a');
+
+	ASSERT_TRUE(aSearch.State());
+	GTEST_ASSERT_EQ(aSearch.Get(), 0);
+
+	auto zeroSearch = FindFirst(string, u8'0');
+
+	ASSERT_TRUE(zeroSearch.State());
+	GTEST_ASSERT_EQ(zeroSearch.Get(), 26);
+
+	auto nullSearch = FindFirst(string, u8'\0');
+
+	ASSERT_TRUE(nullSearch.State());
+	GTEST_ASSERT_EQ(nullSearch.Get(), 72);
+
+	auto invalidSearch = FindFirst(string, u8'!');
+	ASSERT_FALSE(invalidSearch.State());
+}
+
+TEST(String, FindLast) {
+	String<DefaultAllocatorReference> string(u8"abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789");
+
+	auto aSearch = FindLast(string, u8'a');
+
+	ASSERT_TRUE(aSearch.State());
+	GTEST_ASSERT_EQ(aSearch.Get(), 36);
+
+	auto zeroSearch = FindLast(string, u8'0');
+
+	ASSERT_TRUE(zeroSearch.State());
+	GTEST_ASSERT_EQ(zeroSearch.Get(), 62);
+
+	auto nullSearch = FindLast(string, u8'\0');
+
+	ASSERT_TRUE(nullSearch.State());
+	GTEST_ASSERT_EQ(nullSearch.Get(), 72);
+
+	auto invalidSearch = FindLast(string, u8'!');
+	ASSERT_FALSE(invalidSearch.State());
+}
+
+TEST(String, Iterator) {
+	auto testString = u8"abcdefghijklmnopqrstuvwxyz0123456789";
+
+	String<DefaultAllocatorReference> string(testString);
+
+	auto begin = string.begin(); uint32 i = 0;
+
+	while(true) {
+		if (begin == string.end()) { break; }
+		GTEST_ASSERT_EQ(*begin, ToUTF32(testString + i++));
+		++begin;
+	}
 }

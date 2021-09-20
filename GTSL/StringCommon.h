@@ -67,32 +67,6 @@ namespace GTSL
 
 	using StringView = Range<const char8_t*>;
 
-	inline Tuple<uint32, uint32, uint8> StringLengths2(const char8_t* text) noexcept {
-		uint32 codePoint = 0; uint32 byt = 0; uint8 len = 1;
-
-		while (text[byt] != u8'\0') {
-			++codePoint;
-			len = UTF8CodePointLength(text[byt]);
-			byt += len;
-		}
-
-		return Tuple(MoveRef(byt) + 1, MoveRef(codePoint) + 1, MoveRef(len));
-	}
-
-	inline Tuple<uint32, uint32, uint8> StringLengths2(Range<const char8_t*> text) noexcept {
-		uint8 lcl = 0; uint32 i = text.GetBytes() - 1;
-
-		char8_t lc = u8'\0';
-
-		do {
-			lc = text.GetData()[i];
-			lcl = UTF8CodePointLength(lc);
-			--i;
-		} while (lcl == 0 || lc == u8'\0');
-
-		return Tuple(text.GetBytes(), text.GetCodepoints(), MoveRef(lcl));
-	}
-
 	template<class S>
 	void ToString(S& string, const char8_t* str) {
 		string += Range(str);

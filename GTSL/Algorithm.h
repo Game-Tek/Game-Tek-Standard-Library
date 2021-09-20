@@ -14,6 +14,8 @@ namespace GTSL
 	template <typename LAMBDA, typename... ARGS>
 	static auto Call(LAMBDA&& lambda, Tuple<ARGS...>&& tup) { return Call(lambda, GTSL::MoveRef(tup), BuildIndices<sizeof...(ARGS)>{}); }
 
+	constexpr uint32 ModuloByPowerOf2(const uint64 key, const uint32 size) { return key & (size - 1); }
+
 	template<typename T>
 	void Destroy(T& object) { object.~T(); }
 	

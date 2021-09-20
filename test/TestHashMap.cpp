@@ -151,3 +151,28 @@ TEST(HashMap, Resize) {
 		GTEST_ASSERT_EQ(ref.State(), true); GTEST_ASSERT_EQ(ref.Get(), 111);
 	}
 }
+
+TEST(KeyMap, Construct) {
+	GTSL::KeyMap<GTSL::uint64, GTSL::DefaultAllocatorReference> keyMap(4);
+}
+
+TEST(KeyMap, Emplace) {
+	GTSL::KeyMap<GTSL::uint64, GTSL::DefaultAllocatorReference> keyMap(4);
+
+	keyMap.Emplace(123);
+}
+
+TEST(KeyMap, Find) {
+	GTSL::KeyMap<GTSL::uint64, GTSL::DefaultAllocatorReference> keyMap(4);
+	keyMap.Emplace(123);
+
+	ASSERT_TRUE(keyMap.Find(123));
+
+	ASSERT_FALSE(keyMap.Find(456));
+
+	keyMap.Emplace(6789);
+
+	ASSERT_TRUE(keyMap.Find(123));
+	ASSERT_FALSE(keyMap.Find(456));
+	ASSERT_TRUE(keyMap.Find(6789));
+}

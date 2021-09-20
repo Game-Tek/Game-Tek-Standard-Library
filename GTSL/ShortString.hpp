@@ -34,10 +34,6 @@ namespace GTSL
 
 		[[nodiscard]] constexpr const char8_t* begin() const { return array; }
 		[[nodiscard]] constexpr const char8_t* end() const { return array + GetLength(); }
-		
-		constexpr ShortString(const char8_t* text) : ShortString() {
-			(*this) += Range<const char8_t*>(text);
-		}
 
 		constexpr ShortString(const Range<const char8_t*> text) : ShortString() {
 			(*this) += text;
