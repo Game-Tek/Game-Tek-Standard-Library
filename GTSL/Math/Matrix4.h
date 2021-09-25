@@ -3,7 +3,7 @@
 #include "GTSL/Core.h"
 
 #include "Vectors.h"
-#include "GTSL/SIMD/SIMD.hpp"
+#include "GTSL/SIMD.hpp"
 
 //Index increases in row order.
 

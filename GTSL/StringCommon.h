@@ -22,6 +22,44 @@ namespace GTSL
 		return { bytes + 1, cp + 1 };
 	}
 
+	struct StringIterator {
+		constexpr StringIterator(const char8_t* d, uint32 b, uint32 cb) : data(d), bytes(b), currentByte(cb) {
+		}
+
+		constexpr StringIterator& operator++() {
+			currentByte += UTF8CodePointLength(data[currentByte]);
+			return *this;
+		}
+
+		constexpr StringIterator& operator--() {
+			currentByte -= UTF8CodePointLength(data[currentByte]);
+			return *this;
+		}
+
+		constexpr char32_t operator*() const { return ToUTF32(data + currentByte); }
+
+		constexpr StringIterator operator-(const int32 i) const {
+			return StringIterator(data, bytes, currentByte - i);
+		}
+
+		constexpr bool operator<(const StringIterator& other) const {
+			return currentByte < other.currentByte;
+		}
+
+		constexpr bool operator==(const StringIterator& other) const {
+			return currentByte == other.currentByte;
+		}
+
+		constexpr bool operator!=(const StringIterator& other) const {
+			return currentByte != other.currentByte;
+		}
+
+		const char8_t* data = nullptr;
+		uint32 bytes = 0, currentByte = 0;
+
+		friend class Range<const char8_t*>;
+	};
+
 	template<>
 	struct Range<const char8_t*>
 	{
@@ -29,7 +67,7 @@ namespace GTSL
 
 		constexpr Range(const char8_t* string) : data(string) {
 			auto lengths = StringLengths(string);
-			bytes = lengths.First; codepoints = lengths.Second;
+			bytes = lengths.First - 1; codepoints = lengths.Second - 1;
 		}
 
 		template<uint64 N>
@@ -38,11 +76,15 @@ namespace GTSL
 			bytes = lengths.First; codepoints = lengths.Second;
 		}
 
-		constexpr Range(const uint32 bytes, const uint32 codePoints, const char8_t* string) : data(string), codepoints(codePoints), bytes(bytes) {
+		constexpr Range(const uint32 bytes, const uint32 codePoints, const char8_t* string) : data(string), codepoints(codePoints - 1), bytes(bytes - 1) {
 		}
 
-		[[nodiscard]] constexpr uint32 GetBytes() const { return bytes; }
-		[[nodiscard]] constexpr uint32 GetCodepoints() const { return codepoints; }
+		constexpr Range(const StringIterator start, const StringIterator end) : data(start.data + start.currentByte) {
+			while (start.currentByte + bytes < end.currentByte) { bytes += UTF8CodePointLength(data[bytes]); ++codepoints; }
+		}
+
+		[[nodiscard]] constexpr uint32 GetBytes() const { return bytes + 1; }
+		[[nodiscard]] constexpr uint32 GetCodepoints() const { return codepoints + 1; }
 
 		[[nodiscard]] constexpr const char8_t* GetData() const { return data; }
 
@@ -50,8 +92,8 @@ namespace GTSL
 			return data[index];
 		}
 
-		[[nodiscard]] constexpr const char8_t* begin() const { return data; }
-		[[nodiscard]] constexpr const char8_t* end() const { return data + bytes; }
+		[[nodiscard]] constexpr StringIterator begin() const { return StringIterator(data, bytes, 0); }
+		[[nodiscard]] constexpr StringIterator end() const { return StringIterator(data, bytes, bytes + 2); }
 
 		constexpr auto operator==(const Range<const char8_t*> other) const {
 			if (codepoints != other.codepoints || bytes != other.bytes) { return false; }
@@ -66,6 +108,54 @@ namespace GTSL
 	Range(const char8_t*) -> Range<const char8_t*>;
 
 	using StringView = Range<const char8_t*>;
+
+	template<typename...C>
+	void ForEachSubstring(const StringView string, auto&& f, C ... divs) {
+		static_assert(sizeof...(C) != 0, "You need at least one parameter to divide substrings.");
+
+		auto it = string.begin();
+
+		while (it < string.end() - 2) {
+			while (it < string.end() - 2 && ((*it == divs) || ...)) {
+				++it;
+			}
+
+			auto start = it;
+
+			while (it < string.end() - 2 and ((*it != divs) && ...)) {
+				++it;
+			}
+
+			f({ start, it });
+		}
+	}
+
+	void ForEachLine(const StringView string, auto&& f) {
+		ForEachSubstring(string, f, U'\n');
+	}
+
+	template<typename...C>
+	void Substrings(const StringView string, auto& container, C... divs) {
+		static_assert(sizeof...(C) != 0, "You need at least one parameter to divide substrings.");
+		auto it = string.begin();
+
+		while (it < string.end() - 2) {
+			auto& a = container.EmplaceBack();
+
+			while (it < string.end() - 2 and ((*it == divs) || ...)) {
+				++it;
+			}
+
+			while (it < string.end() - 2 and ((*it != divs) && ...)) {
+				a += *it;
+				++it;
+			}
+		}
+	}
+
+	void Lines(const StringView string, auto& container) {
+		Substrings(string, container, U'\n');
+	}
 
 	template<class S>
 	void ToString(S& string, const char8_t* str) {

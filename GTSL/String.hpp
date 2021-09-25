@@ -105,38 +105,10 @@ namespace GTSL
 		//	return true;
 		//}
 
-		struct Iterator {
-			Iterator(const char8_t* d, uint32 b, uint32 cb) : data(d), bytes(b), currentByte(cb) {
-			}
-
-			Iterator& operator++() {
-				currentByte += UTF8CodePointLength(data[currentByte]);
-				return *this;
-			}
-
-			Iterator& operator--() {
-				currentByte -= UTF8CodePointLength(data[currentByte]);
-				return *this;
-			}
-
-			char32_t operator*() const { return ToUTF32(data[currentByte], data[currentByte + 1], data[currentByte + 2], data[currentByte + 3], UTF8CodePointLength(data[currentByte])).Get(); }
-
-			bool operator==(const Iterator& other) const {
-				return currentByte == other.currentByte;
-			}
-
-			bool operator!=(const Iterator& other) const {
-				return currentByte != other.currentByte;
-			}
-
-			const char8_t* data = nullptr;
-			uint32 bytes = 0, currentByte = 0;
-		};
-
 		//auto begin() noexcept { return Iterator(data, bytes); }
-		[[nodiscard]] auto begin() const noexcept { return Iterator(data, bytes, 0); }
+		[[nodiscard]] auto begin() const noexcept { return StringIterator(data, bytes, 0); }
 		//auto end() noexcept { return data + bytes + 1; }
-		[[nodiscard]] auto end() const noexcept { return Iterator(data, bytes, bytes + 1); }
+		[[nodiscard]] auto end() const noexcept { return StringIterator(data, bytes, bytes + 1); }
 
 		//operator Range<char8_t*>() const { return Range<char8_t*>(begin(), end()); }
 		operator Range<const char8_t*>() const { return Range<const char8_t*>(GetBytes(), GetCodepoints(), data); }
@@ -184,7 +156,7 @@ namespace GTSL
 		}
 
 		void Resize(const uint32 newLength) {
-			tryResize(newLength - bytes);
+			tryResize(newLength);
 		}
 		
 		//void ReplaceAll(const char* a, const char* with) {
@@ -291,19 +263,19 @@ namespace GTSL
 			return Tuple(MoveRef(byt), MoveRef(codePoint), MoveRef(len));
 		}
 
-		void tryResize(int64 delta)
+		void tryResize(uint32 newSize)
 		{
-			delta += 3; /*null terminator padding*/
+			newSize += 3; /*null terminator padding*/
 
-			if (bytes + delta > capacity) {
+			if (newSize > capacity) {
 				uint64 allocatedSize = 0; char8_t* newData = nullptr;
 				
 				if(data) {
-					allocator.Allocate((bytes + delta) * 2, 16, reinterpret_cast<void**>(&newData), &allocatedSize);
+					allocator.Allocate(newSize * 2, 16, reinterpret_cast<void**>(&newData), &allocatedSize);
 					for (uint32 i = 0; i < bytes + 1; ++i) { newData[i] = data[i]; }
 					allocator.Deallocate(bytes, 16, static_cast<void*>(data));
 				} else {
-					allocator.Allocate(bytes + delta, 16, reinterpret_cast<void**>(&newData), &allocatedSize);
+					allocator.Allocate(newSize, 16, reinterpret_cast<void**>(&newData), &allocatedSize);
 				}
 
 				capacity = static_cast<uint32>(allocatedSize / sizeof(char8_t));
@@ -312,7 +284,7 @@ namespace GTSL
 		}
 		
 		void copy(const Range<const char8_t*> string) {
-			tryResize(string.GetBytes());
+			tryResize(bytes + string.GetBytes());
 			for(uint32 i = 0; i < string.GetBytes(); ++i) { data[bytes + i] = string[i]; }
 			bytes += string.GetBytes() - 1;
 			codePoints += string.GetCodepoints() - 1;

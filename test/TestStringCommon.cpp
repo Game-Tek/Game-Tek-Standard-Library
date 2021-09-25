@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 
 #include "GTSL/ShortString.hpp"
+#include "GTSL/String.hpp"
 #include "GTSL/StringCommon.h"
 #include "GTSL/Unicode.hpp"
+#include "GTSL/Vector.hpp"
 
 using namespace GTSL;
 
@@ -85,4 +87,37 @@ TEST(StringCommon, StringToNumber) {
 		auto number0 = ToNumber<int32>(string);
 		GTEST_ASSERT_EQ(number0.State(), false);
 	}
+}
+
+TEST(StringCommon, ForEachSubstring) {
+	StaticString<64> string(u8"a bcd efghi  j");
+
+	uint32 i = 0;
+
+	ForEachSubstring(string, [&](StringView substring) {
+		switch (i) {
+		case 0:
+			GTEST_ASSERT_EQ(substring, u8"a");
+			break;
+		case 1:
+			GTEST_ASSERT_EQ(substring, u8"bcd");
+			break;
+		case 2:
+			GTEST_ASSERT_EQ(substring, u8"efghi");
+			break;
+		case 3:
+			GTEST_ASSERT_EQ(substring, u8"j");
+			break;
+		}
+
+		++i;
+	}, U' ');
+
+	StaticVector<StaticString<16>, 4> vector;
+
+	Substrings(string, vector, U' ');
+	GTEST_ASSERT_EQ(vector[0], u8"a");
+	GTEST_ASSERT_EQ(vector[1], u8"bcd");
+	GTEST_ASSERT_EQ(vector[2], u8"efghi");
+	GTEST_ASSERT_EQ(vector[3], u8"j");
 }

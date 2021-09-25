@@ -24,7 +24,7 @@ namespace GTSL {
 		{ 0b00000111, 0b11110000, 0200000, 04177777, 3 },
 	};
 
-	inline constexpr uint8_t UTF8CodePointLength(const char8_t buf) {
+	constexpr uint8_t UTF8CodePointLength(const char8_t buf) {
 		constexpr uint8 lengths[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0 };
 		uint8 len = lengths[buf >> 3];
 		return len;
@@ -46,7 +46,7 @@ namespace GTSL {
 		return ret;
 	}
 
-	inline char32_t ToUTF32(const char8_t a[]) {
+	constexpr char32_t ToUTF32(const char8_t a[]) {
 		uint32_t bigChar = 0;
 
 		auto len = UTF8CodePointLength(a[0]);
@@ -57,36 +57,28 @@ namespace GTSL {
 		case 1:
 			shift = 18;
 			mask = 0x7f;
-
 			bigChar = (uint32_t)(a[0] & mask) << 18;
-
 			break;
 		case 2:
 			shift = 12;
 			mask = 0x1f;
-
 			bigChar = (uint32_t)(a[0] & mask) << 18;
 			bigChar |= (uint32_t)(a[1] & 0x3f) << 12;
-
 			break;
 		case 3:
 			shift = 6;
 			mask = 0x0f;
-
 			bigChar = (uint32_t)(a[0] & mask) << 18;
 			bigChar |= (uint32_t)(a[1] & 0x3f) << 12;
 			bigChar |= (uint32_t)(a[2] & 0x3f) << 6;
-
 			break;
 		case 4:
 			shift = 0;
 			mask = 0x07;
-
 			bigChar = (uint32_t)(a[0] & mask) << 18;
 			bigChar |= (uint32_t)(a[1] & 0x3f) << 12;
 			bigChar |= (uint32_t)(a[2] & 0x3f) << 6;
 			bigChar |= (uint32_t)(a[3] & 0x3f) << 0;
-
 			break;
 		}
 

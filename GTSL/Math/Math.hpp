@@ -14,7 +14,7 @@
 #include "GTSL/Range.hpp"
 #include <GTSL/Extent.h>
 
-#include "GTSL/SIMD/SIMD.hpp"
+#include "GTSL/SIMD.hpp"
 
 #include <cmath>
 

@@ -7,6 +7,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOCOMM
 #include <WinSock2.h>
+#include <intrin.h>
 #undef NOCOMM
 #undef WIN32_LEAN_AND_MEAN
 typedef int socklen_t;
@@ -16,6 +17,22 @@ namespace GTSL
 {
 	class Socket
 	{
+		static uint16 HostToNet(const uint16 a) {
+#ifdef _WIN32
+			return _byteswap_ushort(a);
+#else
+			return (a >> 8) | (a << 8);
+#endif
+		}
+
+		static uint16 NetToHost(const uint16 a) {
+#ifdef _WIN32
+			return _byteswap_ushort(a);
+#else
+			return (a >> 8) | (a << 8);
+#endif
+		}
+
 		uint64 handle = 0;
 
 	public:
@@ -30,8 +47,11 @@ namespace GTSL
 
 			sockaddr_in address{};
 			address.sin_family = AF_INET;
-			address.sin_addr.s_addr = htonl(endpoint.IntFromAddress());
-			address.sin_port = htons(endpoint.Port);
+			address.sin_addr.S_un.S_un_b.s_b1 = endpoint[3];
+			address.sin_addr.S_un.S_un_b.s_b2 = endpoint[2];
+			address.sin_addr.S_un.S_un_b.s_b3 = endpoint[1];
+			address.sin_addr.S_un.S_un_b.s_b4 = endpoint[0];
+			address.sin_port = HostToNet(endpoint.Port);
 			if (bind(handle, reinterpret_cast<const sockaddr*>(&address), sizeof(sockaddr_in)) < 0) { return false; }
 
 			DWORD non_blocking = blocking;
@@ -44,8 +64,11 @@ namespace GTSL
 		[[nodiscard]] bool Send(const IPv4Endpoint endpoint, Range<const byte*> buffer) const {
 			sockaddr_in addr{};
 			addr.sin_family = AF_INET;
-			addr.sin_addr.s_addr = htonl(endpoint.IntFromAddress());
-			addr.sin_port = htons(endpoint.Port);
+			addr.sin_addr.S_un.S_un_b.s_b1 = endpoint[3];
+			addr.sin_addr.S_un.S_un_b.s_b2 = endpoint[2];
+			addr.sin_addr.S_un.S_un_b.s_b3 = endpoint[1];
+			addr.sin_addr.S_un.S_un_b.s_b4 = endpoint[0];
+			addr.sin_port = HostToNet(endpoint.Port);
 
 			GTSL_ASSERT(buffer.Bytes() <= 512, "Size bigger than can be sent.")
 			const auto sent_bytes = sendto(handle, reinterpret_cast<const char*>(buffer.begin()), static_cast<int32>(buffer.Bytes()), 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
@@ -59,8 +82,11 @@ namespace GTSL
 
 			const auto bytes_received = recvfrom(handle, reinterpret_cast<char*>(buffer.begin()), static_cast<int32>(buffer.Bytes()), 0, reinterpret_cast<sockaddr*>(&from), &fromLength);
 
-			sender->AddressFromInt(ntohl(from.sin_addr.s_addr));
-			sender->Port = ntohs(from.sin_port);
+			*sender[0] = from.sin_addr.S_un.S_un_b.s_b4;
+			*sender[1] = from.sin_addr.S_un.S_un_b.s_b3;
+			*sender[2] = from.sin_addr.S_un.S_un_b.s_b2;
+			*sender[3] = from.sin_addr.S_un.S_un_b.s_b1;
+			sender->Port = NetToHost(from.sin_port);
 
 			return bytes_received != SOCKET_ERROR;
 		}
