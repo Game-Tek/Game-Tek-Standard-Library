@@ -1,8 +1,5 @@
 ﻿#pragma once
 
-#include <immintrin.h>
-#include <intrin0.h>
-
 #include "AxisAngle.h"
 #include "GTSL/Core.h"
 #include "Vectors.h"
@@ -902,30 +899,34 @@ namespace GTSL
 			//Tangent of half the vertical view angle.
 			const auto yScale = 1.0f / Tangent(fov * 0.5f);
 			const auto xScale = yScale / aspectRatio;
+			const auto f = farPlane / (farPlane - nearPlane);
+			const auto n = (nearPlane * farPlane) / (nearPlane - farPlane);
 
-			matrix[0][0] = xScale; matrix[1][1] = yScale;
-			matrix[2][2] = farPlane / (farPlane - nearPlane);
-			matrix[2][3] = (nearPlane * farPlane) / (nearPlane - farPlane);
-			matrix[3][2] = 1.0f; matrix[3][3] = 0.0f;
+			matrix[0][0] = xScale;
+			matrix[1][1] = yScale;
+			matrix[2][2] = f;
+			matrix[2][3] = n;
+			matrix[3][2] = 1.0f;
+			matrix[3][3] = 0.0f;
 			
 			return matrix;
 		}
-		
-		inline Matrix4 BuildInversePerspectiveMatrix(const float32 fov, const float32 aspectRatio, const float32 nearPlane, const float32 farPlane) {
+
+		inline Matrix4 BuildInvertedPerspectiveMatrix(const float32 fov, const float32 aspectRatio, const float32 nearPlane, const float32 farPlane) {
 			Matrix4 matrix;
 
-			const auto yScale = 1.0f / Tangent(fov * 0.5f);
-			const auto xScale = yScale / aspectRatio;
+			//Tangent of half the vertical view angle.
+			const auto half_tan = Tangent(fov * 0.5f);
+			const auto f = farPlane / (farPlane - nearPlane);
+			const auto n = (nearPlane * farPlane) / (nearPlane - farPlane);
 
-			matrix[0][0] = 1 / xScale; matrix[1][1] = 1 / yScale;
-			auto z0 = farPlane / (farPlane - nearPlane);
-			auto z1 = (nearPlane * farPlane) / (nearPlane - farPlane);
+			matrix[0][0] = 1.0f / (1.0f / half_tan / aspectRatio);
+			matrix[1][1] = half_tan;
+			matrix[2][2] = 0;
+			matrix[2][3] = 1;
+			matrix[3][2] = 1.0f / n;
+			matrix[3][3] = -f / n;
 
-			matrix[3][2] = 1 / z1;
-			matrix[2][3] = 1.0f;
-			
-			matrix[3][3] = z0 / z1;
-			
 			return matrix;
 		}
 

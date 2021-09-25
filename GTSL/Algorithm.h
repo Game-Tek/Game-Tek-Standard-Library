@@ -2,17 +2,16 @@
 
 #include "Result.h"
 #include "Tuple.h"
+#include "Range.hpp"
 
 namespace GTSL
-{	
-	//template<typename CALLABLE, typename... ARGS>
-	//static auto Call(CALLABLE&& callable, Tuple<ARGS...>& tup) { using indices = BuildIndices<sizeof...(ARGS)>; return callable(TupleAccessor<indices>::Get(tup)...); }
+{
 	
-	template <typename LAMBDA, typename... ARGS, uint64... IS>
-	static auto Call(LAMBDA&& lambda, Tuple<ARGS...>&& tup, Indices<IS...>) { return lambda(GTSL::MoveRef(TupleAccessor<IS>::Get(tup))...); }
-
-	template <typename LAMBDA, typename... ARGS>
-	static auto Call(LAMBDA&& lambda, Tuple<ARGS...>&& tup) { return Call(lambda, GTSL::MoveRef(tup), BuildIndices<sizeof...(ARGS)>{}); }
+	template <typename... ARGS, uint64... IS>
+	auto Call(auto&& lambda, Tuple<ARGS...>&& tup, Indices<IS...>) { return lambda(GTSL::MoveRef(TupleAccessor<IS>::Get(tup))...); }
+	
+	template <typename... ARGS>
+	auto Call(auto&& lambda, Tuple<ARGS...>&& tup) { return Call(lambda, GTSL::MoveRef(tup), BuildIndices<sizeof...(ARGS)>{}); }
 
 	constexpr uint32 ModuloByPowerOf2(const uint64 key, const uint32 size) { return key & (size - 1); }
 
@@ -82,5 +81,71 @@ namespace GTSL
 		}
 		
 		return Result<decltype(iterable.begin())>(false);
+	}
+
+	template<typename A, typename B, typename C>
+	bool CrossSearch(const A& range0, const B& range1, const C& obj) {
+		for (auto& a : range0) {
+			if (a == obj) {
+				for (auto& b : range1) {
+					if (b == obj) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	template<typename A, typename B, typename C>
+	void CrossSearch(const A& range0, const B& range1, const C& obj, auto&& f) {
+		uint32 ia = 0, ib = 0;
+
+		for (auto& a : range0) {
+			if (a == obj) {
+				for (auto& b : range1) {
+					if (b == obj) {
+						f(true, ia, ib);
+						return;
+					}
+
+					++ib;
+				}
+			}
+
+			++ia;
+		}
+
+		f(false, ia, ib);
+	}
+
+	template<typename A>
+	void Sort(A& container, auto pred) {
+		bool sorted = false;
+
+		while (!sorted) {
+			sorted = true;
+
+			for (uint32 i = 0; i < container.GetLength() - 1; ++i) {
+				if (pred(container[i], container[i + 1])) {
+					auto aux = container[i];
+					container[i] = container[i + 1];
+					container[i + 1] = aux;
+
+					sorted = false;
+				}
+			}
+		}
+	}
+
+	template<typename A>
+	void SortG(A& container) {
+		Sort(container, [](const typename A::value_type& a, const typename A::value_type& b) -> bool { return a > b; });
+	}
+
+	template<typename A>
+	void SortL(A& container) {
+		Sort(container, [](const typename A::value_type& a, const typename A::value_type& b) -> bool { return a < b; });
 	}
 }

@@ -257,6 +257,14 @@ namespace GTSL
 			return *this;
 		}
 
+		bool operator==(const Matrix4& other) const {
+			auto a = array[0][0] == other[0][0] && array[0][1] == other[0][1] && array[0][2] == other[0][2] && array[0][3] == other[0][3];
+			auto b = array[1][0] == other[1][0] && array[1][1] == other[1][1] && array[1][2] == other[1][2] && array[1][3] == other[1][3];
+			auto c = array[2][0] == other[2][0] && array[2][1] == other[2][1] && array[2][2] == other[2][2] && array[2][3] == other[2][3];
+			auto d = array[3][0] == other[3][0] && array[3][1] == other[3][1] && array[3][2] == other[3][2] && array[3][3] == other[3][3];
+			return a && b && c && d;
+		}
+
 		float32& operator()(const uint8 row, const uint8 column) { return array[row][column]; }
 		float32 operator()(const uint8 row, const uint8 column) const { return array[row][column]; }
 

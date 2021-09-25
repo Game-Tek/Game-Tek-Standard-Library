@@ -223,3 +223,10 @@ TEST(Math, QuaternionMultiply) {
 		EXPECT_FLOAT_EQ(quaternion[0], 0); EXPECT_FLOAT_EQ(quaternion[1], 1); EXPECT_FLOAT_EQ(quaternion[2], 0); EXPECT_FLOAT_EQ(quaternion[3], 0);
 	}
 }
+
+TEST(Math, ProjectionMatrix) {
+	auto o = Math::BuildPerspectiveMatrix(45, 16.0f / 9.0f, 1.0f, 100.0f);
+	auto i = Math::BuildInvertedPerspectiveMatrix(45, 16.0f / 9.0f, 1.0f, 100.0f);
+
+	GTEST_ASSERT_EQ(i, Math::Inverse(o));
+}
