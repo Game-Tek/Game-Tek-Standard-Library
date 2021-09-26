@@ -33,7 +33,7 @@ namespace GTSL {
 			} else {
 			}
 			
-			file = CreateFileA(reinterpret_cast<const char*>(path.begin()), desiredAccess, shareMode, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
+			file = CreateFileA(reinterpret_cast<const char*>(path.GetData()), desiredAccess, shareMode, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
 			auto createRes = GetLastError();
 			if (!file) { return false; }
 
@@ -74,7 +74,7 @@ namespace GTSL {
 		}
 
 	private:
-		HANDLE file, fileMapping;
-		void* data; uint64 size = 0;
+		HANDLE file = nullptr, fileMapping = nullptr;
+		void* data = nullptr; uint64 size = 0;
 	};
 }

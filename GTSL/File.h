@@ -43,7 +43,7 @@ namespace GTSL {
 
 			DWORD creationDisposition = create ? OPEN_ALWAYS : OPEN_EXISTING;
 
-			fileHandle = CreateFileA(reinterpret_cast<const char*>(path.begin()), desiredAccess, shareMode, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
+			fileHandle = CreateFileA(reinterpret_cast<const char*>(path.GetData()), desiredAccess, shareMode, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
 
 			OpenResult openResult;
 

@@ -118,17 +118,8 @@ namespace GTSL
 		{
 			bool isController = false;
 		};
-
-		struct WindowCreateInfo {
-			StringView Name;
-			Extent2D Extent;
-			Window* ParentWindow = nullptr;
-			class Application* Application = nullptr;
-			WindowType Type = WindowType::OS_WINDOW;
-			void* UserData;
-			Delegate<void(void*, WindowEvents, void*)> Function;
-		};
-		void BindToOS(const WindowCreateInfo & windowCreateInfo)
+		
+		void BindToOS(StringView name, Extent2D extent, const Application& application, void* userData, Delegate<void(void*, WindowEvents, void*)> function, Window parentWindow = Window(), WindowType type = WindowType::OS_WINDOW)
 		{
 #if (_WIN32)
 			WNDCLASSA wndclass{};
@@ -140,26 +131,26 @@ namespace GTSL
 			wndclass.lpszMenuName = nullptr;
 			wndclass.style = 0;
 			wndclass.cbWndExtra = 0;
-			wndclass.lpszClassName = reinterpret_cast<const char*>(windowCreateInfo.Name.begin());
-			wndclass.hInstance = windowCreateInfo.Application->GetHINSTANCE();
+			wndclass.lpszClassName = reinterpret_cast<const char*>(name.GetData());
+			wndclass.hInstance = application.GetHINSTANCE();
 			RegisterClassA(&wndclass);
 
 			uint32 style = 0;
-			switch (windowCreateInfo.Type) {
+			switch (type) {
 			case WindowType::OS_WINDOW: style = WS_OVERLAPPEDWINDOW; break;
 			case WindowType::NO_ELEMENTS: style = WS_POPUP; break;
 			}
 
 			WindowsCallData windowsCallData;
-			windowsCallData.UserData = windowCreateInfo.UserData;
+			windowsCallData.UserData = userData;
 			windowsCallData.WindowPointer = this;
-			windowsCallData.FunctionToCall = windowCreateInfo.Function;
+			windowsCallData.FunctionToCall = function;
 
 			RECT windowRect;
 			windowRect.top = 0; windowRect.left = 0;
-			windowRect.bottom = windowCreateInfo.Extent.Height; windowRect.right = windowCreateInfo.Extent.Width;
+			windowRect.bottom = extent.Height; windowRect.right = extent.Width;
 			AdjustWindowRect(&windowRect, style, false);
-			windowHandle = CreateWindowExA(0, wndclass.lpszClassName, reinterpret_cast<const char*>(windowCreateInfo.Name.begin()), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, windowCreateInfo.Application->GetHINSTANCE(), &windowsCallData);
+			windowHandle = CreateWindowExA(0, wndclass.lpszClassName, reinterpret_cast<const char*>(name.GetData()), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, application.GetHINSTANCE(), &windowsCallData);
 
 			GTSL_ASSERT(windowHandle, "Window failed to create!");
 

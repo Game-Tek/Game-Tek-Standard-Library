@@ -40,10 +40,8 @@ namespace GTSL
 			TryUnload();
 		}
 		
-		bool LoadLibrary(const char8_t* name) { handle = LoadLibraryA(reinterpret_cast<const char*>(name)); return handle; }
-		
-		bool LoadLibrary(const Range<const char8_t*> ranger) {
-			handle = LoadLibraryA(reinterpret_cast<const char*>(ranger.begin()));
+		bool LoadLibrary(const StringView ranger) {
+			handle = LoadLibraryA(reinterpret_cast<const char*>(ranger.GetData()));
 			return handle;
 		}
 		
