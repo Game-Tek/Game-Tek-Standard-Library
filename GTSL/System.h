@@ -3,6 +3,7 @@
 #include "DataSizes.h"
 #include "Extent.h"
 #include "Range.hpp"
+#include "StringCommon.h"
 
 #ifdef _WIN64
 #define WIN32_LEAN_AND_MEAN
@@ -165,8 +166,7 @@ namespace GTSL
 		}
 
 		static Extent2D GetScreenExtent() {
-			if constexpr (_WIN32)
-			{
+			if constexpr (_WIN32) {
 				int width = GetSystemMetrics(SM_CXSCREEN);
 				int height = GetSystemMetrics(SM_CYSCREEN);
 				return Extent2D(width, height);
@@ -174,6 +174,7 @@ namespace GTSL
 		}
 
 		static void QueryParameter(const Range<const char8_t*> name) {
+#ifdef _WIN32
 			HKEY result;
 			auto openResult = RegOpenKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\", &result);
 			if(openResult != ERROR_SUCCESS) {}
@@ -184,6 +185,49 @@ namespace GTSL
 			char8_t valueName[128]; byte dataBuffer[1024];
 			RegEnumValueA(result, index, reinterpret_cast<char*>(valueName), &charCountValueName, nullptr, &type, dataBuffer, &charBytesData);
 			RegCloseKey(result);
+#endif
+		}
+	};
+
+	class Console
+	{
+	public:
+		static void SetConsoleInputModeAsUTF8() {
+#ifdef _WIN32
+			SetConsoleOutputCP(CP_UTF8);
+#endif
+		}
+
+		static void Print(const Range<const char8_t*> text) {
+#ifdef _WIN32
+			WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), text.GetData(), text.GetBytes() - 1, nullptr, nullptr);
+#endif
+		}
+
+		//static void Read(Range<char8_t*> buffer) {
+		//	DWORD characters_read{ 0 };
+		//	ReadConsoleA(GetStdHandle(STD_INPUT_HANDLE), buffer.begin(), buffer.ElementCount(), &characters_read, nullptr);
+		//}
+
+		enum class ConsoleTextColor : uint8 {
+			WHITE, RED, YELLOW, GREEN, ORANGE, PURPLE
+		};
+		static void SetTextColor(ConsoleTextColor textColor) {
+#ifdef _WIN32
+			WORD color{ 0 };
+
+			switch (textColor) {
+			case ConsoleTextColor::WHITE:	color = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE; break;
+			case ConsoleTextColor::RED:		color = FOREGROUND_INTENSITY | FOREGROUND_RED; break;
+			case ConsoleTextColor::YELLOW:	color = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN; break;
+			case ConsoleTextColor::GREEN:	color = FOREGROUND_INTENSITY | FOREGROUND_GREEN; break;
+			case ConsoleTextColor::ORANGE:	color = FOREGROUND_RED | FOREGROUND_GREEN; break;
+			case ConsoleTextColor::PURPLE:	color = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE; break;
+			default:						break;
+			}
+
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
+#endif
 		}
 	};
 }
