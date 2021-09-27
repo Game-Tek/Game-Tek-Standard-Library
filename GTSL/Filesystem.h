@@ -27,7 +27,7 @@ namespace GTSL
 
 				if (reinterpret_cast<uint64>(handle_res) != ERROR_FILE_NOT_FOUND && handle_res != INVALID_HANDLE_VALUE) {
 					handle = handle_res;
-					return Result<StaticString<256>>(reinterpret_cast<const char8_t*>(find_data.cFileName));
+					return Result(StaticString<256>(reinterpret_cast<const char8_t*>(find_data.cFileName)), true);
 				}
 
 				return Result<StaticString<256>>(false);
@@ -35,7 +35,7 @@ namespace GTSL
 				const auto handle_res = FindNextFileA(handle, &find_data);
 
 				if (handle_res) {
-					return Result<StaticString<256>>(reinterpret_cast<const char8_t*>(find_data.cFileName));
+					return Result(StaticString<256>(reinterpret_cast<const char8_t*>(find_data.cFileName)), true);
 				}
 
 				FindClose(handle);

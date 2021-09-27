@@ -28,16 +28,16 @@ namespace GTSL {
 		int16 X, Y;
 	};
 
-	inline void get(int64* dst, const char* src, uint32& offset) {
+	inline void get(int64* dst, const char* src, uint32* offset) {
 		if constexpr (_WIN64) {
-			reinterpret_cast<uint8_t*>(dst)[0] = src[offset + 7];
-			reinterpret_cast<uint8_t*>(dst)[1] = src[offset + 6];
-			reinterpret_cast<uint8_t*>(dst)[2] = src[offset + 5];
-			reinterpret_cast<uint8_t*>(dst)[3] = src[offset + 4];
-			reinterpret_cast<uint8_t*>(dst)[4] = src[offset + 3];
-			reinterpret_cast<uint8_t*>(dst)[5] = src[offset + 2];
-			reinterpret_cast<uint8_t*>(dst)[6] = src[offset + 1];
-			reinterpret_cast<uint8_t*>(dst)[7] = src[offset + 0];
+			reinterpret_cast<uint8_t*>(dst)[0] = src[*offset + 7];
+			reinterpret_cast<uint8_t*>(dst)[1] = src[*offset + 6];
+			reinterpret_cast<uint8_t*>(dst)[2] = src[*offset + 5];
+			reinterpret_cast<uint8_t*>(dst)[3] = src[*offset + 4];
+			reinterpret_cast<uint8_t*>(dst)[4] = src[*offset + 3];
+			reinterpret_cast<uint8_t*>(dst)[5] = src[*offset + 2];
+			reinterpret_cast<uint8_t*>(dst)[6] = src[*offset + 1];
+			reinterpret_cast<uint8_t*>(dst)[7] = src[*offset + 0];
 		}
 		else {
 			reinterpret_cast<uint8_t*>(dst)[0] = src[0];
@@ -50,19 +50,19 @@ namespace GTSL {
 			reinterpret_cast<uint8_t*>(dst)[7] = src[7];
 		}
 	
-		offset += 8;
+		*offset += 8;
 	}
 
-	inline void get(uint64* dst, const char* src, uint32& offset) {
+	inline void get(uint64* dst, const char* src, uint32* offset) {
 		if constexpr (_WIN64) {
-			reinterpret_cast<uint8_t*>(dst)[0] = src[offset + 7];
-			reinterpret_cast<uint8_t*>(dst)[1] = src[offset + 6];
-			reinterpret_cast<uint8_t*>(dst)[2] = src[offset + 5];
-			reinterpret_cast<uint8_t*>(dst)[3] = src[offset + 4];
-			reinterpret_cast<uint8_t*>(dst)[4] = src[offset + 3];
-			reinterpret_cast<uint8_t*>(dst)[5] = src[offset + 2];
-			reinterpret_cast<uint8_t*>(dst)[6] = src[offset + 1];
-			reinterpret_cast<uint8_t*>(dst)[7] = src[offset + 0];
+			reinterpret_cast<uint8_t*>(dst)[0] = src[*offset + 7];
+			reinterpret_cast<uint8_t*>(dst)[1] = src[*offset + 6];
+			reinterpret_cast<uint8_t*>(dst)[2] = src[*offset + 5];
+			reinterpret_cast<uint8_t*>(dst)[3] = src[*offset + 4];
+			reinterpret_cast<uint8_t*>(dst)[4] = src[*offset + 3];
+			reinterpret_cast<uint8_t*>(dst)[5] = src[*offset + 2];
+			reinterpret_cast<uint8_t*>(dst)[6] = src[*offset + 1];
+			reinterpret_cast<uint8_t*>(dst)[7] = src[*offset + 0];
 		}
 		else {
 			reinterpret_cast<uint8_t*>(dst)[0] = src[0];
@@ -75,15 +75,15 @@ namespace GTSL {
 			reinterpret_cast<uint8_t*>(dst)[7] = src[7];
 		}
 	
-		offset += 8;
+		*offset += 8;
 	}
 
-	inline void get(float32* dst, const char* src, uint32& offset) {
+	inline void get(float32* dst, const char* src, uint32* offset) {
 		if constexpr (_WIN64) {
-			reinterpret_cast<uint8_t*>(dst)[0] = src[offset + 3];
-			reinterpret_cast<uint8_t*>(dst)[1] = src[offset + 2];
-			reinterpret_cast<uint8_t*>(dst)[2] = src[offset + 1];
-			reinterpret_cast<uint8_t*>(dst)[3] = src[offset + 0];
+			reinterpret_cast<uint8_t*>(dst)[0] = src[*offset + 3];
+			reinterpret_cast<uint8_t*>(dst)[1] = src[*offset + 2];
+			reinterpret_cast<uint8_t*>(dst)[2] = src[*offset + 1];
+			reinterpret_cast<uint8_t*>(dst)[3] = src[*offset + 0];
 		}
 		else {
 			reinterpret_cast<uint8_t*>(dst)[0] = src[0];
@@ -92,15 +92,15 @@ namespace GTSL {
 			reinterpret_cast<uint8_t*>(dst)[3] = src[3];
 		}
 	
-		offset += 4;
+		*offset += 4;
 	}
 
-	inline void get(uint32* dst, const char* src, uint32& offset) {
+	inline void get(uint32* dst, const char* src, uint32* offset) {
 		if constexpr (_WIN64) {
-			reinterpret_cast<uint8_t*>(dst)[0] = src[offset + 3];
-			reinterpret_cast<uint8_t*>(dst)[1] = src[offset + 2];
-			reinterpret_cast<uint8_t*>(dst)[2] = src[offset + 1];
-			reinterpret_cast<uint8_t*>(dst)[3] = src[offset + 0];
+			reinterpret_cast<uint8_t*>(dst)[0] = src[*offset + 3];
+			reinterpret_cast<uint8_t*>(dst)[1] = src[*offset + 2];
+			reinterpret_cast<uint8_t*>(dst)[2] = src[*offset + 1];
+			reinterpret_cast<uint8_t*>(dst)[3] = src[*offset + 0];
 		}
 		else {
 			reinterpret_cast<uint8_t*>(dst)[0] = src[0];
@@ -109,43 +109,43 @@ namespace GTSL {
 			reinterpret_cast<uint8_t*>(dst)[3] = src[3];
 		}
 	
-		offset += 4;
+		*offset += 4;
 	}
 
-	inline void get(int16* dst, const char* src, uint32& offset) {
+	inline void get(int16* dst, const char* src, uint32* offset) {
 		if constexpr (_WIN64) {
-			reinterpret_cast<uint8_t*>(dst)[0] = src[offset + 1];
-			reinterpret_cast<uint8_t*>(dst)[1] = src[offset + 0];
+			reinterpret_cast<uint8_t*>(dst)[0] = src[*offset + 1];
+			reinterpret_cast<uint8_t*>(dst)[1] = src[*offset + 0];
 		}
 		else {
 			reinterpret_cast<uint8_t*>(dst)[0] = src[0];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[1];
 		}
 	
-		offset += 2;
+		*offset += 2;
 	}
 
-	inline void get(uint16* dst, const char* src, uint32& offset) {
+	inline void get(uint16* dst, const char* src, uint32* offset) {
 		if constexpr (_WIN64) {
-			reinterpret_cast<uint8_t*>(dst)[0] = src[offset + 1];
-			reinterpret_cast<uint8_t*>(dst)[1] = src[offset + 0];
+			reinterpret_cast<uint8_t*>(dst)[0] = src[*offset + 1];
+			reinterpret_cast<uint8_t*>(dst)[1] = src[*offset + 0];
 		}
 		else {
 			reinterpret_cast<uint8_t*>(dst)[0] = src[0];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[1];
 		}
 	
-		offset += 2;
+		*offset += 2;
 	}
 
-	inline void get(char* dst, const char* src, uint32& offset) {
-		dst[0] = src[offset + 0];
-		++offset;
+	inline void get(char* dst, const char* src, uint32* offset) {
+		dst[0] = src[*offset + 0];
+		++(*offset);
 	}
 
-	inline void get(uint8* dst, const char* src, uint32& offset) {
-		dst[0] = src[offset + 0];
-		++offset;
+	inline void get(uint8* dst, const char* src, uint32* offset) {
+		dst[0] = src[*offset + 0];
+		++(*offset);
 	}
 
 	inline void get8b(void* dst, const char* src)
@@ -213,11 +213,6 @@ namespace GTSL {
 		get4b(dst, src);
 	}
 
-	inline void get2b(void* dst, const char* src, uint32& offset) {
-		offset += 2;
-		get2b(dst, src);
-	}
-
 	inline void get1b(void* dst, const char* src, uint32& offset) {
 		++offset;
 		get1b(dst, src);
@@ -260,8 +255,8 @@ namespace GTSL {
 
 		void Parse(const char* data, uint32& offset)
 		{
-			get(&Version, data, offset);
-			get(&NumberOfTables, data, offset);
+			get(&Version, data, &offset);
+			get(&NumberOfTables, data, &offset);
 			/*get2b(&searchRange, data + offset); offset += sizeof(uint16);
 			get2b(&entrySelector, data + offset); offset += sizeof(uint16);
 			get2b(&rangeShift, data + offset); offset += sizeof(uint16);*/
@@ -269,8 +264,7 @@ namespace GTSL {
 		}
 	};
 
-	struct TableEntry
-	{
+	struct TableEntry {
 		uint32 tag;
 		char tagstr[5];
 		uint32 checkSum;
@@ -279,17 +273,16 @@ namespace GTSL {
 
 		void Parse(const char* data, uint32& offset)
 		{
-			get(&tag, data, offset); offset -= 4;
-			get(&tagstr[0], data, offset); get(&tagstr[1], data, offset); 	get(&tagstr[2], data, offset); get(&tagstr[3], data, offset);
+			get(&tag, data, &offset); offset -= 4;
+			get(&tagstr[0], data, &offset); get(&tagstr[1], data, &offset); 	get(&tagstr[2], data, &offset); get(&tagstr[3], data, &offset);
 			tagstr[4] = 0;
-			get(&checkSum, data, offset);
-			get(&offsetPos, data, offset);
-			get(&length, data, offset);
+			get(&checkSum, data, &offset);
+			get(&offsetPos, data, &offset);
+			get(&length, data, &offset);
 		}
 	};
 
-	struct HeadTable
-	{
+	struct HeadTable {
 		float32 tableVersion;
 		float32 fontRevision;
 		uint32 checkSumAdjustment;
@@ -310,28 +303,27 @@ namespace GTSL {
 
 		void Parse(const char* data, uint32& offset)
 		{
-			get(&tableVersion, data, offset);
-			get(&fontRevision, data, offset);
-			get(&checkSumAdjustment, data, offset);
-			get(&magicNumber, data, offset);
-			get(&flags, data, offset);
-			get(&unitsPerEm, data, offset);
-			get(&createdDate, data, offset);
-			get(&modifiedData, data, offset);
-			get(&xMin, data, offset);
-			get(&yMin, data, offset);
-			get(&xMax, data, offset);
-			get(&yMax, data, offset);
-			get(&macStyle, data, offset);
-			get(&lowestRecPPEM, data, offset);
-			get(&fontDirectionHintl, data, offset);
-			get(&indexToLocFormat, data, offset);
-			get(&glyphDataFormat, data, offset);
+			get(&tableVersion, data, &offset);
+			get(&fontRevision, data, &offset);
+			get(&checkSumAdjustment, data, &offset);
+			get(&magicNumber, data, &offset);
+			get(&flags, data, &offset);
+			get(&unitsPerEm, data, &offset);
+			get(&createdDate, data, &offset);
+			get(&modifiedData, data, &offset);
+			get(&xMin, data, &offset);
+			get(&yMin, data, &offset);
+			get(&xMax, data, &offset);
+			get(&yMax, data, &offset);
+			get(&macStyle, data, &offset);
+			get(&lowestRecPPEM, data, &offset);
+			get(&fontDirectionHintl, data, &offset);
+			get(&indexToLocFormat, data, &offset);
+			get(&glyphDataFormat, data, &offset);
 		}
 	};
 
-	struct MaximumProfile
-	{
+	struct MaximumProfile {
 		float32 version;
 		uint16 numGlyphs;
 		uint16 maxPoints;
@@ -349,26 +341,25 @@ namespace GTSL {
 		uint16 maxComponentDepth;
 
 		void Parse(const char* data, uint32& offset) {
-			get(&version, data, offset);
-			get(&numGlyphs, data, offset);
-			get(&maxPoints, data, offset);
-			get(&maxContours, data, offset);
-			get(&maxCompositePoints, data, offset);
-			get(&maxCompositeContours, data, offset);
-			get(&maxZones, data, offset);
-			get(&maxTwilightPoints, data, offset);
-			get(&maxStorage, data, offset);
-			get(&maxFunctionDefs, data, offset);
-			get(&maxInstructionDefs, data, offset);
-			get(&maxStackElements, data, offset);
-			get(&maxSizeOfInstructions, data, offset);
-			get(&maxComponentElements, data, offset);
-			get(&maxComponentDepth, data, offset);
+			get(&version, data, &offset);
+			get(&numGlyphs, data, &offset);
+			get(&maxPoints, data, &offset);
+			get(&maxContours, data, &offset);
+			get(&maxCompositePoints, data, &offset);
+			get(&maxCompositeContours, data, &offset);
+			get(&maxZones, data, &offset);
+			get(&maxTwilightPoints, data, &offset);
+			get(&maxStorage, data, &offset);
+			get(&maxFunctionDefs, data, &offset);
+			get(&maxInstructionDefs, data, &offset);
+			get(&maxStackElements, data, &offset);
+			get(&maxSizeOfInstructions, data, &offset);
+			get(&maxComponentElements, data, &offset);
+			get(&maxComponentDepth, data, &offset);
 		}
 	};
 
-	struct NameValue
-	{
+	struct NameValue {
 		uint16 platformID;
 		uint16 encodingID;
 		uint16 languageID;
@@ -377,17 +368,16 @@ namespace GTSL {
 		uint16 offset_value;
 
 		void Parse(const char* data, uint32& offset) {
-			get(&platformID, data, offset);
-			get(&encodingID, data, offset);
-			get(&languageID, data, offset);
-			get(&nameID, data, offset);
-			get(&length, data, offset);
-			get(&offset_value, data, offset);
+			get(&platformID, data, &offset);
+			get(&encodingID, data, &offset);
+			get(&languageID, data, &offset);
+			get(&nameID, data, &offset);
+			get(&length, data, &offset);
+			get(&offset_value, data, &offset);
 		}
 	};
 
-	struct NameTable
-	{
+	struct NameTable {
 		uint16 Format;
 		uint16 count;
 		uint16 stringOffset;
@@ -396,9 +386,9 @@ namespace GTSL {
 		void Parse(const char* data, uint32& offset, std::string* names, uint16 maxNumberOfNames = 25)
 		{
 			uint32 offset_start = offset;
-			get(&Format, data, offset);
-			get(&count, data, offset);
-			get(&stringOffset, data, offset);
+			get(&Format, data, &offset);
+			get(&count, data, &offset);
+			get(&stringOffset, data, &offset);
 			NameRecords.resize(count);
 			for (uint32 i = 0; i < count; i++) {
 				if (NameRecords[i].nameID > maxNumberOfNames) { continue; }
@@ -423,8 +413,7 @@ namespace GTSL {
 		}
 	};
 
-	struct HHEATable
-	{
+	struct HHEATable {
 		uint16 majorVersion;
 		uint16 minorVersion;
 		int16 Ascender;
@@ -442,21 +431,67 @@ namespace GTSL {
 
 		void Parse(const char* data, uint32& offset)
 		{
-			get(&majorVersion, data, offset);
-			get(&minorVersion, data, offset);
-			get(&Ascender, data, offset);
-			get(&Descender, data, offset);
-			get(&LineGap, data, offset);
-			get(&advanceWidthMax, data, offset);
-			get(&minLeftSideBearing, data, offset);
-			get(&minRightSideBearing, data, offset);
-			get(&xMaxExtent, data, offset);
-			get(&caretSlopeRise, data, offset);
-			get(&caretSlopeRun, data, offset);
-			get(&caretOffset, data, offset);
+			get(&majorVersion, data, &offset);
+			get(&minorVersion, data, &offset);
+			get(&Ascender, data, &offset);
+			get(&Descender, data, &offset);
+			get(&LineGap, data, &offset);
+			get(&advanceWidthMax, data, &offset);
+			get(&minLeftSideBearing, data, &offset);
+			get(&minRightSideBearing, data, &offset);
+			get(&xMaxExtent, data, &offset);
+			get(&caretSlopeRise, data, &offset);
+			get(&caretSlopeRun, data, &offset);
+			get(&caretOffset, data, &offset);
 			offset += sizeof(int16) * 4;
-			get(&metricDataFormat, data, offset);
-			get(&numberOfHMetrics, data, offset);
+			get(&metricDataFormat, data, &offset);
+			get(&numberOfHMetrics, data, &offset);
+		}
+	};
+
+	struct ColorTable {
+		uint16 numBaseGlyphRecords;
+		uint32 baseGlyphRecordsOffset;
+		uint32 layerRecordsOffset;
+		uint16 numLayerRecords;
+	
+		void Parse(const char* data, uint32* offset)
+		{
+			offset += 2; //version
+			get(&numBaseGlyphRecords, data, offset);
+			get(&baseGlyphRecordsOffset, data, offset);
+			get(&layerRecordsOffset, data, offset);
+			get(&numLayerRecords, data, offset);
+		}
+	};
+
+	struct CPALTable {
+		uint16 numPaletteEntries, numPalettes, numColorRecords;
+		uint32 colorRecordsArrayOffset;
+		std::vector<uint16> colorRecordIndices;
+
+		struct BGRAColor {
+			uint8 Blue, Green, Red, Alpha;
+		};
+
+		std::vector<BGRAColor> colors;
+
+		void Parse(const char* data, uint32* offset) {
+			uint16 version = 0;
+			get(&version, data, offset);
+
+			get(&numPaletteEntries, data, offset);
+			get(&numPalettes, data, offset);
+			get(&numColorRecords, data, offset);
+			get(&colorRecordsArrayOffset, data, offset);
+
+			colorRecordIndices.resize(numPalettes);
+
+			//auto colorRecordIndex = colorRecordIndices[paletteIndex] + paletteEntryIdex;
+
+			if(version == 1) {
+				
+			}
 		}
 	};
 
@@ -496,12 +531,12 @@ namespace GTSL {
 
 	struct Font
 	{
-		Font(const DefaultAllocatorReference& allocator) : KerningTable(8, allocator), Glyphs(128, allocator) /*,GlyphMap(128, allocator)*/ {}
+		Font(const DefaultAllocatorReference& allocator) : /*KerningTable(8, allocator),*/ Glyphs(128, allocator) /*,GlyphMap(128, allocator)*/ {}
 
 		uint32 FileNameHash;
 		std::string FullFontName;
 		std::string NameTable[25];
-		HashMap<uint32, int16, DefaultAllocatorReference> KerningTable;
+		std::unordered_map<uint32, int16> KerningTable;
 		HashMap<uint32, Glyph, DefaultAllocatorReference> Glyphs;
 		//HashMap<uint32, uint16, DefaultAllocatorReference> GlyphMap;
 		std::unordered_map<uint32, uint16> GlyphMap;
@@ -510,6 +545,11 @@ namespace GTSL {
 
 		[[nodiscard]] const Glyph& GetGlyph(const char8_t ch) const {
 			return Glyphs.At(GlyphMap.at(ch));
+		}
+
+		[[nodiscard]] int16 GetKerning(const char32_t left, const char32_t right) const {
+			auto kern_data = KerningTable.find((left << 16) | right);
+			return kern_data != KerningTable.end() ? kern_data->second : 0;
 		}
 	};
 
@@ -552,12 +592,6 @@ namespace GTSL {
 		}
 	};
 
-	inline int16 GetKerningOffset(Font* font_data, uint16 left_glyph, uint16 right_glyph)
-	{
-		auto kern_data = font_data->KerningTable.TryGet((left_glyph << 16) | right_glyph);
-		return kern_data.State() ? kern_data.Get() : 0;
-	}
-
 	inline Vector2 toVector(const ShortVector sh) { return Vector2(sh.X, sh.Y); }
 
 	inline bool MakeFont(const char* data, Font* fontData) {
@@ -577,21 +611,24 @@ namespace GTSL {
 		}
 
 		auto head_table_entry = tables.find("head");
-		if (head_table_entry == tables.end()) { return -2; }
+		if (head_table_entry == tables.end()) { return false; }
 
 		ptr = head_table_entry->second.offsetPos;
 
 		HeadTable headTable;
 		headTable.Parse(data, ptr);
+
+		if (headTable.magicNumber != 0x5F0F3CF5) { return false; }
+
 		auto maxp_table_entry = tables.find("maxp");
-		if (maxp_table_entry == tables.end()) { return -2; }
+		if (maxp_table_entry == tables.end()) { return false; }
 
 		ptr = maxp_table_entry->second.offsetPos;
 
 		MaximumProfile max_profile;
 		max_profile.Parse(data, ptr);
 		auto name_table_entry = tables.find("name");
-		if (name_table_entry == tables.end()) { return -2; }
+		if (name_table_entry == tables.end()) { return false; }
 
 		ptr = name_table_entry->second.offsetPos;
 
@@ -601,7 +638,7 @@ namespace GTSL {
 		fontData->FullFontName = fontData->NameTable[1] + " " + fontData->NameTable[2];
 
 		auto loca_table_entry = tables.find("loca");
-		if (loca_table_entry == tables.end()) { return -2; }
+		if (loca_table_entry == tables.end()) { return false; }
 
 		std::vector<uint32> glyph_index(max_profile.numGlyphs);
 
@@ -611,56 +648,54 @@ namespace GTSL {
 		{
 			uint32 byte_offset = loca_table_entry->second.offsetPos;
 
-			for (uint16 i = 0; i < max_profile.numGlyphs; i++, byte_offset += sizeof(uint16))
-			{
-				get2b(&glyph_index[i], data + byte_offset);
-				glyph_index[i] = glyph_index[i] << 1;
+			for (uint16 i = 0; i < max_profile.numGlyphs; i++) {
+				uint16 t = 0;
+				get(&t, data, &byte_offset);
+				glyph_index[i] = static_cast<uint32>(t) << 1u;
 			}
 
-			get2b(&end_of_glyf, data + byte_offset);
-			end_of_glyf = end_of_glyf << 1;
-		}
-		else
-		{
+			uint16 eog;
+			get(&eog, data, &byte_offset);
+			end_of_glyf = static_cast<uint32>(eog) << 1;
+		} else {
 			uint32 byte_offset = loca_table_entry->second.offsetPos;
-			for (uint16 i = 0; i < max_profile.numGlyphs; i++, byte_offset += sizeof(uint32))
-			{
-				get4b(&glyph_index[i], data + byte_offset);
+			for (uint16 i = 0; i < max_profile.numGlyphs; i++) {
+				get(&glyph_index[i], data, &byte_offset);
 			}
-			get4b(&end_of_glyf, data + byte_offset);
+			get(&end_of_glyf, data, &byte_offset);
 		}
 
 		auto cmap_table_entry = tables.find("cmap");
-		if (cmap_table_entry == tables.end()) { return -2; }
+		if (cmap_table_entry == tables.end()) { return false; }
 
 		uint32 cmap_offset = cmap_table_entry->second.offsetPos + sizeof(uint16); //Skip version
 		uint16 cmap_num_tables;
-		get(&cmap_num_tables, data, cmap_offset);
+		get(&cmap_num_tables, data, &cmap_offset);
 
 		std::map<uint16, uint32> glyphReverseMap;
 
 		bool valid_cmap_table = false;
 		for (uint16 i = 0; i < cmap_num_tables; i++) {
-			constexpr uint8 UNICODE_PLATFORM_INDEX = 0; constexpr uint8 WIN32_PLATFORM_INDEX = 3; constexpr uint8 WIN32_UNICODE_ENCODING = 1;
+			constexpr uint8 UNICODE1_PLATFORM_ID = 0, UNICODE2_PLATFORM_ID = 3; constexpr uint8 WIN32_PLATFORM_ID = 3; constexpr uint8 WIN32_UNICODE_ENCODING = 1;
 
 			uint16 platformID, encodingID;
 			uint32 cmap_subtable_offset;
-			get(&platformID, data, cmap_offset);
-			get(&encodingID, data, cmap_offset);
-			get(&cmap_subtable_offset, data, cmap_offset);
+			get(&platformID, data, &cmap_offset);
+			get(&encodingID, data, &cmap_offset);
+			get(&cmap_subtable_offset, data, &cmap_offset);
 
-			if (!((platformID == UNICODE_PLATFORM_INDEX && encodingID == 3/*\(··)/*/) || (platformID == WIN32_PLATFORM_INDEX && encodingID == WIN32_UNICODE_ENCODING))) { continue; }
+			if (!((platformID == UNICODE1_PLATFORM_ID && encodingID == UNICODE2_PLATFORM_ID) || (platformID == WIN32_PLATFORM_ID && encodingID == WIN32_UNICODE_ENCODING))) { continue; }
 
 			cmap_subtable_offset += cmap_table_entry->second.offsetPos;
 			uint16 format, length;
-			get(&format, data, cmap_subtable_offset);
-			get(&length, data, cmap_subtable_offset);
+			get(&format, data, &cmap_subtable_offset);
+			get(&length, data, &cmap_subtable_offset);
 
 			if (format != 4) { continue; }
 
 			uint16 language, segCountX2;// , searchRange, entrySelector, rangeShift;
-			get(&language, data, cmap_subtable_offset);
-			get(&segCountX2, data, cmap_subtable_offset);
+			get(&language, data, &cmap_subtable_offset);
+			get(&segCountX2, data, &cmap_subtable_offset);
 			//get2b(&searchRange, data + cmap_subtable_offset); cmap_subtable_offset += sizeof(uint16);
 			//get2b(&entrySelector, data + cmap_subtable_offset); cmap_subtable_offset += sizeof(uint16);
 			//get2b(&rangeShift, data + cmap_subtable_offset); cmap_subtable_offset += sizeof(uint16);
@@ -671,7 +706,7 @@ namespace GTSL {
 			std::vector<int16> idDelta(segCount);
 			for (uint16 j = 0; j < segCount; j++)
 			{
-				get(&endCount[j], data, cmap_subtable_offset);
+				get(&endCount[j], data, &cmap_subtable_offset);
 			}
 
 			cmap_subtable_offset += sizeof(uint16);
@@ -681,16 +716,13 @@ namespace GTSL {
 				get2b(&startCount[j], data + cmap_subtable_offset);
 				get2b(&idDelta[j], data + cmap_subtable_offset + sizeof(uint16) * segCount);
 				get2b(&idRangeOffset[j], data + cmap_subtable_offset + sizeof(uint16) * segCount * 2);
-				if (idRangeOffset[j] == 0)
-				{
+				if (idRangeOffset[j] == 0) {
 					for (uint32 k = startCount[j]; k <= endCount[j]; k++)
 					{
 						fontData->GlyphMap[k] = k + idDelta[j];
 						glyphReverseMap[k + idDelta[j]] = k;
 					}
-				}
-				else
-				{
+				} else {
 					uint32 glyph_address_offset = cmap_subtable_offset + sizeof(uint16) * segCount * 2; //idRangeOffset_ptr
 					for (uint32 k = startCount[j]; k <= endCount[j]; k++)
 					{
@@ -710,16 +742,15 @@ namespace GTSL {
 		}
 		if (!valid_cmap_table) { /*BE_ASSERT(false);*/ }
 
-
 		HHEATable hheaTable;
 		auto hhea_table_entry = tables.find("hhea");
-		if (hhea_table_entry == tables.end()) { return -2; }
+		if (hhea_table_entry == tables.end()) { return false; }
 		ptr = hhea_table_entry->second.offsetPos;
 		hheaTable.Parse(data, ptr);
 
 		auto glyf_table_entry = tables.find("glyf");
 		{
-			if (glyf_table_entry == tables.end()) { return -2; }
+			if (glyf_table_entry == tables.end()) { return false; }
 		}
 		uint32 glyf_offset = glyf_table_entry->second.offsetPos;
 
@@ -741,16 +772,16 @@ namespace GTSL {
 		std::vector<std::vector<uint16>> pointsPerContour((max_profile.maxContours < 4096) ? max_profile.maxContours : 4096);
 		std::vector<uint16> pointsInContour((max_profile.maxContours < 4096) ? max_profile.maxContours : 4096);
 
-		if (!max_profile.numGlyphs) { return -1; }
+		if (!max_profile.numGlyphs) { return false; }
 
 		Vector<bool, DefaultAllocatorReference> glyphLoaded(max_profile.numGlyphs, DefaultAllocatorReference());
 		for(uint32 i = 0; i < max_profile.numGlyphs; ++i) {
 			glyphLoaded.EmplaceBack(false);
 		}
 
-		auto parseGlyph = [&](uint32 i, auto&& self) -> int8
+		auto parseGlyph = [&](uint32 i, auto&& self) -> bool
 		{
-			if (glyphLoaded[i] == true) { return 1; }
+			if (glyphLoaded[i] == true) { return true; }
 
 			Glyph& currentGlyph = fontData->Glyphs.Emplace(i);
 			//currentGlyph.Paths.Initialize(3, GetPersistentAllocator());
@@ -761,9 +792,9 @@ namespace GTSL {
 			{
 				ptr = hmtx_offset + i * sizeof(uint32);
 
-				get(&currentGlyph.AdvanceWidth, data, ptr);
+				get(&currentGlyph.AdvanceWidth, data, &ptr);
 				last_glyph_advance_width = currentGlyph.AdvanceWidth;
-				get(&currentGlyph.LeftSideBearing, data, ptr);
+				get(&currentGlyph.LeftSideBearing, data, &ptr);
 			}
 			else
 			{
@@ -773,31 +804,27 @@ namespace GTSL {
 			if (i != max_profile.numGlyphs - 1 && glyph_index[i] == glyph_index[i + 1])
 			{
 				glyphLoaded[i] = true;
-				return -1;
+				return false;
 			}
 
-			if (glyph_index[i] >= end_of_glyf) { return -1; }
+			if (glyph_index[i] >= end_of_glyf) { return false; }
 
 			uint32 currentOffset = glyf_offset + glyph_index[i];
 
 			int16 bbox[2][2];
 
-			get(&currentGlyph.NumContours, data, currentOffset);
-			get(&bbox[0][0], data, currentOffset); //xMin
-			get(&bbox[0][1], data, currentOffset); //yMin
-			get(&bbox[1][0], data, currentOffset); //xMax
-			get(&bbox[1][1], data, currentOffset); //yMax
+			get(&currentGlyph.NumContours, data, &currentOffset);
+			get(&bbox[0][0], data, &currentOffset); //xMin
+			get(&bbox[0][1], data, &currentOffset); //yMin
+			get(&bbox[1][0], data, &currentOffset); //xMax
+			get(&bbox[1][1], data, &currentOffset); //yMax
 
 			currentGlyph.BoundingBox[0][0] = bbox[0][0];
 			currentGlyph.BoundingBox[0][1] = bbox[0][1];
 			currentGlyph.BoundingBox[1][0] = bbox[1][0];
 			currentGlyph.BoundingBox[1][1] = bbox[1][1];
 
-			//Vector2 glyphCenter = (currentGlyph.BoundingBox[0] + currentGlyph.BoundingBox[2]) / 2.0f;
-			//glyphCenter.X() = 
-			//glyphCenter.Y() = (currentGlyph.BoundingBox[1] + currentGlyph.BoundingBox[3]) / 2.0f;
-
-			//currentGlyph.Center = glyphCenter;
+			currentGlyph.Center = (currentGlyph.BoundingBox[0] + currentGlyph.BoundingBox[1]) / 2.0f;
 
 			if (currentGlyph.NumContours > 0)
 			{ //Simple glyph
@@ -810,12 +837,10 @@ namespace GTSL {
 
 				for (uint16 j = 0; j < currentGlyph.NumContours; j++) { get2b(&contourEnd[j], data + currentOffset); currentOffset += sizeof(uint16); }
 
-				for (uint16 contourIndex = 0; contourIndex < currentGlyph.NumContours; contourIndex++)
-				{
+				for (uint16 contourIndex = 0; contourIndex < currentGlyph.NumContours; contourIndex++) {
 					uint16 num_points = contourEnd[contourIndex] - (contourIndex ? contourEnd[contourIndex - 1] : -1);
 
-					if (pointsPerContour[contourIndex].size() < num_points)
-					{
+					if (pointsPerContour[contourIndex].size() < num_points) {
 						pointsPerContour[contourIndex].resize(num_points);
 					}
 
@@ -835,16 +860,12 @@ namespace GTSL {
 				int16 repeat = 0;
 				uint16 contour_count_first_point = 0;
 
-				for (uint16 j = 0; j < numPoints; j++, ++contour_count_first_point)
-				{
-					if (repeat == 0)
-					{
+				for (uint16 j = 0; j < numPoints; j++, ++contour_count_first_point) {
+					if (repeat == 0) {
 						get1b(&flags[j], data + currentOffset); currentOffset += sizeof(uint8_t);
 
 						if (flags[j] & 0x8) { get1b(&repeat, data + currentOffset); currentOffset += sizeof(uint8_t); }
-					}
-					else
-					{
+					} else {
 						flags[j] = flags[j - 1];
 						repeat--;
 					}
@@ -856,8 +877,7 @@ namespace GTSL {
 					flagsEnum[j].xDual = (flags[j] & 0b00010000) != 0;
 					flagsEnum[j].yDual = (flags[j] & 0b00100000) != 0;
 
-					if (j > contourEnd[current_contour_index])
-					{
+					if (j > contourEnd[current_contour_index]) {
 						current_contour_index++;
 						contour_count_first_point = 0;
 					}
@@ -868,20 +888,13 @@ namespace GTSL {
 
 				std::vector<ShortVector> glyphPoints(numPoints);
 
-				for (uint16 j = 0; j < numPoints; ++j)
-				{
-					if (flagsEnum[j].xDual && !flagsEnum[j].xShort)
-					{
+				for (uint16 j = 0; j < numPoints; ++j) {
+					if (flagsEnum[j].xDual && !flagsEnum[j].xShort) {
 						glyphPoints[j].X = j ? glyphPoints[j - 1].X : 0;
-					}
-					else
-					{
-						if (flagsEnum[j].xShort)
-						{
+					} else {
+						if (flagsEnum[j].xShort) {
 							get1b(&glyphPoints[j].X, data + currentOffset); currentOffset += 1;
-						}
-						else
-						{
+						} else {
 							get2b(&glyphPoints[j].X, data + currentOffset); currentOffset += 2;
 						}
 
@@ -891,20 +904,13 @@ namespace GTSL {
 					}
 				}
 
-				for (uint16 j = 0; j < numPoints; j++)
-				{
-					if (flagsEnum[j].yDual && !flagsEnum[j].yShort)
-					{
+				for (uint16 j = 0; j < numPoints; j++) {
+					if (flagsEnum[j].yDual && !flagsEnum[j].yShort) {
 						glyphPoints[j].Y = j ? glyphPoints[j - 1].Y : 0;
-					}
-					else
-					{
-						if (flagsEnum[j].yShort)
-						{
+					} else {
+						if (flagsEnum[j].yShort) {
 							get1b(&glyphPoints[j].Y, data + currentOffset); currentOffset += 1;
-						}
-						else
-						{
+						} else {
 							get2b(&glyphPoints[j].Y, data + currentOffset); currentOffset += 2;
 						}
 
@@ -915,8 +921,7 @@ namespace GTSL {
 				}
 
 				//Generate contours
-				for (uint16 contourIndex = 0; contourIndex < currentGlyph.NumContours; ++contourIndex)
-				{
+				for (uint16 contourIndex = 0; contourIndex < currentGlyph.NumContours; ++contourIndex) {
 					currentGlyph.Paths.EmplaceBack(64, DefaultAllocatorReference());
 
 					const uint16 numPointsInContour = pointsInContour[contourIndex];
@@ -936,16 +941,13 @@ namespace GTSL {
 
 					++pointInIndices;
 
-					for (uint32 p = 0; p < numPointsInContour; ++p, ++pointInIndices)
-					{
+					for (uint32 p = 0; p < numPointsInContour; ++p, ++pointInIndices) {
 						uint32 safeIndexToData = pointsPerContour[contourIndex][pointInIndices % numPointsInContour];
 
 						thisPointIsControlPoint = contourPointsFlags[safeIndexToData].isControlPoint;
 
-						if (thisPointIsControlPoint)
-						{
-							if (lastPointWasControlPoint)
-							{
+						if (thisPointIsControlPoint) {
+							if (lastPointWasControlPoint) {
 								auto thisPoint = toVector(glyphPoints[safeIndexToData]);
 								auto newPoint = (thisPoint + currentCurve.Points[1]) * 0.5f;
 								currentCurve.Points[2] = newPoint;
@@ -955,25 +957,18 @@ namespace GTSL {
 								currentCurve.Points[0] = newPoint;
 
 								currentCurve.Points[1] = thisPoint;
-							}
-							else
-							{
+							} else {
 								currentCurve.Points[1] = toVector(glyphPoints[safeIndexToData]);
 							}
-						}
-						else
-						{
-							if (lastPointWasControlPoint)
-							{
+						} else {
+							if (lastPointWasControlPoint) {
 								auto thisPoint = toVector(glyphPoints[safeIndexToData]);
 								currentCurve.Points[2] = thisPoint;
 								currentCurve.IsCurve = true;
 								currentGlyph.Paths[contourIndex].EmplaceBack(currentCurve);
 
 								currentCurve.Points[0] = thisPoint;
-							}
-							else
-							{
+							} else {
 								auto thisPoint = toVector(glyphPoints[safeIndexToData]);
 								currentCurve.Points[1] = GTSL::Vector2(0, 0);
 								currentCurve.Points[2] = thisPoint;
@@ -987,11 +982,8 @@ namespace GTSL {
 						lastPointWasControlPoint = thisPointIsControlPoint;
 					}
 				} //for contour
-			}
-			else //Composite glyph
-			{
-				for (auto compound_glyph_index = 0; compound_glyph_index < -currentGlyph.NumContours; compound_glyph_index++)
-				{
+			} else { //Composite glyph
+				for (auto compound_glyph_index = 0; compound_glyph_index < -currentGlyph.NumContours; compound_glyph_index++) {
 					uint16 glyfFlags, glyphIndex;
 
 					do
@@ -1118,7 +1110,7 @@ namespace GTSL {
 
 			glyphLoaded[i] = true;
 
-			return 0;
+			return true;
 		};
 
 		for (uint16 i = 0; i < max_profile.numGlyphs; i++)
@@ -1160,7 +1152,7 @@ namespace GTSL {
 					get2b(&kern_right, data + currentOffset); currentOffset += sizeof(uint16);
 					get2b(&kern_value, data + currentOffset); currentOffset += sizeof(int16);
 
-					fontData->KerningTable.Emplace((kern_left << 16) | kern_right, kern_value);
+					fontData->KerningTable.emplace((kern_left << 16) | kern_right, kern_value);
 				}
 			}
 		}
@@ -1170,7 +1162,7 @@ namespace GTSL {
 		fontData->Metadata.Descender = hheaTable.Descender;
 		fontData->Metadata.LineGap = hheaTable.LineGap;
 
-		return 0;
+		return true;
 	}
 
 	//struct TTFHeader {
@@ -1313,23 +1305,6 @@ namespace GTSL {
 	//	}
 	//};
 	//
-	//struct ColorTable
-	//{
-	//	uint16 numBaseGlyphRecords;
-	//	uint32 baseGlyphRecordsOffset;
-	//	uint32 layerRecordsOffset;
-	//	uint16 numLayerRecords;
-	//
-	//	uint32 Parse(const char* data, uint32 offset)
-	//	{
-	//		offset += 2; //version
-	//		get(&numBaseGlyphRecords, data, offset);
-	//		get(&baseGlyphRecordsOffset, data, offset);
-	//		get(&layerRecordsOffset, data, offset);
-	//		get(&numLayerRecords, data, offset);
-	//		return offset;
-	//	}
-	//};
 	//
 	//struct NameTable
 	//{

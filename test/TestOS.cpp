@@ -30,6 +30,12 @@ TEST(FileQuery, Construct) {
 	GTSL::FileQuery file_query;
 }
 
+TEST(FileQuery, Do) {
+	GTSL::FileQuery file_query;
+	auto res = file_query.DoQuery(u8"*.exe");
+	GTEST_ASSERT_EQ(res.Get(), u8"GTSL_Test.exe");
+}
+
 TEST(DLL, Construct) {
 	GTSL::DLL dll;
 }
@@ -54,11 +60,19 @@ TEST(Font, Font) {
 	GTSL::Font font{ GTSL::DefaultAllocatorReference() };
 
 	file.Read(buffer);
-	
-	GTSL::MakeFont(reinterpret_cast<const char*>(buffer.GetData()), &font);
+
+	auto result = MakeFont(reinterpret_cast<const char*>(buffer.GetData()), &font);
+
+	ASSERT_TRUE(result);
 
 	GTEST_ASSERT_EQ(font.FullFontName, "Cooper Black Normal");
 	GTEST_ASSERT_EQ(font.GlyphMap.size(), 242);
+	GTEST_ASSERT_EQ(font.Metadata.UnitsPerEm, 2048);
+	GTEST_ASSERT_EQ(font.Metadata.Ascender, 1880);
+	GTEST_ASSERT_EQ(font.Metadata.Descender, -469);
+	GTEST_ASSERT_EQ(font.Metadata.LineGap, 0);
+
+	GTEST_ASSERT_EQ(font.GetKerning(15, 20), -18);
 
 	{ //a
 		auto& a = font.GetGlyph(u8'a');

@@ -159,7 +159,7 @@ namespace GTSL
 
 	template<class S>
 	void ToString(S& string, const char8_t* str) {
-		string += Range(str);
+		string += StringView(str);
 	}
 
 	template<class S>
