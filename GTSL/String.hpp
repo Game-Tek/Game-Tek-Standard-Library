@@ -14,8 +14,8 @@ namespace GTSL
 	class String {
 	public:
 		using string_type = char8_t;
-		
-		String(const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference) {			
+
+		String(const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference) {
 		}
 
 		/**
@@ -33,11 +33,11 @@ namespace GTSL
 		String(const String& other) : allocator(other.allocator) {
 			copy(other);
 		}
-		
+
 		String(String&& other) noexcept requires std::move_constructible<ALLOCATOR> : allocator(MoveRef(other.allocator)), data(other.data), codePoints(other.codePoints), bytes(other.bytes), capacity(other.capacity) {
 			other.data = nullptr; other.bytes = 0; other.codePoints = 0; other.capacity = 0;
 		}
-		
+
 		String& operator=(const StringView range) {
 			bytes = 0;
 			codePoints = 0;
@@ -51,7 +51,7 @@ namespace GTSL
 			copy(other);
 			return *this;
 		}
-		
+
 		String& operator=(String&& other) noexcept requires std::move_constructible<ALLOCATOR>
 		{
 			//free current
@@ -65,7 +65,7 @@ namespace GTSL
 
 			return *this;
 		}
-		
+
 		~String() {
 			if (data) { allocator.Deallocate(capacity, 16, data); }
 		}
@@ -86,7 +86,7 @@ namespace GTSL
 		}
 
 		bool operator==(const char8_t* text) const {
-			auto l = StringByteLength(text) - 1;
+			auto l = StringByteLength(text);
 			//Discard if Length of strings is not equal, first because it helps us discard before even starting, second because we can't compare strings of different sizes.
 			if (bytes != l) return false;
 			for (uint32 i = 0; i < bytes; ++i) { if (data[i] != text[i]) { return false; } }
@@ -108,7 +108,7 @@ namespace GTSL
 		//auto begin() noexcept { return Iterator(data, bytes); }
 		[[nodiscard]] auto begin() const noexcept { return StringIterator(data, bytes, 0); }
 		//auto end() noexcept { return data + bytes + 1; }
-		[[nodiscard]] auto end() const noexcept { return StringIterator(data, bytes, bytes + 1); }
+		[[nodiscard]] auto end() const noexcept { return StringIterator(data, bytes, bytes); }
 
 		//operator Range<char8_t*>() const { return Range<char8_t*>(begin(), end()); }
 		operator Range<const char8_t*>() const { return Range<const char8_t*>(GetBytes(), GetCodepoints(), data); }
@@ -116,8 +116,8 @@ namespace GTSL
 		[[nodiscard]] const char8_t* c_str() const { return data; }
 
 		//Return the length of this String.
-		[[nodiscard]] uint32 GetBytes() const { return bytes + 1; }
-		[[nodiscard]] uint32 GetCodepoints() const { return codePoints + 1; }
+		[[nodiscard]] uint32 GetBytes() const { return bytes; }
+		[[nodiscard]] uint32 GetCodepoints() const { return codePoints; }
 		[[nodiscard]] uint32 GetCapacity() const { return capacity; }
 		//Returns whether this String is empty.
 		[[nodiscard]] bool IsEmpty() const { return !bytes; }
@@ -130,7 +130,7 @@ namespace GTSL
 		String& operator+=(char8_t character) {
 			tryResize(1 + 3/*res len*/);
 			data[bytes++] = character;
-			for(uint8 i = 0; i < 4; ++i)
+			for (uint8 i = 0; i < 4; ++i)
 				data[bytes + i] = u8'\0';
 			++codePoints;
 			return *this;
@@ -158,7 +158,7 @@ namespace GTSL
 		void Resize(const uint32 newLength) {
 			tryResize(newLength);
 		}
-		
+
 		//void ReplaceAll(const char* a, const char* with) {
 		//	Array<uint32, 24> ocurrences; //cache ocurrences so as to not perform an array Resize every time we Find a match
 		//
@@ -230,6 +230,39 @@ namespace GTSL
 			return Result<uint32>(false);
 		}
 
+
+		/**
+		 * \brief Chops an string at the last occurrence of a character in the string and shifts the chop position by the nudge amount.
+		 * \param string String to modify.
+		 * \param c Character to search for.
+		 * \param nudge Amount to shift codepoint to be dropped.
+		 * \return Whether or not a drop has occurred.
+		 */
+		friend bool DropLast(String& string, char8_t c, int32 nudge = 0) {
+			auto pos = FindLast(string, c);
+			if (pos.State()) {
+				string.Drop(pos.Get() + nudge);
+				return true;
+			}
+			return false;
+		}
+
+		/**
+		 * \brief Chops an string at the first occurrence of a character in the string and shifts the chop position by the nudge amount.
+		 * \param string String to modify.
+		 * \param c Character to search for.
+		 * \param nudge Amount to shift codepoint to be dropped.
+		 * \return Whether or not a drop has occurred.
+		 */
+		friend bool DropFirst(String& string, char8_t c, int32 nudge = 0) {
+			auto pos = FindFirst(string, c);
+			if (pos.State()) {
+				string.Drop(pos.Get() + nudge);
+				return true;
+			}
+			return false;
+		}
+
 		/**
 		* \brief Returns an index to the first char in the string that is equal to c. If no such character is found npos() is returned.
 		* \param c Char to Find.
@@ -286,24 +319,24 @@ namespace GTSL
 		void copy(const Range<const char8_t*> string) {
 			tryResize(bytes + string.GetBytes());
 			for(uint32 i = 0; i < string.GetBytes(); ++i) { data[bytes + i] = string[i]; }
-			bytes += string.GetBytes() - 1;
-			codePoints += string.GetCodepoints() - 1;
-			for (uint32 i = 0, pos = bytes + 1; i < 3; ++i, ++pos) { data[pos] = u8'\0'; }
+			bytes += string.GetBytes();
+			codePoints += string.GetCodepoints();
+			for (uint32 i = 0, pos = bytes; i < 3; ++i, ++pos) { data[pos] = u8'\0'; }
 		}
 
 		friend class String;
 
 	public:
 		friend void Insert(const String& string, auto& buffer) {
-			Insert(string.GetBytes(), buffer);
-			buffer.CopyBytes(string.GetBytes(), reinterpret_cast<const byte*>(string.c_str()));
+			Insert(string.bytes, buffer); Insert(string.codePoints, buffer);
+			buffer.CopyBytes(string.GetBytes() + 1, reinterpret_cast<const byte*>(string.c_str()));
 		}
 		
 		friend void Extract(String& string, auto& buffer) {
 			uint32 bytes = 0, codepoints = 0;
 			Extract(bytes, buffer); Extract(codepoints, buffer);
 			string.Resize(bytes);
-			buffer.CopyBytes(bytes, reinterpret_cast<const byte*>(string.c_str()));
+			buffer.ReadBytes(bytes + 1, reinterpret_cast<byte*>(string.data));
 			string.bytes = bytes;
 			string.codePoints = codepoints;
 		}

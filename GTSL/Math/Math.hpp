@@ -775,8 +775,16 @@ namespace GTSL
 			return IsNearlyEqual(a.X(), b.X(), tolerance) && IsNearlyEqual(a.Y(), b.Y(), tolerance) && IsNearlyEqual(a.Z(), b.Z(), tolerance) && IsNearlyEqual(a.W(), b.W(), tolerance);
 		}
 
-		inline bool AreVectorComponentsGreater(const Vector3& A, const Vector3& B) {
-			return A.X() > B.X() && A.Y() > B.Y() && A.Z() > B.Z();
+		inline bool MagnitudeGreater(const Vector2& A, const Vector2& B) {
+			return LengthSquared(A) > LengthSquared(B);
+		}
+
+		inline bool MagnitudeGreater(const Vector3& A, const Vector3& B) {
+			return LengthSquared(A) > LengthSquared(B);
+		}
+
+		inline bool MagnitudeGreater(const Vector4& A, const Vector4& B) {
+			return LengthSquared(A) > LengthSquared(B);
 		}
 
 		inline bool PointInBox(Vector2 min, Vector2 max, Vector2 p) { return p.X() >= min.X() && p.X() <= max.X() && p.Y() >= min.Y() && p.Y() <= max.Y(); }
@@ -950,8 +958,7 @@ namespace GTSL
 		template<typename T>
 		T Clamp(T a, T min, T max) { return a > max ? max : (a < min ? min : a); }
 
-		inline Vector3 ClosestPointOnPlane(const Vector3& point, const Plane& plane)
-		{
+		inline Vector3 ClosestPointOnPlane(const Vector3& point, const Plane& plane) {
 			const float32 T = (DotProduct(plane.Normal, point) - plane.D) / DotProduct(plane.Normal, plane.Normal);
 			return point - plane.Normal * T;
 		}
@@ -962,15 +969,13 @@ namespace GTSL
 			return (DotProduct(plane.Normal, point) - plane.D) / DotProduct(plane.Normal, plane.Normal);
 		}
 
-		inline Vector2 ClosestPointOnLineToPoint(const Vector2 a, const Vector2 b, const Vector2 p)
-		{
+		inline Vector2 ClosestPointOnLineToPoint(const Vector2 a, const Vector2 b, const Vector2 p) {
 			const auto m = b - a;
 			const auto t0 = DotProduct(m, p - a) / DotProduct(m, m);
 			return a + m * t0;
 		}
 
-		inline Vector2 ClosestPointOnLineSegmentToPoint(const Vector2 a, const Vector2 b, const Vector2 p)
-		{
+		inline Vector2 ClosestPointOnLineSegmentToPoint(const Vector2 a, const Vector2 b, const Vector2 p) {
 			const auto AB = b - a;
 			// Project c onto ab, computing parameterized position d(t) = a + t*(b – a)
 			auto t = DotProduct(p - a, AB) / LengthSquared(AB);
@@ -981,8 +986,7 @@ namespace GTSL
 			return a + AB * t;
 		}
 		
-		inline Vector2 ClosestPointOnLineSegmentToPoint(const Vector2 a, const Vector2 b, const Vector2 p, float32& isOnLine)
-		{
+		inline Vector2 ClosestPointOnLineSegmentToPoint(const Vector2 a, const Vector2 b, const Vector2 p, float32& isOnLine) {
 			const auto AB = b - a;
 			// Project c onto ab, computing parameterized position d(t) = a + t*(b – a)
 			auto t = DotProduct(p - a, AB) / LengthSquared(AB);
@@ -995,8 +999,7 @@ namespace GTSL
 			return a + AB * t;
 		}
 
-		inline Vector3 ClosestPointOnLineSegmentToPoint(const Vector3& a, const Vector3& b, const Vector3& p)
-		{
+		inline Vector3 ClosestPointOnLineSegmentToPoint(const Vector3& a, const Vector3& b, const Vector3& p) {
 			const Vector3 AB = b - a;
 			// Project c onto ab, computing parameterized position d(t) = a + t*(b – a)
 			auto t = DotProduct(p - a, AB) / LengthSquared(AB);
@@ -1007,8 +1010,7 @@ namespace GTSL
 			return a + AB * t;
 		}
 
-		inline float32 SquaredDistancePointToSegment(const Vector3& a, const Vector3& b, const Vector3& c)
-		{
+		inline float32 SquaredDistancePointToSegment(const Vector3& a, const Vector3& b, const Vector3& c) {
 			const Vector3 AB = b - a;
 			const Vector3 AC = c - a;
 			const Vector3 BC = c - b;
@@ -1023,8 +1025,7 @@ namespace GTSL
 
 		// Compute barycentric coordinates (u, v, w) for
 		// point p with respect to triangle (a, b, c)
-		inline void Barycentric(Vector2 a, Vector2 b, Vector2 c, Vector2 p, float32& s, float32& t, float32& u)
-		{
+		inline void Barycentric(Vector2 a, Vector2 b, Vector2 c, Vector2 p, float32& s, float32& t, float32& u) {
 			Vector2 v0 = b - a, v1 = c - a, v2 = p - a;
 			float32 den = v0.X() * v1.Y() - v1.X() * v0.Y();
 			s = (v2.X() * v1.Y() - v1.X() * v2.Y()) / den;	
@@ -1032,8 +1033,7 @@ namespace GTSL
 			u = 1.0f - s - t;
 		}
 
-		inline Vector3 ClosestPointOnTriangleToPoint(const Vector3& a, const Vector3& p1, const Vector3& p2, const Vector3& p3)
-		{
+		inline Vector3 ClosestPointOnTriangleToPoint(const Vector3& a, const Vector3& p1, const Vector3& p2, const Vector3& p3) {
 			// Check if P in vertex region outside A
 			const Vector3 AP = a - p1;
 			const Vector3 AB = p2 - p1;
@@ -1083,23 +1083,18 @@ namespace GTSL
 			return p1 + AB * V + AC * W; // = u*a + v*b + w*c, u = va * denom = 1.0f - v - w
 		}
 
-		inline bool PointOutsideOfPlane(const Vector3& p, const Vector3& a, const Vector3& b, const Vector3& c)
-		{
+		inline bool PointOutsideOfPlane(const Vector3& p, const Vector3& a, const Vector3& b, const Vector3& c) {
 			return DotProduct(p - a, Cross(b - a, c - a)) >= 0.0f; // [AP AB AC] >= 0
 		}
 
-		inline bool PointOutsideOfPlane(const Vector3& p, const Vector3& a, const Vector3& b, const Vector3& c,
-			const Vector3& d)
-		{
+		inline bool PointOutsideOfPlane(const Vector3& p, const Vector3& a, const Vector3& b, const Vector3& c, const Vector3& d) {
 			const float32 signp = DotProduct(p - a, Cross(b - a, c - a)); // [AP AB AC]
 			const float32 signd = DotProduct(d - a, Cross(b - a, c - a)); // [AD AB AC]
 			// Points on opposite sides if expression signs are opposite
 			return signp * signd < 0.0f;
 		}
 
-		inline Vector3 ClosestPtPointTetrahedron(const Vector3& p, const Vector3& a, const Vector3& b,
-			const Vector3& c, const Vector3& d)
-		{
+		inline Vector3 ClosestPtPointTetrahedron(const Vector3& p, const Vector3& a, const Vector3& b, const Vector3& c, const Vector3& d) {
 			// Start out assuming point inside all halfspaces, so closest to itself
 			Vector3 ClosestPoint = p;
 			float32 BestSquaredDistance = 3.402823466e+38F;

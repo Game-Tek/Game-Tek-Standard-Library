@@ -6,9 +6,9 @@
 using namespace GTSL;
 
 TEST(Unicode, StringLength) {
-	GTEST_ASSERT_EQ(StringByteLength(u8"Test the length of the string. \U0001f975"), 36);
-	GTEST_ASSERT_EQ(StringLengths(u8"Test the length of the string. \U0001f975").First, 36);  //bytes
-	GTEST_ASSERT_EQ(StringLengths(u8"Test the length of the string. \U0001f975").Second, 33); //codepoints
+	GTEST_ASSERT_EQ(StringByteLength(u8"Test the length of the string. \U0001f975"), 35);
+	GTEST_ASSERT_EQ(StringLengths(u8"Test the length of the string. \U0001f975").First, 35);  //bytes
+	GTEST_ASSERT_EQ(StringLengths(u8"Test the length of the string. \U0001f975").Second, 32); //codepoints
 }
 
 TEST(Unicode, CodepointLength) {

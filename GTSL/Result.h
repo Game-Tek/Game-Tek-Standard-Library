@@ -24,7 +24,7 @@ namespace GTSL
 		explicit Result(const bool err) : result(), success(err) {}
 
 		[[nodiscard]] constexpr bool State() const { return success; }
-		constexpr operator bool() const { return success; }
+		explicit constexpr operator bool() const { return success; }
 		[[nodiscard]] constexpr const R& Get() const { return result; }
 	private:
 		R result;

@@ -1,4 +1,5 @@
 #pragma once
+#include <regex>
 #include <GTSL/Core.h>
 
 #include "Range.hpp"
@@ -14,12 +15,13 @@ namespace GTSL
 	* \param text Pointer to a c string containing the string to be measured.
 	* \return The string length including the null terminator.
 	*/
-	constexpr uint32 StringByteLength(const char8_t* text) noexcept { uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i + 1; }
+	constexpr uint32 StringByteLength(const char8_t* text) noexcept { uint32 i{ 0 }; while (text[i] != '\0') { ++i; } return i; }
+	constexpr uint32 StringByteLengthNull(const char8_t* text) noexcept { return StringByteLength(text) + 1; }
 
 	constexpr Pair<uint32, uint32> StringLengths(const char8_t* text) noexcept { 
 		uint32 bytes = 0, cp = 0;
 		while (text[bytes] != u8'\0') { bytes += UTF8CodePointLength(text[bytes]); ++cp; }
-		return { bytes + 1, cp + 1 };
+		return { bytes, cp };
 	}
 
 	struct StringIterator {
@@ -67,7 +69,7 @@ namespace GTSL
 
 		constexpr Range(const char8_t* string) : data(string) {
 			auto lengths = StringLengths(string);
-			bytes = lengths.First - 1; codepoints = lengths.Second - 1;
+			bytes = lengths.First; codepoints = lengths.Second;
 		}
 
 		template<uint64 N>
@@ -76,15 +78,15 @@ namespace GTSL
 			bytes = lengths.First; codepoints = lengths.Second;
 		}
 
-		constexpr Range(const uint32 bytes, const uint32 codePoints, const char8_t* string) : data(string), codepoints(codePoints - 1), bytes(bytes - 1) {
+		constexpr Range(const uint32 bytes, const uint32 codePoints, const char8_t* string) : data(string), codepoints(codePoints), bytes(bytes) {
 		}
 
 		constexpr Range(const StringIterator start, const StringIterator end) : data(start.data + start.currentByte) {
 			while (start.currentByte + bytes < end.currentByte) { bytes += UTF8CodePointLength(data[bytes]); ++codepoints; }
 		}
 
-		[[nodiscard]] constexpr uint32 GetBytes() const { return bytes + 1; }
-		[[nodiscard]] constexpr uint32 GetCodepoints() const { return codepoints + 1; }
+		[[nodiscard]] constexpr uint32 GetBytes() const { return bytes; }
+		[[nodiscard]] constexpr uint32 GetCodepoints() const { return codepoints; }
 
 		[[nodiscard]] constexpr const char8_t* GetData() const { return data; }
 
@@ -93,7 +95,7 @@ namespace GTSL
 		}
 
 		[[nodiscard]] constexpr StringIterator begin() const { return StringIterator(data, bytes, 0); }
-		[[nodiscard]] constexpr StringIterator end() const { return StringIterator(data, bytes, bytes + 2); }
+		[[nodiscard]] constexpr StringIterator end() const { return StringIterator(data, bytes, bytes); }
 
 		constexpr auto operator==(const Range<const char8_t*> other) const {
 			if (codepoints != other.codepoints || bytes != other.bytes) { return false; }
@@ -115,14 +117,14 @@ namespace GTSL
 
 		auto it = string.begin();
 
-		while (it < string.end() - 2) {
-			while (it < string.end() - 2 && ((*it == divs) || ...)) {
+		while (it < string.end()) {
+			while (it < string.end() && ((*it == divs) || ...)) {
 				++it;
 			}
 
 			auto start = it;
 
-			while (it < string.end() - 2 and ((*it != divs) && ...)) {
+			while (it < string.end() and ((*it != divs) && ...)) {
 				++it;
 			}
 
@@ -142,11 +144,11 @@ namespace GTSL
 		while (it < string.end() - 2) {
 			auto& a = container.EmplaceBack();
 
-			while (it < string.end() - 2 and ((*it == divs) || ...)) {
+			while (it < string.end() and ((*it == divs) || ...)) {
 				++it;
 			}
 
-			while (it < string.end() - 2 and ((*it != divs) && ...)) {
+			while (it < string.end() and ((*it != divs) && ...)) {
 				a += *it;
 				++it;
 			}
@@ -155,6 +157,29 @@ namespace GTSL
 
 	void Lines(const StringView string, auto& container) {
 		Substrings(string, container, U'\n');
+	}
+
+	inline bool IsNumber(const StringView string) {
+		for (const auto e : string) {
+			if (e != U'0' and e != U'1' and e != U'2' and e != U'3' and e != U'4' and e != U'5' and e != U'6' and e != U'7' and e != U'8' and e != U'9' and e != U'.' and e != U',') {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	inline bool IsDecimalNumber(const StringView string) {
+		bool hasDecimalSeparator = false;
+
+		for (const auto e : string) {
+			if (e != U'0' and e != U'1' and e != U'2' and e != U'3' and e != U'4' and e != U'5' and e != U'6' and e != U'7' and e != U'8' and e != U'9' and e != U'.') {
+				return false;
+			}
+
+			if (e == U'.') { hasDecimalSeparator = true; }
+		}
+
+		return hasDecimalSeparator;
 	}
 
 	template<class S>
@@ -180,7 +205,7 @@ namespace GTSL
 			++len;
 		} while (num);
 
-		string += Range<const char8_t*>(len + 1, len + 1, str + i + 1);
+		string += Range<const char8_t*>(len, len, str + i + 1);
 	}
 
 	template<class S, std::signed_integral I>
@@ -200,7 +225,7 @@ namespace GTSL
 
 		if (isNegative) { str[i--] = u8'-'; ++len; }
 
-		string += GTSL::Range<const char8_t*>(len + 1, len + 1, str + i + 1);
+		string += GTSL::Range<const char8_t*>(len, len, str + i + 1);
 	}
 
 	template<class S>
@@ -243,7 +268,7 @@ namespace GTSL
 
 		if (isNegative) { str[i--] = u8'-'; ++len; }
 
-		string += GTSL::Range<const char8_t*>(len + 1, len + 1, str + i + 1);
+		string += GTSL::Range<const char8_t*>(len, len, str + i + 1);
 	}
 	
 	/**
@@ -306,12 +331,12 @@ namespace GTSL
 
 	template<>
 	inline Result<float32> ToNumber(Range<const char8_t*> numberString) {
-		float32 value = 0; uint64 c = numberString.GetBytes() - 2/*because of inverse parse*/;
+		float32 value = 0; uint64 c = numberString.GetBytes() - 1/*because of inverse parse*/;
 
 		{
 			float32 div = 1.0f;
 
-			while (c <= numberString.GetBytes() - 2) {
+			while (c <= numberString.GetBytes() - 1) {
 				uint8 num;
 
 				switch (numberString[c--]) {

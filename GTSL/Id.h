@@ -25,7 +25,7 @@ namespace GTSL
 		constexpr Id64() = default;
 
 		template<uint64 N>
-		constexpr Id64(const char8_t(&string)[N]) noexcept : hashValue(Hash(GTSL::Range<const char8_t*>(N, string))) {}
+		constexpr Id64(const char8_t(&string)[N]) noexcept : hashValue(Hash(GTSL::Range<const char8_t*>(string))) {}
 
 		//template<char8_t... str>
 		//constexpr Id64() noexcept : hashValue(hashString<str...>()) {}
@@ -62,9 +62,4 @@ namespace GTSL
 	};
 
 	//inline constexpr uint64 operator""_hash(const char8_t* text, size_t length) { return Id64((length, text)).GetID(); }
-	
-	template<uint64 N>
-	constexpr uint64 Hash(char const(&string)[N]) { return Id64(string).GetID(); }
-
-	constexpr uint64 Hash(Id64 id) { return id(); }
 }

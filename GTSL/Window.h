@@ -326,8 +326,7 @@ namespace GTSL
 			PAUSED,
 			ERROR
 		};
-		void SetProgressState(ProgressState progressState) const
-		{
+		void SetProgressState(ProgressState progressState) const {
 			TBPFLAG flags = TBPF_NOPROGRESS;
 
 #undef ERROR
@@ -345,8 +344,7 @@ namespace GTSL
 			//static_cast<ITaskbarList3*>(iTaskbarList)->SetProgressState(static_cast<HWND>(windowHandle), flags);
 		}
 		
-		void SetProgressValue(float32 value) const
-		{
+		void SetProgressValue(float32 value) const {
 			//static_cast<ITaskbarList3*>(iTaskbarList)->SetProgressValue(static_cast<HWND>(windowHandle), value * 1000u, 1000u);
 		}
 
@@ -469,8 +467,7 @@ namespace GTSL
 				idata.cbSize = sizeof(idata);
 
 				DWORD index = 0;
-				while (SetupDiEnumDeviceInterfaces(dev, nullptr, &xbox_guid, index, &idata))
-				{
+				while (SetupDiEnumDeviceInterfaces(dev, nullptr, &xbox_guid, index, &idata)) {
 					DWORD size;
 					SetupDiGetDeviceInterfaceDetailA(dev, &idata, nullptr, 0, &size, nullptr);
 
@@ -967,18 +964,84 @@ namespace GTSL
 
 			return DefWindowProcA(winHandle, uMsg, wParam, lParam);
 		}
-		
-		static void Win32_calculateMousePos(uint32 x, uint32 y, Extent2D clientSize, Vector2& mousePos)
-		{
+
+		void SendKeyboardInput(KeyboardKeys key) {
+			INPUT input;
+			input.type = 1;
+			input.ki.time = 0;
+			input.ki.wScan = 0;
+
+			switch (key) {
+			case KeyboardKeys::Q: break; case KeyboardKeys::W: break;
+			case KeyboardKeys::E: break; case KeyboardKeys::R: break;
+			case KeyboardKeys::T: break; case KeyboardKeys::Y: break;
+			case KeyboardKeys::U: break; case KeyboardKeys::I: break;
+			case KeyboardKeys::O: break; case KeyboardKeys::P: break;
+			case KeyboardKeys::A: input.ki.wVk = 0x41; break; case KeyboardKeys::S: break;
+			case KeyboardKeys::D: break; case KeyboardKeys::F: break;
+			case KeyboardKeys::G: break; case KeyboardKeys::H: break;
+			case KeyboardKeys::J: break; case KeyboardKeys::K: break;
+			case KeyboardKeys::L: break; case KeyboardKeys::Z: break;
+			case KeyboardKeys::X: break; case KeyboardKeys::C: break;
+			case KeyboardKeys::V: break; case KeyboardKeys::B: break;
+			case KeyboardKeys::N: break; case KeyboardKeys::M: break;
+			case KeyboardKeys::Keyboard0: break; case KeyboardKeys::Keyboard1: break;
+			case KeyboardKeys::Keyboard2: break; case KeyboardKeys::Keyboard3: break;
+			case KeyboardKeys::Keyboard4: break; case KeyboardKeys::Keyboard5: break;
+			case KeyboardKeys::Keyboard6: break; case KeyboardKeys::Keyboard7: break;
+			case KeyboardKeys::Keyboard8: break; case KeyboardKeys::Keyboard9: break;
+			case KeyboardKeys::Backspace: break;
+			case KeyboardKeys::Enter: break;
+			case KeyboardKeys::Supr: break;
+			case KeyboardKeys::Tab: break;
+			case KeyboardKeys::CapsLock: break;
+			case KeyboardKeys::Esc: break;
+			case KeyboardKeys::RShift: break;
+			case KeyboardKeys::LShift: break;
+			case KeyboardKeys::RControl: break;
+			case KeyboardKeys::LControl: break;
+			case KeyboardKeys::Alt: break;
+			case KeyboardKeys::AltGr: break;
+			case KeyboardKeys::UpArrow: break;
+			case KeyboardKeys::RightArrow: break;
+			case KeyboardKeys::DownArrow: break;
+			case KeyboardKeys::LeftArrow: break;
+			case KeyboardKeys::SpaceBar: break;
+			case KeyboardKeys::Numpad0: break;
+			case KeyboardKeys::Numpad1: break;
+			case KeyboardKeys::Numpad2: break;
+			case KeyboardKeys::Numpad3: break;
+			case KeyboardKeys::Numpad4: break;
+			case KeyboardKeys::Numpad5: break;
+			case KeyboardKeys::Numpad6: break;
+			case KeyboardKeys::Numpad7: break;
+			case KeyboardKeys::Numpad8: break;
+			case KeyboardKeys::Numpad9: break;
+			case KeyboardKeys::F1: break;
+			case KeyboardKeys::F2: break;
+			case KeyboardKeys::F3: break;
+			case KeyboardKeys::F4: break;
+			case KeyboardKeys::F5: break;
+			case KeyboardKeys::F6: break;
+			case KeyboardKeys::F7: break;
+			case KeyboardKeys::F8: break;
+			case KeyboardKeys::F9: break;
+			case KeyboardKeys::F10: break;
+			case KeyboardKeys::F11: break;
+			case KeyboardKeys::F12: break;
+			}
+
+			SendInput(1, &input, sizeof(INPUT));
+		}
+
+		static void Win32_calculateMousePos(uint32 x, uint32 y, Extent2D clientSize, Vector2& mousePos) {
 			const auto halfX = static_cast<float>(clientSize.Width) * 0.5f;
 			const auto halfY = static_cast<float>(clientSize.Height) * 0.5f;
 			mousePos.X() = (x - halfX) / halfX; mousePos.Y() = (halfY - y) / halfY;
 		}
 		
-		static void Win32_translateKeys(uint64 win32Key, uint64 context, KeyboardKeys& key)
-		{
-			switch (win32Key)
-			{
+		static void Win32_translateKeys(uint64 win32Key, uint64 context, KeyboardKeys& key) {
+			switch (win32Key) {
 			case VK_BACK:     key = KeyboardKeys::Backspace; return;
 			case VK_TAB:      key = KeyboardKeys::Tab; return;
 			case VK_RETURN:   key = KeyboardKeys::Enter; return;
@@ -1058,8 +1121,7 @@ namespace GTSL
 		}
 #endif
 
-		struct WindowGamepad
-		{
+		struct WindowGamepad {
 			byte leftTrigger = 0, rightTrigger = 0;
 			int16 thumbLX = 0, thumbLY = 0, thumbRX = 0, thumbRY = 0;
 			bool dpadUp : 1 = false, dpadRight : 1 = false, dpadDown : 1 = false, dpadLeft : 1 = false;

@@ -29,27 +29,27 @@ namespace GTSL
 		{
 		}
 
-		HashMap(const uint32 size, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference), bucketCount(NextPowerOfTwo(size)), maxBucketLength(bucketCount / 2)
+		HashMap(const uint32 size, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference), bucketCount(NextPowerOfTwo(size)), bucketCapacity(bucketCount / 2)
 		{
-			while (maxBucketLength == 0) {
+			while (bucketCapacity == 0) {
 				bucketCount *= 2;
-				maxBucketLength = bucketCount / 2;
+				bucketCapacity = bucketCount / 2;
 			}
 			
-			data = allocate(bucketCount, maxBucketLength); initializeBuckets();
+			data = allocate(bucketCount, bucketCapacity); initializeBuckets();
 		}
 
-		HashMap(const uint32 size, const float32 loadFactor, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference), bucketCount(NextPowerOfTwo(size)), maxBucketLength(static_cast<uint32>(bucketCount * loadFactor))
+		HashMap(const uint32 size, const float32 loadFactor, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference), bucketCount(NextPowerOfTwo(size)), bucketCapacity(static_cast<uint32>(bucketCount * loadFactor))
 		{
-			while (maxBucketLength == 0) {
+			while (bucketCapacity == 0) {
 				bucketCount *= 2;
-				maxBucketLength = bucketCount / 2;
+				bucketCapacity = bucketCount / 2;
 			}
 			
-			data = allocate(bucketCount, maxBucketLength); initializeBuckets();
+			data = allocate(bucketCount, bucketCapacity); initializeBuckets();
 		}
 
-		HashMap(HashMap&& other) noexcept requires std::move_constructible<ALLOCATOR> : allocator(MoveRef(other.allocator)), data(other.data), bucketCount(other.bucketCount), maxBucketLength(other.maxBucketLength)
+		HashMap(HashMap&& other) noexcept requires std::move_constructible<ALLOCATOR> : allocator(MoveRef(other.allocator)), data(other.data), bucketCount(other.bucketCount), bucketCapacity(other.bucketCapacity)
 		{
 			other.data = nullptr; other.bucketCount = 0;
 		}
@@ -97,22 +97,6 @@ namespace GTSL
 				return *this;
 			}
 
-			//Iterator operator--()
-			//{
-			//	auto range = map->getValuesBucket(bucketIndex);
-			//
-			//	if (range.begin() + index == range.begin())
-			//	{
-			//		--bucketIndex; index = 0;
-			//	}
-			//	else
-			//	{
-			//		--index;
-			//	}
-			//
-			//	return (*this);
-			//}
-
 			TT& operator*() const { return map->getValuesBucket(bucketIndex)[bucketElement]; }
 			TT* operator->() const { return map->getValuesBucket(bucketIndex).begin() + bucketElement; }
 
@@ -139,14 +123,12 @@ namespace GTSL
 
 			uint64 placeIndex = getBucketLength(bucketIndex);
 			
-			if (placeIndex + 1 > maxBucketLength)
+			if (placeIndex + 1 > bucketCapacity)
 			{
 				resize();
 				bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), this->bucketCount);
 				placeIndex = getBucketLength(bucketIndex)++;
-			}
-			else
-			{
+			} else {
 				++getBucketLength(bucketIndex);
 			}
 
@@ -169,11 +151,16 @@ namespace GTSL
 
 		[[nodiscard]] bool Find(const K key) const { return findKeyInBucket(ModuloByPowerOf2(static_cast<uint64>(key), this->bucketCount), key); }
 
-		[[nodiscard]] Result<V&> TryGet(const K key)
-		{
+		[[nodiscard]] Result<V&> TryGet(const K key) {
 			const auto bucket = ModuloByPowerOf2(static_cast<uint64>(key), this->bucketCount);
 			auto result = getIndexForKeyInBucket(bucket, key);
 			return GTSL::Result<V&>(*(getValuesBucketPointer(bucket) + result.Get()), result.State());
+		}
+
+		[[nodiscard]] Result<const V&> TryGet(const K key) const {
+			const auto bucket = ModuloByPowerOf2(static_cast<uint64>(key), this->bucketCount);
+			auto result = getIndexForKeyInBucket(bucket, key);
+			return GTSL::Result<const V&>(*(getValuesBucketPointer(bucket) + result.Get()), result.State());
 		}
 
 		V& At(const K key)
@@ -220,7 +207,7 @@ namespace GTSL
 		[[no_unique_address]] ALLOCATOR allocator;
 		byte* data = nullptr;
 		uint32 bucketCount = 0;
-		uint32 maxBucketLength = 0;
+		uint32 bucketCapacity = 0;
 
 		[[nodiscard]] uint64* findKeyInBucket(const uint32 keys_bucket, const K key) const
 		{
@@ -253,36 +240,26 @@ namespace GTSL
 
 		void resize()
 		{
-			auto newBucketCount = this->bucketCount * 2;
-			auto newMaxBucketLength = this->maxBucketLength * 2u;
-			auto* newAlloc = allocate(newBucketCount, newMaxBucketLength);
-			copy(newBucketCount, newMaxBucketLength, newAlloc);
-			deallocate();
-			this->data = newAlloc; this->bucketCount = newBucketCount; this->maxBucketLength = newMaxBucketLength;
-			initializeBuckets(this->bucketCount / 2u /*old capacity*/); //intialize new upper half
+			auto newBucketCount = bucketCount * 2;
+			auto newBucketCapacity = bucketCapacity * 2u;
+			auto* newAlloc = allocate(newBucketCount, newBucketCapacity);
 
-			for (uint32 currentBucketIndex = 0; currentBucketIndex < this->bucketCount / 2; ++currentBucketIndex) //rehash lower half only since it's the only part that has elements
-			{
-				// Do rehash in reverse because elements at the top of the bucket require less data copying when moved, as we only have to move those elements on top of them
-				for (uint32 currentElementIndex = static_cast<uint32>(getBucketLength(currentBucketIndex)) - 1u, i = 0u; i < static_cast<uint32>(getBucketLength(currentBucketIndex)); ++i, --currentElementIndex)
-				{
-					auto newBucketIndex = ModuloByPowerOf2(getKeysBucket(currentBucketIndex)[currentElementIndex], this->bucketCount);
+			for (uint32 bucketIndex = 0; bucketIndex < newBucketCount; ++bucketIndex) {
+				*getKeysBucketLength(newAlloc, bucketIndex, newBucketCapacity) = 0;
+			}			
 
-					if (newBucketIndex != currentBucketIndex) { //If after rehash element has to go to a new bucket, move it (elements tend keep their original modulo, specially as the map grows)
-						auto& currentBucketLength = getBucketLength(currentBucketIndex); auto& newBucketLength = getBucketLength(newBucketIndex);
-
-						if (newBucketLength + 1 > newMaxBucketLength) { resize(); return; } //if pushing one more element into the current bucket would exhaust it's space, trigger another resize
-
-						copyElementToBack(getKeysBucket(newBucketIndex), getKeysBucket(currentBucketIndex).begin() + currentElementIndex); //move key to new bucket
-						popElement(getKeysBucket(currentBucketIndex), currentElementIndex); //pop key from old bucket
-
-						copyElementToBack(getValuesBucket(newBucketIndex), getValuesBucket(currentBucketIndex).begin() + currentElementIndex); //move object to new bucket
-						popElement(getValuesBucket(currentBucketIndex), currentElementIndex); //pop object from old bucket
-
-						--currentBucketLength; ++newBucketLength; //update count to match changes
-					}
+			for(uint32 bucketIndex = 0; bucketIndex < bucketCount; ++bucketIndex) {
+				for(uint32 bucketElementIndex = 0; bucketElementIndex < getBucketLength(bucketIndex); ++bucketElementIndex) {
+					auto newBucketIndex = ModuloByPowerOf2(getKeysBucket(bucketIndex)[bucketElementIndex], newBucketCount);
+					auto& newBucketLength = *getKeysBucketLength(newAlloc, newBucketIndex, newBucketCapacity);
+					getKeysBucket(newAlloc, newBucketIndex, newBucketCapacity)[newBucketLength] = getKeysBucket(bucketIndex)[bucketElementIndex];
+					MemCopy(sizeof(V), getValuesBucketPointer(data, bucketIndex, bucketCapacity, bucketCount) + bucketElementIndex, getValuesBucketPointer(newAlloc, newBucketIndex, newBucketCapacity, newBucketCount) + newBucketLength);
+					++newBucketLength;
 				}
 			}
+
+			deallocate();
+			data = newAlloc; bucketCount = newBucketCount; bucketCapacity = newBucketCapacity;
 		}
 
 		static uint64 getKeysBucketAllocationSize(const uint32 bucketLength) { return (bucketLength + 1) * sizeof(uint64); }
@@ -303,27 +280,20 @@ namespace GTSL
 			return static_cast<byte*>(memory);
 		}
 
-		void deallocate() { allocator.Deallocate(getTotalAllocationSize(this->bucketCount, maxBucketLength), alignof(V), this->data); }
+		void deallocate() { allocator.Deallocate(getTotalAllocationSize(this->bucketCount, bucketCapacity), alignof(V), this->data); }
 
 		void initializeBuckets() { for (uint32 i = 0; i < this->bucketCount; ++i) { getBucketLength(i) = 0; } }
-		void initializeBuckets(const uint32 oldCapacity) { for (uint32 i = oldCapacity; i < this->bucketCount; ++i) { getBucketLength(i) = 0; } }
 
-		void copy(const uint32 newCapacity, const uint32 newMaxBucketLength, byte* to)
-		{
-			for (uint32 i = 0; i < this->bucketCount; ++i)
-			{
-				MemCopy(getKeysBucketAllocationSize(maxBucketLength), getKeysBucketPointer(i), getKeysBucketPointer(to, i, newMaxBucketLength));
-				MemCopy(getValuesBucketAllocationsSize(maxBucketLength), getValuesBucketPointer(i), getValuesBucketPointer(to, i, newMaxBucketLength, newCapacity));
-			}
-		}
+		[[nodiscard]] uint64* getKeysBucketPointer(const uint32 index) const { return getKeysBucketLength(data, index, bucketCapacity); }
+		[[nodiscard]] uint64* getKeysBucketPointer(const uint32 index, const uint32 buecketLength) const { return getKeysBucketLength(data, index, buecketLength); }
 
-		[[nodiscard]] uint64* getKeysBucketPointer(const uint32 index) const { return getKeysBucketPointer(data, index, maxBucketLength); }
-		[[nodiscard]] uint64* getKeysBucketPointer(const uint32 index, const uint32 buecketLength) const { return getKeysBucketPointer(data, index, buecketLength); }
-		static uint64* getKeysBucketPointer(byte* to, const uint32 index, const uint32 bucketLength) { return reinterpret_cast<uint64*>(to) + index * (bucketLength + 1); }
+		static uint64* getKeysBucketLength(byte* to, const uint32 index, const uint32 bucketCapacity) { return reinterpret_cast<uint64*>(to) + index * (bucketCapacity + 1); }
+		static uint64* getKeysBucket(byte* to, const uint32 index, const uint32 bucketCapacity) { return reinterpret_cast<uint64*>(to) + index * (bucketCapacity + 1) + 1; }
 
-		V* getValuesBucketPointer(const uint32 bucketIndex) const { return getValuesBucketPointer(data, bucketIndex, maxBucketLength, bucketCount); }
+		V* getValuesBucketPointer(const uint32 bucketIndex) const { return getValuesBucketPointer(data, bucketIndex, bucketCapacity, bucketCount); }
 		V* getValuesBucketPointer(const uint32 bucketIndex, const uint32 bucketLength) const { return getValuesBucketPointer(data, bucketIndex, bucketLength, bucketCount); }
-		static V* getValuesBucketPointer(byte* to, const uint32 bucketIndex, const uint32 bucketLength, const uint32 bucketCount) { return reinterpret_cast<V*>(to + getKeysAllocationSize(bucketCount, bucketLength)) + bucketIndex * bucketLength; }
+
+		static V* getValuesBucketPointer(byte* to, const uint32 bucketIndex, const uint32 bucketCapacity, const uint32 bucketCount) { return reinterpret_cast<V*>(to + getKeysAllocationSize(bucketCount, bucketCapacity)) + bucketIndex * bucketCapacity; }
 
 		template<typename KK, typename VV, class ALLOCATOR, typename L>
 		friend void ForEach(HashMap<KK, VV, ALLOCATOR>& collection, L&& lambda);
@@ -338,13 +308,11 @@ namespace GTSL
 		friend void ForEachKey(HashMap<KK, VV, ALLOCATOR>& collection, L&& lambda);
 
 	public:
-		friend void Insert(const HashMap& map, auto& buffer)
-		{
+		friend void Insert(const HashMap& map, auto& buffer) {
 			Insert(map.bucketCount, buffer);
-			Insert(map.maxBucketLength, buffer);
+			Insert(map.bucketCapacity, buffer);
 		
-			for (uint32 bucket = 0; bucket < map.bucketCount; ++bucket)
-			{
+			for (uint32 bucket = 0; bucket < map.bucketCount; ++bucket) {
 				Insert(map.getBucketLength(bucket), buffer);
 				auto keysBucket = map.getKeysBucket(bucket);
 				for (auto e : keysBucket) { Insert(e, buffer); }
@@ -353,14 +321,12 @@ namespace GTSL
 			}
 		}
 
-		friend void Extract(HashMap& map, auto& buffer)
-		{
+		friend void Extract(HashMap& map, auto& buffer) {
 			uint32 capacity{ 0 }, maxBucketLength = 0;
 			Extract(capacity, buffer);
 			Extract(maxBucketLength, buffer);
 		
-			for (uint32 bucket = 0; bucket < capacity; ++bucket)
-			{
+			for (uint32 bucket = 0; bucket < capacity; ++bucket) {
 				Extract(map.getBucketLength(bucket), buffer);
 				auto keysBucket = map.getKeysBucket(bucket);
 				for (auto& e : keysBucket) { Extract(e, buffer); }
@@ -371,11 +337,10 @@ namespace GTSL
 	};
 	
 	template<typename K, typename V, uint64 N>
-	using StaticMap = HashMap<K, V, StaticAllocator<N * sizeof(uint64) * N + N * sizeof(V) * N>>;
+	using StaticMap = HashMap<K, V, StaticAllocator<N * (sizeof(uint64) * (N + 1)) + N * sizeof(V) * N>>;
 	
 	template<typename K, typename V, class ALLOCATOR, typename L>
-	void ForEach(HashMap<K, V, ALLOCATOR>& collection, L&& lambda)
-	{
+	void ForEach(HashMap<K, V, ALLOCATOR>& collection, L&& lambda) {
 		for (uint32 bucketIndex = 0; bucketIndex < collection.bucketCount; ++bucketIndex) { for (auto& e : collection.getValuesBucket(bucketIndex)) { lambda(e); } }
 	}
 
@@ -410,33 +375,35 @@ namespace GTSL
 		HashMap(const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {}
 		HashMap(const uint64 size, const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {
 			bucketCount = NextPowerOfTwo(size);
-			bucketSize = 4;
-			keys = allocate(bucketCount, bucketSize);
+			bucketCapacity = 4;
+			keys = allocate(bucketCount, bucketCapacity);
+			initializeBuckets(keys, bucketCount, bucketCapacity);
 		}
 
 		~HashMap() {
 			if(keys) {
-				allocator.Deallocate(bucketCount * (bucketSize + 1) * sizeof(uint64), alignof(uint64), static_cast<void*>(keys));
-				keys = nullptr;
+				deallocate();
 			}
 		}
 
 		void Emplace(K key) {
 			auto bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), bucketCount);
-			auto& bucketLength = keys[bucketIndex * (bucketSize + 1)];
+			auto bucketLength = getBucketLength(bucketIndex, keys, bucketCapacity);
 
-			if (bucketLength + 1 > bucketSize) {
-				GTSL_ASSERT(false, "");
+			if (bucketLength + 1 > bucketCapacity) {
+				resize();
+				bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), bucketCount);
+				bucketLength = getBucketLength(bucketIndex, keys, bucketCapacity);
 			}
 
-			keys[bucketLength + bucketIndex * (bucketSize + 1) + 1] = static_cast<uint64>(key);
-			++bucketLength;
+			bucketEntry(bucketIndex, bucketLength, keys, bucketCapacity) = static_cast<uint64>(key);
+			++getBucketLength(bucketIndex, keys, bucketCapacity);
 		}
 
 		[[nodiscard]] bool Find(const K key) const {
 			auto bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), bucketCount);
-			for(uint64 i = 0; i < keys[bucketIndex * (bucketSize + 1)]; ++i) {
-				if(keys[i + bucketIndex * (bucketSize + 1) + 1] == static_cast<uint64>(key)) {
+			for(uint64 i = 0; i < getBucketLength(bucketIndex, keys, bucketCapacity); ++i) {
+				if(bucketEntry(bucketIndex, i, keys, bucketCapacity) == static_cast<uint64>(key)) {
 					return true;
 				}
 			}
@@ -447,14 +414,52 @@ namespace GTSL
 		ALLOCATOR allocator;
 		uint64* keys = nullptr;
 
-		uint32 bucketCount = 0, bucketSize = 0;
+		uint32 bucketCount = 0, bucketCapacity = 0;
 
 		uint64* allocate(const uint32 newBucketCount, const uint32 newBucketSize) {
 			uint64 allocated_size{ 0 };	void* memory{ nullptr };
 			allocator.Allocate(newBucketCount * (newBucketSize + 1) * sizeof(uint64), alignof(uint64), &memory, &allocated_size);
 			auto* data = static_cast<uint64*>(memory);
-			for (uint32 i = 0; i < newBucketCount; ++i) { data[i * (newBucketSize + 1)] = 0; }
 			return static_cast<uint64*>(memory);
+		}
+
+		void deallocate() {
+			allocator.Deallocate(bucketCount * (bucketCapacity + 1) * sizeof(uint64), alignof(uint64), keys);
+			keys = nullptr;
+		}
+
+		static uint64& getBucketLength(uint32 bucketIndex, uint64* keys, uint32 bucketCapacity) {
+			return keys[bucketIndex * (bucketCapacity + 1)];
+		}
+
+		static uint64& bucketEntry(uint32 bucketIndex, uint32 element, uint64* keys, uint32 bucketCapacity) {
+			return keys[bucketIndex * (bucketCapacity + 1) + element + 1];
+		}
+
+		static void initializeBuckets(uint64* buckets, uint32 bucketCount, uint32 bucketCapacity) {
+			for (uint32 bucketIndex = 0; bucketIndex < bucketCount; ++bucketIndex) {
+				getBucketLength(bucketIndex, buckets, bucketCapacity) = 0;
+			}
+		}
+
+		void resize() {
+			auto newBucketCount = bucketCount * 2;
+			auto newBucketCapacity = bucketCapacity * 2u;
+			auto* newAlloc = allocate(newBucketCount, newBucketCapacity);
+
+			initializeBuckets(newAlloc, newBucketCount, newBucketCapacity);
+
+			for (uint32 bucketIndex = 0; bucketIndex < bucketCount; ++bucketIndex) {
+				for (uint32 bucketElementIndex = 0; bucketElementIndex < getBucketLength(bucketIndex, keys, bucketCapacity); ++bucketElementIndex) {
+					auto newBucketIndex = ModuloByPowerOf2(bucketEntry(bucketIndex, bucketElementIndex, keys, bucketCapacity), newBucketCount);
+					auto& newBucketLength = getBucketLength(newBucketIndex, newAlloc, newBucketCapacity);
+					bucketEntry(newBucketIndex, newBucketLength, newAlloc, newBucketCapacity) = bucketEntry(bucketIndex, bucketElementIndex, keys, bucketCapacity);
+					++newBucketLength;
+				}
+			}
+
+			deallocate();
+			keys = newAlloc; bucketCount = newBucketCount; bucketCapacity = newBucketCapacity;
 		}
 	};
 

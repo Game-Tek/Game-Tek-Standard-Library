@@ -1,20 +1,22 @@
 #include <gtest/gtest.h>
 
+#include "GTSL/Buffer.hpp"
 #include "GTSL/String.hpp"
+#include "GTSL/Serialize.hpp"
 
 using namespace GTSL;
 
 TEST(String, ConstructFromSize) {
 	String<DefaultAllocatorReference> string(32);
-	GTEST_ASSERT_EQ(string.GetCodepoints(), 1);
-	GTEST_ASSERT_EQ(string.GetBytes(), 1);
+	GTEST_ASSERT_EQ(string.GetCodepoints(), 0);
+	GTEST_ASSERT_EQ(string.GetBytes(), 0);
 	GTEST_ASSERT_GE(string.GetCapacity(), 32);
 }
 
 TEST(String, ConstructFromRange) {
 	String<DefaultAllocatorReference> string(u8"\U0001F34C \U0001F34E");
-	GTEST_ASSERT_EQ(string.GetCodepoints(), 4);
-	GTEST_ASSERT_EQ(string.GetBytes(), 10);
+	GTEST_ASSERT_EQ(string.GetCodepoints(), 3);
+	GTEST_ASSERT_EQ(string.GetBytes(), 9);
 	GTEST_ASSERT_GE(string.GetCapacity(), 10);
 }
 
@@ -48,7 +50,7 @@ TEST(String, MoveConstruct) {
 	String string1(static_cast<String<DefaultAllocatorReference>&&>(string0)); //force move constructor
 
 	//test original string have been modified
-	GTEST_ASSERT_EQ(string0.GetBytes(), 1/*null terminator*/); GTEST_ASSERT_EQ(string0.GetCodepoints(), 1/*null terminator*/); GTEST_ASSERT_EQ(string0.c_str(), nullptr); GTEST_ASSERT_EQ(string0.IsEmpty(), true);
+	GTEST_ASSERT_EQ(string0.GetBytes(), 0); GTEST_ASSERT_EQ(string0.GetCodepoints(), 0); GTEST_ASSERT_EQ(string0.c_str(), nullptr); GTEST_ASSERT_EQ(string0.IsEmpty(), true);
 
 	//test information has been moved
 	GTEST_ASSERT_EQ(string1.GetCodepoints(), string0Codepoints); GTEST_ASSERT_EQ(string1.GetBytes(), string0Bytes); GTEST_ASSERT_EQ(string1.c_str(), string0pointer); //remember static allocators DO switch pointers so this may not be a necessarily true test
@@ -105,7 +107,7 @@ TEST(String, MoveAssignment) {
 	string1 = static_cast<String<DefaultAllocatorReference>&&>(string0);
 
 	//test original string have been modified
-	GTEST_ASSERT_EQ(string0.GetBytes(), 1/*null terminator*/); GTEST_ASSERT_EQ(string0.GetCodepoints(), 1/*null terminator*/); GTEST_ASSERT_EQ(string0.c_str(), nullptr); GTEST_ASSERT_EQ(string0.IsEmpty(), true);
+	GTEST_ASSERT_EQ(string0.GetBytes(), 0); GTEST_ASSERT_EQ(string0.GetCodepoints(), 0); GTEST_ASSERT_EQ(string0.c_str(), nullptr); GTEST_ASSERT_EQ(string0.IsEmpty(), true);
 
 	//test information has been moved
 	GTEST_ASSERT_EQ(string1.GetCodepoints(), string0Codepoints); GTEST_ASSERT_EQ(string1.GetBytes(), string0Bytes); GTEST_ASSERT_EQ(string1.c_str(), string0pointer); //remember static allocators DO switch pointers so this may not be a necessarily true test
@@ -139,21 +141,13 @@ TEST(String, Append) {
 	String<DefaultAllocatorReference> string(u8"\U0001F34C");
 	string += u8"\U0001f975";
 
-	GTEST_ASSERT_EQ(string.GetCodepoints(), 3);
-	GTEST_ASSERT_EQ(string.GetBytes(), 9);
+	GTEST_ASSERT_EQ(string.GetCodepoints(), 2);
+	GTEST_ASSERT_EQ(string.GetBytes(), 8);
 
 	string += u8"foo";
 
-	GTEST_ASSERT_EQ(string.GetCodepoints(), 6);
-	GTEST_ASSERT_EQ(string.GetBytes(), 12);
-}
-
-TEST(String, Drop) {
-	String<DefaultAllocatorReference> string(u8"Drop \U0001F34C");
-	string.Drop(5);
-
-	GTEST_ASSERT_EQ(string.GetCodepoints(), 6);
-	GTEST_ASSERT_EQ(string.GetBytes(), 6);
+	GTEST_ASSERT_EQ(string.GetCodepoints(), 5);
+	GTEST_ASSERT_EQ(string.GetBytes(), 11);
 }
 
 TEST(String, FindFirst) {
@@ -169,10 +163,10 @@ TEST(String, FindFirst) {
 	ASSERT_TRUE(zeroSearch.State());
 	GTEST_ASSERT_EQ(zeroSearch.Get(), 26);
 
-	auto nullSearch = FindFirst(string, u8'\0');
-
-	ASSERT_TRUE(nullSearch.State());
-	GTEST_ASSERT_EQ(nullSearch.Get(), 72);
+	//auto nullSearch = FindFirst(string, u8'\0');
+	//
+	//ASSERT_TRUE(nullSearch.State());
+	//GTEST_ASSERT_EQ(nullSearch.Get(), 72);
 
 	auto invalidSearch = FindFirst(string, u8'!');
 	ASSERT_FALSE(invalidSearch.State());
@@ -191,13 +185,50 @@ TEST(String, FindLast) {
 	ASSERT_TRUE(zeroSearch.State());
 	GTEST_ASSERT_EQ(zeroSearch.Get(), 62);
 
-	auto nullSearch = FindLast(string, u8'\0');
-
-	ASSERT_TRUE(nullSearch.State());
-	GTEST_ASSERT_EQ(nullSearch.Get(), 72);
+	//auto nullSearch = FindLast(string, u8'\0');
+	//
+	//ASSERT_TRUE(nullSearch.State());
+	//GTEST_ASSERT_EQ(nullSearch.Get(), 72);
 
 	auto invalidSearch = FindLast(string, u8'!');
 	ASSERT_FALSE(invalidSearch.State());
+}
+
+TEST(String, Drop) {
+	{
+		String<DefaultAllocatorReference> string(u8"Drop \U0001F34C");
+		string.Drop(5);
+		GTEST_ASSERT_EQ(string.GetCodepoints(), 5);
+		GTEST_ASSERT_EQ(string.GetBytes(), 5);
+	}
+
+	{
+		String<DefaultAllocatorReference> string(u8"Drop \U0001F34C");
+		DropLast(string, u8' ');
+		GTEST_ASSERT_EQ(string.GetCodepoints(), 4);
+		GTEST_ASSERT_EQ(string.GetBytes(), 4);
+	}
+
+	{
+		String<DefaultAllocatorReference> string(u8"Drop \U0001F34C");
+		DropLast(string, u8' ', 1);
+		GTEST_ASSERT_EQ(string.GetCodepoints(), 5);
+		GTEST_ASSERT_EQ(string.GetBytes(), 5);
+	}
+
+	{
+		String<DefaultAllocatorReference> string(u8"Drop \U0001F34C");
+		DropFirst(string, u8' ');
+		GTEST_ASSERT_EQ(string.GetCodepoints(), 4);
+		GTEST_ASSERT_EQ(string.GetBytes(), 4);
+	}
+
+	{
+		String<DefaultAllocatorReference> string(u8"Drop \U0001F34C");
+		DropFirst(string, u8' ', 1);
+		GTEST_ASSERT_EQ(string.GetCodepoints(), 5);
+		GTEST_ASSERT_EQ(string.GetBytes(), 5);
+	}
 }
 
 TEST(String, Iterator) {
@@ -212,4 +243,19 @@ TEST(String, Iterator) {
 		GTEST_ASSERT_EQ(*begin, ToUTF32(testString + i++));
 		++begin;
 	}
+}
+
+TEST(String, Serialize) {
+	Buffer<StaticAllocator<256>> buffer;
+
+	StaticString<32> stringSource(u8"Serialize.");
+	Insert(stringSource, buffer);
+
+	StaticString<32> stringDestination;
+	Extract(stringDestination, buffer);
+
+	GTEST_ASSERT_EQ(stringDestination, stringSource);
+	GTEST_ASSERT_EQ(stringDestination.GetBytes(), stringSource.GetBytes());
+	GTEST_ASSERT_EQ(stringDestination.GetCodepoints(), stringSource.GetCodepoints());
+	GTEST_ASSERT_GE(stringDestination.GetCapacity(), stringSource.GetBytes());
 }

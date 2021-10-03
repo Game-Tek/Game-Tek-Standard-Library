@@ -46,8 +46,8 @@ namespace GTSL
 
 		constexpr ShortString& operator+=(const Range<const char8_t*> text) {
 			const auto toCopy = text.GetBytes() <= array[SIZE - 1] ? text.GetBytes() : array[SIZE - 1];
-			for (uint16 s = (SIZE - array[SIZE - 1]), i = 0; i < toCopy; ++i, ++s) { array[s] = text[i]; }
-			array[SIZE - 1] -= toCopy - 1;
+			for (uint16 s = GetLength(), i = 0; i < toCopy; ++i, ++s) { array[s] = text[i]; }
+			array[SIZE - 1] -= toCopy;
 			return *this;
 		}
 
@@ -59,7 +59,7 @@ namespace GTSL
 		}
 		
 		//WITH NULL
-		[[nodiscard]] constexpr uint16 GetLength() const { return (SIZE - array[SIZE - 1]) + 1; }
+		[[nodiscard]] constexpr uint16 GetLength() const { return SIZE - array[SIZE - 1]; }
 
 		friend void Insert(const ShortString& string, auto& buffer) {
 			buffer.CopyBytes(SIZE, reinterpret_cast<const byte*>(string.array));

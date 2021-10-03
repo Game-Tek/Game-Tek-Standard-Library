@@ -35,6 +35,7 @@ if(GTSL_TESTS_ENABLED)
 	"${PROJECT_SOURCE_DIR}/test/TestUnicode.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestRange.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestOS.cpp"
+	"${PROJECT_SOURCE_DIR}/test/TestParsers.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestAlgorithm.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestStringCommon.cpp")
 	target_include_directories(GTSL_Test PUBLIC "${PROJECT_SOURCE_DIR}")

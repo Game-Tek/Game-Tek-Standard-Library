@@ -99,6 +99,14 @@ namespace GTSL
 			return X() != other.X() || Y() != other.Y();
 		}
 
+		bool operator>(const Vector2& other) const {
+			return X() > other.X() and Y() > other.Y();
+		}
+
+		bool operator<(const Vector2& other) const {
+			return X() < other.X() and Y() < other.Y();
+		}
+
 		float32& X() { return values[0]; }
 		float32& Y() { return values[1]; }
 
@@ -232,6 +240,14 @@ namespace GTSL
 			return X() != other.X() || Y() != other.Y() || Z() != other.Z();
 		}
 
+		bool operator>(const Vector3& other) const {
+			return X() > other.X() and Y() > other.Y() and Z() > other.Z();
+		}
+
+		bool operator<(const Vector3& other) const {
+			return X() < other.X() and Y() < other.Y() and Z() < other.Z();
+		}
+
 		friend Vector3 operator*(const float32 lhs, const Vector3& rhs)
 		{
 			return Vector3(rhs.X() * lhs, rhs.Y() * lhs, rhs.Z() * lhs);
@@ -340,6 +356,14 @@ namespace GTSL
 		bool operator==(const Vector4& Other) { return X() == Other.X() && Y() == Other.Y() && Z() == Other.Z() && W() == Other.W(); }
 
 		bool operator!=(const Vector4& Other) { return X() != Other.X() || Y() != Other.Y() || Z() != Other.Z() || W() != Other.W(); }
+
+		bool operator>(const Vector4& other) const {
+			return X() > other.X() and Y() > other.Y() and Z() > other.Z() and W() > other.W();
+		}
+
+		bool operator<(const Vector4& other) const {
+			return X() < other.X() and Y() < other.Y() and Z() < other.Z() and W() < other.W();
+		}
 
 		float32& X() { return values[0]; }
 		float32& Y() { return values[1]; }
