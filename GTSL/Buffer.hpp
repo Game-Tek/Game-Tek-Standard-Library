@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Allocator.h"
 #include "Core.h"
 #include "Memory.h"
 
@@ -34,8 +35,10 @@ namespace GTSL
 
 		template<typename T>
 		T* AllocateStructure() {
+			tryDeltaResize(sizeof(T));
 			void* ret = data + length;
 			length += sizeof(T);
+			::new(ret) T();
 			return static_cast<T*>(ret);
 		}
 
@@ -141,4 +144,7 @@ namespace GTSL
 		}
 		
 	};
+
+	template<uint32 BYTES>
+	using StaticBuffer = Buffer<StaticAllocator<BYTES>>;
 }

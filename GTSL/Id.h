@@ -10,7 +10,7 @@ namespace GTSL
 	constexpr uint64 Hash(const Range<const char8_t*> string) {
 		uint64 primary_hash(525201411107845655ull);
 
-		for (uint32 i = 0; i < string.GetBytes() - 1; ++i) {
+		for (uint32 i = 0; i < string.GetBytes(); ++i) {
 			primary_hash ^= string[i]; primary_hash *= 0x5bd1e9955bd1e995; primary_hash ^= primary_hash >> 47;
 		}
 

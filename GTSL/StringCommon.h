@@ -2,6 +2,7 @@
 #include <regex>
 #include <GTSL/Core.h>
 
+#include "DataSizes.h"
 #include "Range.hpp"
 #include "Result.h"
 #include "Tuple.h"
@@ -29,6 +30,11 @@ namespace GTSL
 		}
 
 		constexpr StringIterator& operator++() {
+			currentByte += UTF8CodePointLength(data[currentByte]);
+			return *this;
+		}
+
+		constexpr StringIterator& operator++(int) {
 			currentByte += UTF8CodePointLength(data[currentByte]);
 			return *this;
 		}
@@ -65,7 +71,7 @@ namespace GTSL
 	template<>
 	struct Range<const char8_t*>
 	{
-		constexpr Range() : Range(1, 1, u8"") {}
+		constexpr Range() : Range(0, 0, u8"") {}
 
 		constexpr Range(const char8_t* string) : data(string) {
 			auto lengths = StringLengths(string);
@@ -76,6 +82,10 @@ namespace GTSL
 		constexpr Range(char8_t const (&string)[N]) : data(string) {
 			auto lengths = StringLengths(string);
 			bytes = lengths.First; codepoints = lengths.Second;
+		}
+
+		constexpr Range(const Byte bytes, const char8_t* string) : data(string), bytes(bytes) {
+			for (uint32 i = 0; i < bytes.GetCount();) { i += UTF8CodePointLength(data[bytes]); ++codepoints; }
 		}
 
 		constexpr Range(const uint32 bytes, const uint32 codePoints, const char8_t* string) : data(string), codepoints(codePoints), bytes(bytes) {
@@ -110,6 +120,37 @@ namespace GTSL
 	Range(const char8_t*) -> Range<const char8_t*>;
 
 	using StringView = Range<const char8_t*>;
+
+	class SubstringIterator {
+	public:
+		SubstringIterator(const StringView sv) : stringView(sv), begin(sv.begin()), end(sv.begin()) {}
+
+		template<typename...C>
+		bool operator()(C ... divs) {
+
+			while (end < stringView.end() && ((*end == divs) || ...)) {
+				++end;
+			}
+
+			begin = end;
+
+			while (end < stringView.end() and ((*end != divs) && ...)) {
+				++end;
+			}
+
+			return begin != end;
+		}
+
+		StringView operator*() {
+			return StringView(begin, end);
+		}
+
+	private:
+		StringView stringView;
+		StringIterator begin, end;
+
+		//static_assert(sizeof...(C) != 0, "You need at least one parameter to divide substrings.");
+	};
 
 	template<typename...C>
 	void ForEachSubstring(const StringView string, auto&& f, C ... divs) {
@@ -161,11 +202,11 @@ namespace GTSL
 
 	inline bool IsNumber(const StringView string) {
 		for (const auto e : string) {
-			if (e != U'0' and e != U'1' and e != U'2' and e != U'3' and e != U'4' and e != U'5' and e != U'6' and e != U'7' and e != U'8' and e != U'9' and e != U'.' and e != U',') {
+			if (e != U'0' and e != U'1' and e != U'2' and e != U'3' and e != U'4' and e != U'5' and e != U'6' and e != U'7' and e != U'8' and e != U'9' and e != U'.' and e != U',' and e != U'-') {
 				return false;
 			}
 		}
-		return true;
+		return string.GetBytes();
 	}
 
 	inline bool IsDecimalNumber(const StringView string) {
@@ -180,6 +221,11 @@ namespace GTSL
 		}
 
 		return hasDecimalSeparator;
+	}
+
+	template<class S>
+	void ToString(S& string, char8_t str) {
+		string += str;
 	}
 
 	template<class S>
@@ -282,7 +328,7 @@ namespace GTSL
 
 	template<std::unsigned_integral T>
 	Result<T> ToNumber(Range<const char8_t*> numberString) {
-		uint32 value = 0, mult = 1;
+		T value = 0, mult = 1;
 
 		for (uint64 j = 0, c = numberString.GetBytes() - 1; j < numberString.GetBytes(); ++j, --c) {
 			uint8 num;
@@ -294,7 +340,7 @@ namespace GTSL
 			case u8'6': num = 6; break; case u8'7': num = 7; break;
 			case u8'8': num = 8; break; case u8'9': num = 9; break;
 			case u8'\0': continue;
-			default: return Result(0u, false);
+			default: return Result(static_cast<T>(0), false);
 			}
 
 			value += num * mult;
@@ -306,7 +352,7 @@ namespace GTSL
 
 	template<std::signed_integral T>
 	Result<T> ToNumber(Range<const char8_t*> numberString) {
-		int32 value = 0, mult = 1;
+		T value = 0, mult = 1;
 
 		for (uint64 j = 0, c = numberString.GetBytes() - 1; j < numberString.GetBytes(); ++j, --c) {
 			uint8 num;
@@ -319,7 +365,7 @@ namespace GTSL
 			case u8'8': num = 8; break; case u8'9': num = 9; break;
 			case u8'-': num = 0; value = -value; break;
 			case u8'\0': continue;
-			default: return Result(0, false);
+			default: return Result(static_cast<T>(0), false);
 			}
 
 			value += num * mult;

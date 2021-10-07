@@ -11,63 +11,33 @@
 #undef min
 #undef max
 #include <Windows.h>
+#include <shellapi.h>
+#include <VersionHelpers.h>
 #endif
 
 namespace GTSL
 {
-	struct RamInfo
-	{
-		GTSL::Byte TotalPhysicalMemory;
-		GTSL::Byte FreePhysicalMemory;
-		GTSL::Byte ProcessAvailableMemory;
+	struct RamInfo {
+		Byte TotalPhysicalMemory;
+		Byte FreePhysicalMemory;
+		Byte ProcessAvailableMemory;
 	};
 
-	struct VectorInfo
-	{
-		bool HW_MMX;
-		bool HW_x64;
-		bool HW_ABM;
-		bool HW_RDRAND;
-		bool HW_BMI1;
-		bool HW_BMI2;
-		bool HW_ADX;
-		bool HW_PREFETCHWT1;
-		bool HW_MPX;
+	struct VectorInfo {
+		bool HW_MMX, HW_x64, HW_ABM, HW_RDRAND, HW_BMI1, HW_BMI2, HW_ADX, HW_PREFETCHWT1, HW_MPX;
 
 		//  SIMD: 128-bit
-		bool HW_SSE;
-		bool HW_SSE2;
-		bool HW_SSE3;
-		bool HW_SSSE3;
-		bool HW_SSE41;
-		bool HW_SSE42;
-		bool HW_SSE4a;
-		bool HW_AES;
-		bool HW_SHA;
+		bool HW_SSE, HW_SSE2, HW_SSE3, HW_SSSE3, HW_SSE41, HW_SSE42, HW_SSE4a, HW_AES, HW_SHA;
 
 		//  SIMD: 256-bit
-		bool HW_AVX;
-		bool HW_XOP;
-		bool HW_FMA3;
-		bool HW_FMA4;
-		bool HW_AVX2;
+		bool HW_AVX, HW_XOP, HW_FMA3, HW_FMA4, HW_AVX2;
 
 		//  SIMD: 512-bit
-		bool HW_AVX512_F;
-		bool HW_AVX512_PF;
-		bool HW_AVX512_ER;
-		bool HW_AVX512_CD;
-		bool HW_AVX512_VL;
-		bool HW_AVX512_BW;
-		bool HW_AVX512_DQ;
-		bool HW_AVX512_IFMA;
-		bool HW_AVX512_VBMI;
+		bool HW_AVX512_F, HW_AVX512_PF, HW_AVX512_ER, HW_AVX512_CD, HW_AVX512_VL, HW_AVX512_BW, HW_AVX512_DQ, HW_AVX512_IFMA, HW_AVX512_VBMI;
 	};
 
-	struct SystemInfo
-	{
-		struct CPUInfo
-		{
+	struct SystemInfo {
+		struct CPUInfo {
 			VectorInfo VectorInfo;
 			uint8 CoreCount = 0;
 		} CPU;
@@ -75,8 +45,7 @@ namespace GTSL
 		RamInfo RAM;
 	};
 
-	class System
-	{
+	class System {
 	public:
 		static void GetRAMInfo(RamInfo& ramInfo) {
 #if (_WIN32)
@@ -187,6 +156,18 @@ namespace GTSL
 			RegCloseKey(result);
 #endif
 		}
+
+		static bool Run(StringView path) {
+#ifdef _WIN32
+			return ShellExecuteA(nullptr, "open", reinterpret_cast<const char*>(path.GetData()), nullptr, nullptr, SW_SHOWNORMAL);
+#endif
+		}
+
+		static bool CheckOSVersion() {
+#ifdef _WIN32
+			return IsWindowsVersionOrGreater(10, 5, 5);
+#endif
+		}
 	};
 
 	class Console
@@ -200,7 +181,7 @@ namespace GTSL
 
 		static void Print(const Range<const char8_t*> text) {
 #ifdef _WIN32
-			WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), text.GetData(), text.GetBytes() - 1, nullptr, nullptr);
+			WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), text.GetData(), text.GetBytes(), nullptr, nullptr);
 #endif
 		}
 
