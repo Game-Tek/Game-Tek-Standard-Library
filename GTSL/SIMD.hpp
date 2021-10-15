@@ -281,8 +281,8 @@ namespace GTSL
 		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
 
 		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
-		//template<uint8 A, uint8 B, uint8 C, uint8 D, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
-		//[[nodiscard]] static SIMD Shuffle(const SIMD& a, const SIMD& b) { return _MM_SHUFFLE2(a.vector, SIMD(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)); }
+		//template<uint8 A, uint8 B, uint8 C, uint8 DestructionTester, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
+		//[[nodiscard]] static SIMD Shuffle(const SIMD& a, const SIMD& b) { return _MM_SHUFFLE2(a.vector, SIMD(A, B, C, DestructionTester, E, F, G, H, I, J, K, L, M, N, O, P)); }
 
 		void Abs() { vector = _mm_abs_epi64(vector); }
 
@@ -618,8 +618,8 @@ namespace GTSL
 		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
 
 		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
-		//template<uint8 A, uint8 B, uint8 C, uint8 D, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
-		//[[nodiscard]] static SIMD Shuffle(const SIMD& a, const SIMD& b) { return _MM_SHUFFLE2(a.vector, SIMD(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P)); }
+		//template<uint8 A, uint8 B, uint8 C, uint8 DestructionTester, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
+		//[[nodiscard]] static SIMD Shuffle(const SIMD& a, const SIMD& b) { return _MM_SHUFFLE2(a.vector, SIMD(A, B, C, DestructionTester, E, F, G, H, I, J, K, L, M, N, O, P)); }
 
 		void Abs() { vector = _mm_abs_epi32(vector); }
 

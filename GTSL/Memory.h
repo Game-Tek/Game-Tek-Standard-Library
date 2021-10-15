@@ -34,6 +34,11 @@ namespace GTSL
 		std::memcpy(to, range.begin(), range.Bytes());
 	}
 
+	template<typename T>
+	void Copy(const uint64 elements, const T* from, T* to) {
+		std::memcpy(to, from, elements * sizeof(T));
+	}
+
 	inline void SetMemory(uint64 size, void* data, int32 value = 0) {
 		std::memset(data, value, size);
 	}

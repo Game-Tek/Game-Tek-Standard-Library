@@ -75,7 +75,7 @@ TEST(Font, Font) {
 	GTEST_ASSERT_EQ(font.GetKerning(15, 20), -18);
 
 	{ //a
-		auto& a = font.GetGlyph(u8'a');
+		auto& a = font.GetGlyph(U'a');
 		GTEST_ASSERT_EQ(a.BoundingBox[0].X(), 27);
 		GTEST_ASSERT_EQ(a.BoundingBox[0].Y(), -27);
 		GTEST_ASSERT_EQ(a.BoundingBox[1].X(), 1134);
@@ -83,13 +83,16 @@ TEST(Font, Font) {
 		GTEST_ASSERT_EQ(a.GlyphIndex, 68);
 		GTEST_ASSERT_EQ(a.AdvanceWidth, 1161);
 		GTEST_ASSERT_EQ(a.LeftSideBearing, 27);
-		GTEST_ASSERT_EQ(a.NumContours, 2);
-		GTEST_ASSERT_EQ(a.Paths[0].GetLength(), 32);
-		GTEST_ASSERT_EQ(a.Paths[1].GetLength(), 7);
+		GTEST_ASSERT_EQ(a.Contours.GetLength(), 2);
+		GTEST_ASSERT_EQ(a.Contours[0].Points.GetLength(), 54);
+		GTEST_ASSERT_EQ(a.Contours[1].Points.GetLength(), 11);
+
+		GTEST_ASSERT_EQ(a.Contours[0].Points[0].Position, GTSL::ShortVector(609, 997));
+		GTEST_ASSERT_EQ(a.Contours[1].Points[0].Position, GTSL::ShortVector(542, 418));
 	}
 
 	{ //A
-		auto& A = font.GetGlyph(u8'A');
+		auto& A = font.GetGlyph(U'A');
 		GTEST_ASSERT_EQ(A.BoundingBox[0].X(), 0);
 		GTEST_ASSERT_EQ(A.BoundingBox[0].Y(), -21);
 		GTEST_ASSERT_EQ(A.BoundingBox[1].X(), 1693);
@@ -97,8 +100,30 @@ TEST(Font, Font) {
 		GTEST_ASSERT_EQ(A.GlyphIndex, 36);
 		GTEST_ASSERT_EQ(A.AdvanceWidth, 1693);
 		GTEST_ASSERT_EQ(A.LeftSideBearing, 0);
-		GTEST_ASSERT_EQ(A.NumContours, 2);
-		GTEST_ASSERT_EQ(A.Paths[0].GetLength(), 35);
-		GTEST_ASSERT_EQ(A.Paths[1].GetLength(), 9);
+		GTEST_ASSERT_EQ(A.Contours.GetLength(), 2);
+		GTEST_ASSERT_EQ(A.Contours[0].Points.GetLength(), 58);
+		GTEST_ASSERT_EQ(A.Contours[1].Points.GetLength(), 16);
+
+		GTEST_ASSERT_EQ(A.Contours[0].Points[0].Position, GTSL::ShortVector(1332, 691));
+		GTEST_ASSERT_EQ(A.Contours[1].Points[0].Position, GTSL::ShortVector(636, 565));
+	}
+
+	{ //a tilde
+		auto& a = font.GetGlyph(U'á');
+		GTEST_ASSERT_EQ(a.BoundingBox[0].X(), 27);
+		GTEST_ASSERT_EQ(a.BoundingBox[0].Y(), -27);
+		GTEST_ASSERT_EQ(a.BoundingBox[1].X(), 1134);
+		GTEST_ASSERT_EQ(a.BoundingBox[1].Y(), 1430);
+		GTEST_ASSERT_EQ(a.GlyphIndex, 105);
+		GTEST_ASSERT_EQ(a.AdvanceWidth, 1161);
+		GTEST_ASSERT_EQ(a.LeftSideBearing, 27);
+		GTEST_ASSERT_EQ(a.Contours.GetLength(), 3);
+		GTEST_ASSERT_EQ(a.Contours[0].Points.GetLength(), 54);
+		GTEST_ASSERT_EQ(a.Contours[1].Points.GetLength(), 11);
+		GTEST_ASSERT_EQ(a.Contours[2].Points.GetLength(), 24); //tilde
+
+		GTEST_ASSERT_EQ(a.Contours[0].Points[0].Position, GTSL::ShortVector(609, 997));
+		GTEST_ASSERT_EQ(a.Contours[1].Points[0].Position, GTSL::ShortVector(542, 418));
+		GTEST_ASSERT_EQ(a.Contours[2].Points[0].Position, GTSL::ShortVector(629 + 40, 1430 + 0));
 	}
 }

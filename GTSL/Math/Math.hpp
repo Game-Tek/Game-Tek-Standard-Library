@@ -1150,7 +1150,7 @@ namespace GTSL
 			auto A = float4x::Shuffle<0, 1, 0, 1>(vec0, vec1); auto B = float4x::Shuffle<2, 3, 2, 3>(vec1, vec0);
 			auto C = float4x::Shuffle<0, 1, 0, 1>(vec2, vec3); auto D = float4x::Shuffle<2, 3, 2, 3>(vec3, vec2);
 
-			// determinant as (|A| |B| |C| |D|)
+			// determinant as (|A| |B| |C| |DestructionTester|)
 			auto detSub=float4x::Shuffle<0, 2, 0, 2>(vec0, vec2) * float4x::Shuffle<1, 3, 1, 3>(vec1, vec3) - float4x::Shuffle<1, 3, 1, 3>(vec0, vec2) * float4x::Shuffle<0, 2, 0, 2>(vec1, vec3);
 			auto detA = float4x::Shuffle<0, 0, 0, 0>(detSub); auto detB = float4x::Shuffle<1, 1, 1, 1>(detSub);
 			auto detC = float4x::Shuffle<2, 2, 2, 2>(detSub); auto detD = float4x::Shuffle<3, 3, 3, 3>(detSub);
@@ -1174,24 +1174,24 @@ namespace GTSL
 			// let iM = 1/|M| * | X  Y |
 			//                  | Z  W |
 
-			// D#C								A#B
+			// DestructionTester#C								A#B
 			auto D_C = Mat2AdjMul(D, C); auto A_B = Mat2AdjMul(A, B);
-			// X# = |D|A - B(D#C)								// W# = |A|D - C(A#B)
+			// X# = |DestructionTester|A - B(DestructionTester#C)								// W# = |A|DestructionTester - C(A#B)
 			auto X_ = detD * A - Mat2Mul(B, D_C);	auto W_ = detA * D - Mat2Mul(C, A_B);
 
-			// |M| = |A|*|D| + ... (continue later)
+			// |M| = |A|*|DestructionTester| + ... (continue later)
 			auto detM = detA * detD;
 
-			// Y# = |B|C - D(A#B)#									// Z# = |C|B - A(D#C)#
+			// Y# = |B|C - DestructionTester(A#B)#									// Z# = |C|B - A(DestructionTester#C)#
 			auto Y_ = detB * C - Mat2MulAdj(D, A_B);	auto Z_ = detC * B - Mat2MulAdj(A, D_C);
 
-			// |M| = |A|*|D| + |B|*|C| ... (continue later)
+			// |M| = |A|*|DestructionTester| + |B|*|C| ... (continue later)
 			detM = detM + detB * detC;
 
-			// tr((A#B)(D#C))
+			// tr((A#B)(DestructionTester#C))
 			auto tr = A_B * float4x::Shuffle<0, 2, 1, 3>(D_C);
 			tr = float4x::HorizontalAdd(tr, tr); tr = float4x::HorizontalAdd(tr, tr);
-			// |M| = |A|*|D| + |B|*|C| - tr((A#B)(D#C)
+			// |M| = |A|*|DestructionTester| + |B|*|C| - tr((A#B)(DestructionTester#C)
 			detM = detM - tr;
 
 			const auto adjSignMask = float4x(1.f, -1.f, -1.f, 1.f);

@@ -185,9 +185,9 @@ namespace GTSL
 #endif
 		}
 
-		//static void Read(Range<char8_t*> buffer) {
+		//static void Read(Range<char8_t*> betaTable) {
 		//	DWORD characters_read{ 0 };
-		//	ReadConsoleA(GetStdHandle(STD_INPUT_HANDLE), buffer.begin(), buffer.ElementCount(), &characters_read, nullptr);
+		//	ReadConsoleA(GetStdHandle(STD_INPUT_HANDLE), betaTable.begin(), betaTable.ElementCount(), &characters_read, nullptr);
 		//}
 
 		enum class ConsoleTextColor : uint8 {

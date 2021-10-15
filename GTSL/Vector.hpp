@@ -451,7 +451,7 @@ namespace GTSL
 
 	template<typename T, class ALLOCATOR>
 	void Insert(const Vector<T, ALLOCATOR>& vector, auto& buffer) {
-		Insert(vector.GetLength(), buffer);
+		Insert(vector.GetAlphaLength(), buffer);
 		for (const auto& e : vector) { Insert(e, buffer); }
 	}
 

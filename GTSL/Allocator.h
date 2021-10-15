@@ -235,4 +235,34 @@ namespace GTSL
 		bool allocator = true;
 		byte buffer[BYTES]; A a;
 	};
+
+	template<typename T>
+	void Allocate(auto& allocator, uint64 n, T** data) {
+		uint64 allocatedBytes;
+		allocator.Allocate(sizeof(T) * n, alignof(T), static_cast<void**>(&data), &allocatedBytes);
+	}
+
+	template<typename T, std::unsigned_integral N>
+	void Allocate(auto& allocator, uint64 n, T** data, N* allocatedElements) {
+		uint64 allocatedBytes;
+		allocator.Allocate(sizeof(T) * n, alignof(T), reinterpret_cast<void**>(data), &allocatedBytes);
+		*allocatedElements = static_cast<N>(allocatedBytes / sizeof(T));
+	}
+
+	template<typename T>
+	void Deallocate(auto& allocator, T* data, uint64 n) {
+		allocator.Deallocate(sizeof(T) * n, alignof(T), reinterpret_cast<void*>(data));
+	}
+
+	template<typename T, std::unsigned_integral C>
+	void Resize(auto& allocator, T** data, C* capacity, uint64 newCapacity, auto&& f) {
+		T* newNodes; uint64 allocatedElements;
+		Allocate(allocator, newCapacity, &newNodes, &allocatedElements);
+
+		f(*capacity, *data, allocatedElements, newNodes);
+
+		Deallocate(allocator, *data, *capacity);
+
+		*data = newNodes; *capacity = static_cast<C>(allocatedElements);
+	}
 }

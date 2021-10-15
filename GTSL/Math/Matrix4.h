@@ -15,12 +15,12 @@ namespace GTSL
 	 * E.J:\n
 	 *
 	 * Matrix:\n
-	 * A B C D\n
+	 * A B C DestructionTester\n
 	 * E F G H\n
 	 * I J K L\n
 	 * M N O P\n
 	 *
-	 * Array(data): A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P\n
+	 * Array(data): A, B, C, DestructionTester, E, F, G, H, I, J, K, L, M, N, O, P\n
 	 *
 	 * Most operations are accelerated by SIMD code.
 	 *

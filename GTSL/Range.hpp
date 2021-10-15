@@ -3,6 +3,8 @@
 #include "Core.h"
 #include "Assert.h"
 
+#include <initializer_list>
+
 namespace GTSL
 {
 	template<typename I>
@@ -30,6 +32,8 @@ namespace GTSL
 	struct Range<I*>
 	{
 		Range() = default;
+
+		constexpr Range(std::initializer_list<I> il) : from(il.begin()), to(il.end()) {}
 
 		constexpr Range(I* b, I* e) : from(b), to(e) {}
 
@@ -66,6 +70,12 @@ namespace GTSL
 		}
 
 		constexpr operator Range<const I*>() const { return Range<const I*>(static_cast<const I*>(this->from), static_cast<const I*>(this->to)); }
+
+		bool operator==(const Range other) const {
+			if (ElementCount() != other.ElementCount()) { return false; }
+			for (uint64 i = 0; i < ElementCount(); ++i) { if (from[i] != other[i]) { return false; } }
+			return true;
+		}
 	private:
 		I* from = nullptr, * to = nullptr;
 
@@ -74,6 +84,9 @@ namespace GTSL
 
 	template<>
 	struct Range<const char8_t*>;
+
+	template<typename T>
+	Range(const std::initializer_list<T>) -> Range<const T*>;
 
 	template<typename A, typename B>
 	inline bool CompareContents(const Range<const A*> a, const Range<const B*> b)
