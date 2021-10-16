@@ -15,7 +15,7 @@ public:
 	}
 };
 
-TEST(Tree, Construct) {
+TEST(AlphaBetaTree, Construct) {
 	GTSL::uint32 counter = 0;
 
 	{
@@ -26,7 +26,7 @@ TEST(Tree, Construct) {
 	GTEST_ASSERT_EQ(counter, 1); //test destructor is run on object
 }
 
-TEST(Tree, Insertion) {
+TEST(AlphaBetaTree, Insertion) {
 	GTSL::AlphaBetaTree<GTSL::DefaultAllocatorReference, uint32_t, uint32_t> tree;
 	
 	auto handle = tree.AddBeta(0, 55u);
@@ -38,11 +38,11 @@ TEST(Tree, Insertion) {
 	GTEST_ASSERT_EQ(tree.At<uint32_t>(tree.AddBeta(handle, 99u)), 99u);
 }
 
-TEST(Tree, Removal) {
+TEST(AlphaBetaTree, Removal) {
 
 }
 
-TEST(Tree, Iteration) {
+TEST(AlphaBetaTree, Iteration) {
 	GTSL::AlphaBetaTree<GTSL::DefaultAllocatorReference, GTSL::uint32, GTSL::float32> tree(2);
 
 	auto alphaRoot = tree.EmplaceAlpha(0, 36);
@@ -67,4 +67,27 @@ TEST(Tree, Iteration) {
 	ASSERT_TRUE(ok);
 
 	GTEST_ASSERT_EQ(tree.At(alphaRoot), 36);
+}
+
+TEST(Tree, Iteration) {
+	GTSL::Tree<GTSL::uint32, GTSL::DefaultAllocatorReference> tree;
+
+	auto root = tree.Emplace(0u, 0);
+	tree.Emplace(tree.Emplace(tree.Emplace(root, 1), 2), 3);
+	tree.Emplace(tree.Emplace(tree.Emplace(root, 4), 5), 6);
+
+	GTSL::uint32 i = 0;
+
+	bool ok = true;
+
+	auto visitNode = [&](uint32_t node) {
+		ok = ok && i++ == tree[node];
+	};
+
+	auto endNode = [&](uint32_t value) {
+	};
+
+	ForEach(tree, visitNode, endNode);
+
+	ASSERT_TRUE(ok);
 }

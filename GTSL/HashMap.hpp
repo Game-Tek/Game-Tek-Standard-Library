@@ -163,22 +163,19 @@ namespace GTSL
 			return GTSL::Result<const V&>(*(getValuesBucketPointer(bucket) + result.Get()), result.State());
 		}
 
-		V& At(const K key)
-		{
+		V& At(const K key) {
 			const auto bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), bucketCount); const auto elementIndex = getIndexForKeyInBucket(bucketIndex, key);
 			GTSL_ASSERT(elementIndex.State(), "No element with that key!");
 			return getValuesBucket(bucketIndex)[elementIndex.Get()];
 		}
 
-		const V& At(const K key) const
-		{
+		const V& At(const K key) const {
 			const auto bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), bucketCount); const auto elementIndex = getIndexForKeyInBucket(bucketIndex, key);
 			GTSL_ASSERT(elementIndex.State(), "No element with that key!");
 			return getValuesBucket(bucketIndex)[elementIndex.Get()];
 		}
 
-		void Remove(const K key)
-		{
+		void Remove(const K key) {
 			auto bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), this->bucketCount); auto elementIndex = getIndexForKeyInBucket(bucketIndex, key);
 			Destroy(getValuesBucket(bucketIndex)[elementIndex.Get()]);
 			GTSL_ASSERT(elementIndex.State(), "Key doesn't exist!")

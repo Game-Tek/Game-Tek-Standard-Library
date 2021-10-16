@@ -30,6 +30,87 @@ namespace GTSL
 		Destroy<CLASSES...>(index, p, BuildIndices<sizeof...(CLASSES)>{});
 	}
 
+
+	template<typename T, class ALLOCATOR>
+	class Tree {
+	public:
+		using Key = uint32;
+
+		Tree(const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {}
+		Tree(const uint32 minElements, const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {}
+
+		template<typename... ARGS>
+		uint32 Emplace(const uint32 parentNodeHandle, ARGS&&... args) {
+			tryResize(1);
+
+			::new(nodes + length++) Node(GTSL::ForwardRef<ARGS>(args)...);
+
+			if(parentNodeHandle) {
+				Node& parentNode = at(parentNodeHandle);
+				parentNode.ChildrenCount += 1;
+
+				Key hand = parentNodeHandle;
+				while (at(hand).Next) { hand = at(hand).Next; }
+
+				auto& preLink = at(hand);
+				preLink.Next = length;
+			} else {
+				if (length - 1) {
+					Key hand = 1;
+					while (at(hand).Next) { hand = at(hand).Next; }
+					at(hand).Next = length;
+				}
+			}
+
+			return length;
+		}
+
+		T& operator[](const Key handle) { return at(handle).Data; }
+		const T& operator[](const Key handle) const { return at(handle).Data; }
+
+		friend void ForEach(Tree& tree, auto&& a, auto&& b) {
+			if (tree.length) {
+				Key next = 1;
+
+				auto visitNode = [&](Key handle, auto&& self) -> void {
+					a(handle);
+
+					next = tree.at(handle).Next;
+					for (uint32 i = 0; i < tree.at(handle).ChildrenCount; ++i) { self(next, self); }
+
+					b(handle);
+				};
+
+				visitNode(next, visitNode);
+			}
+		}
+
+	private:
+		struct Node {
+			T Data;
+			uint32 Next = 0, ChildrenCount = 0;
+
+			template<typename ... ARGS>
+			Node(ARGS&&... args) : Data(GTSL::ForwardRef<ARGS>(args)...) {}
+		};
+
+		ALLOCATOR allocator;
+		Node* nodes = nullptr; uint32 length = 0, capacity = 0;
+
+		Node& at(uint32 handle) { return nodes[handle - 1]; }
+		const Node& at(uint32 handle) const { return nodes[handle - 1]; }
+
+		void tryResize(const uint32 delta) {
+			if (length + delta > capacity) {
+				if (nodes) {
+					Resize(allocator, &nodes, &capacity, capacity * 2, length);
+				} else {
+					Allocate(allocator, delta, &nodes, &capacity);
+				}
+			}
+		}
+	};
+
 	template<class ALLOCATOR, typename ALPHA, typename... CLASSES>
 	class AlphaBetaTree {
 	public:
@@ -117,18 +198,21 @@ namespace GTSL
 
 				for(uint32 i = 0; i < alphaEntries; ++i) { Destroy(alphaTable[i]); }
 			
-				Deallocate(allocator, betaTable, betaCapacity);
-				Deallocate(allocator, indirectionTable, indirectionCapacity);
-				Deallocate(allocator, alphaTable, alphaCapacity);
+				Deallocate(allocator, betaCapacity, betaTable);
+				Deallocate(allocator, indirectionCapacity, indirectionTable);
+				Deallocate(allocator, alphaCapacity, alphaTable);
 			}
 		}
 
 		template<typename T>
 		T& At(const uint32 i) { return *reinterpret_cast<T*>(betaTable + indirectionTable[i - 1].Position); }
+		template<typename T>
+		const T& At(const uint32 i) const { return *reinterpret_cast<const T*>(betaTable + indirectionTable[i - 1].Position); }
 
 		ALPHA& At(const Key i) { return alphaTable[i - 1]; }
+		const ALPHA& At(const Key i) const { return alphaTable[i - 1]; }
 
-		uint32 GetNodeType(const Key handle) { return at(handle).TypeIndex; }
+		uint32 GetNodeType(const Key handle) const { return at(handle).TypeIndex; }
 
 		uint32 GetAlphaLength() const { return alphaEntries; }
 		uint32 GetBetaLength() const { return betaLength; }
@@ -144,14 +228,14 @@ namespace GTSL
 			return indirectionTable[nodeHandle - 1];
 		}
 
+		const Node& at(uint32 nodeHandle) const {
+			return indirectionTable[nodeHandle - 1];
+		}
+
 		void tryResizeIndirectionTable(uint32 delta) {
 			if (indirectionEntries + delta > indirectionCapacity) {
 				if (indirectionTable) {
-					auto copy = [len = indirectionEntries](const uint64 capacity, Node* nodes, const uint64 newCapacity, Node* newAlloc) {
-						Copy(len, nodes, newAlloc);
-					};
-
-					Resize(allocator, &indirectionTable, &indirectionCapacity, indirectionCapacity * 2, copy);
+					Resize(allocator, &indirectionTable, &indirectionCapacity, indirectionCapacity * 2, indirectionEntries);
 				} else {
 					Allocate(allocator, delta, &indirectionTable, &indirectionCapacity);
 				}
@@ -161,10 +245,7 @@ namespace GTSL
 		void tryResizeBetaTable(uint32 delta) {
 			if (betaLength + delta > betaCapacity) {
 				if (betaTable) {
-					auto copy = [len = betaLength](const uint64 capacity, byte* nodes, const uint64 newCapacity, byte* newAlloc) {
-						Copy(len, nodes, newAlloc);
-					};
-					Resize(allocator, &betaTable, &betaCapacity, betaCapacity * 2, copy);
+					Resize(allocator, &betaTable, &betaCapacity, betaCapacity * 2, betaLength);
 				} else {
 					Allocate(allocator, delta, &betaTable, &betaCapacity);
 				}
@@ -174,10 +255,7 @@ namespace GTSL
 		void tryResizeAlphaTable(uint32 delta) {
 			if(alphaEntries + delta > alphaCapacity) {
 				if(alphaTable) {
-					auto copy = [len = alphaEntries](const uint64 capacity, ALPHA* nodes, const uint64 newCapacity, ALPHA* newAlloc) {
-						Copy(len, nodes, newAlloc);
-					};
-					Resize(allocator, &alphaTable, &alphaCapacity, alphaCapacity * 2, copy);
+					Resize(allocator, &alphaTable, &alphaCapacity, alphaCapacity * 2, alphaEntries);
 				} else {
 					Allocate(allocator, delta, &alphaTable, &alphaCapacity);
 				}

@@ -250,19 +250,34 @@ namespace GTSL
 	}
 
 	template<typename T>
-	void Deallocate(auto& allocator, T* data, uint64 n) {
+	void Deallocate(auto& allocator, uint64 n, T* data) {
 		allocator.Deallocate(sizeof(T) * n, alignof(T), reinterpret_cast<void*>(data));
 	}
 
+	template<typename T>
+	concept Lambda = requires(T && t) { t.operator(); };
+
 	template<typename T, std::unsigned_integral C>
-	void Resize(auto& allocator, T** data, C* capacity, uint64 newCapacity, auto&& f) {
-		T* newNodes; uint64 allocatedElements;
-		Allocate(allocator, newCapacity, &newNodes, &allocatedElements);
+	void Resize(auto& allocator, T** data, C* capacity, uint64 newCapacity, Lambda auto&& f) {
+		T* newAlloc; uint64 allocatedElements;
+		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements);
 
-		f(*capacity, *data, allocatedElements, newNodes);
+		f(*capacity, *data, allocatedElements, newAlloc);
 
-		Deallocate(allocator, *data, *capacity);
+		Deallocate(allocator, *capacity, *data);
 
-		*data = newNodes; *capacity = static_cast<C>(allocatedElements);
+		*data = newAlloc; *capacity = static_cast<C>(allocatedElements);
+	}
+
+	template<typename T, std::unsigned_integral C>
+	void Resize(auto& allocator, T** data, C* capacity, uint64 newCapacity, uint64 length) {
+		T* newAlloc; uint64 allocatedElements;
+		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements);
+
+		Copy(length, *data, newAlloc);
+
+		Deallocate(allocator, *capacity, *data);
+
+		*data = newAlloc; *capacity = static_cast<C>(allocatedElements);
 	}
 }

@@ -119,6 +119,8 @@ namespace GTSL
 		float32 operator[](const uint8 i) const { return values[i]; }
 		float32& operator[](const uint8 i) { return values[i]; }
 
+		bool operator==(const Vector2&) const = default;
+
 	private:
 		float32 values[2]{ 0.0f };
 	};

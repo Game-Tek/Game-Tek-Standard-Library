@@ -300,19 +300,12 @@ namespace GTSL
 		{
 			newSize += 3; /*null terminator padding*/
 
-			if (newSize > capacity) {
-				uint64 allocatedSize = 0; char8_t* newData = nullptr;
-				
+			if (newSize > capacity) {				
 				if(data) {
-					allocator.Allocate(newSize * 2, 16, reinterpret_cast<void**>(&newData), &allocatedSize);
-					for (uint32 i = 0; i < bytes + 1; ++i) { newData[i] = data[i]; }
-					allocator.Deallocate(bytes, 16, static_cast<void*>(data));
+					GTSL::Resize(allocator, &data, &capacity, newSize * 2, bytes);
 				} else {
-					allocator.Allocate(newSize, 16, reinterpret_cast<void**>(&newData), &allocatedSize);
+					Allocate(allocator, newSize, &data, &capacity);
 				}
-
-				capacity = static_cast<uint32>(allocatedSize / sizeof(char8_t));
-				data = newData;
 			}
 		}
 		

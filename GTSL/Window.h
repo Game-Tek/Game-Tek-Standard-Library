@@ -726,26 +726,26 @@ namespace GTSL
 			}
 			case WM_ACTIVATE: {
 				auto hasFocus = static_cast<bool>(LOWORD(wParam));
-				FocusEventData focus;
-				focus.Focus = hasFocus;
-				focus.HadFocus = windowCallData->WindowPointer->focus;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::FOCUS, static_cast<FocusEventData*>(&focus));
+				FocusEventData focusEventData;
+				focusEventData.Focus = hasFocus;
+				focusEventData.HadFocus = windowCallData->WindowPointer->focus;
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::FOCUS, &focusEventData);
 				windowCallData->WindowPointer->focus = hasFocus;
 				return 0;
 			}
 			case WM_SETFOCUS: {
-				FocusEventData focus;
-				focus.Focus = true;
-				focus.HadFocus = windowCallData->WindowPointer->focus;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::FOCUS, static_cast<FocusEventData*>(&focus));
+				FocusEventData focusEventData;
+				focusEventData.Focus = true;
+				focusEventData.HadFocus = windowCallData->WindowPointer->focus;
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::FOCUS, &focusEventData);
 				windowCallData->WindowPointer->focus = true;
 				return 0;
 			}
 			case WM_KILLFOCUS: {
-				FocusEventData focus;
-				focus.Focus = false;
-				focus.HadFocus = windowCallData->WindowPointer->focus;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::FOCUS, static_cast<FocusEventData*>(&focus));
+				FocusEventData focusEventData;
+				focusEventData.Focus = false;
+				focusEventData.HadFocus = windowCallData->WindowPointer->focus;
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::FOCUS, &focusEventData);
 				windowCallData->WindowPointer->focus = false;
 				return 0;
 			}
