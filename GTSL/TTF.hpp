@@ -143,6 +143,21 @@ namespace GTSL {
 		++(*offset);
 	}
 
+	template<typename T>
+	T get(const char* source, uint32 offset) {
+		T result;
+
+		if constexpr (_WIN64) {
+			reinterpret_cast<uint8_t*>(&result)[0] = source[offset + 1];
+			reinterpret_cast<uint8_t*>(&result)[1] = source[offset + 0];
+		} else {
+			reinterpret_cast<uint8_t*>(&result)[0] = source[0];
+			reinterpret_cast<uint8_t*>(&result)[1] = source[1];
+		}
+
+		return result;
+	}
+
 	inline float32 to_2_14_float(const int16 value) {
 		return static_cast<float32>(value & 0x3fff) / static_cast<float32>(1 << 14) + (-2 * ((value >> 15) & 0x1) + ((value >> 14) & 0x1));
 	}
@@ -477,7 +492,7 @@ namespace GTSL {
 		}
 
 		[[nodiscard]] int16 GetKerning(const char32_t left, const char32_t right) const {
-			const auto kern_data = KerningTable.TryGet((GlyphMap[left] << 16) | GlyphMap[right]);
+			const auto kern_data = KerningTable.TryGet((left << 16) | right);
 			return kern_data ? kern_data.Get() : 0;
 		}
 	};
@@ -625,53 +640,49 @@ namespace GTSL {
 			cmap_subtable_offset += sizeof(uint16) * 3;
 
 			uint16 segCount = segCountX2 >> 1;
-			std::vector<uint16> endCode(segCount), startCode(segCount), idRangeOffset(segCount);
-			std::vector<int16> idDelta(segCount);
 
-			for (uint16 j = 0; j < segCount; j++) { //End characterCode for each segment, last=0xFFFF.
-				read(&endCode[j], data, &cmap_subtable_offset);
-			}
+			auto endCodeTableOffset = cmap_subtable_offset;
+
+			cmap_subtable_offset += segCount * 2; //End characterCode for each segment, last=0xFFFF.			
 
 			cmap_subtable_offset += sizeof(uint16); //reserved pad, should be zero
 
-			for (uint16 j = 0; j < segCount; j++) { //Start character code for each segment.
-				read(&startCode[j], data, &cmap_subtable_offset);
-			}
+			auto startCodeTableOffset = cmap_subtable_offset;
 
-			for (uint16 j = 0; j < segCount; j++) { //Delta for all character codes in segment.
-				read(&idDelta[j], data, &cmap_subtable_offset);
-			}
+			cmap_subtable_offset += segCount * 2; //Start character code for each segment.
 
-			for (uint16 j = 0; j < segCount; j++) { //Offsets into glyphIdArray or 0
-				read(&idRangeOffset[j], data, &cmap_subtable_offset);
-			}
+			auto idDeltaTableOffset = cmap_subtable_offset;
+
+			cmap_subtable_offset += segCount * 2; //Delta for all character codes in segment.			
+
+			auto idRangeOffsetTableOffset = cmap_subtable_offset;
+
+			cmap_subtable_offset += segCount * 2; //Offsets into glyphIdArray or 0s
+
+			auto glyphIndexArrayTableOffset = cmap_subtable_offset;
 
 			for (uint16 i = 0; i < segCount; i++) { //Glyph index array (arbitrary length)
-				if (idRangeOffset[i]) { //If the idRangeOffset value for the segment is not 0, the mapping of the character codes relies on the glyphIndexArray.
+				if (get<uint16>(data, idRangeOffsetTableOffset + i * 2)) { //If the idRangeOffset value for the segment is not 0, the mapping of the character codes relies on the glyphIndexArray.
 					//uint32 glyph_address_offset = cmap_subtable_offset + sizeof(uint16) * segCount * 2; //idRangeOffset_ptr
 					uint32 glyph_address_offset = cmap_subtable_offset - (segCount - i) * 2; //idRangeOffset_ptr
-					for (uint32 c = startCode[i]; c <= endCode[i]; c++) {
-						//uint32 glyph_address_index_offset = idRangeOffset[j] + 2 * (k - startCode[j]) + glyph_address_offset;
-						uint32 glyph_address_index_offset = idRangeOffset[i] + 2 * (c - startCode[i]) + glyph_address_offset;
+					for (uint32 c = get<uint16>(data, startCodeTableOffset + i * 2); c <= get<uint16>(data, endCodeTableOffset + i * 2); c++) {
+						uint32 glyph_address_index_offset = get<uint16>(data, idRangeOffsetTableOffset + i * 2) + 2 * (c - get<uint16>(data, startCodeTableOffset + i * 2)) + glyph_address_offset;
 						uint16 glyphId;
 						read(&glyphId, data, &glyph_address_index_offset);
-						glyphId += idDelta[i];
+						glyphId += get<uint16>(data, idDeltaTableOffset + i * 2);
 						fontData->GlyphMap.Emplace(c, glyphId);
 						if (auto res = glyphReverseMap.TryEmplace(glyphId, c); !res) {
 							res.Get() = c;
 						}
-						//glyphReverseMap[glyph_map_value] = k;
 					}
 				} else {
-					for (uint32 c = startCode[i]; c <= endCode[i]; c++) {
-						fontData->GlyphMap.Emplace(c, c + idDelta[i]);
-						if (auto res = glyphReverseMap.TryEmplace(c + idDelta[i], c); !res) {
+					for (uint32 c = get<uint16>(data, startCodeTableOffset + i * 2); c <= get<uint16>(data, endCodeTableOffset + i * 2); c++) {
+						fontData->GlyphMap.Emplace(c, c + get<uint16>(data, idDeltaTableOffset + i * 2));
+						if (auto res = glyphReverseMap.TryEmplace(c + get<uint16>(data, idDeltaTableOffset + i * 2), c); !res) {
 							res.Get() = c;
-						}
-						//glyphReverseMap[k + idDelta[j]] = k;
+						}						
 					}
-				}
-				//cmap_subtable_offset += sizeof(uint16);
+				}				
 			}
 
 			valid_cmap_table = true;
@@ -708,11 +719,6 @@ namespace GTSL {
 		uint32 hmtx_offset = hmtx_table_entry.Get().offsetPos;
 		uint16 last_glyph_advance_width = 0;
 
-		//First dimension corresponds to each contour of the current glyph
-		//Each uint16 represents and index into pointsInContour
-		std::vector<std::vector<uint16>> pointsInContours((max_profile.maxContours < 4096) ? max_profile.maxContours : 4096);
-		std::vector<uint16> pointsInContour((max_profile.maxContours < 4096) ? max_profile.maxContours : 4096);
-
 		if (!max_profile.numGlyphs) { return false; }
 
 		Vector<bool, DefaultAllocatorReference> glyphLoaded(max_profile.numGlyphs, DefaultAllocatorReference());
@@ -720,14 +726,9 @@ namespace GTSL {
 		fontData->Glyphs.EmplaceGroup(max_profile.numGlyphs);
 
 		auto parseGlyph = [&](uint32 i, auto&& self) -> bool {
-			if (glyphLoaded[i] == true) { return true; }
-
-			//if(i != fontData->Glyphs.GetLength()) {
-			//	__debugbreak();
-			//}
+			if (glyphLoaded[i]) { return true; }
 
 			Glyph& currentGlyph = fontData->Glyphs[i];
-			//currentGlyph.Paths.Initialize(3, GetPersistentAllocator());
 			currentGlyph.GlyphIndex = static_cast<int16>(i);
 			currentGlyph.Character = glyphReverseMap.TryEmplace(static_cast<int16>(i), 0).Get();
 
@@ -749,42 +750,36 @@ namespace GTSL {
 			if (glyph_index[i] >= end_of_glyf) { return false; }
 
 			uint32 currentOffset = glyf_offset + glyph_index[i];
-
-			int16 bbox[2][2];
-
 			int16 numContours = 0;
 
-			read(&numContours, data, &currentOffset);
-			read(&bbox[0][0], data, &currentOffset); //xMin
-			read(&bbox[0][1], data, &currentOffset); //yMin
-			read(&bbox[1][0], data, &currentOffset); //xMax
-			read(&bbox[1][1], data, &currentOffset); //yMax
+			{
+				int16 bbox[2][2];
 
-			currentGlyph.BoundingBox[0][0] = bbox[0][0];
-			currentGlyph.BoundingBox[0][1] = bbox[0][1];
-			currentGlyph.BoundingBox[1][0] = bbox[1][0];
-			currentGlyph.BoundingBox[1][1] = bbox[1][1];
+				read(&numContours, data, &currentOffset);
+				read(&bbox[0][0], data, &currentOffset); //xMin
+				read(&bbox[0][1], data, &currentOffset); //yMin
+				read(&bbox[1][0], data, &currentOffset); //xMax
+				read(&bbox[1][1], data, &currentOffset); //yMax
 
-			currentGlyph.Center = (currentGlyph.BoundingBox[0] + currentGlyph.BoundingBox[1]) / 2.0f;
+				currentGlyph.BoundingBox[0][0] = bbox[0][0];
+				currentGlyph.BoundingBox[0][1] = bbox[0][1];
+				currentGlyph.BoundingBox[1][0] = bbox[1][0];
+				currentGlyph.BoundingBox[1][1] = bbox[1][1];
+
+				currentGlyph.Center = (currentGlyph.BoundingBox[0] + currentGlyph.BoundingBox[1]) / 2.0f;
+			}
 
 			if (numContours > 0) { //Simple glyph
-				std::vector<uint16> contourEnd(numContours);
+				auto contourEndArrayOffset = currentOffset;
 
-				//currentGlyph.PathList.Resize(currentGlyph.NumContours);
-				//don't resize
-				//code expects resize to leave valid elements which our vector doesn't
-				//emplace elements as needed later to ensure valid elements
+				Vector<uint16, DoubleAllocator<sizeof(uint16) * 16, DefaultAllocatorReference>> numberOfPointsPerContour(max_profile.maxContours);
 
-				for (uint16 j = 0; j < numContours; j++) { read(&contourEnd[j], data, &currentOffset); }
+				currentOffset += numContours * 2;
 
 				for (uint16 contourIndex = 0; contourIndex < numContours; contourIndex++) {
-					uint16 num_points = contourEnd[contourIndex] - (contourIndex ? contourEnd[contourIndex - 1] : -1);
+					uint16 num_points = get<uint16>(data, contourEndArrayOffset + contourIndex * 2) - (contourIndex ? get<uint16>(data, contourEndArrayOffset + (contourIndex - 1) * 2) : -1);
 
-					if (pointsInContours[contourIndex].size() < num_points) {
-						pointsInContours[contourIndex].resize(num_points);
-					}
-
-					pointsInContour[contourIndex] = num_points;
+					numberOfPointsPerContour.EmplaceBack(num_points);
 				}
 
 				//Skip instructions
@@ -792,98 +787,84 @@ namespace GTSL {
 				read(&num_instructions, data, &currentOffset);
 				currentOffset += sizeof(uint8_t) * num_instructions;
 
-				uint16 numPoints = contourEnd[static_cast<int64>(numContours) - 1] + 1;
-				//flags for every point in this glyph
-				std::vector<TTFFlags> flagsEnum(numPoints);
-				//??
-				std::vector<uint16> contour_index(numPoints);
-				uint16 current_contour_index = 0;
-				uint16 contour_count_first_point = 0;
+				uint16 numPoints = get<uint16>(data, contourEndArrayOffset + (numContours - 1) * 2) + 1; //endPtsOfContours[numContours - 1]
+
 				signed char repeat = 0; //may cause bugs?
 
-				{
-					//flags for every point in this glyph
-					std::vector<uint8_t> flags(numPoints);
+				for (uint32 c = 0; c < numContours; ++c) {
+					currentGlyph.Contours.EmplaceBack(numberOfPointsPerContour[c], DefaultAllocatorReference());
+				}
 
-					for (uint16 j = 0; j < numPoints; j++, ++contour_count_first_point) {
+				{
+					uint8 flags[2]{ 0 };
+
+					for (uint16 j = 0, t = 0, contourIndex = 0; j < numPoints; ++j, ++t) {
+						if (t == numberOfPointsPerContour[contourIndex]) { ++contourIndex; t = 0; }
+						auto& point = currentGlyph.Contours[contourIndex].Points.EmplaceBack();
 
 						if (repeat) {
-							flags[j] = flags[j - 1];
+							flags[1] = flags[0];
 							repeat--;
 						} else {
-							read(&flags[j], data, &currentOffset);
+							read(&flags[0], data, &currentOffset);
 
-							if (flags[j] & 0x8) { read(&repeat, data, &currentOffset); } //may cause bugs
+							if (flags[0] & 0x8) { read(&repeat, data, &currentOffset); } //may cause bugs
 						}
 
-						flagsEnum[j].isControlPoint = (!(flags[j] & 0b00000001)) != 0;
-						flagsEnum[j].xShort = (flags[j] & 0b00000010) != 0; flagsEnum[j].yShort = (flags[j] & 0b00000100) != 0;
-						flagsEnum[j].repeat = (flags[j] & 0b00001000) != 0;
-						flagsEnum[j].xDual = (flags[j] & 0b00010000) != 0; flagsEnum[j].yDual = (flags[j] & 0b00100000) != 0;
-
-						if (j > contourEnd[current_contour_index]) {
-							current_contour_index++;
-							contour_count_first_point = 0;
-						}
-
-						contour_index[j] = current_contour_index;
-						pointsInContours[current_contour_index][contour_count_first_point] = j;
+						point.Flags.isControlPoint = (!(flags[0] & 0b00000001)) != 0;
+						point.Flags.xShort = (flags[0] & 0b00000010) != 0; point.Flags.yShort = (flags[0] & 0b00000100) != 0;
+						point.Flags.repeat = (flags[0] & 0b00001000) != 0;
+						point.Flags.xDual = (flags[0] & 0b00010000) != 0; point.Flags.yDual = (flags[0] & 0b00100000) != 0;
 					}
 				}
 
-				//all points for current glyph, no distinction between contours
-				std::vector<ShortVector> glyphPoints(numPoints);
+				ShortVector lastPoints[2];
 
-				for (uint16 j = 0; j < numPoints; ++j) {
-					if (flagsEnum[j].xDual && !flagsEnum[j].xShort) {
-						glyphPoints[j].X = j ? glyphPoints[j - 1].X : 0;
+				for (uint16 j = 0, t = 0, contourIndex = 0; j < numPoints; ++j, ++t) {
+					if (t == numberOfPointsPerContour[contourIndex]) { ++contourIndex; t = 0; }
+					auto& point = currentGlyph.Contours[contourIndex].Points[t];
+				
+					lastPoints[1] = lastPoints[0];
+
+					if (point.Flags.xDual && !point.Flags.xShort) {
+						point.Position.X = j ? lastPoints[1].X : 0;
 					} else {
-						if (flagsEnum[j].xShort) {
-							read(reinterpret_cast<uint8*>(&glyphPoints[j].X), data, &currentOffset); //might cause bugs, can directly write value into 16 bit variable
+						if (point.Flags.xShort) {
+							read(reinterpret_cast<uint8*>(&point.Position.X), data, &currentOffset); //might cause bugs, can directly write value into 16 bit variable
 						} else {
-							read(&glyphPoints[j].X, data, &currentOffset);
+							read(&point.Position.X, data, &currentOffset);
 						}
-
-						if (flagsEnum[j].xShort && !flagsEnum[j].xDual) { glyphPoints[j].X *= -1; }
-
-						if (j != 0) { glyphPoints[j].X += glyphPoints[j - 1].X; }
+				
+						if (point.Flags.xShort && !point.Flags.xDual) { point.Position.X *= -1; }
+				
+						if (j != 0) { point.Position.X += lastPoints[1].X; }
 					}
-				}
 
-				for (uint16 j = 0; j < numPoints; j++) {
-					if (flagsEnum[j].yDual && !flagsEnum[j].yShort) {
-						glyphPoints[j].Y = j ? glyphPoints[j - 1].Y : 0;
+					lastPoints[0] = point.Position;
+				}
+				
+				for (uint16 j = 0, t = 0, contourIndex = 0; j < numPoints; ++j, ++t) {
+					if (t == currentGlyph.Contours[contourIndex].Points.GetLength()) { ++contourIndex; t = 0; }
+					auto& point = currentGlyph.Contours[contourIndex].Points[t];
+				
+					lastPoints[1] = lastPoints[0];
+
+					if (point.Flags.yDual && !point.Flags.yShort) {
+						point.Position.Y = j ? lastPoints[1].Y : 0;
 					} else {
-						if (flagsEnum[j].yShort) {
-							read(reinterpret_cast<uint8*>(&glyphPoints[j].Y), data, &currentOffset); //might cause bugs
+						if (point.Flags.yShort) {
+							read(reinterpret_cast<uint8*>(&point.Position.Y), data, &currentOffset); //might cause bugs
 						} else {
-							read(&glyphPoints[j].Y, data, &currentOffset);
+							read(&point.Position.Y, data, &currentOffset);
 						}
-
-						if (flagsEnum[j].yShort && !flagsEnum[j].yDual) { glyphPoints[j].Y *= -1; }
-
-						if (j != 0) { glyphPoints[j].Y += glyphPoints[j - 1].Y; }
+				
+						if (point.Flags.yShort && !point.Flags.yDual) { point.Position.Y *= -1; }
+				
+						if (j != 0) { point.Position.Y += lastPoints[1].Y; }
 					}
+
+					lastPoints[0] = point.Position;
 				}
-
-				//Generate contours
-				for (uint16 contourIndex = 0; contourIndex < numContours; ++contourIndex) {
-					const uint16 numPointsInContour = pointsInContour[contourIndex];
-
-					currentGlyph.Contours.EmplaceBack(numPointsInContour, DefaultAllocatorReference());
-
-					const auto& glyphFlags = flagsEnum;
-
-					uint16 pointInIndices = 0;
-
-					for (uint32 p = 0; p < numPointsInContour; ++p, ++pointInIndices) {
-						uint32 pointInGlyphIndex = pointsInContours[contourIndex][pointInIndices];
-
-						auto& point = currentGlyph.Contours[contourIndex].Points.EmplaceBack();
-						point.Flags = glyphFlags[pointInGlyphIndex];
-						point.Position = glyphPoints[pointInGlyphIndex];
-					}
-				} //for contour
 			} else { //Composite glyph
 				for (auto compound_glyph_index = 0; compound_glyph_index < -numContours; compound_glyph_index++) {
 					uint16 glyfFlags, glyphIndex;
@@ -1020,7 +1001,7 @@ namespace GTSL {
 					read(&kern_right, data, &currentOffset);
 					read(&kern_value, data, &currentOffset);
 
-					fontData->KerningTable.Emplace((kern_left << 16) | kern_right, kern_value);
+					fontData->KerningTable.Emplace((glyphReverseMap[kern_left] << 16) | glyphReverseMap[kern_right], kern_value);
 				}
 			}
 		}

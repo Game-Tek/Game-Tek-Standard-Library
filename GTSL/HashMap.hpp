@@ -123,8 +123,7 @@ namespace GTSL
 
 			uint64 placeIndex = getBucketLength(bucketIndex);
 			
-			if (placeIndex + 1 > bucketCapacity)
-			{
+			if (placeIndex + 1 > bucketCapacity) {
 				resize();
 				bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), this->bucketCount);
 				placeIndex = getBucketLength(bucketIndex)++;

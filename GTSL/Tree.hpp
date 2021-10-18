@@ -131,9 +131,10 @@ namespace GTSL
 			tryResizeBetaTable(minNodes * 8);
 		}
 
-		Key EmplaceAlpha(Key parentNodeHandle, ALPHA alpha) {
+		template<typename... ARGS>
+		Key EmplaceAlpha(Key parentNodeHandle, ARGS&&... args) {
 			tryResizeAlphaTable(1);
-			alphaTable[alphaEntries++] = alpha;
+			::new(alphaTable + alphaEntries++) ALPHA(GTSL::ForwardRef<ARGS>(args)...);
 			return alphaEntries;
 		}
 

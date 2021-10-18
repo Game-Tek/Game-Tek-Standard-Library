@@ -201,8 +201,6 @@ namespace GTSL
 	class DoubleAllocator
 	{
 	public:
-		DoubleAllocator() = default;
-
 		DoubleAllocator(const A& alloc = A()) : a(alloc) {}
 
 		DoubleAllocator(const DoubleAllocator& other) : allocator(other.allocator), a(other.a)

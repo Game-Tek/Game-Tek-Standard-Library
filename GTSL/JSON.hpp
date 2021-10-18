@@ -28,104 +28,134 @@ namespace GTSL {
 		using type = JSON;
 
 		bool newLine = true;
-		uint32 objectsInScope = 0;
+
+		StaticVector<uint32, 16> stack;
 
 		~Serializer() = default;
 	};
 
 	using JSONSerializer = Serializer<JSON>;
 
-	JSONSerializer MakeSerializer(auto& buffer) {
-		ToString(buffer, u8"{");
-		return JSONSerializer();
-	}
-
 	void EndSerializer(auto& buffer, JSONSerializer& serializer) {
-		if(serializer.objectsInScope > 1)
+		if(serializer.stack.back() > 0)
 			DropLast(buffer, u8',');
 
-		ToString(buffer, u8"}");
+		ToString(buffer, u8'}');
+
+		serializer.stack.PopBack();
 	}
 
 	void StartJSONPair(JSONSerializer& serializer, auto& buffer, StringView name) {
 		ToString(buffer, u8'"'); ToString(buffer, name); ToString(buffer, u8'"'); ToString(buffer, u8':');
+		++serializer.stack.back();
 	}
 
 	void StartJSONValue(JSONSerializer& serializer, auto& buffer) {
+		++serializer.stack.back();
+	}
+
+	void StartJSONObject(JSONSerializer& serializer, auto& buffer) {
+		serializer.stack.EmplaceBack(0);
+	}
+
+	void EndJSONValue(JSONSerializer& serializer, auto& buffer) {
+		ToString(buffer, u8',');
 	}
 
 	void EndJSONObject(JSONSerializer& serializer, auto& buffer) {
-		ToString(buffer, u8',');
-		serializer.objectsInScope += 1;
+		if (serializer.stack.back())
+			DropLast(buffer, ',');
+
+		serializer.stack.PopBack();
 	}
 
-	template<class B>
-	void StartObject(Serializer<JSON>& serializer, B& buffer, StringView name) {
-		StartJSONPair(serializer, buffer, name); ToString(buffer, u8'{');
+	JSONSerializer MakeSerializer(auto& buffer) {
+		ToString(buffer, u8"{");
+		auto serializer = JSONSerializer();
+		StartJSONObject(serializer, buffer);
+		return serializer;
 	}
 
 	template<class B>
 	void StartObject(Serializer<JSON>& serializer, B& buffer) {
-		StartJSONValue(serializer, buffer); ToString(buffer, u8'{');
+		StartJSONValue(serializer, buffer);
+		StartJSONObject(serializer, buffer);
+		ToString(buffer, u8'{');
+	}
+
+	template<class B>
+	void StartObject(Serializer<JSON>& serializer, B& buffer, StringView name) {
+		StartJSONPair(serializer, buffer, name);
+		StartJSONObject(serializer, buffer);
+		ToString(buffer, u8'{');
 	}
 
 	template<class B>
 	void EndObject(Serializer<JSON>& serializer, B& buffer) {
-		DropLast(buffer, u8',');
-		ToString(buffer, u8"}");
 		EndJSONObject(serializer, buffer);
+		ToString(buffer, u8"}");
+		EndJSONValue(serializer, buffer);
+	}
+
+	template<class B>
+	void StartArray(Serializer<JSON>& serializer, B& buffer) {
+		StartJSONValue(serializer, buffer);
+		StartJSONObject(serializer, buffer);
+		ToString(buffer, u8'[');
 	}
 
 	template<class B>
 	void StartArray(Serializer<JSON>& serializer, B& buffer, StringView name) {
-		StartJSONPair(serializer, buffer, name); ToString(buffer, u8'[');
+		StartJSONPair(serializer, buffer, name);
+		StartJSONObject(serializer, buffer);
+		ToString(buffer, u8'[');
 	}
 
 	template<class B>
 	void EndArray(Serializer<JSON>& serializer, B& buffer) {
-		DropLast(buffer, u8',');
-		ToString(buffer, u8"]");
 		EndJSONObject(serializer, buffer);
+		ToString(buffer, u8"]");
+		EndJSONValue(serializer, buffer);
 	}
 
 	template<std::integral T, class B>
-	void Insert(Serializer<JSON>& serializer, B& buffer, T& val) {
-		StartJSONValue(serializer, buffer); ToString(buffer, val); EndJSONObject(serializer, buffer);
+	void Insert(Serializer<JSON>& serializer, B& buffer, const T& val) {
+		StartJSONValue(serializer, buffer); ToString(buffer, val); EndJSONValue(serializer, buffer);
 	}
 
 	template<std::integral T, class B>
-	void Insert(Serializer<JSON>& serializer, B& buffer, StringView name, T& val) {
-		StartJSONPair(serializer, buffer, name); ToString(buffer, val); EndJSONObject(serializer, buffer);
+	void Insert(Serializer<JSON>& serializer, B& buffer, StringView name, const T& val) {
+		StartJSONPair(serializer, buffer, name); ToString(buffer, val); EndJSONValue(serializer, buffer);
 	}
 
-	template<class B>
-	void Insert(Serializer<JSON>& serializer, B& buffer, float32 val) {
-		StartJSONValue(serializer, buffer); ToString(buffer, val); EndJSONObject(serializer, buffer);
+	template<std::floating_point T, class B>
+	void Insert(Serializer<JSON>& serializer, B& buffer, T val) {
+		StartJSONValue(serializer, buffer); ToString(buffer, val); EndJSONValue(serializer, buffer);
 	}
 
 	template<class B>
 	void Insert(Serializer<JSON>& serializer, B& buffer, StringView name, float32 val) {
-		StartJSONPair(serializer, buffer, name); ToString(buffer, val); EndJSONObject(serializer, buffer);
+		StartJSONPair(serializer, buffer, name); ToString(buffer, val); EndJSONValue(serializer, buffer);
 	}
 
 	template<class B>
 	void Insert(Serializer<JSON>& serializer, B& buffer, StringView name, bool val) {
-		StartJSONPair(serializer, buffer, name); ToString(buffer, val ? u8"true" : u8"false"); EndJSONObject(serializer, buffer);
+		StartJSONPair(serializer, buffer, name); ToString(buffer, val ? u8"true" : u8"false"); EndJSONValue(serializer, buffer);
 	}
 
 	template<Enum E, class B>
 	void Insert(Serializer<JSON>& serializer, B& buffer, StringView name, E, StringView enumStringType) {
-		StartJSONPair(serializer, buffer, name); ToString(buffer, u8'"'); ToString(buffer, enumStringType); ToString(buffer, u8'"'); EndJSONObject(serializer, buffer);
+		StartJSONPair(serializer, buffer, name); ToString(buffer, u8'"'); ToString(buffer, enumStringType); ToString(buffer, u8'"'); EndJSONValue(serializer, buffer);
 	}
 
 	template<class B>
 	void Insert(Serializer<JSON>& serializer, B& buffer, StringView string) {
-		StartJSONValue(serializer, buffer); ToString(buffer, u8'"'); ToString(buffer, string); ToString(buffer, u8'"'); EndJSONObject(serializer, buffer);
+		StartJSONValue(serializer, buffer); ToString(buffer, u8'"'); ToString(buffer, string); ToString(buffer, u8'"'); EndJSONValue(serializer, buffer);
 	}
 
 	template<class B>
 	void Insert(Serializer<JSON>& serializer, B& buffer, StringView name, StringView string) {
-		StartJSONPair(serializer, buffer, name); ToString(buffer, u8'"'); ToString(buffer, string); ToString(buffer, u8'"'); EndJSONObject(serializer, buffer);
+		StartJSONPair(serializer, buffer, name); ToString(buffer, u8'"'); ToString(buffer, string); ToString(buffer, u8'"'); EndJSONValue(serializer, buffer);
 	}
 
 	template<class B, class I>
@@ -189,7 +219,7 @@ namespace GTSL {
 						whenUint(res.Get());
 					}
 				} else if(str == u8"true" or str == u8"false") {
-						whenBool(str == u8"true");
+					whenBool(str == u8"true");
 				}
 
 				return true;

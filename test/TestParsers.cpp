@@ -49,7 +49,13 @@ TEST(JSON, Serialize) {
 	GTSL::Insert(serializer, buffer, u8"bananas", bananas);
 	GTSL::Insert(serializer, buffer, u8"apples", apples);
 	GTSL::Insert(serializer, buffer, u8"string", GTSL::StringView(u8"test"));
-	GTSL::Insert(serializer, buffer, u8"array", GTSL::Range<const uint32_t*>(GTSL::StaticVector<GTSL::uint32, 4>{ 4, 0, 8, 12 }));
+
+	GTSL::StartArray(serializer, buffer, u8"array");
+		GTSL::Insert(serializer, buffer, 4u);
+		GTSL::Insert(serializer, buffer, 0u);
+		GTSL::Insert(serializer, buffer, 8u);
+		GTSL::Insert(serializer, buffer, 12u);
+	GTSL::EndArray(serializer, buffer);
 
 	GTSL::StartObject(serializer, buffer, u8"obj");
 		GTSL::Insert(serializer, buffer, u8"bool", true);
