@@ -330,9 +330,9 @@ namespace GTSL {
 				if (NameRecords[i].nameID > maxNumberOfNames) { continue; }
 
 				NameRecords[i].Parse(data, offset);
-				char* newNameString = new char[NameRecords[i].length];
-				memcpy(newNameString, data + offset_start + stringOffset + NameRecords[i].offset_value, sizeof(char) * NameRecords[i].length);
-				uint16 string_length = NameRecords[i].length;
+				char newNameString[512];
+				uint16 string_length = NameRecords[i].length < 512 ? NameRecords[i].length : 512u;
+				memcpy(newNameString, data + offset_start + stringOffset + NameRecords[i].offset_value, string_length);
 
 				if (newNameString[0] == 0) {
 					string_length = string_length >> 1;
@@ -343,8 +343,6 @@ namespace GTSL {
 				}
 
 				names[NameRecords[i].nameID].assign(newNameString, string_length);
-
-				delete[] newNameString;
 			}
 		}
 	};
@@ -464,12 +462,11 @@ namespace GTSL {
 	};
 
 	struct Glyph {
-		uint32 Character = 0;
 		int16 GlyphIndex = 0;
 		Vector<Contour, DefaultAllocatorReference> Contours;
 		uint16 AdvanceWidth = 0;
 		int16 LeftSideBearing = 0;
-		Vector2 BoundingBox[2]; //min, max
+		Vector2 Min, Max;
 		Vector2 Center;
 	
 		Glyph(const DefaultAllocatorReference& allocator = DefaultAllocatorReference()) : Contours(allocator) {}
@@ -482,13 +479,12 @@ namespace GTSL {
 		std::string FullFontName;
 		std::string NameTable[25];
 		HashMap<uint32, int16, DefaultAllocatorReference> KerningTable;
-		Vector<Glyph, DefaultAllocatorReference> Glyphs;
-		HashMap<uint32, uint16, DefaultAllocatorReference> GlyphMap;
+		HashMap<uint32, Glyph, DefaultAllocatorReference> Glyphs;
 		FontMetaData Metadata;
 		uint64 LastUsed;
 
 		[[nodiscard]] const Glyph& GetGlyph(const char32_t ch) const {
-			return Glyphs[GlyphMap[ch]];
+			return Glyphs[ch];
 		}
 
 		[[nodiscard]] int16 GetKerning(const char32_t left, const char32_t right) const {
@@ -665,21 +661,23 @@ namespace GTSL {
 				if (get<uint16>(data, idRangeOffsetTableOffset + i * 2)) { //If the idRangeOffset value for the segment is not 0, the mapping of the character codes relies on the glyphIndexArray.
 					//uint32 glyph_address_offset = cmap_subtable_offset + sizeof(uint16) * segCount * 2; //idRangeOffset_ptr
 					uint32 glyph_address_offset = cmap_subtable_offset - (segCount - i) * 2; //idRangeOffset_ptr
-					for (uint32 c = get<uint16>(data, startCodeTableOffset + i * 2); c <= get<uint16>(data, endCodeTableOffset + i * 2); c++) {
-						uint32 glyph_address_index_offset = get<uint16>(data, idRangeOffsetTableOffset + i * 2) + 2 * (c - get<uint16>(data, startCodeTableOffset + i * 2)) + glyph_address_offset;
-						uint16 glyphId;
-						read(&glyphId, data, &glyph_address_index_offset);
-						glyphId += get<uint16>(data, idDeltaTableOffset + i * 2);
-						fontData->GlyphMap.Emplace(c, glyphId);
-						if (auto res = glyphReverseMap.TryEmplace(glyphId, c); !res) {
-							res.Get() = c;
+					for (uint32 unicodeIndex = get<uint16>(data, startCodeTableOffset + i * 2); unicodeIndex <= get<uint16>(data, endCodeTableOffset + i * 2); unicodeIndex++) {
+						uint32 glyph_address_index_offset = get<uint16>(data, idRangeOffsetTableOffset + i * 2) + 2 * (unicodeIndex - get<uint16>(data, startCodeTableOffset + i * 2)) + glyph_address_offset;
+						uint16 glyphIndex;
+						read(&glyphIndex, data, &glyph_address_index_offset);
+						glyphIndex += get<uint16>(data, idDeltaTableOffset + i * 2);
+						//fontData->GlyphMap.Emplace(unicodeIndex, glyphIndex);
+						fontData->Glyphs.Emplace(unicodeIndex);
+						if (auto res = glyphReverseMap.TryEmplace(glyphIndex, unicodeIndex); !res) {
+							res.Get() = unicodeIndex;
 						}
 					}
 				} else {
-					for (uint32 c = get<uint16>(data, startCodeTableOffset + i * 2); c <= get<uint16>(data, endCodeTableOffset + i * 2); c++) {
-						fontData->GlyphMap.Emplace(c, c + get<uint16>(data, idDeltaTableOffset + i * 2));
-						if (auto res = glyphReverseMap.TryEmplace(c + get<uint16>(data, idDeltaTableOffset + i * 2), c); !res) {
-							res.Get() = c;
+					for (uint32 unicodeIndex = get<uint16>(data, startCodeTableOffset + i * 2); unicodeIndex <= get<uint16>(data, endCodeTableOffset + i * 2); unicodeIndex++) {
+						//fontData->GlyphMap.Emplace(unicodeIndex, unicodeIndex + get<uint16>(data, idDeltaTableOffset + i * 2));
+						fontData->Glyphs.Emplace(unicodeIndex);
+						if (auto res = glyphReverseMap.TryEmplace(unicodeIndex + get<uint16>(data, idDeltaTableOffset + i * 2), unicodeIndex); !res) {
+							res.Get() = unicodeIndex;
 						}						
 					}
 				}				
@@ -723,14 +721,12 @@ namespace GTSL {
 
 		Vector<bool, DefaultAllocatorReference> glyphLoaded(max_profile.numGlyphs, DefaultAllocatorReference());
 		glyphLoaded.EmplaceGroup(max_profile.numGlyphs, false);
-		fontData->Glyphs.EmplaceGroup(max_profile.numGlyphs);
 
 		auto parseGlyph = [&](uint32 i, auto&& self) -> bool {
 			if (glyphLoaded[i]) { return true; }
 
-			Glyph& currentGlyph = fontData->Glyphs[i];
+			Glyph& currentGlyph = fontData->Glyphs.TryEmplace(glyphReverseMap.TryEmplace(static_cast<int16>(i), 0).Get()).Get();
 			currentGlyph.GlyphIndex = static_cast<int16>(i);
-			currentGlyph.Character = glyphReverseMap.TryEmplace(static_cast<int16>(i), 0).Get();
 
 			if (i < hheaTable.numberOfHMetrics) {
 				ptr = hmtx_offset + i * sizeof(uint32);
@@ -761,18 +757,18 @@ namespace GTSL {
 				read(&bbox[1][0], data, &currentOffset); //xMax
 				read(&bbox[1][1], data, &currentOffset); //yMax
 
-				currentGlyph.BoundingBox[0][0] = bbox[0][0];
-				currentGlyph.BoundingBox[0][1] = bbox[0][1];
-				currentGlyph.BoundingBox[1][0] = bbox[1][0];
-				currentGlyph.BoundingBox[1][1] = bbox[1][1];
+				currentGlyph.Min[0] = bbox[0][0];
+				currentGlyph.Min[1] = bbox[0][1];
+				currentGlyph.Max[0] = bbox[1][0];
+				currentGlyph.Max[1] = bbox[1][1];
 
-				currentGlyph.Center = (currentGlyph.BoundingBox[0] + currentGlyph.BoundingBox[1]) / 2.0f;
+				currentGlyph.Center = (currentGlyph.Min + currentGlyph.Max) / 2.0f;
 			}
 
 			if (numContours > 0) { //Simple glyph
 				auto contourEndArrayOffset = currentOffset;
 
-				Vector<uint16, DoubleAllocator<sizeof(uint16) * 16, DefaultAllocatorReference>> numberOfPointsPerContour(max_profile.maxContours);
+				SemiVector<uint16, 16, DefaultAllocatorReference> numberOfPointsPerContour(max_profile.maxContours);
 
 				currentOffset += numContours * 2;
 
@@ -936,7 +932,7 @@ namespace GTSL {
 							}
 						}
 
-						const Glyph& compositeGlyphElement = fontData->Glyphs[glyphIndex];
+						const Glyph& compositeGlyphElement = fontData->Glyphs[glyphReverseMap[glyphIndex]];
 
 						uint32 compositeGlyphPathCount = compositeGlyphElement.Contours.GetLength();
 						for (uint32 glyphPointIndex = 0; glyphPointIndex < compositeGlyphPathCount; glyphPointIndex++) {

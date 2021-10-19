@@ -1,5 +1,6 @@
 #pragma once
 #include "Core.h"
+#include "HashMap.hpp"
 #include "System.h"
 #include "Vector.hpp"
 #include "Tuple.h"
@@ -29,7 +30,6 @@ namespace GTSL
 	void Destroy(uint32 index, void* p) {
 		Destroy<CLASSES...>(index, p, BuildIndices<sizeof...(CLASSES)>{});
 	}
-
 
 	template<typename T, class ALLOCATOR>
 	class Tree {
@@ -123,25 +123,39 @@ namespace GTSL
 			uint16 TypeIndex = 0;
 		};
 
+		struct Helper {
+			template<typename... ARGS>
+			Helper(ARGS&&... args) : Alpha(ForwardRef<ARGS>(args)... ) {}
+
+			ALPHA Alpha;
+
+			struct BetaNodeData {
+				Key Handle = 0;
+				StaticMap<uint64, Key, 8> ChildrenMap;
+			};
+
+			StaticVector<BetaNodeData, 8> InternalSiblings;
+		};
+
 		AlphaBetaTree(const ALLOCATOR& alloc = ALLOCATOR()) : allocator(alloc) {}
 
 		AlphaBetaTree(const uint32 minNodes, const ALLOCATOR& alloc = ALLOCATOR()) : allocator(alloc) {
 			tryResizeIndirectionTable(minNodes);
 			tryResizeAlphaTable(minNodes);
-			tryResizeBetaTable(minNodes * 8);
+			tryResizeBetaTable(minNodes * 16);
 		}
 
 		template<typename... ARGS>
 		Key EmplaceAlpha(Key parentNodeHandle, ARGS&&... args) {
 			tryResizeAlphaTable(1);
-			::new(alphaTable + alphaEntries++) ALPHA(GTSL::ForwardRef<ARGS>(args)...);
+			::new(alphaTable + alphaEntries++) Helper(GTSL::ForwardRef<ARGS>(args)...);
 			return alphaEntries;
 		}
 
 		//template<typename T, typename... ARGS>
 		//Key AddBeta(uint32 parentNodeHandle, ARGS&&... args) {
 		template<typename T, typename... ARGS>
-		Key EmplaceBeta(uint32 parentNodeHandle, ARGS&&... args) {
+		Key EmplaceBeta(Key alphaParentHandle, Key alphaSiblingHandle, ARGS&&... args) {
 			tryResizeBetaTable(sizeof(T));
 			tryResizeIndirectionTable(1);
 
@@ -154,8 +168,16 @@ namespace GTSL
 			::new(betaTable + betaLength) T(GTSL::ForwardRef<ARGS>(args)...);
 			betaLength += sizeof(T);
 
-			if (parentNodeHandle) {
+			auto& alphaSibling = getHelper(alphaSiblingHandle);
+			auto& internalSiblingEntry = alphaSibling.InternalSiblings.EmplaceBack();
+			internalSiblingEntry.Handle = indirectionEntries;
+
+			if (alphaParentHandle) {
+				auto& alphaParent = getHelper(alphaParentHandle);
+
+				Key parentNodeHandle = alphaParent.InternalSiblings.back().Handle;
 				Node& parentNode = at(parentNodeHandle);
+
 				parentNode.ChildrenCount += 1;
 
 				Key hand = parentNodeHandle;
@@ -165,6 +187,7 @@ namespace GTSL
 				
 				auto& preLink = at(hand);
 				preLink.Next = indirectionEntries;
+
 			} else  {
 				if (indirectionEntries - 1) {
 					Key hand = 1;
@@ -179,8 +202,8 @@ namespace GTSL
 		}
 
 		template<typename T>
-		Key AddBeta(uint32 parentNodeHandle, T val) {
-			return EmplaceBeta<T>(parentNodeHandle, MoveRef(val));
+		Key AddBeta(Key alphaParentNodeHandle, Key alphaSiblingNodeHandle, T val) {
+			return EmplaceBeta<T>(alphaParentNodeHandle, alphaSiblingNodeHandle, MoveRef(val));
 		}
 
 		~AlphaBetaTree() {
@@ -210,8 +233,8 @@ namespace GTSL
 		template<typename T>
 		const T& At(const uint32 i) const { return *reinterpret_cast<const T*>(betaTable + indirectionTable[i - 1].Position); }
 
-		ALPHA& At(const Key i) { return alphaTable[i - 1]; }
-		const ALPHA& At(const Key i) const { return alphaTable[i - 1]; }
+		ALPHA& At(const Key i) { return alphaTable[i - 1].Alpha; }
+		const ALPHA& At(const Key i) const { return alphaTable[i - 1].Alpha; }
 
 		uint32 GetNodeType(const Key handle) const { return at(handle).TypeIndex; }
 
@@ -222,7 +245,7 @@ namespace GTSL
 		ALLOCATOR allocator;
 		
 		byte* betaTable = nullptr; uint32 betaLength = 0, betaCapacity = 0;
-		ALPHA* alphaTable = nullptr; uint32 alphaEntries = 0, alphaCapacity = 0;
+		Helper* alphaTable = nullptr; uint32 alphaEntries = 0, alphaCapacity = 0;
 		Node* indirectionTable = nullptr; uint32 indirectionEntries = 0, indirectionCapacity = 0;
 
 		Node& at(uint32 nodeHandle) {
@@ -231,6 +254,10 @@ namespace GTSL
 
 		const Node& at(uint32 nodeHandle) const {
 			return indirectionTable[nodeHandle - 1];
+		}
+
+		Helper& getHelper(Key handle) {
+			return alphaTable[handle - 1];
 		}
 
 		void tryResizeIndirectionTable(uint32 delta) {

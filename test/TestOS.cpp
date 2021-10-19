@@ -79,10 +79,10 @@ TEST(Font, Font) {
 
 	{ //a
 		auto& a = font.GetGlyph(U'a');
-		GTEST_ASSERT_EQ(a.BoundingBox[0].X(), 27);
-		GTEST_ASSERT_EQ(a.BoundingBox[0].Y(), -27);
-		GTEST_ASSERT_EQ(a.BoundingBox[1].X(), 1134);
-		GTEST_ASSERT_EQ(a.BoundingBox[1].Y(), 997);
+		GTEST_ASSERT_EQ(a.Min.X(), 27);
+		GTEST_ASSERT_EQ(a.Min.Y(), -27);
+		GTEST_ASSERT_EQ(a.Max.X(), 1134);
+		GTEST_ASSERT_EQ(a.Max.Y(), 997);
 		GTEST_ASSERT_EQ(a.GlyphIndex, 68);
 		GTEST_ASSERT_EQ(a.AdvanceWidth, 1161);
 		GTEST_ASSERT_EQ(a.LeftSideBearing, 27);
@@ -96,10 +96,10 @@ TEST(Font, Font) {
 
 	{ //A
 		auto& A = font.GetGlyph(U'A');
-		GTEST_ASSERT_EQ(A.BoundingBox[0].X(), 0);
-		GTEST_ASSERT_EQ(A.BoundingBox[0].Y(), -21);
-		GTEST_ASSERT_EQ(A.BoundingBox[1].X(), 1693);
-		GTEST_ASSERT_EQ(A.BoundingBox[1].Y(), 1399);
+		GTEST_ASSERT_EQ(A.Min.X(), 0);
+		GTEST_ASSERT_EQ(A.Min.Y(), -21);
+		GTEST_ASSERT_EQ(A.Max.X(), 1693);
+		GTEST_ASSERT_EQ(A.Max.Y(), 1399);
 		GTEST_ASSERT_EQ(A.GlyphIndex, 36);
 		GTEST_ASSERT_EQ(A.AdvanceWidth, 1693);
 		GTEST_ASSERT_EQ(A.LeftSideBearing, 0);
@@ -113,10 +113,10 @@ TEST(Font, Font) {
 
 	{ //a tilde
 		auto& aTilde = font.GetGlyph(U'á');
-		GTEST_ASSERT_EQ(aTilde.BoundingBox[0].X(), 27);
-		GTEST_ASSERT_EQ(aTilde.BoundingBox[0].Y(), -27);
-		GTEST_ASSERT_EQ(aTilde.BoundingBox[1].X(), 1134);
-		GTEST_ASSERT_EQ(aTilde.BoundingBox[1].Y(), 1430);
+		GTEST_ASSERT_EQ(aTilde.Min.X(), 27);
+		GTEST_ASSERT_EQ(aTilde.Min.Y(), -27);
+		GTEST_ASSERT_EQ(aTilde.Max.X(), 1134);
+		GTEST_ASSERT_EQ(aTilde.Max.Y(), 1430);
 		GTEST_ASSERT_EQ(aTilde.GlyphIndex, 105);
 		GTEST_ASSERT_EQ(aTilde.AdvanceWidth, 1161);
 		GTEST_ASSERT_EQ(aTilde.LeftSideBearing, 27);
