@@ -128,12 +128,13 @@ namespace GTSL
 			Helper(ARGS&&... args) : Alpha(ForwardRef<ARGS>(args)... ) {}
 
 			ALPHA Alpha;
+			
+			StaticMap<uint64, Key, 8> ChildrenMap;
 
 			struct BetaNodeData {
 				Key Handle = 0;
 				StaticMap<uint64, Key, 8> ChildrenMap;
 			};
-
 			StaticVector<BetaNodeData, 8> InternalSiblings;
 		};
 
@@ -155,7 +156,7 @@ namespace GTSL
 		//template<typename T, typename... ARGS>
 		//Key AddBeta(uint32 parentNodeHandle, ARGS&&... args) {
 		template<typename T, typename... ARGS>
-		Key EmplaceBeta(Key alphaParentHandle, Key alphaSiblingHandle, ARGS&&... args) {
+		Result<Key> EmplaceBeta(uint64 nodeName, Key alphaParentHandle, Key alphaSiblingHandle, ARGS&&... args) {
 			tryResizeBetaTable(sizeof(T));
 			tryResizeIndirectionTable(1);
 
@@ -168,12 +169,17 @@ namespace GTSL
 			::new(betaTable + betaLength) T(GTSL::ForwardRef<ARGS>(args)...);
 			betaLength += sizeof(T);
 
-			auto& alphaSibling = getHelper(alphaSiblingHandle);
+			Helper& alphaSibling = getHelper(alphaSiblingHandle);
+			alphaSibling.ChildrenMap.Emplace(nodeName, indirectionEntries);
+
 			auto& internalSiblingEntry = alphaSibling.InternalSiblings.EmplaceBack();
 			internalSiblingEntry.Handle = indirectionEntries;
 
 			if (alphaParentHandle) {
-				auto& alphaParent = getHelper(alphaParentHandle);
+				Helper& alphaParent = getHelper(alphaParentHandle);
+
+				auto r = alphaParent.ChildrenMap.TryEmplace(nodeName, indirectionEntries);
+				if (!r) { return Result(static_cast<Key>(r.Get()), true); }
 
 				Key parentNodeHandle = alphaParent.InternalSiblings.back().Handle;
 				Node& parentNode = at(parentNodeHandle);
@@ -198,12 +204,12 @@ namespace GTSL
 				}
 			}
 
-			return indirectionEntries;
+			return Result(static_cast<Key&&>(indirectionEntries), true);
 		}
 
 		template<typename T>
-		Key AddBeta(Key alphaParentNodeHandle, Key alphaSiblingNodeHandle, T val) {
-			return EmplaceBeta<T>(alphaParentNodeHandle, alphaSiblingNodeHandle, MoveRef(val));
+		Result<Key> AddBeta(uint64 nodeName, Key alphaParentNodeHandle, Key alphaSiblingNodeHandle, T val) {
+			return EmplaceBeta<T>(nodeName, alphaParentNodeHandle, alphaSiblingNodeHandle, MoveRef(val));
 		}
 
 		~AlphaBetaTree() {
@@ -229,9 +235,34 @@ namespace GTSL
 		}
 
 		template<typename T>
-		T& At(const uint32 i) { return *reinterpret_cast<T*>(betaTable + indirectionTable[i - 1].Position); }
+		T& GetBeta(const Key betaNodeHandle) {
+#if _DEBUG
+			if (!(GetTypeIndexInTemplateList<T, CLASSES...>() == at(betaNodeHandle).TypeIndex)) { __debugbreak(); }
+#endif
+			return *reinterpret_cast<T*>(betaTable + at(betaNodeHandle).Position);
+		}
+
 		template<typename T>
-		const T& At(const uint32 i) const { return *reinterpret_cast<const T*>(betaTable + indirectionTable[i - 1].Position); }
+		[[nodiscard]] const T& GetBeta(const Key betaNodeHandle) const {
+#if _DEBUG
+			if (!(GetTypeIndexInTemplateList<T, CLASSES...>() == at(betaNodeHandle).TypeIndex)) { __debugbreak(); }
+#endif
+			return *reinterpret_cast<const T*>(betaTable + at(betaNodeHandle).Position);
+		}
+
+		template<typename T>
+		T& GetBetaFromAlphaNode(const Key alphaSiblingHandle, uint32 index) {
+			const auto& alphaSibling = getHelper(alphaSiblingHandle);
+			index = index >= alphaSibling.InternalSiblings.GetLength() ? alphaSibling.InternalSiblings.GetLength() - 1 : index;
+			return GetBeta<T>(alphaSibling.InternalSiblings[index].Handle);
+		}
+
+		template<typename T>
+		const T& GetBetaFromAlphaNode(const Key alphaSiblingHandle, uint32 index) const {
+			const auto& alphaSibling = getHelper(alphaSiblingHandle);
+			index = index >= alphaSibling.InternalSiblings.GetLength() ? alphaSibling.InternalSiblings.GetLength() - 1 : index;
+			return GetBeta<T>(alphaSibling.InternalSiblings[index].Handle);
+		}
 
 		ALPHA& At(const Key i) { return alphaTable[i - 1].Alpha; }
 		const ALPHA& At(const Key i) const { return alphaTable[i - 1].Alpha; }
@@ -241,6 +272,10 @@ namespace GTSL
 		uint32 GetAlphaLength() const { return alphaEntries; }
 		uint32 GetBetaLength() const { return betaLength; }
 
+		void Optimize() {
+			
+		}
+
 	private:
 		ALLOCATOR allocator;
 		
@@ -248,11 +283,11 @@ namespace GTSL
 		Helper* alphaTable = nullptr; uint32 alphaEntries = 0, alphaCapacity = 0;
 		Node* indirectionTable = nullptr; uint32 indirectionEntries = 0, indirectionCapacity = 0;
 
-		Node& at(uint32 nodeHandle) {
+		Node& at(Key nodeHandle) {
 			return indirectionTable[nodeHandle - 1];
 		}
 
-		const Node& at(uint32 nodeHandle) const {
+		const Node& at(Key nodeHandle) const {
 			return indirectionTable[nodeHandle - 1];
 		}
 

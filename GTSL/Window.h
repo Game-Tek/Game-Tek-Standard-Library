@@ -11,10 +11,12 @@
 #include "StringCommon.h"
 
 #if (_WIN64)
+#include <Windows.h>
 #define WIN32_LEAN_AND_MEAN
 #include "ShObjIdl_core.h"
+#include <WinUser.h>
 #include <hidsdi.h>
-#include <setupapi.h>
+#include <SetupAPI.h>
 #undef ERROR
 #endif
 
@@ -23,13 +25,11 @@ namespace GTSL
 	class Window
 	{
 	public:
-		enum class MouseButton : uint8
-		{
+		enum class MouseButton : uint8 {
 			LEFT_BUTTON, RIGHT_BUTTON, MIDDLE_BUTTON
 		};
 
-		enum class KeyboardKeys : uint8
-		{
+		enum class KeyboardKeys : uint8 {
 			Q, W, E, R, T, Y, U, I, O, P, A, S, D, F, G, H, J, K, L, Z, X, C, V, B, N, M,
 
 			Keyboard0, Keyboard1, Keyboard2, Keyboard3, Keyboard4, Keyboard5, Keyboard6, Keyboard7, Keyboard8, Keyboard9,
@@ -76,20 +76,17 @@ namespace GTSL
 			F12
 		};
 
-		enum class WindowType : uint8
-		{
+		enum class WindowType : uint8 {
 			OS_WINDOW, NO_ELEMENTS
 		};
 
-		enum class WindowSizeState : uint8
-		{
+		enum class WindowSizeState : uint8 {
 			MINIMIZED, MAXIMIZED, FULLSCREEN
 		};
 		
 		Window() = default;
 
-		struct JoystickUpdate
-		{
+		struct JoystickUpdate {
 			Gamepad::Side Side;
 			Gamepad::SourceNames Source;
 
@@ -100,27 +97,23 @@ namespace GTSL
 			};
 		};
 
-		enum class WindowEvents
-		{
+		enum class WindowEvents {
 			CLOSE, KEYBOARD_KEY, CHAR, SIZE, MOVING, MOUSE_MOVE, MOUSE_WHEEL,
-			MOUSE_BUTTON, FOCUS, JOYSTICK_UPDATE, DEVICE_CHANGE
+			MOUSE_BUTTON, FOCUS, JOYSTICK_UPDATE, DEVICE_CHANGE, PPI_CHANGE
 		};
 
-		struct WindowsCallData
-		{
+		struct WindowsCallData {
 			void* UserData;
 			Delegate<void(void*, WindowEvents, void*)> FunctionToCall;
 			Window* WindowPointer;
 			bool hadResize = false;
 		};
 
-		struct DeviceChangeData
-		{
+		struct DeviceChangeData {
 			bool isController = false;
 		};
 		
-		void BindToOS(StringView name, Extent2D extent, const Application& application, void* userData, Delegate<void(void*, WindowEvents, void*)> function, Window parentWindow = Window(), WindowType type = WindowType::OS_WINDOW)
-		{
+		void BindToOS(StringView name, Extent2D extent, const Application& application, void* userData, Delegate<void(void*, WindowEvents, void*)> function, Window parentWindow = Window(), WindowType type = WindowType::OS_WINDOW) {
 #if (_WIN32)
 			WNDCLASSA wndclass{};
 			wndclass.lpfnWndProc = reinterpret_cast<WNDPROC>(Win32_windowProc);
@@ -249,8 +242,7 @@ namespace GTSL
 			}
 			break;
 
-			case WindowSizeState::FULLSCREEN:
-			{
+			case WindowSizeState::FULLSCREEN: {
 				const DWORD remove = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 				const DWORD new_style = defaultWindowStyle & ~remove;
 				SetWindowLongPtrA(windowHandle, GWL_STYLE, new_style);
@@ -261,8 +253,7 @@ namespace GTSL
 			}
 			break;
 
-			case WindowSizeState::MINIMIZED:
-			{
+			case WindowSizeState::MINIMIZED: {
 				SetWindowLongPtrA(windowHandle, GWL_STYLE, defaultWindowStyle);
 				ShowWindowAsync(windowHandle, SW_MINIMIZE);
 
@@ -369,9 +360,12 @@ namespace GTSL
 		using WindowSizeEventData = Extent2D;
 		using MouseWheelEventData = float32;
 		
-		struct FocusEventData
-		{
+		struct FocusEventData {
 			bool Focus, HadFocus;
+		};
+
+		struct PPIChangeData {
+			uint32 PPI = 0;
 		};
 	
 	protected:
@@ -383,7 +377,7 @@ namespace GTSL
 		bool focus : 1 = false;
 		//void* iTaskbarList;
 
-#if (_WIN64)
+#ifdef _WIN32
 		//https://gist.github.com/mmozeiko/b8ccc54037a5eaf35432396feabbe435
 		typedef struct
 		{
@@ -957,6 +951,15 @@ namespace GTSL
 
 				DeviceChangeData result;
 				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::DEVICE_CHANGE, &result);
+
+				break;
+			}
+			case WM_DPICHANGED: {
+				auto dpi = HIWORD(wParam);
+
+				PPIChangeData result;
+				result.PPI = dpi;
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::PPI_CHANGE, &result);
 
 				break;
 			}

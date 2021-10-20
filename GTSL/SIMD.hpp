@@ -143,8 +143,7 @@ namespace GTSL
 	};
 
 	template<>
-	class SIMD<uint8, 16>
-	{
+	class SIMD<uint8, 16> {
 	public:
 		using type = uint8;
 		static constexpr uint8 TypeElementsCount = 16;
@@ -241,8 +240,7 @@ namespace GTSL
 	};
 
 	template<>
-	class SIMD<uint64, 2>
-	{
+	class SIMD<uint64, 2> {
 	public:
 		using type = uint64;
 		static constexpr uint8 TypeElementsCount = 2;
@@ -340,11 +338,10 @@ namespace GTSL
 	class SIMD<int32, 4>;
 
 	template<>
-	class SIMD<float32, 4>
-	{
+	class SIMD<float32, 4> {
 	public:
 		using type = float32;
-		static constexpr uint8 TypeElementsCount = 4;
+		static constexpr uint8 ElementCount = 4;
 
 		SIMD() = default;
 
@@ -471,12 +468,144 @@ namespace GTSL
 		friend class SIMD<int32, 4>;
 	};
 
+
 	template<>
-	class SIMD<float64, 2>
-	{
+	class SIMD<float32, 8> {
+	public:
+		using type = float32;
+		static constexpr uint8 ElementCount = 8;
+
+		SIMD() = default;
+
+		explicit SIMD(const type a) : vector(_mm_set_ps1(a)) {}
+
+		SIMD(const type* data) : vector(_mm_load_ps(data)) {}
+
+		SIMD(const AlignedPointer<const type, 16> data) : vector(_mm_load_ps(data)) {}
+		SIMD(const UnalignedPointer<const type> data) : vector(_mm_loadu_ps(data)) {}
+
+		/**
+		 * \brief Loads elements in to the vector, it stores in order from left to right, doen't use SSE native little-endian ordering
+		 * \param x 0th parameter in vector
+		 * \param y 1st parameter in vector
+		 * \param z 2nd parameter in vector
+		 * \param w 3rd parameter in vector
+		 */
+		SIMD(const type x, const type y, const type z, const type w) : vector(_mm_setr_ps(x, y, z, w)) {}
+		explicit SIMD(const SIMD<int32, 4> other);
+
+		SIMD(const SIMD& other) = default;
+
+		~SIMD() = default;
+
+		void Set(const AlignedPointer<type, 16> data) { vector = _mm_load_ps(data); }
+		void Set(const UnalignedPointer<type> data) { vector = _mm_loadu_ps(data); }
+
+		/**
+		 * \brief Sets all of this vector's components as a.
+		 * \param a float to set all of this vector's components as.
+		 * \return Returns a reference to itself.
+		 */
+		SIMD& operator=(const type a) { vector = _mm_set_ps1(a); return *this; }
+		SIMD& operator=(const SIMD& other) { vector = other.vector; return *this; }
+
+		SIMD& operator=(const AlignedPointer<const type, 16> data) { vector = _mm_load_ps(data); return *this; }
+		SIMD& operator=(const UnalignedPointer<const type> data) { vector = _mm_loadu_ps(data); return *this; }
+
+		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
+		void CopyTo(const AlignedPointer<type, 16> data) const { _mm_store_ps(data, vector); }
+
+		void CopyTo(type* data) const { _mm_store_ps(data, vector); }
+
+		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
+		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_ps(data, vector); }
+
+		template<int32 A, int32 B, int32 C, int32 D>
+		[[nodiscard]] static SIMD Shuffle(const SIMD a, const SIMD b) {
+			if constexpr (A == 0 and B == 1 and C == 0 and D == 1) {
+				return _mm_movelh_ps(a, b);
+			} if constexpr (A == 2 and B == 3 and C == 2 and D == 3) {
+				return _mm_movehl_ps(a, b);
+			}
+			else {
+				return _mm_shuffle_ps(a.vector, b.vector, _MM_SHUFFLE(D, C, B, A));
+			}
+		}
+
+		template<int32 A, int32 B, int32 C, int32 D>
+		[[nodiscard]] static SIMD Shuffle(const SIMD a) { return _mm_permute_ps(a.vector, _MM_SHUFFLE(D, C, B, A)); }
+
+		void Abs() { vector = _mm_andnot_ps(vector, SIMD(1.0f)); }
+		static SIMD Abs(const SIMD& a) { return _mm_andnot_ps(a, SIMD(-0.0f)); }
+		static SIMD NotAbs(const SIMD& a) { return _mm_andnot_ps(a, SIMD(0.0f)); }
+
+		static SIMD Floor(const SIMD& a) { return _mm_floor_ps(a); }
+
+		static SIMD Min(const SIMD& a, const SIMD& b) { return _mm_min_ps(a, b); }
+		static SIMD Max(const SIMD& a, const SIMD& b) { return _mm_max_ps(a, b); }
+
+		static SIMD HorizontalAdd(const SIMD& a, const SIMD& b) { return _mm_hadd_ps(a.vector, b.vector); }
+
+		//Horizontally add adjacent pairs of single - precision(32 - bit) floating - point elements in a and B, and pack the results in dst.
+		static SIMD HorizontalSub(const SIMD& a, const SIMD& b) { return _mm_hsub_ps(a.vector, b.vector); }
+
+		//Alternatively add and subtract packed single-precision (32-bit) floating-point elements in a to/from packed elements in B, and store the results in dst
+		[[nodiscard]] static SIMD Add13Sub02(const SIMD& a, const SIMD& b) { return _mm_addsub_ps(a.vector, b.vector); }
+
+		//Conditionally multiply the packed single-precision (32-bit) floating-point elements in a and B using the high 4 bits in imm8, sum the four products, and conditionally store the sum in dst using the low 4 bits of imm8.
+		[[nodiscard]] static SIMD DotProduct(const SIMD& a, const SIMD& b) { return _mm_dp_ps(a.vector, b.vector, 0xff); }
+
+		static void Transpose(SIMD& a, SIMD& b, SIMD& c, SIMD& d) { _MM_TRANSPOSE4_PS(a, b, c, d); }
+
+		[[nodiscard]] SIMD SquareRoot() const { return _mm_sqrt_ps(vector); }
+
+		uint8 BitMask() const { return static_cast<uint8>(_mm_movemask_ps(vector)); }
+
+		/**
+		 * \brief Computes the square root of the lower single-precision (32-bit) floating-point element, stores the result in the lower element of the return, and copies the upper 3 elements from the vector to the upper elements of the return.
+		 * \return A vector containing the square root of the vector's first element in the lowest element and the vector upper 3 elements in the upper 3 elements.
+		 */
+		[[nodiscard]] SIMD SquareRootToLower() const { return _mm_sqrt_ss(vector); }
+
+		template<uint8 I>
+		[[nodiscard]] type GetElement() const { return _mm_extract_ps(vector, I); }
+
+		SIMD operator+(const SIMD& other) const { return _mm_add_ps(vector, other.vector); }
+		SIMD operator-(const SIMD& other) const { return _mm_sub_ps(vector, other.vector); }
+		SIMD operator*(const SIMD& other) const { return _mm_mul_ps(vector, other.vector); }
+		SIMD operator/(const SIMD& other) const { return _mm_div_ps(vector, other.vector); }
+
+		SIMD& operator+=(const SIMD& other) { vector = _mm_add_ps(vector, other.vector); return *this; }
+		SIMD& operator-=(const SIMD& other) { vector = _mm_sub_ps(vector, other.vector); return *this; }
+		SIMD& operator*=(const SIMD& other) { vector = _mm_mul_ps(vector, other.vector); return *this; }
+		SIMD& operator/=(const SIMD& other) { vector = _mm_div_ps(vector, other.vector); return *this; }
+
+		SIMD operator==(const SIMD& other) const { return _mm_cmpeq_ps(vector, other.vector); }
+		SIMD operator!=(const SIMD& other) const { return _mm_cmpneq_ps(vector, other.vector); }
+		SIMD operator>(const SIMD& other)  const { return _mm_cmpgt_ps(vector, other.vector); }
+		SIMD operator>=(const SIMD& other) const { return _mm_cmpge_ps(vector, other.vector); }
+		SIMD operator<(const SIMD& other)  const { return _mm_cmplt_ps(vector, other.vector); }
+		SIMD operator<=(const SIMD& other) const { return _mm_cmple_ps(vector, other.vector); }
+
+		SIMD operator&(const SIMD& other) const { return _mm_and_ps(vector, other.vector); }
+		SIMD operator|(const SIMD& other) const { return _mm_or_ps(vector, other.vector); }
+		SIMD operator^(const SIMD& other) const { return _mm_xor_ps(vector, other); }
+		SIMD& operator~() { vector = _mm_xor_ps(vector, _mm_cmpeq_ps(vector, vector)); return *this; }
+
+	private:
+		__m128 vector;
+
+		operator __m128() const { return vector; }
+		SIMD(const __m128 m128) : vector(m128) {}
+
+		friend class SIMD<int32, 4>;
+	};
+
+	template<>
+	class SIMD<float64, 2> {
 	public:
 		using type = float64;
-		static constexpr uint8 TypeElementsCount = 2;
+		static constexpr uint8 ElementCount = 2;
 
 		SIMD() = default;
 
@@ -576,11 +705,10 @@ namespace GTSL
 	};
 
 	template<>
-	class SIMD<int32, 4>
-	{
+	class SIMD<int32, 4> {
 	public:
 		using type = int32;
-		static constexpr uint8 TypeElementsCount = 4;
+		static constexpr uint8 ElementCount = 4;
 
 		SIMD() = default;
 

@@ -61,7 +61,32 @@ namespace GTSL
 	consteval size_t PackSize() {
 		return (sizeof(ARGS) + ... + 0);
 	}
-	
+
+	template <int N, typename... T>
+	struct TypeAt;
+
+	template <typename T0, typename... T>
+	struct TypeAt<0, T0, T...> {
+		typedef T0 type;
+	};
+	template <int N, typename T0, typename... T>
+	struct TypeAt<N, T0, T...> {
+		typedef typename TypeAt<N - 1, T...>::type type;
+	};
+
+	template<uint32 AT, uint32 I, typename... ARGS>
+	consteval size_t ttt() {
+		if constexpr (AT == I)
+			return 0;
+		else
+			return sizeof(TypeAt<I, ARGS...>) + ttt<AT, I + 1, ARGS...>();
+	}
+
+	template<uint32 AT, typename... ARGS>
+	consteval size_t PackSizeAt() {
+		return ttt<AT, 0, ARGS...>();
+	}
+
 	template<typename F, typename... ARGS>
 	void MultiFor(F&& function, uint32 length, ARGS&&... iterators)
 	{

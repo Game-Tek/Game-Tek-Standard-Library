@@ -389,18 +389,31 @@ namespace GTSL {
 		uint16 numLayerRecords;
 	
 		void Parse(const char* data, uint32* offset) {
-			offset += 2; //version
+			uint16 version = 0;
+			read(&version, data, offset);
+
 			read(&numBaseGlyphRecords, data, offset);
 			read(&baseGlyphRecordsOffset, data, offset);
 			read(&layerRecordsOffset, data, offset);
 			read(&numLayerRecords, data, offset);
+
+			//BaseGlyph record:
+			//Type	Name	Description
+			//uint16	glyphID	Glyph ID of the base glyph.
+			//uint16	firstLayerIndex	Index(base 0) into the layerRecords array.
+			//uint16	numLayers	Number of color layers associated with this glyph.
+
+			//Layer record:
+			//Type	Name	Description
+			//uint16	glyphID	Glyph ID of the glyph used for a given layer.
+			//uint16	paletteIndex	Index(base 0) for a palette entry in the CPAL table.
 		}
 	};
 
 	struct CPALTable {
 		uint16 numPaletteEntries, numPalettes, numColorRecords;
 		uint32 colorRecordsArrayOffset;
-		std::vector<uint16> colorRecordIndices;
+		std::vector<uint16> colorRecordIndices; //Index of each palette’s first color record in the combined color record array.
 
 		struct BGRAColor {
 			uint8 Blue, Green, Red, Alpha;
@@ -419,10 +432,14 @@ namespace GTSL {
 
 			colorRecordIndices.resize(numPalettes);
 
-			//auto colorRecordIndex = colorRecordIndices[paletteIndex] + paletteEntryIdex;
+			for(uint32 i = 0; i < numPalettes; ++i) {
+				read(&colorRecordIndices[i], data, offset);
+			}
 
-			if(version == 1) {
-				
+			colors.resize(numColorRecords);
+
+			for (uint32 i = 0; i < numColorRecords; ++i) {
+				read(&colors[i].Blue, data, offset); read(&colors[i].Green, data, offset); read(&colors[i].Red, data, offset); read(&colors[i].Alpha, data, offset);
 			}
 		}
 	};

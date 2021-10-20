@@ -455,4 +455,45 @@ namespace GTSL
 
 	template<typename T, uint64 N, class B>
 	using SemiVector = Vector<T, DoubleAllocator<N * sizeof(T), B>>;
+
+	template<class ALLOCATOR, typename... TYPES>
+	class MultiVector {
+	public:
+		MultiVector(const uint32 minElements, const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {
+			tryResize(minElements);
+		}
+
+		~MultiVector() {
+			if (capacity) {
+				Deallocate(allocator, PackSize<TYPES...>() * capacity, data);
+			}
+		}
+
+		void EmplaceBack(TYPES&&... args) {
+			tryResize(1);
+			++length;
+		}
+
+		template<uint32 M>
+		auto At(const uint32 index) {
+			return *reinterpret_cast<typename TypeAt<M, TYPES...>::type*>(data + PackSize<TYPES...>() * index + PackSizeAt<M, TYPES...>());
+		}
+
+	private:
+		ALLOCATOR allocator;
+		uint32 capacity = 0, length = 0;
+		byte* data = nullptr;
+
+		void tryResize(const uint32 delta) {
+			if(length + delta > capacity) {
+				if(data) {
+					Resize(allocator, &data, &capacity, capacity * 2 * PackSize<TYPES...>(), length * PackSize<TYPES...>());
+				} else {
+					Allocate(allocator, delta * PackSize<TYPES...>(), &data, &capacity);
+				}
+
+				capacity /= PackSize<TYPES...>();
+			}
+		}
+	};
 }

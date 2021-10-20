@@ -15,10 +15,8 @@
 
 #include <cmath>
 
-namespace GTSL
-{
-	union FloatintPoint
-	{
+namespace GTSL {
+	union FloatintPoint {
 		FloatintPoint(float32 f) : Float(f) {}
 		FloatintPoint(int32 i) : Int(i) {}
 
@@ -404,7 +402,7 @@ namespace GTSL
 				a5(-2.502845227292692953118686710787e-8f),
 				a6(1.538730635926417598443354215485e-10f);
 
-			for (uint32 t = 0; t < n.ElementCount() / SIMD::TypeElementsCount; ++t, i += SIMD::TypeElementsCount) {
+			for (uint32 t = 0; t < n.ElementCount() / SIMD::ElementCount; ++t, i += SIMD::ElementCount) {
 				auto x = SIMD(AlignedPointer<const float32, 16>(n.begin() + i));
 
 				//wrap modulo PI
@@ -1208,20 +1206,35 @@ namespace GTSL
 
 			return r;
 		}
+		
+		inline void DotProduct(const uint32 vectorCount, float32* __restrict dps, const float32* x0, const float32* y0, const float32* x1, const float32* y1) {
+			uint32 i = 0;
 
-		template<typename T1, typename T2, typename MF, typename SF>
-		void MultiplesFor(const Range<T1*> range1, const Range<T2*> range2, const uint64 multiple, const MF& multiplesFunction, const SF& singlesFunction)
-		{
-			GTSL_ASSERT(range1.ElementCount() == range2.ElementCount(), "Element count is not equal!")
-			
-			uint64 quotient, remainder;
-			RoundDown(range1.ElementCount(), multiple, quotient, remainder);
+			for (; i < vectorCount / SIMD<float32, 8>::ElementCount; i += SIMD<float32, 8>::ElementCount) {
+				SIMD<float32, 8> x0Vec(x0 + i), y0Vec(y0 + i);
+				SIMD<float32, 8> x1Vec(x1 + i), y1Vec(y1 + i);
 
-			uint64 i = 0;
-			for (auto begin = range1.begin(); begin != range1.end() - remainder; begin += multiple) { multiplesFunction(range1.begin() + i, range2.begin() + i); i += multiple; }
-			
-			i = 0;
-			for (auto begin = range1.end() - remainder; begin != range1.end(); ++begin) { singlesFunction(range1.begin() + i, range2.begin() + i); i += multiple; }
+				(x0Vec * x1Vec + y0Vec * y1Vec).CopyTo(dps + i);
+			}
+
+			for (; i < vectorCount; ++i) {
+				dps[i] = x0[i] * x1[i] + y0[i] * y1[i];
+			}
+		}
+
+		inline void DotProduct(const uint32 vectorCount, float32* __restrict dps, const float32* x0, const float32* y0, const float32* z0, const float32* x1, const float32* y1, const float32* z1) {
+			uint32 i = 0;
+
+			for(; i < vectorCount / SIMD<float32, 8>::ElementCount; i += SIMD<float32, 8>::ElementCount) {
+				SIMD<float32, 8> x0Vec(x0 + i), y0Vec(y0 + i), z0Vec(z0 + i);
+				SIMD<float32, 8> x1Vec(x1 + i), y1Vec(y1 + i), z1Vec(z1 + i);
+
+				(x0Vec * x1Vec + y0Vec * y1Vec + z0Vec * z1Vec).CopyTo(dps + i);
+			}
+
+			for(; i < vectorCount; ++i) {
+				dps[i] = x0[i] * x1[i] + y0[i] * y1[i] + z0[i] * z1[i];
+			}
 		}
 	}
 
