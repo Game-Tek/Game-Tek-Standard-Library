@@ -476,7 +476,7 @@ namespace GTSL
 
 		template<uint32 M>
 		auto At(const uint32 index) {
-			return *reinterpret_cast<typename TypeAt<M, TYPES...>::type*>(data + PackSize<TYPES...>() * index + PackSizeAt<M, TYPES...>());
+			return *reinterpret_cast<typename GetTypeIndex<M, TYPES...>::type*>(data + PackSize<TYPES...>() * index + PackSizeAt<M, TYPES...>());
 		}
 
 	private:

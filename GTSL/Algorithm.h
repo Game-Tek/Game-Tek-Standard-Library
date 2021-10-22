@@ -1,18 +1,10 @@
 #pragma once
 
 #include "Result.h"
-#include "Tuple.h"
 #include "Range.hpp"
 
 namespace GTSL
 {
-	
-	template <typename... ARGS, uint64... IS>
-	auto Call(auto&& lambda, Tuple<ARGS...>&& tup, Indices<IS...>) { return lambda(GTSL::MoveRef(TupleAccessor<IS>::Get(tup))...); }
-	
-	template <typename... ARGS>
-	auto Call(auto&& lambda, Tuple<ARGS...>&& tup) { return Call(lambda, GTSL::MoveRef(tup), BuildIndices<sizeof...(ARGS)>{}); }
-
 	constexpr uint32 ModuloByPowerOf2(const uint64 key, const uint32 size) { return key & (size - 1); }
 
 	template<typename T>
@@ -57,39 +49,61 @@ namespace GTSL
 	template<Enum E>
 	using UnderlyingType = __underlying_type(E);
 
+	template<class T, class... Ts>
+	constexpr bool IsInPack() noexcept {
+		return (std::is_same_v<T, Ts> || ...);
+	}
+
+	template<size_t POS, typename... TYPES>
+	struct TypeAt;
+
+	template<typename HEAD, typename... TAIL >
+	struct TypeAt<0, HEAD, TAIL...> {
+		using type = HEAD;
+	};
+
+	template<size_t POS, typename HEAD, typename... TAIL >
+	struct TypeAt<POS, HEAD, TAIL...> {
+		using type = typename TypeAt<POS - 1, TAIL...>::type;
+	};
+
+	template<typename A, typename B>
+	constexpr bool IsSame() { return std::is_same_v<A, B>; }
+
 	template<typename... ARGS>
 	consteval size_t PackSize() {
 		return (sizeof(ARGS) + ... + 0);
 	}
 
-	template <int N, typename... T>
-	struct TypeAt;
+	template<uint32 I, typename Target, typename ListHead, typename... ListTails>
+	constexpr uint32 GetTypeIndex_impl() {
+		if constexpr (std::is_same_v<Target, ListHead>)
+			return I;
+		else
+			return GetTypeIndex_impl<I + 1, Target, ListTails...>();
+	}
 
-	template <typename T0, typename... T>
-	struct TypeAt<0, T0, T...> {
-		typedef T0 type;
-	};
-	template <int N, typename T0, typename... T>
-	struct TypeAt<N, T0, T...> {
-		typedef typename TypeAt<N - 1, T...>::type type;
-	};
+	template<typename Target, typename... ListTails>
+	constexpr uint32 GetTypeIndex() {
+		static_assert(IsInPack<Target, ListTails...>(), "Type T is not in template pack.");
+		return GetTypeIndex_impl<0, Target, ListTails...>();
+	}
 
 	template<uint32 AT, uint32 I, typename... ARGS>
-	consteval size_t ttt() {
+	consteval size_t PackSizeAt_impl() {
 		if constexpr (AT == I)
 			return 0;
 		else
-			return sizeof(TypeAt<I, ARGS...>) + ttt<AT, I + 1, ARGS...>();
+			return sizeof(GetTypeIndex<I, ARGS...>) + ttt<AT, I + 1, ARGS...>();
 	}
 
 	template<uint32 AT, typename... ARGS>
 	consteval size_t PackSizeAt() {
-		return ttt<AT, 0, ARGS...>();
+		return PackSizeAt_impl<AT, 0, ARGS...>();
 	}
 
 	template<typename F, typename... ARGS>
-	void MultiFor(F&& function, uint32 length, ARGS&&... iterators)
-	{
+	void MultiFor(F&& function, uint32 length, ARGS&&... iterators) {
 		auto add = [](auto& n) { ++n; };
 		
 		for (uint32 i = 0; i < length; ++i) {
@@ -98,7 +112,7 @@ namespace GTSL
 		}
 	}
 
-	constexpr auto LookFor(auto& iterable, auto&& function) {
+	constexpr auto Find(auto& iterable, auto&& function) {
 		for (auto begin = iterable.begin(); begin != iterable.end(); ++begin) {
 			if (function(*begin)) {
 				return Result(MoveRef(begin), true);

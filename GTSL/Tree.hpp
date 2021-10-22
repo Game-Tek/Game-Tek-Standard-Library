@@ -3,18 +3,10 @@
 #include "HashMap.hpp"
 #include "System.h"
 #include "Vector.hpp"
-#include "Tuple.h"
+#include "Tuple.hpp"
 
 namespace GTSL
 {
-	template<typename Target, typename ListHead, typename... ListTails>
-	constexpr uint32 GetTypeIndexInTemplateList() {
-		if constexpr (std::is_same_v<Target, ListHead>)
-			return 0u;
-		else
-			return 1u + GetTypeIndexInTemplateList<Target, ListTails...>();
-	}
-
 	template<typename CLASS, std::size_t INDEX>
 	bool Destroy(uint32 index, void* p) {
 		if (index == INDEX) { Destroy(*static_cast<CLASS*>(p)); return true; }
@@ -111,7 +103,7 @@ namespace GTSL
 		}
 	};
 
-	template<class ALLOCATOR, typename ALPHA, typename... CLASSES>
+	template<class ALLOCATOR, typename ALPHA, typename BETA, typename... CLASSES>
 	class AlphaBetaTree {
 	public:
 		using Key = uint32;
@@ -153,21 +145,31 @@ namespace GTSL
 			return alphaEntries;
 		}
 
-		//template<typename T, typename... ARGS>
-		//Key AddBeta(uint32 parentNodeHandle, ARGS&&... args) {
 		template<typename T, typename... ARGS>
 		Result<Key> EmplaceBeta(uint64 nodeName, Key alphaParentHandle, Key alphaSiblingHandle, ARGS&&... args) {
-			tryResizeBetaTable(sizeof(T));
+			static_assert(IsInPack<T, CLASSES...>(), "Type T is not in tree's type list.");
+
+			if constexpr (sizeof...(CLASSES)) {
+				tryResizeBetaTable(sizeof(BETA) + sizeof(T));
+			} else {
+				tryResizeBetaTable(sizeof(BETA));
+			}
+
 			tryResizeIndirectionTable(1);
 
 			auto& entry = indirectionTable[indirectionEntries++];
 			entry.Position = betaLength;
 			entry.Next = 0;
 			entry.ChildrenCount = 0;
-			entry.TypeIndex = GetTypeIndexInTemplateList<T, CLASSES...>();
+			entry.TypeIndex = GetTypeIndex<T, CLASSES...>();
 
-			::new(betaTable + betaLength) T(GTSL::ForwardRef<ARGS>(args)...);
-			betaLength += sizeof(T);
+			::new(betaTable + betaLength) BETA();
+			betaLength += sizeof(BETA);
+
+			if constexpr (sizeof...(CLASSES)) {
+				::new(betaTable + betaLength) T(GTSL::ForwardRef<ARGS>(args)...);
+				betaLength += sizeof(T);
+			}
 
 			Helper& alphaSibling = getHelper(alphaSiblingHandle);
 			alphaSibling.ChildrenMap.Emplace(nodeName, indirectionEntries);
@@ -221,7 +223,7 @@ namespace GTSL
 						xx = at(xx).Next;
 					}
 
-					Destroy<CLASSES...>(at(handle).TypeIndex, betaTable + at(handle).Position);
+					Destroy<CLASSES...>(at(handle).TypeIndex, betaTable + at(handle).Position + sizeof(BETA));
 				};
 
 				visitNode(1, visitNode);
@@ -233,44 +235,44 @@ namespace GTSL
 				Deallocate(allocator, alphaCapacity, alphaTable);
 			}
 		}
-
-		template<typename T>
-		T& GetBeta(const Key betaNodeHandle) {
-#if _DEBUG
-			if (!(GetTypeIndexInTemplateList<T, CLASSES...>() == at(betaNodeHandle).TypeIndex)) { __debugbreak(); }
-#endif
-			return *reinterpret_cast<T*>(betaTable + at(betaNodeHandle).Position);
+		
+		BETA& GetBeta(const Key betaNodeHandle) {
+			return *reinterpret_cast<BETA*>(betaTable + at(betaNodeHandle).Position);
 		}
 
-		template<typename T>
-		[[nodiscard]] const T& GetBeta(const Key betaNodeHandle) const {
-#if _DEBUG
-			if (!(GetTypeIndexInTemplateList<T, CLASSES...>() == at(betaNodeHandle).TypeIndex)) { __debugbreak(); }
-#endif
-			return *reinterpret_cast<const T*>(betaTable + at(betaNodeHandle).Position);
+		[[nodiscard]] const BETA& GetBeta(const Key betaNodeHandle) const {
+			return *reinterpret_cast<const BETA*>(betaTable + at(betaNodeHandle).Position);
 		}
 
-		template<typename T>
-		T& GetBetaFromAlphaNode(const Key alphaSiblingHandle, uint32 index) {
+		Key GetBetaHandleFromAlpha(const Key alphaSiblingHandle, uint32 index) const {
 			const auto& alphaSibling = getHelper(alphaSiblingHandle);
 			index = index >= alphaSibling.InternalSiblings.GetLength() ? alphaSibling.InternalSiblings.GetLength() - 1 : index;
-			return GetBeta<T>(alphaSibling.InternalSiblings[index].Handle);
+			return alphaSibling.InternalSiblings[index].Handle;
 		}
 
-		template<typename T>
-		const T& GetBetaFromAlphaNode(const Key alphaSiblingHandle, uint32 index) const {
-			const auto& alphaSibling = getHelper(alphaSiblingHandle);
-			index = index >= alphaSibling.InternalSiblings.GetLength() ? alphaSibling.InternalSiblings.GetLength() - 1 : index;
-			return GetBeta<T>(alphaSibling.InternalSiblings[index].Handle);
-		}
-
-		ALPHA& At(const Key i) { return alphaTable[i - 1].Alpha; }
-		const ALPHA& At(const Key i) const { return alphaTable[i - 1].Alpha; }
+		ALPHA& GetAlpha(const Key i) { return alphaTable[i - 1].Alpha; }
+		const ALPHA& GetAlpha(const Key i) const { return alphaTable[i - 1].Alpha; }
 
 		uint32 GetNodeType(const Key handle) const { return at(handle).TypeIndex; }
 
 		uint32 GetAlphaLength() const { return alphaEntries; }
 		uint32 GetBetaLength() const { return betaLength; }
+
+		template<typename T>
+		T& GetClass(const Key nodeHandle) {
+#if _DEBUG
+			if (!(GetTypeIndex<T, CLASSES...>() == at(nodeHandle).TypeIndex)) { __debugbreak(); }
+#endif
+			return *reinterpret_cast<T*>(betaTable + at(nodeHandle).Position + sizeof(BETA));
+		}
+
+		template<typename T>
+		const T& GetClass(const Key nodeHandle) const {
+#if _DEBUG
+			if (!(GetTypeIndex<T, CLASSES...>() == at(nodeHandle).TypeIndex)) { __debugbreak(); }
+#endif
+			return *reinterpret_cast<const T*>(betaTable + at(nodeHandle).Position + sizeof(BETA));
+		}
 
 		void Optimize() {
 			
@@ -292,6 +294,10 @@ namespace GTSL
 		}
 
 		Helper& getHelper(Key handle) {
+			return alphaTable[handle - 1];
+		}
+
+		const Helper& getHelper(Key handle) const {
 			return alphaTable[handle - 1];
 		}
 

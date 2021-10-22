@@ -19,8 +19,8 @@ TEST(AlphaBetaTree, Construct) {
 	GTSL::uint32 counter = 0;
 
 	{
-		GTSL::AlphaBetaTree<GTSL::DefaultAllocatorReference, uint32_t, DestructionTester> tree(4);		
-		tree.EmplaceBeta<DestructionTester>(0, 0, tree.EmplaceAlpha(0, 222), &counter);
+		GTSL::AlphaBetaTree<GTSL::DefaultAllocatorReference, uint32_t, uint32_t, DestructionTester> tree(4);		
+		tree.EmplaceBeta<DestructionTester>(0, 0, tree.EmplaceAlpha(0, 222), GTSL::MoveRef(&counter));
 	}
 	
 	GTEST_ASSERT_EQ(counter, 1); //test destructor is run on object
@@ -43,7 +43,7 @@ TEST(AlphaBetaTree, Removal) {
 }
 
 TEST(AlphaBetaTree, Iteration) {
-	GTSL::AlphaBetaTree<GTSL::DefaultAllocatorReference, GTSL::uint32, GTSL::float32> tree(8);
+	GTSL::AlphaBetaTree<GTSL::DefaultAllocatorReference, GTSL::uint32, GTSL::uint32, GTSL::float32> tree(8);
 
 	auto alphaRoot = tree.EmplaceAlpha(0, 11);
 
@@ -71,7 +71,7 @@ TEST(AlphaBetaTree, Iteration) {
 	bool ok = true;
 
 	auto visitNode = [&](uint32_t node) {
-		ok = ok && i++ == tree.GetBeta<GTSL::float32>(node);
+		ok = ok && i++ == tree.GetClass<GTSL::float32>(node);
 	};
 
 	auto endNode = [&](uint32_t value) {
@@ -81,15 +81,16 @@ TEST(AlphaBetaTree, Iteration) {
 
 	ASSERT_TRUE(ok);
 
-	GTEST_ASSERT_EQ(tree.At(alphaRoot), 11);
-	GTEST_ASSERT_EQ(tree.GetBetaFromAlphaNode<GTSL::float32>(alphaRoot, 0), 0.f);
-	GTEST_ASSERT_EQ(tree.GetBetaFromAlphaNode<GTSL::float32>(lRoot, 0), 1.f);
-	GTEST_ASSERT_EQ(tree.GetBetaFromAlphaNode<GTSL::float32>(lRoot, 1), 2.f);
-	GTEST_ASSERT_EQ(tree.GetBetaFromAlphaNode<GTSL::float32>(lRoot, 2), 2.f);
+	GTEST_ASSERT_EQ(tree.GetAlpha(alphaRoot), 11);
 
-	GTEST_ASSERT_EQ(tree.GetBetaFromAlphaNode<GTSL::float32>(rRoot, 0), 5.f);
-	GTEST_ASSERT_EQ(tree.GetBetaFromAlphaNode<GTSL::float32>(rRoot, 1), 6.f);
-	GTEST_ASSERT_EQ(tree.GetBetaFromAlphaNode<GTSL::float32>(rRoot, 2), 6.f);
+	GTEST_ASSERT_EQ(tree.GetClass<GTSL::float32>(tree.GetBetaHandleFromAlpha(alphaRoot, 0)), 0.f);
+	GTEST_ASSERT_EQ(tree.GetClass<GTSL::float32>(tree.GetBetaHandleFromAlpha(lRoot, 0)), 1.f);
+	GTEST_ASSERT_EQ(tree.GetClass<GTSL::float32>(tree.GetBetaHandleFromAlpha(lRoot, 1)), 2.f);
+	GTEST_ASSERT_EQ(tree.GetClass<GTSL::float32>(tree.GetBetaHandleFromAlpha(lRoot, 2)), 2.f);
+
+	GTEST_ASSERT_EQ(tree.GetClass<GTSL::float32>(tree.GetBetaHandleFromAlpha(rRoot, 0)), 5.f);
+	GTEST_ASSERT_EQ(tree.GetClass<GTSL::float32>(tree.GetBetaHandleFromAlpha(rRoot, 1)), 6.f);
+	GTEST_ASSERT_EQ(tree.GetClass<GTSL::float32>(tree.GetBetaHandleFromAlpha(rRoot, 2)), 6.f);
 }
 
 TEST(Tree, Iteration) {

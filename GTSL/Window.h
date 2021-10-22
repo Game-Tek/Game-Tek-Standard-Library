@@ -630,51 +630,59 @@ namespace GTSL
 				MouseButtonEventData mouseButtonEventData;
 				mouseButtonEventData.State = true;
 				mouseButtonEventData.Button = MouseButton::LEFT_BUTTON;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData); return 0;
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+				return 0;
 			}
 			case WM_LBUTTONUP: {
 				MouseButtonEventData mouseButtonEventData;
 				mouseButtonEventData.State = false;
 				mouseButtonEventData.Button = MouseButton::LEFT_BUTTON;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData); return 0;
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+				return 0;
 			}
 			case WM_RBUTTONDOWN: {
 				MouseButtonEventData mouseButtonEventData;
 				mouseButtonEventData.State = true;
 				mouseButtonEventData.Button = MouseButton::RIGHT_BUTTON;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData); return 0;
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+				return 0;
 			}
 			case WM_RBUTTONUP: {
 				MouseButtonEventData mouseButtonEventData;
 				mouseButtonEventData.State = false;
 				mouseButtonEventData.Button = MouseButton::RIGHT_BUTTON;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData); return 0;
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+				return 0;
 			}
 			case WM_MBUTTONDOWN: {
 				MouseButtonEventData mouseButtonEventData;
 				mouseButtonEventData.State = true;
 				mouseButtonEventData.Button = MouseButton::MIDDLE_BUTTON;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData); return 0;
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+				return 0;
 			}
 			case WM_MBUTTONUP: {
 				MouseButtonEventData mouseButtonEventData;
 				mouseButtonEventData.State = false;
 				mouseButtonEventData.Button = MouseButton::MIDDLE_BUTTON;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData); return 0;
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+				return 0;
 			}
 			case WM_KEYDOWN: {
 				KeyboardKeyEventData keyboardKeyPressEventData;
 				Win32_translateKeys(wParam, lParam, keyboardKeyPressEventData.Key);
 				keyboardKeyPressEventData.State = true;
 				keyboardKeyPressEventData.IsFirstTime = !((lParam >> 30) & 1);
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::KEYBOARD_KEY, &keyboardKeyPressEventData); return 0;
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::KEYBOARD_KEY, &keyboardKeyPressEventData);
+				return 0;
 			}
 			case WM_KEYUP: {
 				KeyboardKeyEventData keyboardKeyPressEventData;
 				Win32_translateKeys(wParam, lParam, keyboardKeyPressEventData.Key);
 				keyboardKeyPressEventData.State = false;
 				keyboardKeyPressEventData.IsFirstTime = true;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::KEYBOARD_KEY, &keyboardKeyPressEventData); return 0;
+				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::KEYBOARD_KEY, &keyboardKeyPressEventData);
+				return 0;
 			}
 			case WM_UNICHAR: {
 				CharEventData charEventData = static_cast<uint32>(wParam);
@@ -952,7 +960,7 @@ namespace GTSL
 				DeviceChangeData result;
 				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::DEVICE_CHANGE, &result);
 
-				break;
+				return 0;
 			}
 			case WM_DPICHANGED: {
 				auto dpi = HIWORD(wParam);
@@ -961,7 +969,7 @@ namespace GTSL
 				result.PPI = dpi;
 				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::PPI_CHANGE, &result);
 
-				break;
+				return 0;
 			}
 			}
 

@@ -13,7 +13,7 @@
 */
 
 #include "Core.h"
-#include "Tuple.h"
+#include "Tuple.hpp"
 
 namespace GTSL
 {
@@ -24,8 +24,7 @@ namespace GTSL
 	class SmartDelegate;
 
 	template <typename RET, typename... ARGS>
-	class Delegate<RET(ARGS...)> final
-	{
+	class Delegate<RET(ARGS...)> final {
 	public:
 		using call_signature = RET(*)(ARGS...);
 
@@ -35,18 +34,12 @@ namespace GTSL
 		Delegate() = default;
 		~Delegate() = default;
 
-		Delegate(const Delegate& another) noexcept : callerFunction(another.callerFunction), callee(another.callee)
-		{
-		}
+		Delegate(const Delegate& another) noexcept : callerFunction(another.callerFunction), callee(another.callee) {}
 
-		Delegate(Delegate&& another) noexcept : callerFunction(another.callerFunction), callee(another.callee)
-		{
-			another.callee = nullptr; another.callerFunction = nullptr;
-		}
+		Delegate(Delegate&& another) noexcept : callerFunction(another.callerFunction), callee(another.callee) { another.callee = nullptr; another.callerFunction = nullptr; }
 
 		template<typename R, typename... A>
-		Delegate(Delegate<R(A...)> other) noexcept : callerFunction(reinterpret_cast<RET(*)(void*, ARGS&&...)>(other.callerFunction)), callee(other.callee)
-		{
+		Delegate(Delegate<R(A...)> other) noexcept : callerFunction(reinterpret_cast<RET(*)(void*, ARGS&&...)>(other.callerFunction)), callee(other.callee) {
 			static_assert(sizeof(other) == sizeof(decltype(*this)), "Size doesn't match. Illegal conversion!");
 		}
 		
@@ -111,9 +104,7 @@ namespace GTSL
 		RET(*callerFunction)(void*, ARGS&&...) { nullptr };
 		void* callee{ nullptr };
 
-		Delegate(void* callee, decltype(callerFunction) cF) : callerFunction(cF), callee(callee)
-		{
-		}
+		Delegate(void* callee, decltype(callerFunction) cF) : callerFunction(cF), callee(callee) {}
 
 		template <class T, RET(T::*CONST_METHOD)(ARGS ...) const>
 		static RET constMethodCaller(void* callee, ARGS&&... params) { return (static_cast<const T*>(callee)->*CONST_METHOD)(GTSL::ForwardRef<ARGS>(params)...); }
@@ -126,8 +117,7 @@ namespace GTSL
 	};
 
 	template <typename ALLOCATOR, typename RET, typename... ARGS>
-	class SmartDelegate<ALLOCATOR, RET(ARGS...)> final
-	{
+	class SmartDelegate<ALLOCATOR, RET(ARGS...)> final {
 	public:
 		using call_signature = RET(*)(ARGS...);
 
@@ -249,4 +239,13 @@ namespace GTSL
 	//{
 	//	return Delegate<function_traits<F>::result(function_traits<F>::arguments)>::Create<T, F>(instance);
 	//}
+
+	template <typename... ARGS, uint64... IS>
+	auto Call(auto&& lambda, Tuple<ARGS...>&& tup, Indices<IS...>) { return lambda(GTSL::MoveRef(Get<IS>(tup))...); }
+
+	template <typename... ARGS>
+	auto Call(auto&& lambda, Tuple<ARGS...>&& tup) { return Call(lambda, GTSL::MoveRef(tup), BuildIndices<sizeof...(ARGS)>{}); }
+
+	//template <typename... ARGS>
+	//auto Call(auto&& callable, ARGS&&... args) { return callable(GTSL::ForwardRef<ARGS>(args)...); }
 }
