@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Core.h"
 #include "Result.h"
-#include "Range.hpp"
 
 namespace GTSL
 {
@@ -89,12 +89,12 @@ namespace GTSL
 		return GetTypeIndex_impl<0, Target, ListTails...>();
 	}
 
-	template<uint32 AT, uint32 I, typename... ARGS>
+	template<uint32 AT, uint32 I, typename HEAD, typename... TAIL>
 	consteval size_t PackSizeAt_impl() {
 		if constexpr (AT == I)
 			return 0;
 		else
-			return sizeof(GetTypeIndex<I, ARGS...>) + ttt<AT, I + 1, ARGS...>();
+			return sizeof(HEAD) + PackSizeAt_impl<AT, I + 1, TAIL...>();
 	}
 
 	template<uint32 AT, typename... ARGS>
@@ -112,14 +112,15 @@ namespace GTSL
 		}
 	}
 
-	constexpr auto Find(auto& iterable, auto&& function) {
+	template<class C>
+	constexpr auto Find(C& iterable, auto&& function) -> Result<typename C::iterator> {
 		for (auto begin = iterable.begin(); begin != iterable.end(); ++begin) {
 			if (function(*begin)) {
 				return Result(MoveRef(begin), true);
 			}
 		}
 		
-		return Result<decltype(iterable.begin())>(false);
+		return Result<typename C::iterator>(false);
 	}
 
 	template<typename A, typename B, typename C>
@@ -186,5 +187,19 @@ namespace GTSL
 	template<typename A>
 	void SortL(A& container) {
 		Sort(container, [](const typename A::value_type& a, const typename A::value_type& b) -> bool { return a < b; });
+	}
+
+	template<typename T>
+	void Max(T* var, T val) {
+		if(val > *var) {
+			*var = val;
+		}
+	}
+
+	template<typename T>
+	void Min(T* var, T val) {
+		if (val < *var) {
+			*var = val;
+		}
 	}
 }

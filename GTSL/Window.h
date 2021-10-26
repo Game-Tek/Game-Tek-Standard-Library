@@ -17,6 +17,7 @@
 #include <WinUser.h>
 #include <hidsdi.h>
 #include <SetupAPI.h>
+#include <Dbt.h>
 #undef ERROR
 #endif
 
@@ -379,8 +380,7 @@ namespace GTSL
 
 #ifdef _WIN32
 		//https://gist.github.com/mmozeiko/b8ccc54037a5eaf35432396feabbe435
-		typedef struct
-		{
+		struct xbox_state {
 			DWORD packet;
 			WORD buttons;
 			BYTE left_trigger;
@@ -389,16 +389,14 @@ namespace GTSL
 			SHORT left_thumb_y;
 			SHORT right_thumb_x;
 			SHORT right_thumb_y;
-		} xbox_state;
+		};
 
-		typedef struct
-		{
+		struct xbox_battery {
 			BYTE type;
 			BYTE level;
-		} xbox_battery;
+		};
 
-		typedef struct
-		{
+		struct xbox_caps {
 			BYTE type;
 			BYTE subtype;
 			WORD flags;
@@ -413,10 +411,9 @@ namespace GTSL
 
 			BYTE low_freq;
 			BYTE high_freq;
-		} xbox_caps;
+		};
 
-		struct xbox_dev
-		{
+		struct xbox_dev {
 			HANDLE handle;
 			CHAR path[MAX_PATH];
 		};
@@ -450,8 +447,7 @@ namespace GTSL
 			return info.dwVendorId == sonyVendorID && (info.dwProductId == ds4Gen1ProductID || info.dwProductId == ds4Gen2ProductID);
 		}
 
-		static void xbox_init()
-		{
+		static void xbox_init() {
 			DWORD count = 0;
 			HANDLE new_handles[XBOX_MAX_CONTROLLERS]{ nullptr };
 
@@ -488,8 +484,7 @@ namespace GTSL
 			}
 		}
 
-		static bool xbox_connect(xbox_dev& xbox_dev, LPSTR path) {
-			
+		static bool xbox_connect(xbox_dev& xbox_dev, const char* path) {
 			// yes, _stricmp, because SetupDi* functions and WM_DEVICECHANGE message provides different case paths...
 			if (xbox_dev.handle != nullptr && _stricmp(xbox_dev.path, path) == 0) {
 				return true;
@@ -509,30 +504,23 @@ namespace GTSL
 			return false;
 		}
 
-		static bool xbox_disconnect(LPWSTR path)
-		{
-			//for (DWORD i = 0; i < XBOX_MAX_CONTROLLERS; i++)
-			//{
-			//	if (xbox_devices[i].handle != NULL && _wcsicmp(xbox_devices[i].path, path) == 0)
-			//	{
-			//		CloseHandle(xbox_devices[i].handle);
-			//		xbox_devices[i].handle = NULL;
-			//		return i;
-			//	}
-			//}
+		static bool xbox_disconnect(xbox_dev& dev, const char* path) {
+			if (dev.handle != nullptr && _stricmp(dev.path, path) == 0) {
+				CloseHandle(dev.handle);
+				dev.handle = nullptr;
+				return true;
+			}			
 
 			return false;
 		}
 
-		static bool xbox_get_caps(xbox_dev xbox_dev, xbox_caps* caps)
-		{
+		static bool xbox_get_caps(xbox_dev xbox_dev, xbox_caps* caps) {
 			if (!xbox_dev.handle) { return false; }
 
 			BYTE in[3] = { 0x01, 0x01, 0x00 };
 			BYTE out[24];
 			DWORD size;
-			if (!DeviceIoControl(xbox_dev.handle, 0x8000e004, in, sizeof(in), out, sizeof(out), &size, nullptr) || size != sizeof(out))
-			{
+			if (!DeviceIoControl(xbox_dev.handle, 0x8000e004, in, sizeof(in), out, sizeof(out), &size, nullptr) || size != sizeof(out)) {
 				// NOTE: could check GetLastError() here, if it is ERROR_DEVICE_NOT_CONNECTED - that means disconnect
 				return false;
 			}
@@ -552,15 +540,13 @@ namespace GTSL
 			return true;
 		}
 
-		static bool xbox_get_battery(xbox_dev xbox_dev, xbox_battery* bat)
-		{
+		static bool xbox_get_battery(xbox_dev xbox_dev, xbox_battery* bat) {
 			if (!xbox_dev.handle) { return false; }
 
 			BYTE in[4] = { 0x02, 0x01, 0x00, 0x00 };
 			BYTE out[4];
 			DWORD size;
-			if (!DeviceIoControl(xbox_dev.handle, 0x8000e018, in, sizeof(in), out, sizeof(out), &size, nullptr) || size != sizeof(out))
-			{
+			if (!DeviceIoControl(xbox_dev.handle, 0x8000e018, in, sizeof(in), out, sizeof(out), &size, nullptr) || size != sizeof(out)) {
 				// NOTE: could check GetLastError() here, if it is ERROR_DEVICE_NOT_CONNECTED - that means disconnect
 				return false;
 			}
@@ -571,15 +557,13 @@ namespace GTSL
 		}
 
 
-		static bool xbox_get(xbox_dev xbox_dev, xbox_state* state)
-		{
+		static bool xbox_get(xbox_dev xbox_dev, xbox_state* state) {
 			if (!xbox_dev.handle) { return false; }
 
 			BYTE in[3] = { 0x01, 0x01, 0x00 };
 			BYTE out[29];
 			DWORD size;
-			if (!DeviceIoControl(xbox_dev.handle, 0x8000e00c, in, sizeof(in), out, sizeof(out), &size, nullptr) || size != sizeof(out))
-			{
+			if (!DeviceIoControl(xbox_dev.handle, 0x8000e00c, in, sizeof(in), out, sizeof(out), &size, nullptr) || size != sizeof(out)) {
 				// NOTE: could check GetLastError() here, if it is ERROR_DEVICE_NOT_CONNECTED - that means disconnect
 				return false;
 			}
@@ -596,8 +580,7 @@ namespace GTSL
 		}
 
 
-		static bool xbox_set(xbox_dev xbox_dev, BYTE low_freq, BYTE high_freq)
-		{
+		static bool xbox_set(xbox_dev xbox_dev, BYTE low_freq, BYTE high_freq) {
 			if (!xbox_dev.handle) { return false; }
 
 			BYTE in[5] = { 0, 0, low_freq, high_freq, 2 };
@@ -609,8 +592,7 @@ namespace GTSL
 			return true;
 		}
 
-		static uint64 __stdcall Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam)
-		{
+		static uint64 __stdcall Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam) {
 			auto* windowCallData = reinterpret_cast<WindowsCallData*>(GetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA));
 			const HWND winHandle = static_cast<HWND>(hwnd);
 			if (!windowCallData) { return DefWindowProcA(winHandle, uMsg, wParam, lParam); }
@@ -949,6 +931,33 @@ namespace GTSL
 
 				HeapFree(hHeap, 0, pRawInput);
 
+				return 0;
+			}
+			case WM_DEVICECHANGE: {
+				const DEV_BROADCAST_HDR* hdr = reinterpret_cast<const DEV_BROADCAST_HDR*>(lParam);
+
+				if (hdr->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE) {
+					const DEV_BROADCAST_DEVICEINTERFACE_A* dif = reinterpret_cast<const DEV_BROADCAST_DEVICEINTERFACE_A*>(hdr);
+
+					if (wParam == DBT_DEVICEARRIVAL) {
+						xbox_dev dev;
+						if (!xbox_connect(dev, dif->dbcc_name)) { return 0; }
+
+						xbox_caps caps;
+						xbox_battery bat;
+						if (xbox_get_caps(dev, &caps) == 0 && xbox_get_battery(dev, &bat) == 0) {
+						}
+					} else if (wParam == DBT_DEVICEREMOVECOMPLETE) {
+						xbox_dev devs[32];
+
+						uint32 i = 0;
+
+						while(!xbox_disconnect(devs[i], dif->dbcc_name)) {
+							++i;
+						}
+					}
+				}
+				
 				return 0;
 			}
 			case WM_INPUT_DEVICE_CHANGE: {

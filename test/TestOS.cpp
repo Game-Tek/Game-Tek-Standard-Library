@@ -9,6 +9,7 @@
 #include "GTSL/Window.h"
 #include "GTSL/TTF.hpp"
 #include "GTSL/System.h"
+#include "GTSL/Thread.hpp"
 
 TEST(File, Construct) {
 	GTSL::File file;
@@ -46,6 +47,10 @@ TEST(Window, Construct) {
 
 TEST(Console, Print) {
 	GTSL::Console::Print(u8"Test print.\n");
+}
+
+TEST(Thread, Construct) {
+	GTSL::Thread thread;
 }
 
 TEST(Font, Font) {

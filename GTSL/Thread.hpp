@@ -2,7 +2,7 @@
 
 #include "Core.h"
 #include "Delegate.hpp"
-#include "Tuple.h"
+#include "Tuple.hpp"
 #include "Algorithm.h"
 
 #if (_WIN64)
@@ -12,8 +12,7 @@
 
 namespace GTSL
 {	
-	class Thread
-	{
+	class Thread {
 	public:
 		Thread() = default;
 
@@ -32,8 +31,7 @@ namespace GTSL
 
 		static uint32 ThisTreadID() noexcept { return threadId; }
 
-		enum class Priority : uint8
-		{
+		enum class Priority : uint8 {
 			LOW, LOW_MID, MID, MID_HIGH, HIGH
 		};
 		void SetPriority(Priority threadPriority) const noexcept {
@@ -54,8 +52,7 @@ namespace GTSL
 		void static SetThreadId(const uint8 id) { threadId = id; }
 		
 		template<class ALLOCATOR>
-		void Join(const ALLOCATOR& allocator) noexcept
-		{
+		void Join(const ALLOCATOR& allocator) noexcept {
 			this->join(); //wait first
 			allocator.Deallocate(this->dataSize, 8, this->data); //deallocate next
 		}
@@ -74,8 +71,7 @@ namespace GTSL
 		
 	private:
 		template<typename FT, typename... ARGS>
-		struct FunctionCallData
-		{
+		struct FunctionCallData {
 			FunctionCallData(const uint8 tId, Delegate<FT> delegate, ARGS&&... args) : ThreadId(tId), Delegate(delegate), Parameters(GTSL::ForwardRef<ARGS>(args)...)
 			{
 			}
@@ -90,8 +86,7 @@ namespace GTSL
 		uint32 dataSize;
 		
 		template<typename FT, typename... ARGS>
-		static unsigned long launchThread(void* data)
-		{
+		static unsigned long launchThread(void* data) {
 			FunctionCallData<FT, ARGS...>* functionData = static_cast<FunctionCallData<FT, ARGS...>*>(data);
 
 			threadId = functionData->ThreadId;

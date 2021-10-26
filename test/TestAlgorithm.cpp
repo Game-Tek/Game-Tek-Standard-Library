@@ -80,8 +80,8 @@ TEST(Delegate, Valid) {
 }
 
 using TTT = GTSL::Tuple<GTSL::float32, GTSL::uint32, GTSL::uint8, GTSL::uint16, GTSL::uint64>;
-static_assert(GTSL::GetTypeIndexInTuple<GTSL::float32>(TTT()) == 0);
-static_assert(GTSL::GetTypeIndexInTuple<GTSL::uint16>(TTT()) == 3);
+static_assert(GTSL::TypeIndexInTuple<GTSL::float32, TTT>::value == 0);
+static_assert(GTSL::TypeIndexInTuple<GTSL::uint16, TTT>::value == 3);
 
 static_assert(GTSL::IsInTuple<GTSL::float32>(TTT()));
 static_assert(!GTSL::IsInTuple<GTSL::int16>(TTT()));
@@ -94,3 +94,8 @@ static_assert(GTSL::GetTypeIndex<GTSL::uint64, GTSL::float32, GTSL::uint32, GTSL
 static_assert(GTSL::IsSame<GTSL::TypeAt<0, GTSL::uint64, GTSL::float32, GTSL::uint32, GTSL::uint8, GTSL::uint16, GTSL::uint64>::type, GTSL::uint64>());
 static_assert(GTSL::IsSame<GTSL::TypeAt<1, GTSL::uint64, GTSL::float32, GTSL::uint32, GTSL::uint8, GTSL::uint16, GTSL::uint64>::type, GTSL::float32>());
 static_assert(GTSL::IsSame<GTSL::TypeAt<3, GTSL::uint64, GTSL::float32, GTSL::uint32, GTSL::uint8, GTSL::uint16, GTSL::uint64>::type, GTSL::uint8>());
+
+static_assert(GTSL::PackSizeAt<0, GTSL::uint32, GTSL::uint32, GTSL::uint32, GTSL::uint32>() == 0);
+static_assert(GTSL::PackSizeAt<1, GTSL::uint32, GTSL::uint32, GTSL::uint32, GTSL::uint32>() == 4);
+static_assert(GTSL::PackSizeAt<2, GTSL::uint32, GTSL::uint32, GTSL::uint32, GTSL::uint32>() == 8);
+static_assert(GTSL::PackSizeAt<3, GTSL::uint32, GTSL::uint32, GTSL::uint32, GTSL::uint32>() == 12);

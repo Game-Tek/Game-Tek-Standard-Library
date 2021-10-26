@@ -46,8 +46,7 @@ namespace GTSL
 	class SIMD;
 
 	template<>
-	class SIMD<int8, 16>
-	{
+	class SIMD<int8, 16> {
 	public:
 		using type = int8;
 		static constexpr uint8 TypeElementsCount = 16;

@@ -67,3 +67,53 @@ TEST(Vector, Pop) {
 	ASSERT_GE(vector.GetCapacity(), 18);
 	ASSERT_EQ(vector.GetLength(), 0);
 }
+
+TEST(MultiVectorAOS, Construct){
+	GTSL::MultiVector<GTSL::DefaultAllocatorReference, true, GTSL::uint8, GTSL::uint16, GTSL::uint32, GTSL::float32> multiVector;
+}
+
+TEST(MultiVectorAOS, Insert) {
+	GTSL::MultiVector<GTSL::DefaultAllocatorReference, true, GTSL::uint8, GTSL::uint16, GTSL::uint32, GTSL::float32> multiVector;
+
+	multiVector.EmplaceBack(0, 1, 2, 3.f);
+
+	GTEST_ASSERT_EQ(multiVector.At<0>(0), 0);
+	GTEST_ASSERT_EQ(multiVector.At<1>(0), 1);
+	GTEST_ASSERT_EQ(multiVector.At<2>(0), 2);
+	GTEST_ASSERT_EQ(multiVector.At<3>(0), 3.f);
+
+	multiVector.EmplaceBack(4, 5, 6, 7.f);
+
+	GTEST_ASSERT_EQ(multiVector.At<0>(1), 4);
+	GTEST_ASSERT_EQ(multiVector.At<1>(1), 5);
+	GTEST_ASSERT_EQ(multiVector.At<2>(1), 6);
+	GTEST_ASSERT_EQ(multiVector.At<3>(1), 7.f);
+}
+
+TEST(MultiVectorSOA, Insert) {
+	GTSL::MultiVector<GTSL::DefaultAllocatorReference, false, GTSL::uint8, GTSL::uint16, GTSL::uint32, GTSL::float32> multiVector;
+
+	multiVector.EmplaceBack(0, 1, 2, 3.f);
+
+	GTEST_ASSERT_EQ(multiVector.At<0>(0), 0);
+	GTEST_ASSERT_EQ(multiVector.At<1>(0), 1);
+	GTEST_ASSERT_EQ(multiVector.At<2>(0), 2);
+	GTEST_ASSERT_EQ(multiVector.At<3>(0), 3.f);
+
+	GTEST_ASSERT_EQ(*multiVector.GetPointer<0>(0), 0);
+	GTEST_ASSERT_EQ(*multiVector.GetPointer<1>(0), 1);
+	GTEST_ASSERT_EQ(*multiVector.GetPointer<2>(0), 2);
+	GTEST_ASSERT_EQ(*multiVector.GetPointer<3>(0), 3.f);
+
+	multiVector.EmplaceBack(4, 5, 6, 7.f);
+
+	GTEST_ASSERT_EQ(multiVector.At<0>(1), 4);
+	GTEST_ASSERT_EQ(multiVector.At<1>(1), 5);
+	GTEST_ASSERT_EQ(multiVector.At<2>(1), 6);
+	GTEST_ASSERT_EQ(multiVector.At<3>(1), 7.f);
+
+	GTEST_ASSERT_EQ(*multiVector.GetPointer<0>(1), 4);
+	GTEST_ASSERT_EQ(*multiVector.GetPointer<1>(1), 5);
+	GTEST_ASSERT_EQ(*multiVector.GetPointer<2>(1), 6);
+	GTEST_ASSERT_EQ(*multiVector.GetPointer<3>(1), 7.f);
+}

@@ -240,11 +240,10 @@ namespace GTSL
 	//	return Delegate<function_traits<F>::result(function_traits<F>::arguments)>::Create<T, F>(instance);
 	//}
 
-	template <typename... ARGS, uint64... IS>
-	auto Call(auto&& lambda, Tuple<ARGS...>&& tup, Indices<IS...>) { return lambda(GTSL::MoveRef(Get<IS>(tup))...); }
-
-	template <typename... ARGS>
-	auto Call(auto&& lambda, Tuple<ARGS...>&& tup) { return Call(lambda, GTSL::MoveRef(tup), BuildIndices<sizeof...(ARGS)>{}); }
+	template <typename F, typename... ARGS>
+	auto Call(F&& lambda, Tuple<ARGS...>&& tup) {
+		return []<uint64... I>(F&& lambda, Tuple<ARGS...> && tup, Indices<I...>) { return lambda(GTSL::MoveRef(Get<I>(tup))...); } (ForwardRef<F>(lambda), ForwardRef<Tuple<ARGS...>>(tup), BuildIndices<sizeof...(ARGS)>{});
+	}
 
 	//template <typename... ARGS>
 	//auto Call(auto&& callable, ARGS&&... args) { return callable(GTSL::ForwardRef<ARGS>(args)...); }

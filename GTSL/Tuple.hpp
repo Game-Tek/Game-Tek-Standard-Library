@@ -101,11 +101,18 @@ namespace GTSL
 		return IsInPack<T, TYPES...>();
 	}
 
-	template<typename TARGET, typename... TYPES>
-	constexpr uint32 GetTypeIndexInTuple(Tuple<TYPES...>) {
-		static_assert(IsInPack<TARGET, TYPES...>(), "Type T is not in template pack.");
-		return GetTypeIndex<TARGET, TYPES...>();
-	}
+	template <class T, class Tuple>
+	struct TypeIndexInTuple;
+
+	template <class T, class... Types>
+	struct TypeIndexInTuple<T, Tuple<T, Types...>> {
+		static constexpr std::size_t value = 0;
+	};
+
+	template <class T, class U, class... Types>
+	struct TypeIndexInTuple<T, Tuple<U, Types...>> {
+		static constexpr std::size_t value = 1 + TypeIndexInTuple<T, Tuple<Types...>>::value;
+	};
 
 	template<uint64 N, typename... ARGS>
 	auto& Get(Tuple<ARGS...>& tuple) { return TupleAccessor<N>::Get(tuple); }

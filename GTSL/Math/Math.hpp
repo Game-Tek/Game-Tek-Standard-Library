@@ -1206,34 +1206,66 @@ namespace GTSL {
 
 			return r;
 		}
-		
-		inline void DotProduct(const uint32 vectorCount, float32* __restrict dps, const float32* x0, const float32* y0, const float32* x1, const float32* y1) {
+
+		inline void DotProduct(float32* __restrict dps, MultiRange<const float32, const float32> v0, MultiRange<const float32, const float32> v1) {
 			uint32 i = 0;
 
-			for (; i < vectorCount / SIMD<float32, 8>::ElementCount; i += SIMD<float32, 8>::ElementCount) {
-				SIMD<float32, 8> x0Vec(x0 + i), y0Vec(y0 + i);
-				SIMD<float32, 8> x1Vec(x1 + i), y1Vec(y1 + i);
+			for (; i < v0.GetLength() / SIMD<float32, 8>::ElementCount; i += SIMD<float32, 8>::ElementCount) {
+				SIMD<float32, 8> x0Vec(v0.GetPointer<0>(i)), y0Vec(v0.GetPointer<1>(i));
+				SIMD<float32, 8> x1Vec(v1.GetPointer<0>(i)), y1Vec(v1.GetPointer<1>(i));
 
 				(x0Vec * x1Vec + y0Vec * y1Vec).CopyTo(dps + i);
 			}
 
-			for (; i < vectorCount; ++i) {
-				dps[i] = x0[i] * x1[i] + y0[i] * y1[i];
+			for (; i < v0.GetLength(); ++i) {
+				dps[i] = v0.Get<0>(i) * v1.Get<0>(i) + v0.Get<1>(i) * v1.Get<1>(i);
 			}
 		}
 
-		inline void DotProduct(const uint32 vectorCount, float32* __restrict dps, const float32* x0, const float32* y0, const float32* z0, const float32* x1, const float32* y1, const float32* z1) {
+		inline void DotProduct(float32* __restrict dps, MultiRange<const float, const float> range, const Vector2 v1) {
 			uint32 i = 0;
 
-			for(; i < vectorCount / SIMD<float32, 8>::ElementCount; i += SIMD<float32, 8>::ElementCount) {
-				SIMD<float32, 8> x0Vec(x0 + i), y0Vec(y0 + i), z0Vec(z0 + i);
-				SIMD<float32, 8> x1Vec(x1 + i), y1Vec(y1 + i), z1Vec(z1 + i);
+			const SIMD<float32, 8> x1Vec(v1.X()), y1Vec(v1.Y());
+
+			for (; i < range.GetLength() / SIMD<float32, 8>::ElementCount; i += SIMD<float32, 8>::ElementCount) {
+				SIMD<float32, 8> x0Vec(range.GetPointer<0>(i)), y0Vec(range.GetPointer<1>(i));
+
+				(x0Vec * x1Vec + y0Vec * y1Vec).CopyTo(dps + i);
+			}
+
+			for (; i < range.GetLength(); ++i) {
+				dps[i] = range.Get<0>(i) * v1.X() + range.Get<1>(i) * v1.Y();
+			}
+		}
+
+		inline void DotProduct(float32* __restrict dps, MultiRange<const float32, const float32, const float32> v0, MultiRange<const float32, const float32, const float32> v1) {
+			uint32 i = 0;
+
+			for(; i < v0.GetLength() / SIMD<float32, 8>::ElementCount; i += SIMD<float32, 8>::ElementCount) {
+				SIMD<float32, 8> x0Vec(v0.GetPointer<0>(i)), y0Vec(v0.GetPointer<1>(i)), z0Vec(v0.GetPointer<2>(i));
+				SIMD<float32, 8> x1Vec(v1.GetPointer<0>(i)), y1Vec(v1.GetPointer<1>(i)), z1Vec(v1.GetPointer<2>(i));
 
 				(x0Vec * x1Vec + y0Vec * y1Vec + z0Vec * z1Vec).CopyTo(dps + i);
 			}
 
-			for(; i < vectorCount; ++i) {
-				dps[i] = x0[i] * x1[i] + y0[i] * y1[i] + z0[i] * z1[i];
+			for(; i < v0.GetLength(); ++i) {
+				dps[i] = v0.Get<0>(i) * v1.Get<0>(i) + v0.Get<1>(i) * v1.Get<1>(i) + v0.Get<2>(i) * v1.Get<2>(i);
+			}
+		}
+
+		inline void DotProduct(float32* __restrict dps, MultiRange<const float, const float, const float> range, const Vector3 v1) {
+			uint32 i = 0;
+
+			const SIMD<float32, 8> x1Vec(v1.X()), y1Vec(v1.Y()), z1Vec(v1.Z());
+
+			for (; i < range.GetLength() / SIMD<float32, 8>::ElementCount; i += SIMD<float32, 8>::ElementCount) {
+				SIMD<float32, 8> x0Vec(range.GetPointer<0>(i)), y0Vec(range.GetPointer<1>(i)), z0Vec(range.GetPointer<2>(i));
+
+				(x0Vec * x1Vec + y0Vec * y1Vec + z0Vec * z1Vec).CopyTo(dps + i);
+			}
+
+			for (; i < range.GetLength(); ++i) {
+				dps[i] = range.Get<0>(i) * v1.X() + range.Get<1>(i) * v1.Y() + range.Get<2>(i) * v1.Z();
 			}
 		}
 	}

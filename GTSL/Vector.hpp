@@ -11,6 +11,7 @@
 #include "Range.hpp"
 #include "Result.h"
 #include "Allocator.h"
+#include "Tuple.hpp"
 
 namespace GTSL
 {	
@@ -456,9 +457,11 @@ namespace GTSL
 	template<typename T, uint64 N, class B>
 	using SemiVector = Vector<T, DoubleAllocator<N * sizeof(T), B>>;
 
-	template<class ALLOCATOR, typename... TYPES>
+	template<class ALLOCATOR, bool AOS, typename... TYPES>
 	class MultiVector {
 	public:
+		MultiVector(const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {}
+
 		MultiVector(const uint32 minElements, const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {
 			tryResize(minElements);
 		}
@@ -471,12 +474,42 @@ namespace GTSL
 
 		void EmplaceBack(TYPES&&... args) {
 			tryResize(1);
+
+			if constexpr (AOS) {
+				[&] <uint64... I>(Indices<I...>) -> void {
+					constexpr auto si = PackSize<TYPES...>();
+					uint64 pos = 0;
+					((::new(data + si * length + (pos += sizeof(TYPES), pos - sizeof(TYPES))) TYPES(args)), ...);
+				} (BuildIndices<sizeof...(TYPES)>{});
+			} else {
+				[&] <uint64... I>(Indices<I...>) -> void {
+					constexpr auto si = PackSize<TYPES...>();
+					uint64 pos = 0;
+					((::new(data + capacity * (pos += sizeof(TYPES), pos - sizeof(TYPES)) + length * sizeof(TYPES)) TYPES(args)), ...);
+				} (BuildIndices<sizeof...(TYPES)>{});
+			}
+
 			++length;
 		}
 
 		template<uint32 M>
-		auto At(const uint32 index) {
-			return *reinterpret_cast<typename GetTypeIndex<M, TYPES...>::type*>(data + PackSize<TYPES...>() * index + PackSizeAt<M, TYPES...>());
+		auto GetPointer(const uint32 index) -> typename TypeAt<M, TYPES...>::type* {
+			if constexpr (AOS) {
+				return reinterpret_cast<typename TypeAt<M, TYPES...>::type*>(data + PackSize<TYPES...>() * index + PackSizeAt<M, TYPES...>());
+			} else {
+				return reinterpret_cast<typename TypeAt<M, TYPES...>::type*>(data + capacity * PackSizeAt<M, TYPES...>() + index * sizeof(typename TypeAt<M, TYPES...>::type));
+			}
+		}
+
+		template<uint32 M>
+		auto At(const uint32 index) -> typename TypeAt<M, TYPES...>::type {
+			return *GetPointer<M>(index);
+		}
+
+		byte* GetData() { return data; }
+
+		operator MultiRange<TYPES...>() {
+			return MultiRange<TYPES...>(capacity, length, data);
 		}
 
 	private:

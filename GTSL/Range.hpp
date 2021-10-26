@@ -2,14 +2,14 @@
 
 #include "Core.h"
 #include "Assert.h"
+#include "Algorithm.h"
 
 #include <initializer_list>
 
 namespace GTSL
 {
 	template<typename I>
-	struct Range
-	{
+	struct Range {
 		Range(I b, I e) : from(b), to(e) {}
 
 		I& begin() { return from; }
@@ -29,8 +29,7 @@ namespace GTSL
 	};
 
 	template<typename I>
-	struct Range<I*>
-	{
+	struct Range<I*> {
 		Range() = default;
 
 		constexpr Range(std::initializer_list<I> il) : from(il.begin()), to(il.end()) {}
@@ -82,15 +81,41 @@ namespace GTSL
 		friend struct Range;
 	};
 
+	template<typename... TYPES>
+	struct MultiRange {
+	public:
+		MultiRange(const uint32 cap, const uint32 len, byte* p) : data(p), capacity(cap), length(len) {
+		}
+
+		template<uint32 M>
+		auto GetPointer(const uint32 index) -> typename TypeAt<M, TYPES...>::type* {
+			if constexpr (false) {
+				return reinterpret_cast<typename TypeAt<M, TYPES...>::type*>(data + PackSize<TYPES...>() * index + PackSizeAt<M, TYPES...>());
+			}
+			else {
+				return reinterpret_cast<typename TypeAt<M, TYPES...>::type*>(data + capacity * PackSizeAt<M, TYPES...>() + index * sizeof(typename TypeAt<M, TYPES...>::type));
+			}
+		}
+
+		template<uint32 M>
+		auto Get(const uint32 index) -> typename TypeAt<M, TYPES...>::type {
+			return *GetPointer<M>(index);
+		}
+
+		uint32 GetLength() const { return length; }
+
+	private:
+		byte* data = nullptr; uint32 capacity = 0, length = 0;
+	};
+
 	template<>
 	struct Range<const char8_t*>;
 
 	template<typename T>
-	Range(const std::initializer_list<T>) -> Range<const T*>;
+	Range(std::initializer_list<T>) -> Range<const T*>;
 
 	template<typename A, typename B>
-	inline bool CompareContents(const Range<const A*> a, const Range<const B*> b)
-	{
+	inline bool CompareContents(const Range<const A*> a, const Range<const B*> b) {
 		if (a.ElementCount() != b.ElementCount()) { return false; }
 		for (uint64 i = 0; i < a.ElementCount(); ++i) { if (a[i] != b[i]) { return false; } }
 		return true;
