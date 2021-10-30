@@ -8,7 +8,7 @@
 #include "Range.hpp"
 #include <new>
 
-#include "Algorithm.h"
+#include "Algorithm.hpp"
 #include "Allocator.h"
 #include "ArrayCommon.hpp"
 #include "Bitman.h"

@@ -28,6 +28,7 @@ if(GTSL_TESTS_ENABLED)
 	add_executable(GTSL_Test
 	"${PROJECT_SOURCE_DIR}/test/TestMain.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestVector.cpp"
+	"${PROJECT_SOURCE_DIR}/test/TestFixedVector.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestMath.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestString.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestShortString.cpp"

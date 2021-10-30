@@ -5,7 +5,7 @@
 #include <concepts>
 
 #include "Assert.h"
-#include "Algorithm.h"
+#include "Algorithm.hpp"
 #include <initializer_list>
 #include <new>
 #include "Range.hpp"
@@ -309,6 +309,12 @@ namespace GTSL
 			return this->data[index];
 		}
 
+		explicit operator bool() const { return length; }
+
+		friend bool operator<(const uint32 i, const Vector& vec) {
+			return i < vec.GetLength();
+		}
+
 		/**
 		 * \brief Returns a reference to the element at index.
 		 * \param index Index to element.
@@ -509,7 +515,7 @@ namespace GTSL
 		byte* GetData() { return data; }
 
 		operator MultiRange<TYPES...>() {
-			return MultiRange<TYPES...>(capacity, length, data);
+			return [&]<uint64_t... I>(Indices<I...>) { return MultiRange<TYPES...>(capacity, length, GetPointer<I>(0)...); }(BuildIndices<sizeof...(TYPES)>{});
 		}
 
 	private:

@@ -68,6 +68,22 @@ TEST(Vector, Pop) {
 	ASSERT_EQ(vector.GetLength(), 0);
 }
 
+TEST(Vector, Length) {
+	GTSL::Vector<GTSL::uint32, GTSL::DefaultAllocatorReference> vector(2);
+
+	//Test bool operator
+	ASSERT_FALSE(vector);
+	//Test int comparison operator
+	ASSERT_FALSE(0u < vector);
+
+	vector.EmplaceBack(0);
+
+	//Test bool operator
+	ASSERT_TRUE(vector);
+	//Test int comparison operator
+	ASSERT_TRUE(0u < vector);
+}
+
 TEST(MultiVectorAOS, Construct){
 	GTSL::MultiVector<GTSL::DefaultAllocatorReference, true, GTSL::uint8, GTSL::uint16, GTSL::uint32, GTSL::float32> multiVector;
 }

@@ -2,9 +2,11 @@
 
 #include "Core.h"
 #include "Assert.h"
-#include "Algorithm.h"
+#include "Algorithm.hpp"
 
 #include <initializer_list>
+
+#include "Tuple.hpp"
 
 namespace GTSL
 {
@@ -84,17 +86,12 @@ namespace GTSL
 	template<typename... TYPES>
 	struct MultiRange {
 	public:
-		MultiRange(const uint32 cap, const uint32 len, byte* p) : data(p), capacity(cap), length(len) {
+		MultiRange(const uint32 len, TYPES*... args) : pointers(GTSL::ForwardRef<TYPES*>(args)...), length(len) {
 		}
 
 		template<uint32 M>
 		auto GetPointer(const uint32 index) -> typename TypeAt<M, TYPES...>::type* {
-			if constexpr (false) {
-				return reinterpret_cast<typename TypeAt<M, TYPES...>::type*>(data + PackSize<TYPES...>() * index + PackSizeAt<M, TYPES...>());
-			}
-			else {
-				return reinterpret_cast<typename TypeAt<M, TYPES...>::type*>(data + capacity * PackSizeAt<M, TYPES...>() + index * sizeof(typename TypeAt<M, TYPES...>::type));
-			}
+			return GTSL::Get<M>(pointers) + index;
 		}
 
 		template<uint32 M>
@@ -105,7 +102,8 @@ namespace GTSL
 		uint32 GetLength() const { return length; }
 
 	private:
-		byte* data = nullptr; uint32 capacity = 0, length = 0;
+		Tuple<TYPES*...> pointers;
+		uint32 length = 0;
 	};
 
 	template<>
@@ -113,6 +111,9 @@ namespace GTSL
 
 	template<typename T>
 	Range(std::initializer_list<T>) -> Range<const T*>;
+
+	template<typename T>
+	Range(uint32, T*) -> Range<const T*>;
 
 	template<typename A, typename B>
 	inline bool CompareContents(const Range<const A*> a, const Range<const B*> b) {

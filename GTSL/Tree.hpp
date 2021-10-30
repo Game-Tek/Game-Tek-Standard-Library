@@ -4,7 +4,7 @@
 #include "System.h"
 #include "Vector.hpp"
 #include "Tuple.hpp"
-#include "Algorithm.h"
+#include "Algorithm.hpp"
 
 namespace GTSL
 {
@@ -112,8 +112,8 @@ namespace GTSL
 
 		struct Node {
 			//Next: indirection table entry
-			uint32 Position = 0, TreeNext = 0, ToTheRight = 0;
-			uint8 TypeIndex = 0, ChildrenCount = 0, Level = 0;
+			uint32 Position = 0, TreeDown = 0, TreeRight = 0;
+			uint8 TypeIndex = 0, ChildrenCount = 0;
 			bool Way = true;
 		};
 
@@ -160,16 +160,16 @@ namespace GTSL
 		Result<Key> EmplaceBeta(uint64 nodeName, Key alphaParentHandle, Key alphaSiblingHandle, ARGS&&... args) {
 			static_assert(IsInPack<T, CLASSES...>(), "Type T is not in tree's type list.");
 
-			if constexpr (_DEBUG) {
-				if (alphaParentHandle) {
-					auto& p = getHelper(alphaParentHandle);
-					auto& s = getHelper(alphaSiblingHandle);
-
-					if(p.InternalSiblings.GetLength() && s.InternalSiblings.GetLength()) {
-						if (at(p.InternalSiblings.back().Handle).Level > at(s.InternalSiblings.back().Handle).Level) { __debugbreak(); }
-					}
-				}
-			}
+			//if constexpr (_DEBUG) {
+			//	if (alphaParentHandle) {
+			//		auto& p = getHelper(alphaParentHandle);
+			//		auto& s = getHelper(alphaSiblingHandle);
+			//
+			//		if(p.InternalSiblings.GetLength() && s.InternalSiblings.GetLength()) {
+			//			if (at(p.InternalSiblings.back().Handle).Level > at(s.InternalSiblings.back().Handle).Level) { __debugbreak(); }
+			//		}
+			//	}
+			//}
 
 			if constexpr (sizeof...(CLASSES)) {
 				tryResizeBetaTable(sizeof(BETA) + sizeof(T));
@@ -212,35 +212,27 @@ namespace GTSL
 				Node& betaParentNode = at(betaParentNodeHandle);
 				betaParentNode.ChildrenCount += 1;
 
-				Key hand = betaParentNodeHandle;
-				while (at(hand).TreeNext) { //if internal sibling exists can use that to get next and not have to iterator ALL previous branch?
-					hand = at(hand).TreeNext;
-				}
+				if (!betaParentNode.TreeDown) { betaParentNode.TreeDown = currentNodeHandle; }
 
-				if(currentNodeHandle != hand + 1) {
-					outOfOrderNodes.EmplaceBack(currentNodeHandle);
-				}
+				//if(currentNodeHandle != hand + 1) {
+				//	outOfOrderNodes.EmplaceBack(currentNodeHandle);
+				//}
 
-				auto& preLink = at(hand);
-				preLink.TreeNext = currentNodeHandle;
+				//auto& preLink = at(hand);
+				//preLink.TreeDown = currentNodeHandle;
 
 				if ((alphaParent.ChildrenList.GetLength() - 1) && !alphaSibling.InternalSiblings.GetLength()) { //write "to the right" if there are elements to our left and we are the first sibling to the right
-					for (auto& e : getHelper(alphaParent.ChildrenList[alphaParent.ChildrenList.GetLength() - 2].NodeHandle).InternalSiblings) {
-						at(e.Handle).ToTheRight = currentNodeHandle;
+					for (auto& e : getHelper(alphaParent.ChildrenList[alphaParent.ChildrenList.GetLength() - 2].NodeHandle).InternalSiblings) { //write to the right for every internal sibling of node to the left
+						at(e.Handle).TreeRight = currentNodeHandle;
 					}
 				}
 				
-				entry.Level = betaParentNode.Level + 1;
+				//entry.Level = betaParentNode.Level + 1;
 			} else  {
 				if (currentNodeHandle - 1) {
-					Key hand = 1;
-					while (at(hand).TreeNext) {
-						hand = at(hand).TreeNext;
-					}
-					at(hand).TreeNext = currentNodeHandle;
 				}
 
-				entry.Level = 0;
+				//entry.Level = 0;
 			}
 
 			auto& internalSiblingEntry = alphaSibling.InternalSiblings.EmplaceBack();
@@ -263,28 +255,6 @@ namespace GTSL
 			auto& branchNode = at(betaNodeBranchTop);
 
 			branchNode.Way = toggle;
-		}
-
-		~AlphaBetaTree() {
-			if (betaLength && betaTable) {
-				auto visitNode = [&](uint32 handle, auto&& self) -> void {
-					auto xx = at(handle).TreeNext;
-					for (uint32 i = 0; i < at(handle).ChildrenCount; ++i) {
-						self(xx, self);
-						xx = at(xx).TreeNext;
-					}
-
-					Destroy<CLASSES...>(at(handle).TypeIndex, betaTable + at(handle).Position + sizeof(BETA));
-				};
-
-				visitNode(1, visitNode);
-
-				for(uint32 i = 0; i < alphaEntries; ++i) { Destroy(alphaTable[i]); }
-			
-				Deallocate(allocator, betaCapacity, betaTable);
-				Deallocate(allocator, indirectionCapacity, indirectionTable);
-				Deallocate(allocator, alphaCapacity, alphaTable);
-			}
 		}
 		
 		BETA& GetBeta(const Key betaNodeHandle) {
@@ -312,7 +282,7 @@ namespace GTSL
 
 		uint32 GetBetaNodeChildrenCount(const Key betaNodeHandle) const { return at(betaNodeHandle).ChildrenCount; }
 		uint32 GetBetaNodeType(const Key handle) const { return at(handle).TypeIndex; }
-		uint32 GetBetaNodeLevel(const Key handle) const { return at(handle).Level; }
+		//uint32 GetBetaNodeLevel(const Key handle) const { return at(handle).Level; }
 
 		uint32 GetAlphaLength() const { return alphaEntries; }
 		uint32 GetBetaLength() const { return betaLength; }
@@ -428,19 +398,36 @@ namespace GTSL
 
 					if (node.Way) {
 						a(handle, level);
-						next = node.TreeNext;
-				
+
+						next = node.TreeDown ? node.TreeDown : node.TreeRight;
+
 						for (uint32 i = 0; i < node.ChildrenCount; ++i) {
 							self(next, level + 1, self);
 						}
 
 						b(handle, level);
-					} else {
-						next = node.ToTheRight;
 					}
+
+					next = node.TreeRight;
 				};
 
 				visitNode(next, 0, visitNode);
+			}
+		}
+
+		~AlphaBetaTree() {
+			if (betaLength && betaTable) {
+				auto visitNode = [&](uint32 key, uint32 level) -> void {
+					Destroy<CLASSES...>(at(key).TypeIndex, betaTable + at(key).Position + sizeof(BETA));
+				};
+
+				ForEachBeta(*this, visitNode, [&](uint32 key, uint32 level) {});
+
+				for (uint32 i = 0; i < alphaEntries; ++i) { Destroy(alphaTable[i]); }
+
+				Deallocate(allocator, betaCapacity, betaTable);
+				Deallocate(allocator, indirectionCapacity, indirectionTable);
+				Deallocate(allocator, alphaCapacity, alphaTable);
 			}
 		}
 	};

@@ -3,7 +3,7 @@
 #include "Bitman.h"
 #include "Core.h"
 #include "Result.h"
-#include "Algorithm.h"
+#include "Algorithm.hpp"
 #include "Range.hpp"
 
 namespace GTSL
@@ -31,15 +31,11 @@ namespace GTSL
 	}
 
 	template<Integral T>
-	Result<uint32> OccupyFirstFreeSlot(Range<T*> bits, uint32 maxLength) {
+	Result<uint32> OccupyFirstFreeSlot(Range<T*> bits) {
 		for (uint32 i = 0, iBits = 0; i < static_cast<uint32>(bits.ElementCount()); ++i, iBits += static_cast<uint32>(Bits<T>())) {
 			if (auto bit = FindFirstClearBit(bits[i]); bit) {
-				if (bit.Get() < maxLength) {
-					GTSL::SetBit(bit.Get(), bits[i]);
-					return Result<uint32>(iBits + bit.Get(), true);
-				}
-
-				break;
+				GTSL::SetBit(bit.Get(), bits[i]);
+				return Result<uint32>(iBits + bit.Get(), true);
 			}
 		}
 

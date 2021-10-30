@@ -122,6 +122,11 @@ namespace GTSL
 		//Returns whether this String is empty.
 		[[nodiscard]] bool IsEmpty() const { return !bytes; }
 
+		explicit operator bool() const { return bytes; }
+		friend bool operator<(const uint32 i, const String& string) {
+			return i < string.GetCodepoints();
+		}
+
 		String& operator+=(Range<const char8_t*> range) {
 			copy(range);
 			return *this;
@@ -296,8 +301,7 @@ namespace GTSL
 			return Tuple(MoveRef(byt), MoveRef(codePoint), MoveRef(len));
 		}
 
-		void tryResize(uint32 newSize)
-		{
+		void tryResize(uint32 newSize) {
 			newSize += 3; /*null terminator padding*/
 
 			if (newSize > capacity) {				

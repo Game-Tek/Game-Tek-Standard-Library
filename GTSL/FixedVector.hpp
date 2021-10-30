@@ -4,11 +4,10 @@
 #include "Bitman.h"
 #include "Memory.h"
 #include "Range.hpp"
-#include <new>
-
-#include "Algorithm.h"
 #include "BitTracker.h"
+#include "Allocator.h"
 #include "Result.h"
+#include <new>
 
 namespace GTSL
 {
@@ -17,18 +16,15 @@ namespace GTSL
 	 * \tparam T Type of the object this KeepVector will store.
 	 */
 	template<typename T, class ALLOCATOR>
-	class FixedVector
-	{
+	class FixedVector {
 	public:
 		using length_type = uint32;
 
-		FixedVector() = default;
-
-		FixedVector(const ALLOCATOR& allocatorReference) : allocator(allocatorReference) {
+		FixedVector(const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference) {
 		}
 
-		FixedVector(const length_type min, const ALLOCATOR& allocatorReference) : allocator(allocatorReference) {
-			data = allocate(min, &capacity);
+		FixedVector(const length_type min, const ALLOCATOR& allocatorReference = ALLOCATOR()) : allocator(allocatorReference) {
+			resize(min);
 			InitializeBits(getIndices());
 		}
 
@@ -40,8 +36,7 @@ namespace GTSL
 		}
 
 		template<typename T>
-		struct FixedVectorIterator
-		{
+		struct FixedVectorIterator {
 			//begin
 			FixedVectorIterator(FixedVector* keepVector) : keepVector(keepVector) {}
 
@@ -52,13 +47,13 @@ namespace GTSL
 			FixedVectorIterator& operator++() {
 				do {
 					++pos;
-				} while (CheckBit(modulo(pos), ~keepVector->getIndices()[pos / BITS]) && pos < keepVector->capacity);
+				} while (CheckBit(modulo(pos), ~keepVector->indices[pos / BITS]) && pos < keepVector->capacity);
 
 				return *this;
 			}
 
-			T& operator*() { return keepVector->getObjects()[pos]; }
-			T* operator->() { return keepVector->getObjects().begin() + pos; }
+			T& operator*() { return keepVector->data[pos]; }
+			T* operator->() { return keepVector->data + pos; }
 
 		private:
 			uint32 pos = 0;
@@ -84,14 +79,14 @@ namespace GTSL
 		 */
 		template <typename... ARGS>
 		length_type Emplace(ARGS&&... args) {
-			auto res = OccupyFirstFreeSlot(getIndices(), capacity);
+			auto res = OccupyFirstFreeSlot(getIndices());
 			
 			if (!res) { //If there is a free index insert there,
 				resize();
-				res = OccupyFirstFreeSlot(getIndices(), capacity);
+				res = OccupyFirstFreeSlot(getIndices());
 			}
 
-			new(getObjects().begin() + res.Get()) T(GTSL::ForwardRef<ARGS>(args)...);
+			new(data + res.Get()) T(GTSL::ForwardRef<ARGS>(args)...);
 
 			return res.Get();
 		}
@@ -105,20 +100,7 @@ namespace GTSL
 		T& EmplaceAt(length_type index, ARGS&&... args) {
 			if(index > capacity) { resize(index + 1); }
 			SetAsOccupied(getIndices(), index);
-			return *new(getObjects().begin() + index) T(GTSL::ForwardRef<ARGS>(args)...);
-		}
-
-		template<class ALLOC>
-		void Copy(const FixedVector<T, ALLOC>& other) {
-			if (this->capacity < other.capacity) { resize(other.capacity); }
-
-			for (uint32 num = 0, num32 = 0; num < other.getIndices().ElementCount(); ++num, num32 += BITS) {
-				for (uint32 i = 0; i < BITS; ++i) {
-					if (other.IsSlotOccupied(num32 + i)) { getObjects()[num32 + i] = other.getObjects()[num32 + i]; }
-				}
-
-				getIndices()[num] = other.getIndices()[num];
-			}
+			return *new(data + index) T(GTSL::ForwardRef<ARGS>(args)...);
 		}
 
 		/**
@@ -126,7 +108,7 @@ namespace GTSL
 		 * \param index Index of the object to remove.
 		 */
 		void Pop(const length_type index) {
-			GTSL::Destroy(getObjects().begin()[index]);
+			GTSL::Destroy(data[index]);
 			SetAsFree(getIndices(), index);
 		}
 
@@ -135,10 +117,8 @@ namespace GTSL
 		}
 
 		void Clear() {
-			for (uint32 num = 0, num32 = 0; num < getIndices().ElementCount(); ++num, num32 += BITS) {
-				for (uint32 i = 0; i < BITS; ++i) {
-					if (IsSlotOccupied(num32 + i)) { Pop(num32 + i); }
-				}
+			for (uint32 num = 0; num < capacity; ++num) {
+				if (IsSlotOccupied(num)) { Pop(num); }
 			}
 		}
 
@@ -147,19 +127,19 @@ namespace GTSL
 		T& operator[](const uint32 i) {
 			if constexpr (_DEBUG) {
 				const auto number = i / BITS; const auto bit = static_cast<uint8>(i % BITS);
-				auto c = getIndices()[number];
-				GTSL_ASSERT(CheckBit(bit, getIndices()[number]), "No valid value in that slot!")
+				auto c = indices[number];
+				GTSL_ASSERT(CheckBit(bit, indices[number]), "No valid value in that slot!")
 			}
-			return getObjects()[i];
+			return data[i];
 		}
 
 		const T& operator[](const uint32 i) const {
 			if constexpr (_DEBUG) {
 				const auto number = i / BITS; const auto bit = static_cast<uint8>(i % BITS);
-				auto c = getIndices()[number];
-				GTSL_ASSERT(CheckBit(bit, getIndices()[number]), "No valid value in that slot!")
+				auto c = indices[number];
+				GTSL_ASSERT(CheckBit(bit, indices[number]), "No valid value in that slot!")
 			}
-			return getObjects()[i];
+			return data[i];
 		}
 
 		using type = T;
@@ -173,54 +153,41 @@ namespace GTSL
 
 		ALLOCATOR allocator;
 		uint32 capacity = 0;
-		byte* data = nullptr;
+		T* data = nullptr;
+		uint32* indices = nullptr;
 
 		static constexpr uint32 modulo(const length_type key) { return key & (BITS - 1); }
-
-		byte* allocate(const uint32 newElementCount, uint32* newCapacity) {
-			auto totalSize = getDataSize(newElementCount) + getIndicesSize(newElementCount);
-			uint64 allocatedSize; void* newAlloc;
-			allocator.Allocate(totalSize, alignof(T), &newAlloc, &allocatedSize);
-			*newCapacity = newElementCount;
-			return static_cast<byte*>(newAlloc);
-		}
 
 		void resize() {
 			resize(capacity * 2);
 		}
 		
-		void resize(const uint32 newSize)
-		{
-			uint32 newCapacity;
-			auto* newAlloc = allocate(newSize, &newCapacity);
+		void resize(uint32 newSize) {
+			newSize = GTSL::Math::RoundUpByPowerOf2(newSize, BITS);
 
-			GTSL::MemCopy(getDataSize(capacity), getObjects().begin(), newAlloc);
-			GTSL::MemCopy(getIndicesSize(capacity), getIndices().begin(), newAlloc + getDataSize(newCapacity));
-
-			free();
-			data = newAlloc;
-			auto oldCapacity = capacity;
-			capacity = newCapacity;
-
-			for (uint32 i = (oldCapacity / BITS) + 1; i < (capacity / BITS) + 1; ++i) {
-				getIndices()[i] = 0;
+			if (data) {
+				Resize(allocator, &data, capacity, newSize);
+				Resize(allocator, &indices, capacity / BITS, newSize / BITS);
+			} else {
+				Allocate(allocator, newSize, &data);
+				Allocate(allocator, newSize / BITS, &indices);
 			}
+
+			for(uint32 i = capacity / BITS; i < newSize / BITS; ++i) {
+				indices[i] = 0;
+			}
+
+			capacity = newSize;
 		}
 
 		void free() {
-			auto totalSize = getDataSize(capacity) + getIndicesSize(capacity);
-			allocator.Deallocate(totalSize, alignof(T), data);
-			data = nullptr;
+			Deallocate(allocator, capacity, data);
+			Deallocate(allocator, capacity / BITS, indices);
+			data = nullptr; indices = nullptr;
 		}
-		
-		[[nodiscard]] uint32 getDataSize(const uint32 newElementCount) const { return sizeof(T) * newElementCount; }
-		[[nodiscard]] uint32 getIndicesSize(const uint32 newElementCount) const { return ((newElementCount / BITS) + 1) * sizeof(uint32); }
 
-		[[nodiscard]] Range<uint32*> getIndices() { return GTSL::Range<uint32*>((capacity / BITS) + 1, reinterpret_cast<uint32*>(data + getDataSize(capacity))); }
-		[[nodiscard]] Range<const uint32*> getIndices() const { return GTSL::Range<uint32*>((capacity / BITS) + 1, reinterpret_cast<uint32*>(data + getDataSize(capacity))); }
-
-		[[nodiscard]] Range<T*> getObjects() { return GTSL::Range<T*>(capacity, reinterpret_cast<T*>(data)); }
-		[[nodiscard]] Range<const T*> getObjects() const { return GTSL::Range<T*>(capacity, reinterpret_cast<T*>(data)); }
+		Range<uint32*> getIndices() { return GTSL::Range<uint32*>(capacity / BITS, indices); }
+		Range<const uint32*> getIndices() const { return GTSL::Range<const uint32*>(capacity / BITS, indices); }
 
 		template<typename TT, class ALLOC, typename L>
 		friend void ForEach(FixedVector<TT, ALLOC>& keepVector, L&& lambda);

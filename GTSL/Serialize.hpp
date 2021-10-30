@@ -2,7 +2,7 @@
 
 #include "Buffer.hpp"
 #include "Extent.h"
-#include "Algorithm.h"
+#include "Algorithm.hpp"
 #include "Id.h"
 #include "Pair.h"
 #include "ShortString.hpp"

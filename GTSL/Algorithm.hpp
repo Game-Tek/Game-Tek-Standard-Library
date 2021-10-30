@@ -2,6 +2,7 @@
 
 #include "Core.h"
 #include "Result.h"
+#include <type_traits>
 
 namespace GTSL
 {
@@ -121,6 +122,17 @@ namespace GTSL
 		}
 		
 		return Result<typename C::iterator>(false);
+	}
+
+	template<class C>
+	constexpr auto Find(const C& iterable, auto&& function) -> Result<typename C::const_iterator> {
+		for (const auto begin = iterable.begin(); begin != iterable.end(); ++begin) {
+			if (function(*begin)) {
+				return Result(MoveRef(begin), true);
+			}
+		}
+
+		return Result<typename C::const_iterator>(false);
 	}
 
 	template<typename A, typename B, typename C>

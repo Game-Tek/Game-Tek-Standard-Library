@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core.h"
-#include "Algorithm.h"
+#include "Algorithm.hpp"
 
 namespace GTSL
 {	

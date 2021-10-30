@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "GTSL/Vector.hpp"
 #include "GTSL/Math/Math.hpp"
 
 using namespace GTSL;
@@ -229,4 +230,21 @@ TEST(Math, ProjectionMatrix) {
 	auto i = Math::BuildInvertedPerspectiveMatrix(45, 16.0f / 9.0f, 1.0f, 100.0f);
 
 	GTEST_ASSERT_EQ(i, Math::Inverse(o));
+}
+
+TEST(Math, DotProduct) {
+	float32 xxxx[] = { 1.0f, 5.0f, 4.0f, 8.0f, 2.33f, 2.77f, 8.1f, 9.3f, 4.5f };
+	float32 yyyy[] = { 2.5f, 1.1f, 7.6f, 9.2f, 4.22f, 7.2f, 4.1f, 11.11f, 12.3f };
+	float32 zzzz[] = { 3.f, 9.f, 2.f, 1.f, 7.f };
+	float32 wwww[] = { 7.f, 9.5f, 2.3f, 1.7f, 4.54f };
+
+	{
+		float32 alignas(32) res[9];
+
+		GTSL::Math::DotProduct(res, MultiRange<const float, const float>(9u, xxxx, yyyy), GTSL::Vector2(1.0f, 2.0f));
+
+		for (uint32 i = 0; i < 9; ++i) {
+			ASSERT_FLOAT_EQ(res[i], xxxx[i] * 1.0f + yyyy[i] * 2.0f);
+		}
+	}
 }

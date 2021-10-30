@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Algorithm.h"
+#include "Algorithm.hpp"
 #include "Core.h"
 #include "Assert.h"
 #include "FunctionPointer.hpp"
@@ -237,7 +237,7 @@ namespace GTSL
 	template<typename T>
 	void Allocate(auto& allocator, uint64 n, T** data) {
 		uint64 allocatedBytes;
-		allocator.Allocate(sizeof(T) * n, alignof(T), static_cast<void**>(&data), &allocatedBytes);
+		allocator.Allocate(sizeof(T) * n, alignof(T), reinterpret_cast<void**>(data), &allocatedBytes);
 	}
 
 	template<typename T, std::unsigned_integral N>
@@ -277,5 +277,17 @@ namespace GTSL
 		Deallocate(allocator, *capacity, *data);
 
 		*data = newAlloc; *capacity = static_cast<C>(allocatedElements);
+	}
+
+	template<typename T, std::unsigned_integral C>
+	void Resize(auto& allocator, T** data, C capacity, uint64 newCapacity) {
+		T* newAlloc; uint64 allocatedElements;
+		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements);
+
+		Copy(capacity, *data, newAlloc);
+
+		Deallocate(allocator, capacity, *data);
+
+		*data = newAlloc;
 	}
 }

@@ -3,7 +3,7 @@
 #include "Core.h"
 #include "Delegate.hpp"
 #include "Tuple.hpp"
-#include "Algorithm.h"
+#include "Algorithm.hpp"
 
 #if (_WIN64)
 #define WIN32_LEAN_AND_MEAN
