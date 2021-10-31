@@ -11,13 +11,13 @@
 #include "Range.hpp"
 #include "Result.h"
 #include "Allocator.h"
+#include "ArrayCommon.hpp"
 #include "Tuple.hpp"
 
 namespace GTSL
 {	
 	template <typename T, class ALLOCATOR>
-	class Vector
-	{
+	class Vector {
 	public:
 		typedef uint32 length_type;
 		typedef ALLOCATOR allocator_t;
@@ -73,13 +73,11 @@ namespace GTSL
 		 * \brief Constructs a Vector from an r-value reference to another Vector.
 		 * \param other R-Value reference to other Vector to transfer from.
 		 */
-		Vector(Vector&& other) noexcept requires std::move_constructible<ALLOCATOR> : allocator(GTSL::MoveRef(other.allocator)), length(other.length), capacity(other.capacity), data(other.data)
-		{
+		Vector(Vector&& other) noexcept requires std::move_constructible<ALLOCATOR> : allocator(GTSL::MoveRef(other.allocator)), length(other.length), capacity(other.capacity), data(other.data) {
 			other.data = nullptr;
 		}
 
-		Vector& operator=(const Vector& other) requires std::copyable<T>
-		{
+		Vector& operator=(const Vector& other) requires std::copyable<T> {
 			GTSL_ASSERT(this != &other, "Assigning to self is not allowed!");
 			TryFree();
 			allocator = other.allocator;
@@ -94,8 +92,7 @@ namespace GTSL
 		 * \param other Reference to other Vector.
 		 * \return Reference to self.
 		 */
-		Vector& operator=(Vector&& other) noexcept requires std::move_constructible<ALLOCATOR>
-		{
+		Vector& operator=(Vector&& other) noexcept requires std::move_constructible<ALLOCATOR> {
 			GTSL_ASSERT(this != &other, "Assigning to self is not allowed!");
 			TryFree();
 			allocator = GTSL::MoveRef(other);
@@ -224,8 +221,7 @@ namespace GTSL
 		/**
 		 * \brief Destroys the object At the end of the vector and frees one space.
 		 */
-		void PopBack()
-		{
+		void PopBack() {
 			GTSL_ASSERT(this->length != 0, "Cannot pop back, there are no more elements!")
 			Destroy(data[length]);
 			length -= 1;
@@ -237,24 +233,19 @@ namespace GTSL
 		 * \return Returns the length of the vector after inserting.
 		 */
 		template<typename... ARGS>
-		T& Insert(const length_type index, ARGS&&... args)
-		{
+		T& Insert(const length_type index, ARGS&&... args) {
 			tryReallocate(1);
-			copyArray(getIterator(index), getIterator(index + 1), this->length - index);
-			auto* data = ::new(getIterator(index)) T(ForwardRef<ARGS>(args)...);
-			this->length += 1;
-			return *data;
+			InsertElement(capacity, length, data, index, GTSL::ForwardRef<ARGS>(args)...);
+			return data[length++];
 		}
 
 		/**
 		 * \brief Removes the elements At index and moves the rest of the vector to fill the space.
 		 * \param index Index of the element to Pop.
 		 */
-		void Pop(const length_type index)
-		{
-			Destroy(data[index]);
+		void Pop(const length_type index) {
+			PopElement(capacity, length, data, index);
 			length -= 1;
-			MemCopy((length - index) * sizeof(T), getIterator(index + 1), getIterator(index));
 		}
 
 		/**
@@ -262,10 +253,8 @@ namespace GTSL
 		 * \param index Index At which to start popping.
 		 * \param elemCount Number of elements to Pop.
 		 */
-		void Pop(const length_type index, const length_type elemCount)
-		{
+		void Pop(const length_type index, const length_type elemCount) {
 			for (auto* begin = getIterator(index); begin != getIterator(index + elemCount); ++begin) { begin->~T(); }
-
 			copyArray(getIterator(index + elemCount), getIterator(index), elemCount);
 			this->length -= elemCount;
 		}
@@ -275,14 +264,12 @@ namespace GTSL
 		 * \param obj Object to look for.
 		 * \return Iterator to element if it was found, iterator to end if object was not found.
 		 */
-		Result<uint32> Find(const T& obj) const noexcept
-		{
+		Result<uint32> Find(const T& obj) const noexcept {
 			for (uint32 i = 0; i < GetLength(); ++i) { if (obj == data[i]) { return Result<uint32>(MoveRef(i), true); } } return Result<uint32>(false);
 		}
 
 		template<typename F>
-		Result<uint32> LookFor(F&& function) const
-		{
+		Result<uint32> LookFor(F&& function) const {
 			for (uint32 i = 0; i < GetLength(); ++i) { if (function(data[i])) { return Result<uint32>(MoveRef(i), true); } }
 			return Result<uint32>(false);
 		}
@@ -292,8 +279,7 @@ namespace GTSL
 		 * \param index Index to element.
 		 * \return Reference to the element at index.
 		 */
-		T& operator[](const length_type index) noexcept
-		{
+		T& operator[](const length_type index) noexcept {
 			GTSL_ASSERT(index < this->length, "Entered index is not accessible, array is not as large.")
 			return this->data[index];
 		}
@@ -303,8 +289,7 @@ namespace GTSL
 		 * \param index Index to element.
 		 * \return Const reference to the element at index.
 		 */
-		const T& operator[](const length_type index) const noexcept
-		{
+		const T& operator[](const length_type index) const noexcept {
 			GTSL_ASSERT(index < this->length, "Entered index is not accessible, array is not as large.")
 			return this->data[index];
 		}
@@ -393,15 +378,13 @@ namespace GTSL
 		 * \param to Pointer to write the data to.
 		 * \param elementCount How many elements of this vector's T to write to to.
 		 */
-		static void copyArray(const T* from, T* to, const length_type elementCount) requires std::copyable<T>
-		{
+		static void copyArray(const T* from, T* to, const length_type elementCount) requires std::copyable<T> {
 			for (uint32 i = 0; i < elementCount; ++i) {
 				to[i] = from[i];
 			}
 		}
 
-		static void buildCopyArray(const T* from, T* to, const length_type elementCount) requires std::copy_constructible<T>
-		{
+		static void buildCopyArray(const T* from, T* to, const length_type elementCount) requires std::copy_constructible<T> {
 			for (uint32 i = 0; i < elementCount; ++i) {
 				::new(to + i) T(from[i]);
 			}

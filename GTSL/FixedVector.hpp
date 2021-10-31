@@ -245,7 +245,7 @@ namespace GTSL
 	{
 		for (int64 num = keepVector.getIndices().ElementCount() - 1, numBits = num * keepVector.BITS; num > -1; --num, numBits -= keepVector.BITS) {
 			for (int64 i = 31; i > -1; --i) {
-				if (keepVector.IsSlotOccupied(numBits + i)) { lambda(keepVector.getObjects()[numBits + i]); }
+				if (keepVector.IsSlotOccupied(numBits + i)) { lambda(keepVector.data[numBits + i]); }
 			}
 		}
 	}

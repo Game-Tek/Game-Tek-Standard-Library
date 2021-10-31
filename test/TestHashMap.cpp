@@ -32,11 +32,11 @@ TEST(HashMap, Lookup) {
 TEST(HashMap, FindAndResize) {
 	GTSL::HashMap<GTSL::uint64, GTSL::uint64, GTSL::DefaultAllocatorReference> hashMap(2);
 
-	for (GTSL::uint32 i = 0; i < 1025; ++i) {
+	for (GTSL::uint32 i = 0; i < 8193; ++i) {
 		hashMap.Emplace(i, i);
 	}
 
-	for (GTSL::uint32 i = 0; i < 1025; ++i) {
+	for (GTSL::uint32 i = 0; i < 8193; ++i) {
 		ASSERT_TRUE(hashMap.Find(i));
 	}
 }

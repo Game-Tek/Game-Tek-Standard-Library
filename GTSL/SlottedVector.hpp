@@ -17,7 +17,6 @@ namespace GTSL
 			this->allocator.Allocate(sizeof(T) * allocatedElements, alignof(T), );
 		}
 
-
 		template<typename... ARGS>
 		Pair<T&, uint32> Emplace(const ARGS&&... args)
 		{

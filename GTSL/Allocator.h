@@ -6,13 +6,14 @@
 #include "FunctionPointer.hpp"
 #include "Memory.h"
 
+#include <type_traits>
+
 namespace GTSL
 {
 	/**
 	 * \brief Interface to an allocator.
 	 */
-	struct AllocatorReference
-	{
+	struct AllocatorReference {
 		AllocatorReference() = default;
 
 		AllocatorReference(const AllocatorReference& allocatorReference) = default;
@@ -44,8 +45,7 @@ namespace GTSL
 		 */
 	};
 
-	struct DefaultAllocatorReference
-	{
+	struct DefaultAllocatorReference {
 		DefaultAllocatorReference() = default;
 
 		DefaultAllocatorReference(const DefaultAllocatorReference& allocatorReference) = default;
@@ -65,15 +65,13 @@ namespace GTSL
 	};
 
 	template<typename T, class ALLOCATOR, typename... ARGS>
-	T* New(const ALLOCATOR& allocator, ARGS&&... args)
-	{
+	T* New(const ALLOCATOR& allocator, ARGS&&... args) {
 		uint64 allocated_size; void* data; allocator.Allocate(sizeof(T), alignof(T), &data, &allocated_size);
 		return ::new(data) T(GTSL::ForwardRef<ARGS>(args)...);
 	}
 
 	template<typename T, class ALLOCATOR>
-	void Delete(T** data, const ALLOCATOR& allocator)
-	{
+	void Delete(T** data, const ALLOCATOR& allocator) {
 		GTSL::Destroy(**data);
 		allocator.Deallocate(sizeof(T), alignof(T), *data);
 		if constexpr (_DEBUG) {
@@ -82,8 +80,7 @@ namespace GTSL
 	}
 	
 	template<typename T, class ALLOCATOR>
-	struct SmartPointer
-	{
+	struct SmartPointer {
 		SmartPointer() = default;
 			
 		template<typename... ARGS>
@@ -172,27 +169,21 @@ namespace GTSL
 	{
 		StaticAllocator() = default;
 		
-		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size)
-		{
+		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size) {
 			GTSL_ASSERT(size <= BYTES, "Static space is less than being requested!");
 			*data = buffer;
 			*allocated_size = BYTES;
 		}
 		
-		void Deallocate(const uint64 size, uint64 alignment, void* data)
-		{
-		}
+		void Deallocate(const uint64 size, uint64 alignment, void* data) {}
 
-		StaticAllocator(const StaticAllocator& other)
-		{
-			for(uint32 i = 0; i < BYTES; ++i) {
-				buffer[i] = other.buffer[i];
-			}
-		}
+		StaticAllocator(const StaticAllocator& other) {}
 
 		StaticAllocator& operator=(const StaticAllocator& other) { return *this; }
-		StaticAllocator(StaticAllocator&& other) = delete;
-		
+
+		StaticAllocator(StaticAllocator&&) = delete;
+		StaticAllocator& operator=(StaticAllocator&&) = delete;
+
 	private:
 		byte buffer[BYTES];
 	};
@@ -203,12 +194,7 @@ namespace GTSL
 	public:
 		DoubleAllocator(const A& alloc = A()) : a(alloc) {}
 
-		DoubleAllocator(const DoubleAllocator& other) : allocator(other.allocator), a(other.a)
-		{
-			for (uint32 i = 0; i < BYTES; ++i) {
-				buffer[i] = other.buffer[i];
-			}
-		}
+		DoubleAllocator(const DoubleAllocator& other) : allocator(other.allocator), a(other.a) {}
 		
 		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size)
 		{
@@ -272,7 +258,13 @@ namespace GTSL
 		T* newAlloc; uint64 allocatedElements;
 		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements);
 
-		Copy(length, *data, newAlloc);
+		if constexpr (std::is_trivial_v<T>) {
+			Copy(length, *data, newAlloc);
+		} else {
+			for (uint64 i = 0; i < length; ++i) {
+				Move(*data + i, newAlloc + i);
+			}
+		}
 
 		Deallocate(allocator, *capacity, *data);
 

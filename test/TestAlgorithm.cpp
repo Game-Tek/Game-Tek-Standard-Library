@@ -3,6 +3,7 @@
 #include "GTSL/Vector.hpp"
 #include <GTSL/Tuple.hpp>
 
+#include "GTSL/ArrayCommon.hpp"
 #include "GTSL/Delegate.hpp"
 
 TEST(CrossSearch, Invalid) {
@@ -77,6 +78,25 @@ TEST(Delegate, Valid) {
 	delegate(0u, 1u);
 
 	Call(GTSL::Delegate<void(GTSL::uint32, GTSL::uint32)>::Create(lambda), GTSL::Tuple(0u, 1u));
+}
+
+TEST(ArrayFunctions, Insert) {
+	GTSL::uint32 arr[10];
+
+	GTSL::InsertElement(10, 0, arr, 0, 0);
+
+	GTEST_ASSERT_EQ(arr[0], 0u);
+
+	GTSL::InsertElement(10, 1, arr, 1, 1);
+
+	GTEST_ASSERT_EQ(arr[0], 0u);
+	GTEST_ASSERT_EQ(arr[1], 1u);
+
+	GTSL::InsertElement(10, 2, arr, 1, 2);
+
+	GTEST_ASSERT_EQ(arr[0], 0u);
+	GTEST_ASSERT_EQ(arr[1], 2u);
+	GTEST_ASSERT_EQ(arr[2], 1u);
 }
 
 using TTT = GTSL::Tuple<GTSL::float32, GTSL::uint32, GTSL::uint8, GTSL::uint16, GTSL::uint64>;

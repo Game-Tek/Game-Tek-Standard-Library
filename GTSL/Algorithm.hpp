@@ -3,6 +3,7 @@
 #include "Core.h"
 #include "Result.h"
 #include <type_traits>
+#include <new>
 
 namespace GTSL
 {
@@ -19,6 +20,12 @@ namespace GTSL
 
 	template<typename T>
 	constexpr bool IsIntegral() { return false; };
+
+	template<typename T>
+	void Move(T* from, T* to) {
+		::new(to) T(static_cast<T&&>(*from));
+		Destroy(*from);
+	}
 
 	template<>
 	constexpr bool IsIntegral<uint32>() { return true; }
@@ -126,7 +133,7 @@ namespace GTSL
 
 	template<class C>
 	constexpr auto Find(const C& iterable, auto&& function) -> Result<typename C::const_iterator> {
-		for (const auto begin = iterable.begin(); begin != iterable.end(); ++begin) {
+		for (auto begin = iterable.begin(); begin != iterable.end(); ++begin) {
 			if (function(*begin)) {
 				return Result(MoveRef(begin), true);
 			}

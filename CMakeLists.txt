@@ -30,6 +30,7 @@ if(GTSL_TESTS_ENABLED)
 	"${PROJECT_SOURCE_DIR}/test/TestVector.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestFixedVector.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestMath.cpp"
+	"${PROJECT_SOURCE_DIR}/test/TestMemory.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestString.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestShortString.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestHashMap.cpp"

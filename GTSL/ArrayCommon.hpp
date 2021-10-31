@@ -8,53 +8,24 @@
 namespace GTSL
 {
 	template<typename T>
-	void popElement(const Range<T*> range, uint32 index)
-	{
-		++index;
-		auto elementCount = (range.end() - range.begin()) - index;
-		MemCopy(sizeof(T) * elementCount, range.begin() + index, range.begin() + (index - 1));
+	void PopElement(const uint64 capacity, const uint64 length, T* array, uint64 index) {
+		auto elementsToMove = length - index - 1;
+
+		Destroy(array[index]);
+
+		for (uint64 i = 0; i < elementsToMove; ++i) {
+			Move(array + index + i + 1, array + index + i);
+		}
 	}
 
-	template<typename T>
-	void insertElement(const Range<T*> range, uint32 index)
-	{
-		MemCopy(sizeof(T) * (range.end() - (range.begin() + index)), range.begin() + index, range.begin() + index + 1);
-	}
+	template<typename T, typename... ARGS>
+	void InsertElement(const uint64 capacity, const uint64 length, T* array, uint64 index, ARGS&&... args) {
+		auto elementsToMove = length - index;
 
-	template<typename  T>
-	void copyElementToBack(const Range<T*> range, T* object)
-	{
-		MemCopy(sizeof(T), object, range.end());
-	}
-
-	inline Result<uint32> getFreeIndex(Range<Pair<uint32, uint32>*> freeSpaces, uint32* freeSpacesCount) {
-		for(uint32 i = 0; i < *freeSpacesCount; ++i) {
-			auto res = freeSpaces[i].First++;
-			
-			if (freeSpaces[i].First == freeSpaces[i].Second + 1) {
-				--(*freeSpacesCount);
-				popElement(freeSpaces, i);
-			}
-
-			return Result<uint32>(GTSL::MoveRef(res), true);
+		for(uint64 i = 0, t = length - 1; i < elementsToMove; ++i, --t) {
+			Move(array + t, array + t + 1);
 		}
 
-		return Result<uint32>(false);
-	}
-
-	inline void addFreeIndex(uint32 index, GTSL::Range<Pair<uint32, uint32>*> freeSpaces, uint32* freeSpacesCount)
-	{
-		uint32 lowestIndex = *freeSpacesCount;
-		
-		for (uint32 i = 0; i < *freeSpacesCount; ++i)
-		{
-			if(index + 1 == freeSpaces[i].First) { --freeSpaces[i].First; return; }
-			if(index + 1 == freeSpaces[i].Second) { ++freeSpaces[i].Second; return; }
-			if (index < freeSpaces[i].First) { lowestIndex = i; }
-		}
-
-		insertElement(freeSpaces, lowestIndex);
-		freeSpaces[lowestIndex].First = index;
-		freeSpaces[lowestIndex].Second = index;
+		::new(array + index) T(ForwardRef<ARGS>(args)...);
 	}
 }
