@@ -399,9 +399,9 @@ namespace GTSL
 		template<int32 A, int32 B, int32 C, int32 D>
 		[[nodiscard]] static SIMD Shuffle(const SIMD a) { return _mm_permute_ps(a.vector, _MM_SHUFFLE(D, C, B, A)); }
 
-		void Abs() { vector = _mm_andnot_ps(vector, SIMD(1.0f)); }
-		static SIMD Abs(const SIMD& a) { return _mm_andnot_ps(a, SIMD(-0.0f)); }
-		static SIMD NotAbs(const SIMD& a) { return _mm_andnot_ps(a, SIMD(0.0f)); }
+		void Abs() { vector = _mm_andnot_ps(vector, _mm_set_ps1(1.0f)); }
+		static SIMD Abs(const SIMD& a) { return _mm_andnot_ps(a, _mm_set_ps1(-0.0f)); }
+		static SIMD NotAbs(const SIMD& a) { return _mm_andnot_ps(a, _mm_set_ps1(0.0f)); }
 
 		static SIMD Floor(const SIMD& a) { return _mm_floor_ps(a); }
 
@@ -488,7 +488,7 @@ namespace GTSL
 		 * \param w 3rd parameter in vector
 		 */
 		SIMD(const type a, const type b, const type c, const type d, const type e, const type f, const type g, const type h) : vector(_mm256_setr_ps(a, b, c, d, e, f, g, h)) {}
-		explicit SIMD(const SIMD<int32, 4> other);
+		explicit SIMD(const SIMD<int32, 8> other);
 
 		SIMD(const SIMD& other) = default;
 
@@ -601,7 +601,7 @@ namespace GTSL
 		SIMD(const AlignedPointer<type, 16> data) : vector(_mm_load_pd(data)) {}
 		SIMD(const UnalignedPointer<type> data) : vector(_mm_loadu_pd(data)) {}
 
-		SIMD(const type x, const type y) : vector(_mm_set_pd(x, y)) {}
+		SIMD(const type x, const type y) : vector(_mm_setr_pd(x, y)) {}
 
 		SIMD(const SIMD& other) = default;
 
@@ -706,7 +706,7 @@ namespace GTSL
 
 		SIMD(const SIMD<float32, 4> other) : vector(_mm_castps_si128(other.vector)) {}
 
-		SIMD(const type a, const type b, const type c, const type d) : vector(_mm_set_epi32(a, b, c, d)) {}
+		SIMD(const type a, const type b, const type c, const type d) : vector(_mm_setr_epi32(a, b, c, d)) {}
 
 		SIMD(const SIMD& other) = default;
 
@@ -778,7 +778,95 @@ namespace GTSL
 		friend class SIMD<float32, 4>;
 	};
 
+	template<>
+	class alignas(32) SIMD<int32, 8> {
+	public:
+		using type = int32;
+		static constexpr uint8 ElementCount = 8;
+
+		SIMD() = default;
+
+		explicit SIMD(const type a) : vector(_mm256_set1_epi32(a)) {}
+
+		SIMD(const AlignedPointer<type, 32> data) : vector(_mm256_load_si256(reinterpret_cast<__m256i*>(data.Get()))) {}
+		SIMD(const UnalignedPointer<type> data) : vector(_mm256_loadu_si256(reinterpret_cast<__m256i*>(data.Get()))) {}
+
+		SIMD(const SIMD<float32, 8> other) : vector(_mm256_castps_si256(other.vector)) {}
+
+		SIMD(const type a, const type b, const type c, const type d, const type e, const type f, const type g, const type h) : vector(_mm256_setr_epi32(a, b, c, d, e, f, g, h)) {}
+
+		SIMD(const SIMD& other) = default;
+
+		~SIMD() = default;
+
+		void Set(const AlignedPointer<type, 32> data) { vector = _mm256_load_si256(reinterpret_cast<__m256i*>(data.Get())); }
+		void Set(const UnalignedPointer<type> data) { vector = _mm256_loadu_si256(reinterpret_cast<__m256i*>(data.Get())); }
+
+		/**
+		 * \brief Sets all of this vector's components as a.
+		 * \param a float to set all of this vector's components as.
+		 * \return Returns a reference to itself.
+		 */
+		SIMD& operator=(const type a) { vector = _mm256_set1_epi32(a); return *this; }
+		SIMD& operator=(const SIMD& other) { vector = other.vector; return *this; }
+
+		SIMD& operator=(const AlignedPointer<type, 32> data) { vector = _mm256_load_si256(reinterpret_cast<__m256i*>(data.Get())); return *this; }
+		SIMD& operator=(const UnalignedPointer<type> data) { vector = _mm256_loadu_si256(reinterpret_cast<__m256i*>(data.Get())); return *this; }
+
+		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
+		void CopyTo(const AlignedPointer<type, 32> data) const { _mm256_store_si256(reinterpret_cast<__m256i*>(data.Get()), vector); }
+
+		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
+		void CopyTo(const UnalignedPointer<type> data) const { _mm256_storeu_si256(reinterpret_cast<__m256i*>(data.Get()), vector); }
+
+		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
+		//template<uint8 A, uint8 B, uint8 C, uint8 DestructionTester, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
+		//[[nodiscard]] static SIMD Shuffle(const SIMD& a, const SIMD& b) { return _MM_SHUFFLE2(a.vector, SIMD(A, B, C, DestructionTester, E, F, G, H, I, J, K, L, M, N, O, P)); }
+
+		void Abs() { vector = _mm256_abs_epi32(vector); }
+
+		static SIMD Min(const SIMD& a, const SIMD& b) { return _mm256_min_epi32(a, b); }
+		static SIMD Max(const SIMD& a, const SIMD& b) { return _mm256_max_epi32(a, b); }
+
+		//template<uint8 A, uint8 B, uint8 C, uint8 D>
+		//static SIMD Shuffle(const SIMD a) { return _mm256_shuffle_epi32(a, _MM_SHUFFLE(D, C, B, A)); }
+
+		template<uint8 I>
+		[[nodiscard]] type GetElement() const { return _mm_extract_epi32(vector, I); }
+
+		SIMD operator+(const SIMD& other) const { return _mm256_add_epi32(vector, other.vector); }
+		SIMD operator-(const SIMD& other) const { return _mm256_sub_epi32(vector, other.vector); }
+		SIMD operator*(const SIMD& other) const { return _mm256_mul_epi32(vector, other.vector); }
+		SIMD operator/(const SIMD& other) const { return _mm256_div_epi32(vector, other.vector); }
+
+		SIMD& operator+=(const SIMD& other) { vector = _mm256_add_epi32(vector, other.vector); return *this; }
+		SIMD& operator-=(const SIMD& other) { vector = _mm256_sub_epi32(vector, other.vector); return *this; }
+		SIMD& operator*=(const SIMD& other) { vector = _mm256_mul_epi32(vector, other.vector); return *this; }
+		SIMD& operator/=(const SIMD& other) { vector = _mm256_div_epi32(vector, other.vector); return *this; }
+
+		SIMD operator==(const SIMD& other) const { return _mm256_cmpeq_epi32(vector, other.vector); }
+		SIMD operator!=(const SIMD& other) const { return _mm256_andnot_si256(_mm256_cmpeq_epi32(vector, other.vector), _mm256_set1_epi32(-1)); }
+		SIMD operator>(const SIMD& other)  const { return _mm256_cmpgt_epi32(vector, other.vector); }
+		SIMD operator>=(const SIMD& other) const { return _mm256_cmpeq_epi32(_mm256_max_epi32(vector, other.vector), vector); }
+		SIMD operator<(const SIMD& other)  const { return _mm256_andnot_si256(_mm256_cmpeq_epi32(_mm256_max_epi32(vector, other.vector), vector), _mm256_set1_epi32(-1)); }
+		SIMD operator<=(const SIMD& other) const { return _mm256_cmpeq_epi32(_mm256_min_epi32(vector, other.vector), vector); }
+
+		SIMD operator&(const SIMD& other) const { return _mm256_and_si256(vector, other.vector); }
+		SIMD operator|(const SIMD& other) const { return _mm256_or_si256(vector, other.vector); }
+		SIMD operator^(const SIMD& other) const { return _mm256_xor_si256(vector, other); }
+		SIMD& operator~() { vector = _mm256_xor_si256(vector, _mm256_cmpeq_epi32(vector, vector)); return *this; }
+
+	private:
+		__m256i vector;
+
+		SIMD(const __m256i m128) : vector(m128) {}
+		operator __m256i() const { return vector; }
+
+		friend class SIMD<float32, 8>;
+	};
+
 	inline SIMD<float32, 4>::SIMD(const SIMD<int32, 4> other) : vector(_mm_castsi128_ps(other.vector)) {}
+	inline SIMD<float, 8>::SIMD(const SIMD<int32, 8> other) : vector(_mm256_castsi256_ps(other.vector)) {}
 
 	using float4x = SIMD<float32, 4>;
 	using float8x = SIMD<float32, 8>;

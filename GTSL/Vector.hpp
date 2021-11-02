@@ -82,7 +82,7 @@ namespace GTSL
 			TryFree();
 			allocator = other.allocator;
 			Allocate(allocator, other.length, &data, &capacity);
-			copyArray(other.data, data, other.length);
+			buildCopyArray(other.data, data, other.length);
 			length = other.length;
 			return *this;
 		}
