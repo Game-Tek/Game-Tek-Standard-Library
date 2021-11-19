@@ -2,7 +2,7 @@
 
 #include "AxisAngle.h"
 #include "GTSL/Core.h"
-#include "Vectors.h"
+#include "Vectors.hpp"
 #include "Quaternion.h"
 #include "Matrix4.h"
 #include "Plane.h"
@@ -232,7 +232,7 @@ namespace GTSL {
 		}
 
 		inline Vector2 Wrap(const Vector2 a, const Vector2 range) {
-			return Vector2(Wrap(a.X(), range.X()), Wrap(a.Y(), range.Y()));
+			return { Wrap(a.X(), range.X()), Wrap(a.Y(), range.Y()) };
 		}
 		
 		/**
@@ -253,14 +253,10 @@ namespace GTSL {
 		//}
 		
 		inline uint32 Abs(const int32 a) { return static_cast<uint32>(a < 0.0f ? -a : a); }
-
 		inline uint64 Abs(const int64 a) { return static_cast<uint64>(a < 0.0f ? -a : a); }
-
 		inline float32 Abs(const float32 a) { return a < 0.0f ? -a : a; }
 
-		inline float32 Sine(float32 x) {
-			return sinf(x);
-		}
+		inline float32 Sine(float32 x) { return sinf(x); }
 		
 		//inline float32 Sine(float32 x) {
 		//	constexpr float32 B = 4.0f / PI, C = -4.0f / Square(PI), P = 0.225f;
@@ -307,18 +303,14 @@ namespace GTSL {
 		 * \param radians Angle in radians.
 		 * \return Sine of radians
 		 */
-		inline float64 Sine(float64 radians) {
-			return ::sin(radians);
-		}
+		inline float64 Sine(float64 radians) { return ::sin(radians); }
 
 		/**
 		* \brief Returns the cosine of an angle.
 		* \param radians Angle in radians.
 		* \return Cosine of radians
 		*/
-		inline float32 Cosine(float32 x) {
-			return cosf(x);
-		}
+		inline float32 Cosine(float32 x) { return cosf(x); }
 
 		//inline float32 Cosine(float32 x) {
 		//	x = (x > 0) ? -x : x;
@@ -330,9 +322,7 @@ namespace GTSL {
 		* \param radians Angle in radians.
 		* \return Cosine of radians
 		*/
-		inline float64 Cosine(float64 radians) {
-			return ::cos(radians);
-		}
+		inline float64 Cosine(float64 radians) { return ::cos(radians); }
 
 		/**
 		* \brief Returns the tangent of an angle.
@@ -343,53 +333,41 @@ namespace GTSL {
 			//return Sine(x) / Cosine(x);
 		//}
 
-		inline float32 Tangent(float32 x) {
-			return tanf(x);
-		}
+		inline float32 Tangent(float32 x) { return tanf(x); }
 		
 		/**
 		* \brief Returns the tangent of an angle.
 		* \param radians Angle in radians.
 		* \return Tangent of radians
 		*/
-		inline float64 Tangent(float64 radians) {
-			return tan(radians);
-		}
+		inline float64 Tangent(float64 radians) { return tan(radians); }
 
 		/**
 		* \brief Returns the arcsine of A in radians.
 		* \param A value
 		* \return Radians of A
 		*/
-		inline float32 ArcSine(float32 A) {
-			return asin(A);
-		}
+		inline float32 ArcSine(float32 A) { return asin(A); }
 
 		/**
 		* \brief Returns the arccosine of A in radians.
 		* \param A value
 		* \return Radians of A
 		*/
-		inline float32 ArcCosine(float32 A) {
-			return acos(A);
-		}
+		inline float32 ArcCosine(float32 A) { return acos(A); }
 
 		/**
 		* \brief Returns the arctangent of A in radians.
 		* \param A value
 		* \return Radians of A
 		*/
-		inline float32 ArcTangent(float32 A) {
-			return atan(A);
-		}
+		inline float32 ArcTangent(float32 A) { return atan(A); }
 
 		/**
 		* \brief Returns the arctangent of Y / X in degrees.
 		* \return Degrees of Y / X
 		*/
-		inline float32 ArcTan2(float32 y, float32 x) {
-			return atan2(y, x);
-		}
+		inline float32 ArcTan2(float32 y, float32 x) { return atan2(y, x); }
 
 		inline void Sine(Range<float32*> n) {
 			using SIMD = SIMD<float32, 4>;
@@ -442,7 +420,7 @@ namespace GTSL {
 		}
 		
 		inline Vector2 Modulo(const Vector2 a, const Vector2 b) {
-			return Vector2(Modulo(a.X(), b.X()), Modulo(a.Y(), b.Y()));
+			return { Modulo(a.X(), b.X()), Modulo(a.Y(), b.Y()) };
 		}
 		
 		//////////////////////////////////////////////////////////////
@@ -466,8 +444,7 @@ namespace GTSL {
 		}
 
 		//Returns 1 if A is bigger than 0. 0 if A is equal to 0. and -1 if A is less than 0.
-		inline int8 Sign(const float32 A)
-		{
+		inline int8 Sign(const float32 A) {
 			if (A > 0.0f)			
 				return 1;
 			
@@ -483,35 +460,35 @@ namespace GTSL {
 		}
 
 		inline Vector2 Lerp(const Vector2 a, const Vector2 b, const float32 alpha) {
-			return Vector2(Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha));
+			return { Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha) };
 		}
 
 		inline Vector3 Lerp(const Vector3 a, const Vector3 b, const float32 alpha) {
-			return Vector3(Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha), Lerp(a.Z(), b.Z(), alpha));
+			return { Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha), Lerp(a.Z(), b.Z(), alpha) };
 		}
 
 		inline Vector4 Lerp(const Vector4 a, const Vector4 b, const float32 alpha) {
-			return Vector4(Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha), Lerp(a.Z(), b.Z(), alpha), Lerp(a.W(), b.W(), alpha));
+			return { Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha), Lerp(a.Z(), b.Z(), alpha), Lerp(a.W(), b.W(), alpha) };
 		}
 
 		inline float32 LengthSquared(const Vector2 a) { return a.X() * a.X() + a.Y() * a.Y(); }
-		inline float32 LengthSquared(const Vector2 a, const Vector2 b) { return LengthSquared(b - a); }
 		inline float32 LengthSquared(const Vector3 a) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z(); }
-		inline float32 LengthSquared(const Vector3 a, const Vector3 b) { return LengthSquared(b - a); }
 		inline float32 LengthSquared(const Vector4 a) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z() + a.W() * a.W(); }
-		inline float32 LengthSquared(const Vector4 a, const Vector4 b) { return LengthSquared(b - a); }
+		inline float32 DistanceSquared(const Vector2 a, const Vector2 b) { return LengthSquared(b - a); }
+		inline float32 DistanceSquared(const Vector3 a, const Vector3 b) { return LengthSquared(b - a); }
+		inline float32 DistanceSquared(const Vector4 a, const Vector4 b) { return LengthSquared(b - a); }
 
 		inline float32 Length(const Vector2 a) { return SquareRoot(LengthSquared(a)); }
-		inline float32 Length(const Vector2 a, const Vector2 b) { return SquareRoot(LengthSquared(a, b)); }
 		inline float32 Length(const Vector3 a) { return SquareRoot(LengthSquared(a)); }
-		inline float32 Length(const Vector3 a, const Vector3 b) { return SquareRoot(LengthSquared(a, b)); }
 		inline float32 Length(const Vector4 a) { return SquareRoot(LengthSquared(a)); }
-		inline float32 Length(const Vector4 a, const Vector4 b) { return SquareRoot(LengthSquared(a, b)); }
+		inline float32 Distance(const Vector2 a, const Vector2 b) { return SquareRoot(DistanceSquared(a, b)); }
+		inline float32 Distance(const Vector3 a, const Vector3 b) { return SquareRoot(DistanceSquared(a, b)); }
+		inline float32 Distance(const Vector4 a, const Vector4 b) { return SquareRoot(DistanceSquared(a, b)); }
 
 		inline Vector2 Normalized(const Vector2& a) {
 			auto length = Length(a); if (length == 0.0f) { return a; }
 			length = 1.0f / length;
-			return Vector2(a.X() * length, a.Y() * length);
+			return { a.X() * length, a.Y() * length };
 		}
 
 		inline void Normalize(Vector2& a) {
@@ -524,7 +501,7 @@ namespace GTSL {
 		inline Vector3 Normalized(const Vector3& a) {
 			auto length = Length(a); if (length == 0.0f) { return a; }
 			length = 1.0f / length;
-			return Vector3(a.X() * length, a.Y() * length, a.Z() * length);
+			return { a.X() * length, a.Y() * length, a.Z() * length };
 		}
 
 		inline void Normalize(Vector3& a) {
@@ -537,7 +514,7 @@ namespace GTSL {
 		inline Vector4 Normalized(const Vector4& a) {
 			auto length = Length(a); if (length == 0.0f) { return a; }
 			length = 1.0f / length;
-			return Vector4(a.X() * length, a.Y() * length, a.Z() * length, a.W() * length);
+			return { a.X() * length, a.Y() * length, a.Z() * length, a.W() * length };
 		}
 
 		inline void Normalize(Vector4& a) {
@@ -557,7 +534,7 @@ namespace GTSL {
 		inline Quaternion Normalized(const Quaternion& a) {
 			auto length = Length(a); if (length == 0.0f) { return a; }
 			length = 1.0f / length;
-			return Quaternion(a.X() * length, a.Y() * length, a.Z() * length, a.W() * length);
+			return { a.X() * length, a.Y() * length, a.Z() * length, a.W() * length };
 		}
 		
 		inline Quaternion Lerp(const Quaternion a, const Quaternion b, const float32 alpha) {
@@ -613,17 +590,15 @@ namespace GTSL {
 
 		inline float32 InvertRange(const float32 a, const float32 max) { return max - a; }
 		
-		inline float32 MapToRange(const float32 x, const float32 inMin, const float32 inMax, const float32 outMin, const float32 outMax)
-		{
-			if ((inMax - inMin) != 0.0f) {
-				GTSL_ASSERT(x >= inMin && x <= inMax, "Not in range");
-				return (x - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
-			}
-			return x;
+		inline float32 MapToRange(const float32 x, const float32 inMin, const float32 inMax, const float32 outMin, const float32 outMax) {
+			if ((inMax - inMin) == 0.0f) { return x; }
+
+			GTSL_ASSERT(x >= inMin && x <= inMax, "Not in range");
+			return (x - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
 		}
 
 		inline Vector2 MapToRange(const Vector2 a, const Vector2 matrixin, const Vector2 matrixax, const Vector2 OutMin, const Vector2 OutMax) {
-			return Vector2(MapToRange(a.X(), matrixin.X(), matrixax.X(), OutMin.X(), OutMax.X()), MapToRange(a.Y(), matrixin.Y(), matrixax.Y(), OutMin.Y(), OutMax.Y()));
+			return { MapToRange(a.X(), matrixin.X(), matrixax.X(), OutMin.X(), OutMax.X()), MapToRange(a.Y(), matrixin.Y(), matrixax.Y(), OutMin.Y(), OutMax.Y()) };
 		}
 
 		inline float32 MapToRangeZeroToOne(const float32 a, const float32 inMax, const float32 outMax) { return a / (inMax / outMax); }
@@ -684,20 +659,20 @@ namespace GTSL {
 		inline float32 DotProduct(const Vector3& a, const Vector3& b) { return a.X() * b.X() + a.Y() * b.Y() + a.Z() * b.Z(); }
 		inline float32 DotProduct(const Vector4& a, const Vector4& b) { return a.X() * b.X() + a.Y() * b.Y() + a.Z() * b.Z() + a.W() * b.W(); }
 
-		inline Vector3 Cross(const Vector3& a, const Vector3& b) { return Vector3(a.Y() * b.Z() - a.Z() * b.Y(), a.Z() * b.X() - a.X() * b.Z(), a.X() * b.Y() - a.Y() * b.X()); }
+		inline Vector3 Cross(const Vector3& a, const Vector3& b) { return { a.Y() * b.Z() - a.Z() * b.Y(), a.Z() * b.X() - a.X() * b.Z(), a.X() * b.Y() - a.Y() * b.X() }; }
 		inline Vector3 TripleProduct(const Vector3& a, const Vector3& b) { return Cross(Cross(a, b), b); }
 
-		inline Vector2 Abs(const Vector2 a) { return Vector2(Abs(a.X()), Abs(a.Y())); }
-		inline Vector3 Abs(const Vector3 a) { return Vector3(Abs(a.X()), Abs(a.Y()), Abs(a.Z())); }
-		inline Vector4 Abs(const Vector4 a) { return Vector4(Abs(a.X()), Abs(a.Y()), Abs(a.Z()), Abs(a.W())); }
+		inline Vector2 Abs(const Vector2 a) { return { Abs(a.X()), Abs(a.Y()) }; }
+		inline Vector3 Abs(const Vector3 a) { return { Abs(a.X()), Abs(a.Y()), Abs(a.Z()) }; }
+		inline Vector4 Abs(const Vector4 a) { return { Abs(a.X()), Abs(a.Y()), Abs(a.Z()), Abs(a.W()) }; }
 
 		inline void Negate(float32& a) { a *= -1.0f; }
 
-		inline Vector2 Negated(const Vector2& a) { return Vector2(-a.X(), -a.Y()); }
+		inline Vector2 Negated(const Vector2& a) { return { -a.X(), -a.Y() }; }
+		inline Vector3 Negated(const Vector3& a) { return { -a.X(), -a.Y(), -a.Z() }; }
+		inline Vector4 Negated(const Vector4& a) { return { -a.X(), -a.Y(), -a.Z(), -a.W() }; }
 		inline void Negate(Vector2& a) { a.X() = -a.X(); a.Y() = -a.Y(); }
-		inline Vector3 Negated(const Vector3& a) { return Vector3(-a.X(), -a.Y(), -a.Z()); }
 		inline void Negate(Vector3& a) { a.X() = -a.X(); a.Y() = -a.Y(); a.Z() = -a.Z(); }
-		inline Vector4 Negated(const Vector4& a) { return Vector4(-a.X(), -a.Y(), -a.Z(), -a.W()); }
 		inline void Negate(Vector4& a) { a.X() = -a.X(); a.Y() = -a.Y(); a.Z() = -a.Z(); a.W() = -a.W(); }
 
 		//////////////////////////////////////////////////////////////
@@ -732,13 +707,7 @@ namespace GTSL {
 				sclq = alpha;
 			}
 
-			Quaternion result;
-			result.X() = sclp * a.X() + sclq * b.X();
-			result.Y() = sclp * a.Y() + sclq * b.Y();
-			result.Z() = sclp * a.Z() + sclq * b.Z();
-			result.W() = sclp * a.W() + sclq * b.W();
-
-			return result;
+			return { sclp * a.X() + sclq * b.X(), sclp * a.Y() + sclq * b.Y(), sclp * a.Z() + sclq * b.Z(), sclp * a.W() + sclq * b.W() };
 		}
 
 		//////////////////////////////////////////////////////////////
@@ -773,16 +742,20 @@ namespace GTSL {
 			return IsNearlyEqual(a.X(), b.X(), tolerance) && IsNearlyEqual(a.Y(), b.Y(), tolerance) && IsNearlyEqual(a.Z(), b.Z(), tolerance) && IsNearlyEqual(a.W(), b.W(), tolerance);
 		}
 
-		inline bool MagnitudeGreater(const Vector2& A, const Vector2& B) {
-			return LengthSquared(A) > LengthSquared(B);
+		inline bool LengthGreater(const Vector2 a, const Vector2 b) { return LengthSquared(a) > LengthSquared(b); }
+		inline bool LengthGreater(const Vector3& A, const Vector3& B) { return LengthSquared(A) > LengthSquared(B); }
+		inline bool LengthGreater(const Vector4& A, const Vector4& B) { return LengthSquared(A) > LengthSquared(B); }
+
+		inline bool LengthGreaterEqual(const Vector2 a, const Vector2 b) { return LengthSquared(a) >= LengthSquared(b); }
+		inline bool LengthGreaterEqual(const Vector3& A, const Vector3& B) { return LengthSquared(A) >= LengthSquared(B); }
+		inline bool LengthGreaterEqual(const Vector4& A, const Vector4& B) { return LengthSquared(A) >= LengthSquared(B); }
+
+		inline bool AnyComponentLessEqual(const Vector4& a, const Vector4& b) {
+			return a.X() <= b.X() or a.Y() <= b.Y() or a.Z() <= b.Z() or a.W() <= b.W();
 		}
 
-		inline bool MagnitudeGreater(const Vector3& A, const Vector3& B) {
-			return LengthSquared(A) > LengthSquared(B);
-		}
-
-		inline bool MagnitudeGreater(const Vector4& A, const Vector4& B) {
-			return LengthSquared(A) > LengthSquared(B);
+		inline bool AnyComponentGreaterEqual(const Vector4& a, const Vector4& b) {
+			return a.X() >= b.X() or a.Y() >= b.Y() or a.Z() >= b.Z() or a.W() >= b.W();
 		}
 
 		inline bool PointInBox(Vector2 min, Vector2 max, Vector2 p) { return p.X() >= min.X() && p.X() <= max.X() && p.Y() >= min.Y() && p.Y() <= max.Y(); }
@@ -862,11 +835,9 @@ namespace GTSL {
 			return Matrix4(tangent0.X(), tangent0.Y(), tangent0.Z(), 0.0f, tangent1.X(), tangent1.Y(), tangent1.Z(), 0.0f, normal.X(), normal.Y(), normal.Z(), 0.0f, 0, 0, 0, 0);
 		}
 
-		inline void Rotate(Matrix4& matrix, const Quaternion& quaternion) {
-			matrix *= Matrix4(quaternion);
-		}
+		inline void Rotate(Matrix4& matrix, const Quaternion& quaternion) { matrix *= Matrix4(quaternion); }
 
-		inline Vector3 GetTranslation(const Matrix4& matrix4) { return Vector3(matrix4[0][3], matrix4[1][3], matrix4[2][3]); }
+		inline Vector3 GetTranslation(const Matrix4& matrix4) { return { matrix4[0][3], matrix4[1][3], matrix4[2][3] }; }
 		
 		//Returns point colinearity to a line defined by two points.
 		// +0 indicates point is to the right
@@ -878,7 +849,7 @@ namespace GTSL {
 
 		inline Vector3 SphericalCoordinatesToCartesianCoordinates(const Vector2& sphericalCoordinates) {
 			const auto cy = Cosine(sphericalCoordinates.Y());
-			return Vector3(cy * Sine(sphericalCoordinates.X()), Sine(sphericalCoordinates.Y()),	cy * Cosine(sphericalCoordinates.X()));
+			return { cy * Sine(sphericalCoordinates.X()), Sine(sphericalCoordinates.Y()),	cy * Cosine(sphericalCoordinates.X()) };
 		}
 
 		inline Matrix4 Scaling(const Vector3& A) {

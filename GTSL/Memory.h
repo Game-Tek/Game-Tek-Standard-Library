@@ -51,7 +51,7 @@ namespace GTSL
 	{
 		GTSL_ASSERT(size % 128 == 0, "Not perfect");
 		__m256i vector[4];
-		for (uint32 i = 0; i < size / 128; ++i) {
+		for (uint64 i = 0; i < size / 128ull; ++i) {
 			vector[0] = _mm256_loadu_epi8(static_cast<const byte*>(from) + (i * 128));
 			vector[1] = _mm256_loadu_epi8(static_cast<const byte*>(from) + (i * 128) + 32);
 			vector[2] = _mm256_loadu_epi8(static_cast<const byte*>(from) + (i * 128) + 64);

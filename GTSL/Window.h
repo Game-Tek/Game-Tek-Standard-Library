@@ -7,7 +7,7 @@
 #include "Gamepad.h"
 #include "Range.hpp"
 #include "Vector.hpp"
-#include "Math/Vectors.h"
+#include "Math/Vectors.hpp"
 #include "StringCommon.h"
 
 #if (_WIN64)

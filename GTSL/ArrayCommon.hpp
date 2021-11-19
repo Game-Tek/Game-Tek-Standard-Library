@@ -3,7 +3,7 @@
 #include "Result.h"
 #include "GTSL/Core.h"
 #include "GTSL/Memory.h"
-#include "GTSL/Pair.h"
+#include "GTSL/Pair.hpp"
 
 namespace GTSL
 {

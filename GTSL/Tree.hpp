@@ -42,17 +42,13 @@ namespace GTSL
 				Node& parentNode = at(parentNodeHandle);
 				parentNode.ChildrenCount += 1;
 
-				Key hand = parentNodeHandle;
-				while (at(hand).Next) { hand = at(hand).Next; }
+				if (!parentNode.TreeDown) { parentNode.TreeDown = length; }
 
-				auto& preLink = at(hand);
-				preLink.Next = length;
-			} else {
-				if (length - 1) {
-					Key hand = 1;
-					while (at(hand).Next) { hand = at(hand).Next; }
-					at(hand).Next = length;
+				if (parentNode.Children.GetLength()) { //write "to the right" if there are elements to our left
+					at(parentNode.Children.back()).TreeRight = length;
 				}
+
+				parentNode.Children.EmplaceBack(length);
 			}
 
 			return length;
@@ -61,27 +57,37 @@ namespace GTSL
 		T& operator[](const Key handle) { return at(handle).Data; }
 		const T& operator[](const Key handle) const { return at(handle).Data; }
 
-		friend void ForEach(Tree& tree, auto&& a, auto&& b) {
-			if (tree.length) {
-				Key next = 1;
+		friend void ForEach(const Tree& tree, auto&& a, auto&& b) {
+			if (!tree.length) { return; }
 
-				auto visitNode = [&](Key handle, auto&& self) -> void {
-					a(handle);
+			Key next = 1;
 
-					next = tree.at(handle).Next;
-					for (uint32 i = 0; i < tree.at(handle).ChildrenCount; ++i) { self(next, self); }
+			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
+				const auto& node = tree.at(handle);
+				
+				a(tree[handle], level);
 
-					b(handle);
-				};
+				next = node.TreeDown ? node.TreeDown : node.TreeRight;
 
-				visitNode(next, visitNode);
-			}
+				for (uint32 i = 0; i < node.ChildrenCount; ++i) {
+					self(next, level + 1, self);
+				}
+
+				b(tree[handle], level);
+
+				next = node.TreeRight;
+			};
+
+			visitNode(next, 0, visitNode);
+			
 		}
 
 	private:
 		struct Node {
 			T Data;
-			uint32 Next = 0, ChildrenCount = 0;
+			uint32 TreeDown = 0, TreeRight = 0, ChildrenCount = 0;
+
+			StaticVector<uint32, 16> Children;
 
 			template<typename ... ARGS>
 			Node(ARGS&&... args) : Data(GTSL::ForwardRef<ARGS>(args)...) {}
@@ -110,16 +116,16 @@ namespace GTSL
 		using Key = uint32;
 		using Types = Tuple<CLASSES...>;
 
-		struct Node {
+		struct BetaNode {
 			//Next: indirection table entry
 			uint32 Position = 0, TreeDown = 0, TreeRight = 0;
 			uint8 TypeIndex = 0, ChildrenCount = 0;
 			bool Way = true;
 		};
 
-		struct Helper {
+		struct AlphaNode {
 			template<typename... ARGS>
-			Helper(ARGS&&... args) : Alpha(ForwardRef<ARGS>(args)... ) {}
+			AlphaNode(ARGS&&... args) : Alpha(ForwardRef<ARGS>(args)... ) {}
 
 			struct Children {
 				Key NodeHandle;
@@ -132,6 +138,7 @@ namespace GTSL
 			};
 			StaticVector<BetaNodeData, 8> InternalSiblings;
 
+			Key AlphaParent = 0;
 			ALPHA Alpha;
 		};
 
@@ -146,10 +153,11 @@ namespace GTSL
 		template<typename... ARGS>
 		Key EmplaceAlpha(Key parentNodeHandle, ARGS&&... args) {
 			tryResizeAlphaTable(1);
-			::new(alphaTable + alphaEntries++) Helper(GTSL::ForwardRef<ARGS>(args)...);
+			::new(alphaTable + alphaEntries++) AlphaNode(GTSL::ForwardRef<ARGS>(args)...);
 
 			if(parentNodeHandle) {
-				Helper& alphaParent = getHelper(parentNodeHandle);
+				getHelper(alphaEntries).AlphaParent = parentNodeHandle;
+				AlphaNode& alphaParent = getHelper(parentNodeHandle);
 				alphaParent.ChildrenList.EmplaceBack(alphaEntries);
 			}
 
@@ -160,17 +168,6 @@ namespace GTSL
 		Result<Key> EmplaceBeta(uint64 nodeName, Key alphaParentHandle, Key alphaSiblingHandle, ARGS&&... args) {
 			static_assert(IsInPack<T, CLASSES...>(), "Type T is not in tree's type list.");
 
-			//if constexpr (_DEBUG) {
-			//	if (alphaParentHandle) {
-			//		auto& p = getHelper(alphaParentHandle);
-			//		auto& s = getHelper(alphaSiblingHandle);
-			//
-			//		if(p.InternalSiblings.GetLength() && s.InternalSiblings.GetLength()) {
-			//			if (at(p.InternalSiblings.back().Handle).Level > at(s.InternalSiblings.back().Handle).Level) { __debugbreak(); }
-			//		}
-			//	}
-			//}
-
 			if constexpr (sizeof...(CLASSES)) {
 				tryResizeBetaTable(sizeof(BETA) + sizeof(T));
 			} else {
@@ -179,7 +176,7 @@ namespace GTSL
 
 			tryResizeIndirectionTable(1);
 
-			Node& entry = *::new(indirectionTable + indirectionEntries++) Node();
+			BetaNode& entry = *::new(indirectionTable + indirectionEntries++) BetaNode();
 			entry.Position = betaLength;
 			entry.TypeIndex = GetTypeIndex<T>();
 
@@ -193,12 +190,12 @@ namespace GTSL
 				betaLength += sizeof(T);
 			}
 
-			Helper& alphaSibling = getHelper(alphaSiblingHandle);
+			AlphaNode& alphaSibling = getHelper(alphaSiblingHandle);
 
 			if (alphaParentHandle) {
-				Helper& alphaParent = getHelper(alphaParentHandle);
+				AlphaNode& alphaParent = getHelper(alphaParentHandle);
 
-				auto r = Find(alphaSibling.InternalSiblings, [&](const typename Helper::BetaNodeData& c) { return c.Name == nodeName; });
+				auto r = Find(alphaSibling.InternalSiblings, [&](const typename AlphaNode::BetaNodeData& c) { return c.Name == nodeName; });
 				if (r) { return Result(static_cast<Key>(r.Get()->Handle), true); }
 
 				Key betaParentNodeHandle;
@@ -209,7 +206,7 @@ namespace GTSL
 					betaParentNodeHandle = alphaParent.InternalSiblings.back().Handle;
 				}
 
-				Node& betaParentNode = at(betaParentNodeHandle);
+				BetaNode& betaParentNode = at(betaParentNodeHandle);
 				betaParentNode.ChildrenCount += 1;
 
 				if (!betaParentNode.TreeDown) { betaParentNode.TreeDown = currentNodeHandle; }
@@ -218,21 +215,11 @@ namespace GTSL
 				//	outOfOrderNodes.EmplaceBack(currentNodeHandle);
 				//}
 
-				//auto& preLink = at(hand);
-				//preLink.TreeDown = currentNodeHandle;
-
 				if ((alphaParent.ChildrenList.GetLength() - 1) && !alphaSibling.InternalSiblings.GetLength()) { //write "to the right" if there are elements to our left and we are the first sibling to the right
 					for (auto& e : getHelper(alphaParent.ChildrenList[alphaParent.ChildrenList.GetLength() - 2].NodeHandle).InternalSiblings) { //write to the right for every internal sibling of node to the left
 						at(e.Handle).TreeRight = currentNodeHandle;
 					}
 				}
-				
-				//entry.Level = betaParentNode.Level + 1;
-			} else  {
-				if (currentNodeHandle - 1) {
-				}
-
-				//entry.Level = 0;
 			}
 
 			auto& internalSiblingEntry = alphaSibling.InternalSiblings.EmplaceBack();
@@ -280,9 +267,10 @@ namespace GTSL
 		ALPHA& GetAlpha(const Key i) { return alphaTable[i - 1].Alpha; }
 		const ALPHA& GetAlpha(const Key i) const { return alphaTable[i - 1].Alpha; }
 
+		Key GetAlphaNodeParent(const Key key) const { return getHelper(key).AlphaParent; }
+
 		uint32 GetBetaNodeChildrenCount(const Key betaNodeHandle) const { return at(betaNodeHandle).ChildrenCount; }
 		uint32 GetBetaNodeType(const Key handle) const { return at(handle).TypeIndex; }
-		//uint32 GetBetaNodeLevel(const Key handle) const { return at(handle).Level; }
 
 		uint32 GetAlphaLength() const { return alphaEntries; }
 		uint32 GetBetaLength() const { return betaLength; }
@@ -321,24 +309,24 @@ namespace GTSL
 		ALLOCATOR allocator;
 		
 		byte* betaTable = nullptr; uint32 betaLength = 0, betaCapacity = 0;
-		Helper* alphaTable = nullptr; uint32 alphaEntries = 0, alphaCapacity = 0;
-		Node* indirectionTable = nullptr; uint32 indirectionEntries = 0, indirectionCapacity = 0;
+		AlphaNode* alphaTable = nullptr; uint32 alphaEntries = 0, alphaCapacity = 0;
+		BetaNode* indirectionTable = nullptr; uint32 indirectionEntries = 0, indirectionCapacity = 0;
 
 		Vector<Key, ALLOCATOR> outOfOrderNodes;
 
-		Node& at(Key nodeHandle) {
+		BetaNode& at(Key nodeHandle) {
 			return indirectionTable[nodeHandle - 1];
 		}
 
-		const Node& at(Key nodeHandle) const {
+		const BetaNode& at(Key nodeHandle) const {
 			return indirectionTable[nodeHandle - 1];
 		}
 
-		Helper& getHelper(Key handle) {
+		AlphaNode& getHelper(Key handle) {
 			return alphaTable[handle - 1];
 		}
 
-		const Helper& getHelper(Key handle) const {
+		const AlphaNode& getHelper(Key handle) const {
 			return alphaTable[handle - 1];
 		}
 
@@ -374,45 +362,53 @@ namespace GTSL
 
 	public:
 		friend void ForEachBeta(AlphaBetaTree& tree, auto&& a) {
-			if (tree.GetAlphaLength()) {
-				auto visitNode = [&](uint32 handle, auto&& self) -> void {
-					a(tree.at(handle).Data);
+			if (!tree.GetAlphaLength()) { return; }
 
-					auto xx = tree.at(handle).IterationNext;
-					for (uint32 i = 0; i < tree.at(handle).ChildrenCount; ++i) {
-						self(xx, self);
-						xx = tree.at(xx).IterationNext;
+			Key next = 1;
+
+			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
+				const auto& node = tree.at(handle);
+
+				if (node.Way) {
+					a(handle, level);
+
+					next = node.TreeDown ? node.TreeDown : node.TreeRight;
+
+					for (uint32 i = 0; i < node.ChildrenCount; ++i) {
+						self(next, level + 1, self);
 					}
-				};
+				}
 
-				visitNode(1, visitNode);
-			}
+				next = node.TreeRight;
+			};
+
+			visitNode(next, 0, visitNode);			
 		}
 
 		friend void ForEachBeta(const AlphaBetaTree& tree, auto&& a, auto&& b) {
-			if (tree.GetAlphaLength()) {
-				Key next = 1;
-				
-				auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
-					const auto& node = tree.at(handle);
+			if (!tree.GetAlphaLength()) { return; }
 
-					if (node.Way) {
-						a(handle, level);
+			Key next = 1;
+			
+			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
+				const auto& node = tree.at(handle);
 
-						next = node.TreeDown ? node.TreeDown : node.TreeRight;
+				if (node.Way) {
+					a(handle, level);
 
-						for (uint32 i = 0; i < node.ChildrenCount; ++i) {
-							self(next, level + 1, self);
-						}
+					next = node.TreeDown ? node.TreeDown : node.TreeRight;
 
-						b(handle, level);
+					for (uint32 i = 0; i < node.ChildrenCount; ++i) {
+						self(next, level + 1, self);
 					}
 
-					next = node.TreeRight;
-				};
+					b(handle, level);
+				}
 
-				visitNode(next, 0, visitNode);
-			}
+				next = node.TreeRight;
+			};
+
+			visitNode(next, 0, visitNode);			
 		}
 
 		~AlphaBetaTree() {

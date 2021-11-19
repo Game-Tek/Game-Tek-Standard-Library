@@ -21,6 +21,10 @@ TEST(Math, Sines) {
 
 	EXPECT_NEAR(0.0f,				Math::sin(GTSL::Math::PI / 2 * 10), 0.00001f);
 	EXPECT_FLOAT_EQ(1.0f,			Math::sin(GTSL::Math::PI / 4 * 10));
+
+	for(float32 i = -1000.f; i <= 1000.f; ++i) {
+		EXPECT_NEAR(sinf(i), Math::sin(i), 0.00008f);
+	}
 }
 
 TEST(Math, Cosines) {
@@ -39,6 +43,10 @@ TEST(Math, Cosines) {
 
 	EXPECT_FLOAT_EQ(-1.0f, Math::cos(GTSL::Math::PI / 2 * 10));
 	EXPECT_NEAR(0.0f, Math::cos(GTSL::Math::PI / 4 * 10), 0.00001f);
+
+	for (float32 i = -1000.f; i <= 1000.f; ++i) {
+		EXPECT_NEAR(cosf(i), Math::cos(i), 0.00009f);
+	}
 }
 
 TEST(Math, Vector2D) {

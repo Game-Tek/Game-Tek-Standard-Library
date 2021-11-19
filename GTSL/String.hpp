@@ -332,7 +332,7 @@ namespace GTSL
 		friend void Extract(String& string, auto& buffer) {
 			uint32 bytes = 0, codepoints = 0;
 			Extract(bytes, buffer); Extract(codepoints, buffer);
-			string.Resize(bytes);
+			::new(&string) String(bytes);
 			buffer.ReadBytes(bytes + 1, reinterpret_cast<byte*>(string.data));
 			string.bytes = bytes;
 			string.codePoints = codepoints;

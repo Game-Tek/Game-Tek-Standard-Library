@@ -68,48 +68,70 @@ TEST(JSON, Serialize) {
 }
 
 TEST(JSON, Deserialize) {
-	auto jsonString = u8R"({"bananas":5,"apples":2,"string":"test","array":[4,0,8,12],"obj":{"bool":true,"float":3.141}})";
+	auto jsonString = u8R"({
+    "name":"ComputeShader",
+    "type":"Compute", "outputSemantics":"Compute",
+    "renderPass":"ColorCorrectionRenderPass",
+    "input":["GlobalData"],
+    "shaderVariables":[{ "type":"ImageReference", "name":"color", "defaultValue":"color" }],
+    "localSize":[1,1,1],
+    "statements":[
+        { "name":"Write", "params":[ { "name": "GetScreenPosition() "}, { "type":"float4", "params" : [{ "type":"float32", "params" : [1] }] } ] }
+	]
+})";
 
 	//todo if key val pattern is not followed error
 
-	GTSL::uint64 bananas = 0, apples = 0;
-	GTSL::StaticString<64> string;
-	GTSL::StaticVector<GTSL::uint64, 4> array;
-	bool boolean = false;
-	GTSL::float32 floatingPoint = 0;
+	GTSL::StaticString<64> name, type, outputSemantics, renderPass;
+
+	GTSL::StaticVector<GTSL::StaticString<64>, 8> inputs;
+	GTSL::StaticVector<GTSL::Tuple<GTSL::StaticString<64>, GTSL::StaticString<64>, GTSL::StaticString<64>>, 8> shaderVariables;
 
 	GTSL::JSONDeserializer deserializer;
-
 	auto parseResult = GTSL::Parse(jsonString, deserializer);
-
-	GTSL::uint64 a, b, c, d;
+	auto json = deserializer.Get();
 
 	ASSERT_TRUE(parseResult);
 
-	deserializer(u8"bananas", bananas);
-	deserializer(u8"apples", apples);
-	deserializer(u8"string", string);
-	deserializer(u8"array", array);
-	deserializer(u8"array", 0, a);
-	deserializer(u8"array", 1, b);
-	deserializer(u8"array", 2, c);
-	deserializer(u8"array", 3, d);
-	deserializer(u8"obj");
-	deserializer(u8"bool", boolean);
-	deserializer(u8"float", floatingPoint);
+	json[u8"name"](name);
+	json[u8"type"](type);
+	json[u8"outputSemantics"](outputSemantics);
+	json[u8"renderPass"](renderPass);
 
-	GTEST_ASSERT_EQ(bananas, 5);
-	GTEST_ASSERT_EQ(apples, 2);
-	GTEST_ASSERT_EQ(string, u8"test");
-	GTEST_ASSERT_EQ(array[0], 4);
-	GTEST_ASSERT_EQ(array[1], 0);
-	GTEST_ASSERT_EQ(array[2], 8);
-	GTEST_ASSERT_EQ(array[3], 12);
-	GTEST_ASSERT_EQ(a, 4);
-	GTEST_ASSERT_EQ(b, 0);
-	GTEST_ASSERT_EQ(c, 8);
-	GTEST_ASSERT_EQ(d, 12);
-	GTEST_ASSERT_EQ(array.GetLength(), 4);
-	GTEST_ASSERT_EQ(boolean, true);
-	GTEST_ASSERT_EQ(floatingPoint, 3.141f);
+	for (GTSL::uint32 i = 0; i < json[u8"input"]; ++i) {
+		inputs.EmplaceBack();
+		json[u8"input"][i](inputs.back());
+	}
+
+	auto sv = json[u8"shaderVariables"];
+
+	for (GTSL::uint32 i = 0; i < sv; ++i) {
+		shaderVariables.EmplaceBack();
+		auto var = sv[i];
+		var[u8"type"](shaderVariables.back().element);
+		var[u8"name"](shaderVariables.back().rest.element);
+		var[u8"defaultValue"](shaderVariables.back().rest.rest.element);
+	}
+
+	GTSL::uint64 x(json[u8"localSize"][0]), y{ json[u8"localSize"][1] }, z{ json[u8"localSize"][2] };
+
+	GTEST_ASSERT_EQ(json[u8"statements"].GetCount(), 1);
+
+	GTEST_ASSERT_EQ(name, u8"ComputeShader");
+	GTEST_ASSERT_EQ(type, u8"Compute");
+	GTEST_ASSERT_EQ(outputSemantics, u8"Compute");
+	GTEST_ASSERT_EQ(renderPass, u8"ColorCorrectionRenderPass");
+	ASSERT_TRUE(json[u8"localSize"].IsValid());
+
+	GTEST_ASSERT_EQ(x, 1); GTEST_ASSERT_EQ(y, 1); GTEST_ASSERT_EQ(z, 1);
+
+	GTEST_ASSERT_EQ(GTSL::StringView(json[u8"statements"][0][u8"name"]), u8"Write");
+
+	GTEST_ASSERT_EQ(GTSL::StringView(json[u8"statements"][0][u8"params"][0][u8"name"]), u8"GetScreenPosition() ");
+
+	ASSERT_FALSE(json[u8"statements"][0][u8"type"].IsValid());
+	
+	GTEST_ASSERT_EQ(GTSL::StringView(json[u8"statements"][0][u8"params"][1][u8"type"]), u8"float4");
+	GTEST_ASSERT_EQ(GTSL::StringView(json[u8"statements"][0][u8"params"][1][u8"params"][0][u8"type"]), u8"float32");
+	GTEST_ASSERT_EQ(GTSL::uint64(json[u8"statements"][0][u8"params"][1][u8"params"][0][u8"params"][0]), 1);
 }

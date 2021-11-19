@@ -4,10 +4,8 @@
 #include "Extent.h"
 #include "Algorithm.hpp"
 #include "Id.h"
-#include "Pair.h"
-#include "ShortString.hpp"
-#include "String.hpp"
-#include "Math/Vectors.h"
+#include "Pair.hpp"
+#include "Math/Vectors.hpp"
 
 namespace GTSL
 {

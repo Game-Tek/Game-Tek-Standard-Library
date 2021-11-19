@@ -77,7 +77,7 @@ namespace GTSL
 			other.data = nullptr;
 		}
 
-		Vector& operator=(const Vector& other) requires std::copyable<T> {
+		Vector& operator=(const Vector& other) requires std::copy_constructible<T> {
 			GTSL_ASSERT(this != &other, "Assigning to self is not allowed!");
 			TryFree();
 			allocator = other.allocator;

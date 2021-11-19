@@ -356,22 +356,24 @@ TEST(AlphaBetaTree, Iteration2) {
 TEST(Tree, Iteration) {
 	GTSL::Tree<GTSL::uint32, GTSL::DefaultAllocatorReference> tree;
 
-	auto root = tree.Emplace(0u, 0);
-	tree.Emplace(tree.Emplace(tree.Emplace(root, 1), 2), 3);
-	tree.Emplace(tree.Emplace(tree.Emplace(root, 4), 5), 6);
+											auto root = tree.Emplace(0u, 0);
+					auto l = tree.Emplace(root, 1);					auto r = tree.Emplace(root, 5);
+					auto ll = tree.Emplace(l, 2); auto lr = tree.Emplace(l, 4); auto rl = tree.Emplace(r, 6); auto rr = tree.Emplace(r, 8);
+					auto llc = tree.Emplace(ll, 3);								auto rlc = tree.Emplace(rl, 7);
 
 	GTSL::uint32 i = 0;
 
 	bool ok = true;
 
-	auto visitNode = [&](uint32_t node) {
-		ok = ok && i++ == tree[node];
+	auto visitNode = [&](uint32_t node, uint32_t level) {
+		ok = ok && i++ == node;
 	};
 
-	auto endNode = [&](uint32_t value) {
+	auto endNode = [&](uint32_t value, uint32_t level) {
 	};
 
 	ForEach(tree, visitNode, endNode);
 
 	ASSERT_TRUE(ok);
+	GTEST_ASSERT_EQ(i, 9);
 }

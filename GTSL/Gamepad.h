@@ -3,7 +3,7 @@
 #include "Core.h"
 
 #include "Delegate.hpp"
-#include "Math/Vectors.h"
+#include "Math/Vectors.hpp"
 
 #if (_WIN64)
 #define WIN32_LEAN_AND_MEAN

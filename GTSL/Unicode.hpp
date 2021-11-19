@@ -3,7 +3,7 @@
 #include "Core.h"
 #include <array>
 #include "Result.h"
-#include "Pair.h"
+#include "Pair.hpp"
 #include <GTSL/Bitman.h>
 
 namespace GTSL {

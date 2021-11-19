@@ -14,7 +14,7 @@ namespace GTSL
 		uint16 Width = 0, Height = 0;
 
 		bool operator==(const Extent2D& other) const { return Width == other.Width && Height == other.Height; }
-		bool operator!=(const Extent2D& other) const { return Width != other.Width && Height != other.Height; }
+		bool operator!=(const Extent2D& other) const { return Width != other.Width || Height != other.Height; }
 		bool operator==(const uint16 other) const { return Width == other && Height == other; }
 		bool operator!=(const uint16 other) const { return Width != other && Height != other; }
 	};

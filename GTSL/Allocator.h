@@ -81,8 +81,8 @@ namespace GTSL
 	
 	template<typename T, class ALLOCATOR>
 	struct SmartPointer {
-		SmartPointer() = default;
-			
+		SmartPointer() {}
+
 		template<typename... ARGS>
 		SmartPointer(const ALLOCATOR& alloc, ARGS&&... args) : allocator(alloc) {
 			uint64 allocatedSize = 0;
@@ -99,13 +99,11 @@ namespace GTSL
 		}
 		
 		template<typename TT>
-		SmartPointer(SmartPointer<TT, ALLOCATOR>&& other) noexcept : allocator(MoveRef(other.allocator)), size(other.size), alignment(other.alignment), data(reinterpret_cast<T*>(other.data)), destructor(other.destructor)
-		{
+		SmartPointer(SmartPointer<TT, ALLOCATOR>&& other) noexcept : allocator(MoveRef(other.allocator)), size(other.size), alignment(other.alignment), data(reinterpret_cast<T*>(other.data)), destructor(other.destructor) {
 			other.data = nullptr;
 		}
 		
-		SmartPointer(SmartPointer&& other) noexcept : allocator(MoveRef(other.allocator)), size(other.size), alignment(other.alignment), data(other.data), destructor(other.destructor)
-		{
+		SmartPointer(SmartPointer&& other) noexcept : allocator(MoveRef(other.allocator)), size(other.size), alignment(other.alignment), data(other.data), destructor(other.destructor) {
 			other.data = nullptr;
 		}
 
@@ -120,16 +118,14 @@ namespace GTSL
 		~SmartPointer() { TryFree(); }
 
 		template<typename TT>
-		SmartPointer& operator=(SmartPointer<TT, ALLOCATOR>&& other) noexcept
-		{
+		SmartPointer& operator=(SmartPointer<TT, ALLOCATOR>&& other) noexcept {
 			TryFree();
 			size = other.size; alignment = other.alignment; data = reinterpret_cast<T*>(other.data); destructor = other.destructor;
 			other.data = nullptr;
 			return *this;
 		}
 		
-		SmartPointer& operator=(SmartPointer&& other) noexcept
-		{
+		SmartPointer& operator=(SmartPointer&& other) noexcept {
 			TryFree();
 			allocator = MoveRef(other.allocator); size = other.size; alignment = other.alignment; data = other.data; destructor = other.destructor;
 			other.data = nullptr;
@@ -147,13 +143,12 @@ namespace GTSL
 		[[no_unique_address]] ALLOCATOR allocator;
 #pragma warning(default : 4648)
 		
-		uint32 size{ 0 };
-		uint32 alignment{ 0 };
-		T* data{ nullptr };
+		uint32 size = 0;
+		uint32 alignment = 0;
+		T* data = nullptr;
 		void(*destructor)(void*) = nullptr;
 
-		friend struct SmartPointer;
-	
+		friend struct SmartPointer;	
 	public:
 		friend SmartPointer<T, ALLOCATOR> Create(const T& obj, const ALLOCATOR& allocator = ALLOCATOR());
 	};

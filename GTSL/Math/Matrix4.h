@@ -2,7 +2,7 @@
 
 #include "GTSL/Core.h"
 
-#include "Vectors.h"
+#include "Vectors.hpp"
 #include "GTSL/SIMD.hpp"
 
 //Index increases in row order.
@@ -27,8 +27,7 @@ namespace GTSL
 	 * Operations follow ordering convention.	
 	 *
 	 */
-	class alignas(16) Matrix4
-	{
+	class alignas(16) Matrix4 {
 		static constexpr uint8 MATRIX_SIZE = 16;
 		
 	public:
@@ -275,8 +274,7 @@ namespace GTSL
 		float32 array[4][4]{ { 1.0f, 0, 0, 0 }, { 0, 1.0f, 0, 0 }, { 0, 0, 1.0f, 0 }, { 0, 0, 0, 1.0f } };
 	};
 
-	class Matrix3x4
-	{
+	class Matrix3x4 {
 	public:
 		Matrix3x4() = default;
 
