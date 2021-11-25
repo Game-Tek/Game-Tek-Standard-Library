@@ -40,15 +40,15 @@ namespace GTSL
 
 			if(parentNodeHandle) {
 				Node& parentNode = at(parentNodeHandle);
-				parentNode.ChildrenCount += 1;
 
 				if (!parentNode.TreeDown) { parentNode.TreeDown = length; }
 
-				if (parentNode.Children.GetLength()) { //write "to the right" if there are elements to our left
-					at(parentNode.Children.back()).TreeRight = length;
+				if (parentNode.ChildrenCount) { //write "to the right" if there are elements to our left
+					at(parentNode.RightMostChild).TreeRight = length;
 				}
 
-				parentNode.Children.EmplaceBack(length);
+				parentNode.ChildrenCount += 1;
+				parentNode.RightMostChild = length;
 			}
 
 			return length;
@@ -56,6 +56,46 @@ namespace GTSL
 
 		T& operator[](const Key handle) { return at(handle).Data; }
 		const T& operator[](const Key handle) const { return at(handle).Data; }
+
+		template<typename C>
+		struct iterator {
+			iterator(C d, uint32 l, uint32 p) : data(d), level(l), pos(p) {}
+
+			void operator++() {
+				auto& node = data[pos - 1];
+				bool down = (bool)node.TreeDown;
+				pos = node.TreeRight;
+			}
+
+			T& Get() const {
+				return data[pos - 1].Data;
+			}
+
+			bool operator!=(const iterator& other) {
+				return pos;
+			}
+
+			iterator operator*() {
+				return { data, level, pos };
+			}
+
+			uint32 GetLevel() const { return level; }
+			uint32 GetLength() const { return data[pos - 1].ChildrenCount; }
+
+			auto begin() const { return iterator{ data, level + 1, data[pos - 1].TreeDown }; }
+			auto end() const { return iterator{ data, level + 1, 0 }; }
+
+		private:
+			C data;
+			uint32 level;
+			uint32 pos;
+		};
+
+		auto begin() { return iterator{ nodes, 0, 1 }; }
+		auto end() { return iterator{ nodes, 0, 0 }; }
+
+		auto begin() const { return iterator{ nodes, 0, 1 }; }
+		auto end() const { return iterator{ nodes, 0, 1 }; }
 
 		friend void ForEach(const Tree& tree, auto&& a, auto&& b) {
 			if (!tree.length) { return; }
@@ -85,9 +125,7 @@ namespace GTSL
 	private:
 		struct Node {
 			T Data;
-			uint32 TreeDown = 0, TreeRight = 0, ChildrenCount = 0;
-
-			StaticVector<uint32, 16> Children;
+			uint32 TreeDown = 0, TreeRight = 0, ChildrenCount = 0, RightMostChild = 0;
 
 			template<typename ... ARGS>
 			Node(ARGS&&... args) : Data(GTSL::ForwardRef<ARGS>(args)...) {}

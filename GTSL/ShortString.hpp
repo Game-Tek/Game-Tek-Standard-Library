@@ -62,11 +62,11 @@ namespace GTSL
 		[[nodiscard]] constexpr uint16 GetLength() const { return SIZE - array[SIZE - 1]; }
 
 		friend void Insert(const ShortString& string, auto& buffer) {
-			buffer.CopyBytes(SIZE, reinterpret_cast<const byte*>(string.array));
+			buffer.Write(SIZE, reinterpret_cast<const byte*>(string.array));
 		}
 
 		friend void Extract(ShortString& string, auto& buffer) {
-			buffer.ReadBytes(SIZE, reinterpret_cast<byte*>(string.array));
+			buffer.Read(SIZE, reinterpret_cast<byte*>(string.array));
 		}
 		
 	private:

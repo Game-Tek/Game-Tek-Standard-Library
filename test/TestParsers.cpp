@@ -87,15 +87,14 @@ TEST(JSON, Deserialize) {
 	GTSL::StaticVector<GTSL::StaticString<64>, 8> inputs;
 	GTSL::StaticVector<GTSL::Tuple<GTSL::StaticString<64>, GTSL::StaticString<64>, GTSL::StaticString<64>>, 8> shaderVariables;
 
-	GTSL::JSONDeserializer deserializer;
-	auto parseResult = GTSL::Parse(jsonString, deserializer);
-	auto json = deserializer.Get();
+	GTSL::Buffer<GTSL::DefaultAllocatorReference> buffer;
+	auto json = GTSL::Parse(jsonString, buffer);
 
-	ASSERT_TRUE(parseResult);
+	ASSERT_TRUE(json);
 
-	json[u8"name"](name);
-	json[u8"type"](type);
-	json[u8"outputSemantics"](outputSemantics);
+	name = json[u8"name"];
+	type = json[u8"type"];
+	outputSemantics = json[u8"outputSemantics"].GetStringView();
 	json[u8"renderPass"](renderPass);
 
 	for (GTSL::uint32 i = 0; i < json[u8"input"]; ++i) {
@@ -103,17 +102,14 @@ TEST(JSON, Deserialize) {
 		json[u8"input"][i](inputs.back());
 	}
 
-	auto sv = json[u8"shaderVariables"];
-
-	for (GTSL::uint32 i = 0; i < sv; ++i) {
+	for (auto sv : json[u8"shaderVariables"]) {
 		shaderVariables.EmplaceBack();
-		auto var = sv[i];
-		var[u8"type"](shaderVariables.back().element);
-		var[u8"name"](shaderVariables.back().rest.element);
-		var[u8"defaultValue"](shaderVariables.back().rest.rest.element);
+		sv[u8"type"](shaderVariables.back().element);
+		sv[u8"name"](shaderVariables.back().rest.element);
+		sv[u8"defaultValue"](shaderVariables.back().rest.rest.element);
 	}
 
-	GTSL::uint64 x(json[u8"localSize"][0]), y{ json[u8"localSize"][1] }, z{ json[u8"localSize"][2] };
+	GTSL::uint64 x{ json[u8"localSize"][0] }, y{ json[u8"localSize"][1] }, z{ json[u8"localSize"][2] };
 
 	GTEST_ASSERT_EQ(json[u8"statements"].GetCount(), 1);
 
@@ -121,7 +117,7 @@ TEST(JSON, Deserialize) {
 	GTEST_ASSERT_EQ(type, u8"Compute");
 	GTEST_ASSERT_EQ(outputSemantics, u8"Compute");
 	GTEST_ASSERT_EQ(renderPass, u8"ColorCorrectionRenderPass");
-	ASSERT_TRUE(json[u8"localSize"].IsValid());
+	ASSERT_TRUE(json[u8"localSize"]);
 
 	GTEST_ASSERT_EQ(x, 1); GTEST_ASSERT_EQ(y, 1); GTEST_ASSERT_EQ(z, 1);
 
@@ -129,7 +125,7 @@ TEST(JSON, Deserialize) {
 
 	GTEST_ASSERT_EQ(GTSL::StringView(json[u8"statements"][0][u8"params"][0][u8"name"]), u8"GetScreenPosition() ");
 
-	ASSERT_FALSE(json[u8"statements"][0][u8"type"].IsValid());
+	ASSERT_FALSE(json[u8"statements"][0][u8"type"]);
 	
 	GTEST_ASSERT_EQ(GTSL::StringView(json[u8"statements"][0][u8"params"][1][u8"type"]), u8"float4");
 	GTEST_ASSERT_EQ(GTSL::StringView(json[u8"statements"][0][u8"params"][1][u8"params"][0][u8"type"]), u8"float32");

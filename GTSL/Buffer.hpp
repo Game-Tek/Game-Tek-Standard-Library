@@ -3,6 +3,7 @@
 #include "Allocator.h"
 #include "Core.h"
 #include "Memory.h"
+#include "StringCommon.h"
 
 #if (_DEBUG)
 #include "Assert.h"
@@ -11,8 +12,7 @@
 namespace GTSL
 {	
 	template<class ALLOCATOR>
-	class Buffer
-	{
+	class Buffer {
 	public:
 		Buffer(const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {
 		}
@@ -33,12 +33,12 @@ namespace GTSL
 			return ret;
 		}
 
-		template<typename T>
-		T* AllocateStructure() {
+		template<typename T, typename... ARGS>
+		T* AllocateStructure(ARGS&&... args) {
 			tryDeltaResize(sizeof(T));
 			void* ret = data + length;
 			length += sizeof(T);
-			::new(ret) T();
+			::new(ret) T(GTSL::ForwardRef<ARGS>(args)...);
 			return static_cast<T*>(ret);
 		}
 
@@ -47,14 +47,19 @@ namespace GTSL
 			buffer.data = nullptr;
 		}
 		
-		void Allocate(const uint64 bytes, const uint32 algn)
-		{
-			uint64 allocated_size{ 0 };
-			allocator.Allocate(bytes, alignment, reinterpret_cast<void**>(&data), &allocated_size);
-			capacity = allocated_size;
-			alignment = algn;
-			length = 0;
-			readPos = 0;
+		void Allocate(const uint64 bytes, const uint32 algn) {
+			if (data) {
+				if(bytes > capacity) {
+					GTSL::Resize(allocator, &data, &capacity, bytes);
+				}
+			} else {
+				uint64 allocated_size{ 0 };
+				allocator.Allocate(bytes, alignment, reinterpret_cast<void**>(&data), &allocated_size);
+				capacity = allocated_size;
+				alignment = algn;
+				length = 0;
+				readPos = 0;
+			}
 		}
 
 		void Clear() {
@@ -74,13 +79,12 @@ namespace GTSL
 			length += bytes;
 		}
 
-		void CopyBytes(const uint64 size, const byte* from) {
+		void Write(const uint64 size, const byte* from) {
 			tryDeltaResize(size);
 			MemCopy(size, from, data + length); length += size;
 		}
 
-		void ReadBytes(const uint64 size, byte* to)
-		{
+		void Read(const uint64 size, byte* to) {
 			GTSL_ASSERT(readPos <= length, "Buffer doesn't contain any more bytes!");
 			MemCopy(size, data + readPos, to); readPos += size;
 		}
@@ -96,6 +100,8 @@ namespace GTSL
 		
 		explicit operator Range<byte*>() const { return Range<byte*>(length, data); }
 		explicit operator Range<const byte*>() const { return Range<const byte*>(length, data); }
+
+		explicit operator StringView() const { return { Byte(length), data }; }
 
 		Range<byte*> GetRange() { return Range<byte*>(length, data); }
 		Range<const byte*> GetRange() const { return Range<const byte*>(length, data); }

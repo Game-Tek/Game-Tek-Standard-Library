@@ -174,11 +174,8 @@ namespace GTSL {
 #undef NULL
 #undef BOOL
 
-	struct JSONObject {
-		uint32 Position;
-		enum class Type : uint8 {
-			NULL, BOOL, INT, UINT, FLOAT, STRING, ARRAY, OBJECT
-		} ObjectType;
+	enum class JSONObjectType : uint8 {
+		NULL, BOOL, INT, UINT, FLOAT, STRING, ARRAY, OBJECT
 	};
 
 	bool ParseJSON(StringView string, auto&& whenBool, auto&& whenInt, auto&& whenUint, auto&& whenFloat, auto&& whenString, auto&& whenKey, auto&& whenArray, auto&& whenObject) {
@@ -312,28 +309,28 @@ namespace GTSL {
 		return *reinterpret_cast<const T*>(data + off);
 	}
 
-	uint32& getMemberLength(byte* data, uint32 offset) {
+	inline uint32& getMemberLength(byte* data, uint32 offset) {
 		return *reinterpret_cast<uint32*>(data + offset + 1/*type*/ + 8/*name*/);
 	}
 
-	uint32 getMemberLength(const byte* data, uint32 offset) {
+	inline uint32 getMemberLength(const byte* data, uint32 offset) {
 		return *reinterpret_cast<const uint32*>(data + offset + 1/*type*/ + 8/*name*/);
 	}
 
-	uint32 getJumpLengthSameLevel(const byte* data, uint32_t offset) {
+	inline uint32 getJumpLengthSameLevel(const byte* data, uint32_t offset) {
 		uint32 of = 1/*type*/ + 8/*object name*/;
 
-		switch (interpretBytes<JSONObject::Type>(data, offset)) {		
-		case JSONObject::Type::NULL: of += 0; break;
-		case JSONObject::Type::BOOL: of += 1; break;
-		case JSONObject::Type::INT: of += 8; break;
-		case JSONObject::Type::UINT: of += 8; break;
-		case JSONObject::Type::FLOAT: of += 4; break;
-		case JSONObject::Type::STRING:
+		switch (interpretBytes<JSONObjectType>(data, offset)) {
+		case JSONObjectType::NULL: of += 0; break;
+		case JSONObjectType::BOOL: of += 1; break;
+		case JSONObjectType::INT: of += 8; break;
+		case JSONObjectType::UINT: of += 8; break;
+		case JSONObjectType::FLOAT: of += 4; break;
+		case JSONObjectType::STRING:
 			of += 4/*bytes*/ + 4/*codepoints*/ + interpretBytes<uint32>(data, offset + of)/*chars*/;
 			break;
-		case JSONObject::Type::OBJECT:
-		case JSONObject::Type::ARRAY:
+		case JSONObjectType::OBJECT:
+		case JSONObjectType::ARRAY:
 			auto len = getMemberLength(data, offset);
 			of += 4/*len*/;
 
@@ -347,16 +344,17 @@ namespace GTSL {
 		return of;
 	}
 
-	uint64 getMemberName(const byte* data, uint32 offset) {
+	inline uint64 getMemberName(const byte* data, uint32 offset) {
 		return *reinterpret_cast<const uint64*>(data + offset + 1/*type*/);
 	}
 
-	JSONObject::Type getMemberType(const byte* data, uint32 offset) {
-		return *reinterpret_cast<const JSONObject::Type*>(data + offset);
+	inline JSONObjectType getMemberType(const byte* data, uint32 offset) {
+		return *reinterpret_cast<const JSONObjectType*>(data + offset);
 	}
 
 	struct JSONMember {
 		JSONMember() : valid(false) {}
+		JSONMember(const byte* data, bool v) : buffer(data), valid(v) {}
 		JSONMember(const byte* data) : buffer(data) {}
 		JSONMember(const byte* data, uint32 of) : buffer(data), offset(of), type(getMemberType(data, of)) {}
 
@@ -371,7 +369,7 @@ namespace GTSL {
 
 		template<Enum T>
 		bool operator()(T& obj, auto&& lookupFunction) {
-			if (valid && type == JSONObject::Type::STRING) {
+			if (valid && type == JSONObjectType::STRING) {
 				auto res = lookupFunction(StringView(*reinterpret_cast<const uint32*>(buffer + offset + 9), *reinterpret_cast<const uint32*>(buffer + offset + 4 + 9),
 					reinterpret_cast<const char8_t*>(buffer + offset + 8 + 9)), obj);
 				return res;
@@ -393,7 +391,7 @@ namespace GTSL {
 
 		//template<typename T, class ALLOC>
 		//bool operator()(Vector<T, ALLOC>& obj) {
-		//	if (valid && type == JSONObject::Type::ARRAY) {
+		//	if (valid && type == JSONObjectType::ARRAY) {
 		//		obj = Range<const T*>(*reinterpret_cast<const uint32*>(buffer + search.Get().Position), reinterpret_cast<const T*>(buffer.GetData() + search.Get().Position + 4));
 		//		return true;
 		//	}
@@ -401,14 +399,20 @@ namespace GTSL {
 		//	return false;
 		//}
 
-		explicit operator StringView() const { return { *reinterpret_cast<const uint32*>(buffer + offset + 9), *reinterpret_cast<const uint32*>(buffer + offset + 4 + 9),
+		explicit operator bool() const { return valid; }
+
+		operator StringView() const { return GetStringView(); }
+		explicit operator uint64() const { return GetUint(); }
+
+		StringView GetStringView() const {
+			return { *reinterpret_cast<const uint32*>(buffer + offset + 9), *reinterpret_cast<const uint32*>(buffer + offset + 4 + 9),
 			reinterpret_cast<const char8_t*>(buffer + offset + 8 + 9) };
 		}
 
-		explicit operator bool() const { return interpretBytes<bool>(buffer, offset + 1 + 8); }
-		explicit operator uint64() const { return interpretBytes<uint64>(buffer, offset + 1 + 8); }
-		explicit operator int64() const { return interpretBytes<int64>(buffer, offset + 1 + 8); }
-		explicit operator float32() const { return interpretBytes<float32>(buffer, offset + 1 + 8); }
+		bool GetBool() const { return interpretBytes<bool>(buffer, offset + 1 + 8); }
+		int64 GetInt() const { return interpretBytes<int64>(buffer, offset + 1 + 8); }
+		float32 GetFloat() const { return interpretBytes<float32>(buffer, offset + 1 + 8); }
+		uint64 GetUint() const { return interpretBytes<uint64>(buffer, offset + 1 + 8); }
 
 		JSONMember operator[](const StringView name) const {
 			uint32 o = offset + 1 + 8 + 4; //skip self
@@ -441,13 +445,38 @@ namespace GTSL {
 			return getMemberLength(buffer, offset);
 		}
 
-		bool IsValid() const { return valid; }
+		struct Iterator {
+			Iterator(const JSONMember* p, uint64 ni) : parent(p), i(ni) {}
+
+			Iterator operator++() {
+				return { parent, ++i };
+			}
+
+			bool operator!=(const Iterator& other) {
+				return i != other.i;
+			}
+
+			bool operator<(const Iterator& other) {
+				return i < other.i;
+			}
+
+			JSONMember operator*() const {
+				return parent->operator[](i);
+			}
+
+		private:
+			const JSONMember* parent;
+			uint64 i = 0;
+		};
+
+		[[nodiscard]] Iterator begin() const { return { this, 0 }; }
+		[[nodiscard]] Iterator end() const { return { this, GetCount() }; }
 
 	private:
 		const byte* buffer = nullptr;
 		uint32 offset = 0;
 		bool valid = true;
-		JSONObject::Type type = JSONObject::Type::NULL;
+		JSONObjectType type = JSONObjectType::NULL;
 	};
 
 	inline bool operator<(uint32 a, const JSONMember& m) {
@@ -455,55 +484,46 @@ namespace GTSL {
 	}
 
 	template<class ALLOCATOR = DefaultAllocatorReference>
-	struct JSONDeserializer {
-		using Map = HashMap<Id64, JSONObject, ALLOCATOR>;
-
-		JSONMember Get() { return { buffer.GetData() }; }
-
-		Buffer<ALLOCATOR> buffer;
-	};
-
-	template<class ALLOCATOR = DefaultAllocatorReference>
-	bool Parse(const StringView str, JSONDeserializer<ALLOCATOR>& deserializer) {
+	JSONMember Parse(const StringView str, Buffer<ALLOCATOR>& buffer) {
 		StaticVector<uint32, 16> objectOffsetsStack;
 
 		StringView lastKey;
 
-		auto makeObject = [&](const JSONObject::Type t) {
-			*deserializer.buffer.AllocateStructure<JSONObject::Type>() = t;
-			*deserializer.buffer.AllocateStructure<uint64>() = Hash(lastKey); //name
-			++getMemberLength(deserializer.buffer.GetData(), objectOffsetsStack.back());
+		auto makeObject = [&](const JSONObjectType t) {
+			buffer.AllocateStructure<JSONObjectType>(t);
+			buffer.AllocateStructure<uint64>(Hash(lastKey)); //name
+			++getMemberLength(buffer.GetData(), objectOffsetsStack.back());
 		};
 
 		auto whenBool = [&](const bool value) {
-			makeObject(JSONObject::Type::BOOL);
-			*deserializer.buffer.AllocateStructure<bool>() = value;
+			makeObject(JSONObjectType::BOOL);
+			buffer.AllocateStructure<bool>(value);
 		};
 
 		auto whenInt = [&](const int64 value) {
-			makeObject(JSONObject::Type::INT);
-			*deserializer.buffer.AllocateStructure<int64>() = value;
+			makeObject(JSONObjectType::INT);
+			buffer.AllocateStructure<int64>(value);
 		};
 
 		auto whenUint = [&](const uint64 value) {
-			makeObject(JSONObject::Type::UINT);
-			*deserializer.buffer.AllocateStructure<uint64>() = value;
+			makeObject(JSONObjectType::UINT);
+			buffer.AllocateStructure<uint64>(value);
 		};
 
 		auto whenFloat = [&](const float32 value) {
-			makeObject(JSONObject::Type::FLOAT);
-			*deserializer.buffer.AllocateStructure<float32>() = value;
+			makeObject(JSONObjectType::FLOAT);
+			buffer.AllocateStructure<float32>(value);
 		};
 
 		auto whenString = [&](const StringView value) {
-			makeObject(JSONObject::Type::STRING);
+			makeObject(JSONObjectType::STRING);
 
 			//todo: null terminator
-			*deserializer.buffer.AllocateStructure<uint32>() = value.GetBytes();
-			*deserializer.buffer.AllocateStructure<uint32>() = value.GetCodepoints();
+			buffer.AllocateStructure<uint32>(value.GetBytes());
+			buffer.AllocateStructure<uint32>(value.GetCodepoints());
 
 			for (uint32 i = 0; i < value.GetBytes(); ++i) {
-				*deserializer.buffer.AllocateStructure<char8_t>() = value.GetData()[i];
+				buffer.AllocateStructure<char8_t>(value.GetData()[i]);
 			}
 		};
 
@@ -515,13 +535,13 @@ namespace GTSL {
 			if (start) {
 				auto l = objectOffsetsStack.GetLength();
 
-				objectOffsetsStack.EmplaceBack(deserializer.buffer.GetLength());
+				objectOffsetsStack.EmplaceBack(buffer.GetLength());
 
-				*deserializer.buffer.AllocateStructure<JSONObject::Type>() = JSONObject::Type::ARRAY;
-				*deserializer.buffer.AllocateStructure<uint64>() = Hash(lastKey); //name				
-				*deserializer.buffer.AllocateStructure<uint32>() = 0; //length
+				buffer.AllocateStructure<JSONObjectType>(JSONObjectType::ARRAY);
+				buffer.AllocateStructure<uint64>(Hash(lastKey)); //name				
+				buffer.AllocateStructure<uint32>(0); //length
 
-				++getMemberLength(deserializer.buffer.GetData(), objectOffsetsStack[l - 1]);
+				++getMemberLength(buffer.GetData(), objectOffsetsStack[l - 1]);
 			} else {
 				objectOffsetsStack.PopBack();
 			}
@@ -531,24 +551,26 @@ namespace GTSL {
 			if (start) {
 				auto l = objectOffsetsStack.GetLength();
 
-				objectOffsetsStack.EmplaceBack(deserializer.buffer.GetLength());
+				objectOffsetsStack.EmplaceBack(buffer.GetLength());
 
-				*deserializer.buffer.AllocateStructure<JSONObject::Type>() = JSONObject::Type::OBJECT;
+				buffer.AllocateStructure<JSONObjectType>(JSONObjectType::OBJECT);
 
 				if (l) {
-					*deserializer.buffer.AllocateStructure<uint64>() = Hash(lastKey); //name
-					++getMemberLength(deserializer.buffer.GetData(), objectOffsetsStack[l - 1]);
+					buffer.AllocateStructure<uint64>(Hash(lastKey)); //name
+					++getMemberLength(buffer.GetData(), objectOffsetsStack[l - 1]);
 				} else {
-					*deserializer.buffer.AllocateStructure<uint64>() = 0; //name
+					buffer.AllocateStructure<uint64>(0); //name
 				}
 
-				*deserializer.buffer.AllocateStructure<uint32>() = 0; //length
+				buffer.AllocateStructure<uint32>(0); //length
 
 			} else {
 				objectOffsetsStack.PopBack();
 			}
 		};
 
-		return ParseJSON(str, whenBool, whenInt, whenUint, whenFloat, whenString, whenKey, whenArray, whenObject);
+		auto parseResult = ParseJSON(str, whenBool, whenInt, whenUint, whenFloat, whenString, whenKey, whenArray, whenObject);
+
+		return { buffer.GetData(), parseResult };
 	}
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core.h"
+
 namespace GTSL {
 	template <typename A, typename B>
 	struct Pair {
@@ -7,7 +9,7 @@ namespace GTSL {
 
 		Pair() = default;
 		constexpr Pair(const A& first, const B& second) noexcept : First(first), Second(second) {}
-		constexpr Pair(A&& first, B&& second) noexcept : First(MoveRef(first)), Second(MoveRef(second)) {}
+		constexpr Pair(A&& first, B&& second) noexcept : First(GTSL::MoveRef(first)), Second(GTSL::MoveRef(second)) {}
 	};
 
 	template<typename T>

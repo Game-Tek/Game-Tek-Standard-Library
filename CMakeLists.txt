@@ -40,7 +40,8 @@ if(GTSL_TESTS_ENABLED)
 	"${PROJECT_SOURCE_DIR}/test/TestParsers.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestTree.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestAlgorithm.cpp"
-	"${PROJECT_SOURCE_DIR}/test/TestStringCommon.cpp")
+	"${PROJECT_SOURCE_DIR}/test/TestStringCommon.cpp"
+	"${PROJECT_SOURCE_DIR}/test/TestBuffer.cpp")
 	target_include_directories(GTSL_Test PUBLIC "${PROJECT_SOURCE_DIR}")
 	target_link_libraries(GTSL_Test gtest_main)
 endif()

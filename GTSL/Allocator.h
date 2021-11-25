@@ -267,6 +267,19 @@ namespace GTSL
 	}
 
 	template<typename T, std::unsigned_integral C>
+	void Resize(auto& allocator, T** data, C* capacity, uint64 newCapacity) {
+		T* newAlloc; uint64 allocatedElements;
+		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements);
+
+		Copy(*capacity, *data, newAlloc);
+
+		Deallocate(allocator, *capacity, *data);
+
+		*data = newAlloc;
+		*capacity = allocatedElements / sizeof(T);
+	}
+
+	template<typename T, std::unsigned_integral C>
 	void Resize(auto& allocator, T** data, C capacity, uint64 newCapacity) {
 		T* newAlloc; uint64 allocatedElements;
 		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements);

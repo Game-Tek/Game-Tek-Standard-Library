@@ -326,14 +326,14 @@ namespace GTSL
 	public:
 		friend void Insert(const String& string, auto& buffer) {
 			Insert(string.bytes, buffer); Insert(string.codePoints, buffer);
-			buffer.CopyBytes(string.GetBytes() + 1, reinterpret_cast<const byte*>(string.c_str()));
+			buffer.Write(string.GetBytes() + 1, reinterpret_cast<const byte*>(string.c_str()));
 		}
 		
 		friend void Extract(String& string, auto& buffer) {
 			uint32 bytes = 0, codepoints = 0;
 			Extract(bytes, buffer); Extract(codepoints, buffer);
 			::new(&string) String(bytes);
-			buffer.ReadBytes(bytes + 1, reinterpret_cast<byte*>(string.data));
+			buffer.Read(bytes + 1, reinterpret_cast<byte*>(string.data));
 			string.bytes = bytes;
 			string.codePoints = codepoints;
 		}

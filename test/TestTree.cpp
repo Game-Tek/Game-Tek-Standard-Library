@@ -356,10 +356,10 @@ TEST(AlphaBetaTree, Iteration2) {
 TEST(Tree, Iteration) {
 	GTSL::Tree<GTSL::uint32, GTSL::DefaultAllocatorReference> tree;
 
-											auto root = tree.Emplace(0u, 0);
-					auto l = tree.Emplace(root, 1);					auto r = tree.Emplace(root, 5);
-					auto ll = tree.Emplace(l, 2); auto lr = tree.Emplace(l, 4); auto rl = tree.Emplace(r, 6); auto rr = tree.Emplace(r, 8);
-					auto llc = tree.Emplace(ll, 3);								auto rlc = tree.Emplace(rl, 7);
+	auto root = tree.Emplace(0u, 0);
+	auto l = tree.Emplace(root, 1);	auto r = tree.Emplace(root, 5);
+	auto ll = tree.Emplace(l, 2); auto lr = tree.Emplace(l, 4); auto rl = tree.Emplace(r, 6); auto rr = tree.Emplace(r, 8);
+	auto llc = tree.Emplace(ll, 3);	auto rlc = tree.Emplace(rl, 7);
 
 	GTSL::uint32 i = 0;
 
@@ -373,6 +373,42 @@ TEST(Tree, Iteration) {
 	};
 
 	ForEach(tree, visitNode, endNode);
+
+	ASSERT_TRUE(ok);
+	GTEST_ASSERT_EQ(i, 9);
+	
+	i = 0;
+	ok = true;
+
+	auto visitLevel = [&](decltype(tree.begin()) iterator, auto&& self) -> void {
+		ok = ok && i++ == iterator.Get();
+
+		for(auto e : iterator) {
+			self(e, self);
+		}
+	};
+
+	visitLevel(tree.begin(), visitLevel);
+
+	ASSERT_TRUE(ok);
+	GTEST_ASSERT_EQ(i, 9);
+
+	i = 0;
+	ok = true;
+
+	auto visitLevel1 = [&](decltype(tree.begin()) iterator, auto&& self) -> void {
+		ok = ok && i++ == iterator.Get();
+
+		{
+			auto b = iterator.begin();
+
+			for (GTSL::uint64 j = 0ull; j < iterator.GetLength(); ++j, ++b) {
+				self(b, self);
+			}
+		}
+	};
+
+	visitLevel1(tree.begin(), visitLevel1);
 
 	ASSERT_TRUE(ok);
 	GTEST_ASSERT_EQ(i, 9);

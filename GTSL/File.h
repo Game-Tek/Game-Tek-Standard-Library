@@ -35,7 +35,7 @@ namespace GTSL {
 
 		enum class OpenResult { OK, CREATED, ERROR };
 		
-		[[nodiscard]] OpenResult Open(StringView path, AccessMode accessMode, bool create) {
+		[[nodiscard]] OpenResult Open(StringView path, AccessMode accessMode = READ, bool create = false) {
 			DWORD desiredAccess = 0;  DWORD shareMode = 0;
 
 			if (static_cast<uint8>(accessMode) & static_cast<uint8>(READ)) { desiredAccess |= GENERIC_READ; shareMode |= FILE_SHARE_READ; }
@@ -56,6 +56,18 @@ namespace GTSL {
 			return openResult;
 		}
 
+		uint32 Write(const uint64 size, const byte* d) const {
+			DWORD bytes{ 0 };
+			WriteFile(fileHandle, d, static_cast<uint32>(size), &bytes, nullptr);
+			return bytes;
+		}
+
+		uint32 Read(const uint64 size, byte* d) const {
+			DWORD bytes{ 0 };
+			ReadFile(fileHandle, d, static_cast<uint32>(size), &bytes, nullptr);
+			return bytes;
+		}
+
 		uint32 Write(const Range<const byte*> buffer) const {
 			DWORD bytes{ 0 };
 			WriteFile(fileHandle, buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
@@ -71,8 +83,7 @@ namespace GTSL {
 			return bytes;
 		}
 		
-		[[nodiscard]] uint32 Read(const Range<byte*> buffer) const
-		{
+		[[nodiscard]] uint32 Read(const Range<byte*> buffer) const {
 			DWORD bytes{ 0 };
 			ReadFile(fileHandle, buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
 			auto w = GetLastError();
@@ -100,8 +111,7 @@ namespace GTSL {
 			return bytes;
 		}
 		
-		uint32 Read(uint64 size, uint64 offset, GTSL::Range<byte*> buffer) const
-		{
+		uint32 Read(uint64 size, uint64 offset, Range<byte*> buffer) const {
 			DWORD bytes{ 0 };
 			ReadFile(fileHandle, buffer.begin() + offset, static_cast<uint32>(size), &bytes, nullptr);
 			auto w = GetLastError();
@@ -109,23 +119,20 @@ namespace GTSL {
 			return bytes;
 		}
 
-		void Resize(const uint64 newSize)
-		{
+		void Resize(const uint64 newSize) {
 			GTSL_ASSERT(newSize < (~(0ULL)) / 2, "Number too large.");
 			const LARGE_INTEGER bytes{ .QuadPart = static_cast<LONGLONG>(newSize) };
 			SetFilePointerEx(fileHandle, bytes, nullptr, FILE_BEGIN);
 			SetEndOfFile(fileHandle);
 		}
 		
-		void SetPointer(uint64 byte)
-		{
+		void SetPointer(uint64 byte) {
 			GTSL_ASSERT(byte < (~(0ULL)) / 2, "Number too large.");
 			const LARGE_INTEGER bytes{ .QuadPart = static_cast<LONGLONG>(byte) };
 			SetFilePointerEx(fileHandle, bytes, nullptr, FILE_BEGIN);
 		}
 
-		[[nodiscard]] uint64 GetSize() const
-		{
+		[[nodiscard]] uint64 GetSize() const {
 			LARGE_INTEGER size;
 			auto res = GetFileSizeEx(fileHandle, &size);
 			GTSL_ASSERT(res != 0, "Win32 Error!");

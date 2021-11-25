@@ -11,16 +11,14 @@
 #include <Windows.h>
 #endif
 
-namespace GTSL
-{
-	class FileQuery
-	{
+namespace GTSL {
+	class FileQuery {
 	public:
 		using handle_type = void*;
 		
 		FileQuery() {}
 		
-		Result<StaticString<256>> DoQuery(const Range<const char8_t*> query) {
+		Result<StaticString<256>> DoQuery(const StringView query) {
 			WIN32_FIND_DATAA find_data;
 
 			if (!handle) {

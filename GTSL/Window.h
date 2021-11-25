@@ -23,8 +23,7 @@
 
 namespace GTSL
 {
-	class Window
-	{
+	class Window {
 	public:
 		enum class MouseButton : uint8 {
 			LEFT_BUTTON, RIGHT_BUTTON, MIDDLE_BUTTON
@@ -158,8 +157,7 @@ namespace GTSL
 			DestroyWindow(windowHandle);
 		}
 
-		void Update(void* userData, Delegate<void(void*, WindowEvents, void*)> function)
-		{
+		void Update(void* userData, Delegate<void(void*, WindowEvents, void*)> function) {
 			Window::WindowsCallData windowsCallData;
 			windowsCallData.WindowPointer = this;
 			windowsCallData.UserData = userData;
@@ -230,19 +228,15 @@ namespace GTSL
 			Extent2D NewResolution;
 			uint8 NewBitsPerPixel = 8;
 		};
-		void SetState(const WindowState & windowState)
-		{
-			switch (windowState.NewWindowSizeState)
-			{
-			case WindowSizeState::MAXIMIZED:
-			{
+		void SetState(const WindowState & windowState) {
+			switch (windowState.NewWindowSizeState) {
+			case WindowSizeState::MAXIMIZED: {
 				SetWindowLongPtrA(windowHandle, GWL_STYLE, defaultWindowStyle);
 				ShowWindowAsync(windowHandle, SW_SHOWMAXIMIZED);
 
 				windowSizeState = windowState.NewWindowSizeState;
+				break;
 			}
-			break;
-
 			case WindowSizeState::FULLSCREEN: {
 				const DWORD remove = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 				const DWORD new_style = defaultWindowStyle & ~remove;
@@ -251,21 +245,19 @@ namespace GTSL
 				ShowWindowAsync(windowHandle, SW_SHOWMAXIMIZED);
 
 				windowSizeState = windowState.NewWindowSizeState;
+				break;
 			}
-			break;
-
 			case WindowSizeState::MINIMIZED: {
 				SetWindowLongPtrA(windowHandle, GWL_STYLE, defaultWindowStyle);
 				ShowWindowAsync(windowHandle, SW_MINIMIZE);
 
 				windowSizeState = windowState.NewWindowSizeState;
+				break;
 			}
-			break;
 			}
 		}
 
-		struct NativeHandles
-		{
+		struct NativeHandles {
 			HWND HWND{ nullptr };
 		};
 		void GetNativeHandles(void* nativeHandlesStruct) const {
@@ -279,8 +271,7 @@ namespace GTSL
 
 		enum class DeviceType : uint8 { MOUSE, GAMEPAD };
 		
-		void AddDevice(const DeviceType deviceType)
-		{
+		void AddDevice(const DeviceType deviceType) {
 			StaticVector<RAWINPUTDEVICE, 8> rawInputDevices;
 
 			switch (deviceType) {
@@ -310,8 +301,7 @@ namespace GTSL
 			}
 		}
 		
-		enum class ProgressState
-		{
+		enum class ProgressState {
 			NONE,
 			INDETERMINATE,
 			NORMAL,
@@ -323,8 +313,7 @@ namespace GTSL
 
 #undef ERROR
 
-			switch (progressState)
-			{
+			switch (progressState) {
 			case ProgressState::NONE: break;
 			case ProgressState::INDETERMINATE: flags = TBPF_INDETERMINATE; break;
 			case ProgressState::NORMAL: flags = TBPF_NORMAL; break;
@@ -340,17 +329,17 @@ namespace GTSL
 			//static_cast<ITaskbarList3*>(iTaskbarList)->SetProgressValue(static_cast<HWND>(windowHandle), value * 1000u, 1000u);
 		}
 
-		struct MouseButtonEventData
-		{
+		struct MouseButtonEventData {
 			MouseButton Button; bool State;
 		};
-		struct KeyboardKeyEventData
-		{
+
+		struct KeyboardKeyEventData {
 			KeyboardKeys Key; bool State; bool IsFirstTime;
 		};
+
 		using CharEventData = uint32;
-		struct WindowMoveEventData
-		{
+
+		struct WindowMoveEventData {
 			uint16 X, Y;
 		};
 
