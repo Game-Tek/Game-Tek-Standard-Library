@@ -2,11 +2,11 @@
 
 #include "Core.h"
 #include "Assert.h"
-#include "Algorithm.hpp"
 
 #include <initializer_list>
 
 #include "Tuple.hpp"
+#include "Algorithm.hpp"
 
 namespace GTSL
 {
@@ -115,10 +115,9 @@ namespace GTSL
 	template<typename T>
 	Range(uint32, T*) -> Range<const T*>;
 
-	template<typename A, typename B>
-	inline bool CompareContents(const Range<const A*> a, const Range<const B*> b) {
-		if (a.ElementCount() != b.ElementCount()) { return false; }
-		for (uint64 i = 0; i < a.ElementCount(); ++i) { if (a[i] != b[i]) { return false; } }
-		return true;
+	template<typename T>
+	bool IsAnyOf(const T& a, const Range<T> params) {
+		for (const auto& e : params) { if (e == a) { return true; } }
+		return false;
 	}
 }

@@ -6,46 +6,85 @@
 using namespace GTSL;
 
 TEST(Math, Sines) {
-	EXPECT_FLOAT_EQ(0.0f,			Math::sin(0.0f));
+	EXPECT_FLOAT_EQ(0.0f,			Math::Sine(0.0f));
 
-	EXPECT_FLOAT_EQ(-1.0f,			Math::sin(-GTSL::Math::PI / 4 * 10));
-	EXPECT_NEAR(0.0f,				Math::sin(-GTSL::Math::PI / 2 * 10), 0.00001f);
+	EXPECT_FLOAT_EQ(-1.0f,			Math::Sine(-GTSL::Math::PI / 4 * 10));
+	EXPECT_NEAR(0.0f,				Math::Sine(-GTSL::Math::PI / 2 * 10), 0.00001f);
 
-	EXPECT_FLOAT_EQ(-0.7071067f,	Math::sin(-GTSL::Math::PI / 4));
-	EXPECT_FLOAT_EQ(-1.0f,			Math::sin(-GTSL::Math::PI / 2));
+	EXPECT_FLOAT_EQ(-0.7071067f,	Math::Sine(-GTSL::Math::PI / 4));
+	EXPECT_FLOAT_EQ(-1.0f,			Math::Sine(-GTSL::Math::PI / 2));
 
-	EXPECT_NEAR(0.0f,				Math::sin(GTSL::Math::PI), 0.00001f);
+	EXPECT_NEAR(0.0f,				Math::Sine(GTSL::Math::PI), 0.00001f);
 
-	EXPECT_FLOAT_EQ(1.0f,			Math::sin(GTSL::Math::PI / 2));
-	EXPECT_FLOAT_EQ(0.7071067f,		Math::sin(GTSL::Math::PI / 4));
+	EXPECT_FLOAT_EQ(1.0f,			Math::Sine(GTSL::Math::PI / 2));
+	EXPECT_FLOAT_EQ(0.7071067f,		Math::Sine(GTSL::Math::PI / 4));
 
-	EXPECT_NEAR(0.0f,				Math::sin(GTSL::Math::PI / 2 * 10), 0.00001f);
-	EXPECT_FLOAT_EQ(1.0f,			Math::sin(GTSL::Math::PI / 4 * 10));
+	EXPECT_NEAR(0.0f,				Math::Sine(GTSL::Math::PI / 2 * 10), 0.00001f);
+	EXPECT_FLOAT_EQ(1.0f,			Math::Sine(GTSL::Math::PI / 4 * 10));
 
 	for(float32 i = -1000.f; i <= 1000.f; ++i) {
-		EXPECT_NEAR(sinf(i), Math::sin(i), 0.00008f);
+		EXPECT_NEAR(sinf(i), Math::Sine(i), 0.00008f);
 	}
+
+	alignas(16) float32 source[8] = { 2.0f, 3.f, -1.f, 8.f, 9.f, -5.f, 3.14159f, -8.9f };
+
+	alignas(16) float32 results[8];
+
+	Math::Sine({ 8, source }, { 8, results });
+
+	for(uint32 i = 0; i < 8; ++i) {
+		EXPECT_NEAR(Math::Sine(source[i]), results[i], 0.00001f);
+	}
+
 }
 
 TEST(Math, Cosines) {
-	EXPECT_FLOAT_EQ(1.0f, Math::cos(0.0f));
+	EXPECT_FLOAT_EQ(1.0f, Math::Cosine(0.0f));
 
-	EXPECT_NEAR(0.0f, Math::cos(-GTSL::Math::PI / 4 * 10), 0.00001f);
-	EXPECT_FLOAT_EQ(-1.0f, Math::cos(-GTSL::Math::PI / 2 * 10));
+	EXPECT_NEAR(0.0f, Math::Cosine(-GTSL::Math::PI / 4 * 10), 0.00001f);
+	EXPECT_FLOAT_EQ(-1.0f, Math::Cosine(-GTSL::Math::PI / 2 * 10));
 
-	EXPECT_FLOAT_EQ(0.7071067f, Math::cos(-GTSL::Math::PI / 4));
-	EXPECT_NEAR(0.0f, Math::cos(-GTSL::Math::PI / 2), 0.00001f);
+	EXPECT_FLOAT_EQ(0.7071067f, Math::Cosine(-GTSL::Math::PI / 4));
+	EXPECT_NEAR(0.0f, Math::Cosine(-GTSL::Math::PI / 2), 0.00001f);
 
-	EXPECT_NEAR(-1.0f, Math::cos(GTSL::Math::PI), 0.00001f);
+	EXPECT_NEAR(-1.0f, Math::Cosine(GTSL::Math::PI), 0.00001f);
 
-	EXPECT_NEAR(0.0f, Math::cos(GTSL::Math::PI / 2), 0.00001f);
-	EXPECT_FLOAT_EQ(0.7071067f, Math::cos(GTSL::Math::PI / 4));
+	EXPECT_NEAR(0.0f, Math::Cosine(GTSL::Math::PI / 2), 0.00001f);
+	EXPECT_FLOAT_EQ(0.7071067f, Math::Cosine(GTSL::Math::PI / 4));
 
-	EXPECT_FLOAT_EQ(-1.0f, Math::cos(GTSL::Math::PI / 2 * 10));
-	EXPECT_NEAR(0.0f, Math::cos(GTSL::Math::PI / 4 * 10), 0.00001f);
+	EXPECT_FLOAT_EQ(-1.0f, Math::Cosine(GTSL::Math::PI / 2 * 10));
+	EXPECT_NEAR(0.0f, Math::Cosine(GTSL::Math::PI / 4 * 10), 0.00001f);
 
 	for (float32 i = -1000.f; i <= 1000.f; ++i) {
-		EXPECT_NEAR(cosf(i), Math::cos(i), 0.00009f);
+		EXPECT_NEAR(cosf(i), Math::Cosine(i), 0.00009f);
+	}
+
+	alignas(16) float32 source[8] = { 2.0f, 3.f, -1.f, 8.f, 9.f, -5.f, 3.14159f, -8.9f };
+
+	alignas(16) float32 results[8];
+
+	Math::Cosine({ 8, source }, { 8, results });
+
+	for (uint32 i = 0; i < 8; ++i) {
+		EXPECT_NEAR(Math::Cosine(source[i]), results[i], 0.00001f);
+	}
+}
+
+TEST(Math, Tangent) {
+	EXPECT_NEAR(tanf(0), GTSL::Math::Tangent(0.0f), 0.000005f);
+	EXPECT_NEAR(tanf(5), GTSL::Math::Tangent(5.0f), 0.000005f);
+	EXPECT_NEAR(tanf(45), GTSL::Math::Tangent(45.0f), 0.00005f);
+	EXPECT_NEAR(tanf(90), GTSL::Math::Tangent(90.0f), 0.00008f);
+	EXPECT_NEAR(tanf(180), GTSL::Math::Tangent(180.0f), 0.000008f);
+
+	alignas(16) float32 source[8] = { 2.0f, 3.f, -1.f, 8.f, 9.f, -5.f, 3.14159f, -8.9f };
+
+	alignas(16) float32 results[8];
+
+	Math::Tangent({ 8, source }, { 8, results });
+
+	for (uint32 i = 0; i < 8; ++i) {
+		EXPECT_NEAR(tanf(source[i]), results[i], 0.000001f);
 	}
 }
 
@@ -237,14 +276,19 @@ TEST(Math, ProjectionMatrix) {
 	auto o = Math::BuildPerspectiveMatrix(45, 16.0f / 9.0f, 1.0f, 100.0f);
 	auto i = Math::BuildInvertedPerspectiveMatrix(45, 16.0f / 9.0f, 1.0f, 100.0f);
 
-	GTEST_ASSERT_EQ(i, Math::Inverse(o));
+	auto inverted = Math::Inverse(o);
+
+	EXPECT_NEAR(i[0][0], inverted[0][0], 0.000001f); EXPECT_NEAR(i[0][1], inverted[0][1], 0.000001f); EXPECT_NEAR(i[0][2], inverted[0][2], 0.000001f); EXPECT_NEAR(i[0][3], inverted[0][3], 0.000001f);
+	EXPECT_NEAR(i[1][0], inverted[1][0], 0.000001f); EXPECT_NEAR(i[1][1], inverted[1][1], 0.000001f); EXPECT_NEAR(i[1][2], inverted[1][2], 0.000001f); EXPECT_NEAR(i[1][3], inverted[1][3], 0.000001f);
+	EXPECT_NEAR(i[2][0], inverted[2][0], 0.000001f); EXPECT_NEAR(i[2][1], inverted[2][1], 0.000001f); EXPECT_NEAR(i[2][2], inverted[2][2], 0.000001f); EXPECT_NEAR(i[2][3], inverted[2][3], 0.000001f);
+	EXPECT_NEAR(i[3][0], inverted[3][0], 0.000001f); EXPECT_NEAR(i[3][1], inverted[3][1], 0.000001f); EXPECT_NEAR(i[3][2], inverted[3][2], 0.000001f); EXPECT_NEAR(i[3][3], inverted[3][3], 0.000001f);
 }
 
 TEST(Math, DotProduct) {
-	float32 xxxx[] = { 1.0f, 5.0f, 4.0f, 8.0f, 2.33f, 2.77f, 8.1f, 9.3f, 4.5f };
-	float32 yyyy[] = { 2.5f, 1.1f, 7.6f, 9.2f, 4.22f, 7.2f, 4.1f, 11.11f, 12.3f };
-	float32 zzzz[] = { 3.f, 9.f, 2.f, 1.f, 7.f };
-	float32 wwww[] = { 7.f, 9.5f, 2.3f, 1.7f, 4.54f };
+	alignas(32) float32 xxxx[] = { 1.0f, 5.0f, 4.0f, 8.0f, 2.33f, 2.77f, 8.1f, 9.3f, 4.5f };
+	alignas(32) float32 yyyy[] = { 2.5f, 1.1f, 7.6f, 9.2f, 4.22f, 7.2f, 4.1f, 11.11f, 12.3f };
+	alignas(32) float32 zzzz[] = { 3.f, 9.f, 2.f, 1.f, 7.f };
+	alignas(32) float32 wwww[] = { 7.f, 9.5f, 2.3f, 1.7f, 4.54f };
 
 	{
 		float32 alignas(32) res[9];

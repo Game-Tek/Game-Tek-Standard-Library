@@ -26,6 +26,13 @@ namespace GTSL
 
 	template<typename T, class ALLOCATOR>
 	class Tree {
+		struct Node {
+			T Data;
+			uint32 TreeDown = 0, TreeRight = 0, ChildrenCount = 0, RightMostChild = 0;
+
+			template<typename ... ARGS>
+			Node(ARGS&&... args) : Data(GTSL::ForwardRef<ARGS>(args)...) {}
+		};
 	public:
 		using Key = uint32;
 
@@ -58,8 +65,8 @@ namespace GTSL
 		const T& operator[](const Key handle) const { return at(handle).Data; }
 
 		template<typename C>
-		struct iterator {
-			iterator(C d, uint32 l, uint32 p) : data(d), level(l), pos(p) {}
+		struct Iterator {
+			Iterator(C* d, uint32 l, uint32 p) : data(d), level(l), pos(p) {}
 
 			void operator++() {
 				auto& node = data[pos - 1];
@@ -67,35 +74,37 @@ namespace GTSL
 				pos = node.TreeRight;
 			}
 
-			T& Get() const {
-				return data[pos - 1].Data;
+			bool operator!=(const Iterator& other) {
+				return pos != other.pos;
 			}
 
-			bool operator!=(const iterator& other) {
-				return pos;
-			}
-
-			iterator operator*() {
-				return { data, level, pos };
-			}
+			Iterator operator*() { return { data, level, pos }; }
+			operator T&() { return data[pos - 1].Data; }
+			operator const T&() const { return data[pos - 1].Data; }
 
 			uint32 GetLevel() const { return level; }
 			uint32 GetLength() const { return data[pos - 1].ChildrenCount; }
 
-			auto begin() const { return iterator{ data, level + 1, data[pos - 1].TreeDown }; }
-			auto end() const { return iterator{ data, level + 1, 0 }; }
+			[[nodiscard]] auto begin() { return Iterator<C>{ data, level + 1, data[pos - 1].TreeDown }; }
+			[[nodiscard]] auto end() { return Iterator<C>{ data, level + 1, 0 }; }
 
 		private:
-			C data;
+			C* data;
 			uint32 level;
 			uint32 pos;
 		};
 
-		auto begin() { return iterator{ nodes, 0, 1 }; }
-		auto end() { return iterator{ nodes, 0, 0 }; }
+		using iterator = Iterator<Node>;
+		using const_iterator = Iterator<const Node>;
 
-		auto begin() const { return iterator{ nodes, 0, 1 }; }
-		auto end() const { return iterator{ nodes, 0, 1 }; }
+		iterator begin() { return Iterator{ nodes, 0, 1 }; }
+		iterator end() { return Iterator{ nodes, 0, 0 }; }
+
+		[[nodiscard]] const_iterator begin() const { return Iterator{ nodes, 0, 1 }; }
+		[[nodiscard]] const_iterator end() const { return Iterator{ nodes, 0, 0 }; }
+
+		operator Range<iterator>() { return Range<iterator>(begin(), end()); }
+		operator Range<const_iterator>() const { return Range<const_iterator>(begin(), end()); }
 
 		friend void ForEach(const Tree& tree, auto&& a, auto&& b) {
 			if (!tree.length) { return; }
@@ -123,14 +132,6 @@ namespace GTSL
 		}
 
 	private:
-		struct Node {
-			T Data;
-			uint32 TreeDown = 0, TreeRight = 0, ChildrenCount = 0, RightMostChild = 0;
-
-			template<typename ... ARGS>
-			Node(ARGS&&... args) : Data(GTSL::ForwardRef<ARGS>(args)...) {}
-		};
-
 		ALLOCATOR allocator;
 		Node* nodes = nullptr; uint32 length = 0, capacity = 0;
 

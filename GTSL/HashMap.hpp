@@ -50,10 +50,12 @@ namespace GTSL
 			data = allocate(bucketCount, bucketCapacity);
 
 			for(uint32 b = 0; b < bucketCount; ++b) {
-				for (uint32 e = 0; e < other.getBucketLength(b); ++e) {
+				getBucketLength(b) = other.getBucketLength(b);
+
+				for (uint32 e = 0; e < getBucketLength(b); ++e) {
 					getKeysBucketPointer(b)[e] = other.getKeysBucketPointer(b)[e];
 
-					::new(getValuesBucketPointer(b) + e) V(other.getValuesBucketPointer(b) + e);
+					::new(getValuesBucketPointer(b) + e) V(other.getValuesBucketPointer(b)[e]);
 				}				
 			}
 		}
@@ -78,13 +80,12 @@ namespace GTSL
 		}
 
 		template<typename TT>
-		class Iterator
-		{
+		class Iterator {
 		public:
-			Iterator(HashMap* hashMap) : map(hashMap)
-			{
+			Iterator(HashMap* hashMap, uint32 start_bucket, uint32 start_element) : map(hashMap), bucketIndex(start_bucket), bucketElement(start_element) {
 				while (bucketIndex < map->bucketCount) {
 					if (map->getKeysBucket(bucketIndex).ElementCount()) {
+						++bucketElement;
 						break;
 					}
 
@@ -95,7 +96,7 @@ namespace GTSL
 			Iterator operator++()
 			{
 				while (bucketIndex < map->bucketCount) {
-					if (++bucketElement < map->getKeysBucket(bucketIndex).ElementCount()) {
+					if (++bucketElement < map->getBucketLength(bucketIndex)) {
 						return *this;
 					}
 
@@ -110,19 +111,20 @@ namespace GTSL
 			TT* operator->() const { return map->getValuesBucket(bucketIndex).begin() + bucketElement; }
 
 			bool operator==(const Iterator& other) const { return bucketIndex == other.bucketIndex && bucketElement == other.bucketElement; }
-			bool operator!=(const Iterator& other) const { return bucketIndex != other.bucketIndex || bucketElement != other.bucketElement; }
-			bool operator!=(const bool) const { return bucketElement != 0xFFFFFFFF; }
+			bool operator!=(const Iterator& other) const {
+				return bucketIndex != other.bucketIndex || bucketElement != other.bucketElement;
+			}
 
 		private:
 			HashMap* map{ nullptr };
 			uint32 bucketIndex = 0, bucketElement = 0;
 		};
 
-		Iterator<V> begin() { return Iterator<V>(this); }
+		Iterator<V> begin() { return Iterator<V>(this, 0, 0xFFFFFFFF); }
+		[[nodiscard]] Iterator<V> end() { return Iterator<V>(this, bucketCount, 0xFFFFFFFF); }
 
-		[[nodiscard]] bool end() const { return true; }
-
-		Iterator<const V> begin() const { return Iterator<const V>(this); }
+		Iterator<const V> begin() const { return Iterator<const V>(this, 0, 0xFFFFFFFF); }
+		Iterator<const V> end() const { return Iterator<const V>(this, bucketCount, 0xFFFFFFFF); }
 
 		template<typename... ARGS>
 		V& Emplace(const K key, ARGS&&... args) {

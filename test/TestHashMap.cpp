@@ -42,24 +42,33 @@ TEST(HashMap, FindAndResize) {
 }
 
 TEST(HashMap, Iterator) {
-	GTSL::HashMap<GTSL::uint64, GTSL::uint64, GTSL::DefaultAllocatorReference> hashMap(2);
+	{
+		GTSL::HashMap<GTSL::uint64, GTSL::uint64, GTSL::DefaultAllocatorReference> hashMap(2);
 
-	GTSL::uint32 sum = 0;
-	constexpr GTSL::uint32 COUNT = 1025;
+		GTSL::uint32 sum = 0;
+		constexpr GTSL::uint32 COUNT = 1025;
 
-	for (GTSL::uint32 i = 0; i < COUNT; ++i) {
-		hashMap.Emplace(i, i);
-		sum += i;
+		for (GTSL::uint32 i = 0; i < COUNT; ++i) {
+			hashMap.Emplace(i, i);
+			sum += i;
+		}
+
+		GTSL::uint32 i = 0, res = 0;
+		for (const auto& e : hashMap) {
+			++i;
+			res += e;
+		}
+
+		GTEST_ASSERT_EQ(i, COUNT);
+		GTEST_ASSERT_EQ(sum, res);
 	}
 
-	GTSL::uint32 i = 0, res = 0;
-	for(const auto& e : hashMap) {
-		++i;
-		res += e;
+	{
+		GTSL::HashMap<GTSL::uint64, GTSL::uint64, GTSL::DefaultAllocatorReference> hashMap;
+		for (const auto& e : hashMap) {
+			std::cout << e;
+		}
 	}
-
-	GTEST_ASSERT_EQ(sum, res);
-	GTEST_ASSERT_EQ(i, COUNT);
 }
 
 TEST(HashMap, Pop) {

@@ -69,9 +69,8 @@ namespace GTSL
 	};
 
 	template<>
-	struct Range<const char8_t*>
-	{
-		constexpr Range() : Range(0, 0, u8"") {}
+	struct Range<const char8_t*> {
+		constexpr Range() = default;
 
 		constexpr Range(const char8_t* string) : data(string) {
 			auto lengths = StringLengths(string);
@@ -100,8 +99,10 @@ namespace GTSL
 
 		[[nodiscard]] constexpr const char8_t* GetData() const { return data; }
 
-		constexpr char8_t operator[](const uint32 index) const { //TODO: FIX
-			return data[index];
+		constexpr char32_t operator[](const uint32 codepointIndex) const {
+			uint32 byte = 0, codepoint = 0;
+			while (codepoint != codepointIndex) { byte += UTF8CodePointLength(data[byte]); ++codepoint; }
+			return ToUTF32(data + byte);
 		}
 
 		[[nodiscard]] constexpr StringIterator begin() const { return StringIterator(data, bytes, 0); }
@@ -426,41 +427,35 @@ namespace GTSL
 		return a == ToLowerCase(b) || a == ToUpperCase(b);
 	}
 
-	inline bool IsLetter(const char8_t character) {
-		switch (character) {
-		case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J':
-		case 'K': case 'L': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U':
-		case 'V': case 'W': case 'X': case 'Y': case 'Z':
+	inline bool IsLetter(const char32_t character) {
+		constexpr char32_t table[] = { U'A', U'B', U'C', U'D', U'E', U'F', U'G', U'H', U'I', U'J', U'K', U'L', U'M', U'N', U'O', U'P', U'Q', U'R', U'S', U'T', U'U', U'V', U'W', U'X', U'Y', U'Z',
+			                           U'a', U'b', U'c', U'd', U'e', U'f', U'g', U'h', U'i', U'j', U'k', U'l', U'm', U'n', U'o', U'p', U'q', U'r', U's', U't', U'u', U'v', U'w', U'x', U'y', U'z'};
 
-		case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j':
-		case 'k': case 'l': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u':
-		case 'v': case 'w': case 'x': case 'y': case 'z':
-			return true;
-		}
+		for (auto& e : table) { if (e == character) { return true; } }
 
 		return false;
 	}
 
-	inline bool IsWhitespace(const char8_t character) { return character == ' ' || character == '	'; }
+	inline bool IsWhitespace(const char32_t character) { return character == U' ' || character == U'	'; }
 
-	inline bool IsSpecialCharacter(const char8_t character) {
-		return character == '\n' || character == '\0' || character == '\r' || character == '\f' || character == '\b';
+	inline bool IsSpecialCharacter(const char32_t character) {
+		return character == U'\n' || character == U'\0' || character == U'\r' || character == U'\f' || character == U'\b';
 	}
 	
-	inline bool IsNumber(const char8_t character) {
+	inline bool IsNumber(const char32_t character) {
 		switch (character) {
-		case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+		case U'0': case U'1': case U'2': case U'3': case U'4': case U'5': case U'6': case U'7': case U'8': case U'9':
 			return true;
 		}
 
 		return false;
 	}
 
-	inline bool IsSymbol(const char8_t character) {
+	inline bool IsSymbol(const char32_t character) {
 		switch (character) {
-		case '!': case '\"': case '#': case '|': case '\'': case '$': case '%': case '&': case '/': case '(': case ')':
-		case '=': case '?': case '[': case ']': case '^': case '*': case '{': case '}': case ',': case '.': case ';':
-		case '<': case '>': case '_': case '~': case '-': case '+':
+		case U'!': case U'\"': case U'#': case U'|': case U'\'': case U'$': case U'%': case U'&': case U'/': case U'(': case U')':
+		case U'=': case U'?':  case U'[': case U']': case U'^':  case U'*': case U'{': case U'}': case U',': case U'.': case U';':
+		case U'<': case U'>':  case U'_': case U'~': case U'-':  case U'+':
 			return true;
 		}
 

@@ -2,18 +2,12 @@
 
 #include "Core.h"
 #include "HashMap.hpp"
-#include "JSON.hpp"
-#include "JSON.hpp"
 #include "StringCommon.h"
 #include "Range.hpp"
-#include "System.h"
 #include "Vector.hpp"
+#include "String.hpp"
 
 namespace GTSL {
-	//bool JSON(const StringView string) {
-	//	
-	//}
-
 	class JSON {
 		
 	};
@@ -32,12 +26,29 @@ namespace GTSL {
 		bool newLine = true;
 
 		StaticVector<uint32, 16> stack;
+		//String<> storage;
 
 		~Serializer() = default;
 	};
 
+	//template<class S = StaticString<1024>>
 	using JSONSerializer = Serializer<JSON>;
 
+	template<typename T>
+	struct JSONObject {
+		JSONObject(const StringView name, const T& r) : Name(name), Ref(r) {}
+		StringView Name; const T& Ref;
+	};
+
+	template<typename T>
+	JSONObject(StringView, const T&) -> JSONObject<T>;
+
+	template<typename T>
+	inline JSONSerializer& operator<<(JSONSerializer& serializer, const JSONObject<T> n) {
+		return serializer;
+	}
+
+	template<class S = StaticString<1024>>
 	void EndSerializer(auto& buffer, JSONSerializer& serializer) {
 		if(serializer.stack.back() > 0)
 			DropLast(buffer, u8',');
@@ -179,12 +190,10 @@ namespace GTSL {
 	};
 
 	bool ParseJSON(StringView string, auto&& whenBool, auto&& whenInt, auto&& whenUint, auto&& whenFloat, auto&& whenString, auto&& whenKey, auto&& whenArray, auto&& whenObject) {
-		uint32 side = 0;
-		uint32 count = 0;
-
-		uint32 pair = 0;
-
 		StringIterator tokenStart = string.begin(), tokenEnd = string.begin(), ptr = string.begin();
+
+		GTSL::StaticVector<bool, 32> useKeys;
+		GTSL::StaticVector<uint32, 32> commas;
 
 		while (tokenEnd < string.end()) {
 			auto advance = [&] { ++tokenEnd; ++ptr; };
@@ -199,10 +208,6 @@ namespace GTSL {
 
 			auto evalObject = [&] {
 				auto str = StringView(tokenStart, tokenEnd);
-
-				//side += 1;
-				//
-				//if (side != 1) { return false; }
 
 				if (IsNumber(str)) {
 					if(IsDecimalNumber(str)) {
@@ -228,40 +233,48 @@ namespace GTSL {
 			case u8'{': {
 				whenObject(true);
 				sync();
-				side = 0;
+				useKeys.EmplaceBack(true);
+				commas.EmplaceBack(0);
 				break;
 			}
 			case u8'}': {
 				evalObject();
-				whenObject(false);				
-				count = 0;
+				whenObject(false);
 				sync();
+				useKeys.PopBack();
+				commas.PopBack();
 				break;
 			}
 			case u8'[': {
 				whenArray(true);
 				sync();
+				useKeys.EmplaceBack(false);
+				commas.EmplaceBack(0);
 				break;
 			}
 			case u8']': {
 				evalObject();
 				sync();
-				whenArray(false);				
+				whenArray(false);
+				useKeys.PopBack();
+				commas.PopBack();
 				break;
 			}
 			case u8'"': {
-				++pair;
-
 				sync();
 
 				while (ptr < string.end() and *ptr != U'"') {
 					advance();
 				}
 
-				if (side) {
-					whenString(StringView(tokenStart, tokenEnd));
+				if (useKeys.back()) {
+					if (commas.back()) {
+						whenString(StringView(tokenStart, tokenEnd));
+					} else {
+						whenKey(StringView(tokenStart, tokenEnd));						
+					}
 				} else {
-					whenKey(StringView(tokenStart, tokenEnd));
+					whenString(StringView(tokenStart, tokenEnd));
 				}
 
 				sync();
@@ -270,15 +283,14 @@ namespace GTSL {
 			}
 			case u8':': {
 				//evalObject();
-				++side;
 				sync();
+				commas.back() += 1;
 				break;
 			}
 			case u8',': {
-				evalObject();				
-				++count;
-				side = 0;
+				evalObject();
 				sync();
+				commas.back() -= 1;
 				break;
 			}
 			case u8' ':

@@ -19,7 +19,7 @@ install(TARGETS GTSL DESTINATION lib)
 #enable_testing()
 #find_package(GTest CONFIG REQUIRED)
 
-if(GTSL_TESTS_ENABLED)
+#if(GTSL_TESTS_ENABLED)
 	FetchContent_Declare(googletest URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip)
 	# For Windows: Prevent overriding the parent project's compiler/linker settings
 	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -44,7 +44,7 @@ if(GTSL_TESTS_ENABLED)
 	"${PROJECT_SOURCE_DIR}/test/TestBuffer.cpp")
 	target_include_directories(GTSL_Test PUBLIC "${PROJECT_SOURCE_DIR}")
 	target_link_libraries(GTSL_Test gtest_main)
-endif()
+#endif()
 
 #include(GoogleTest)
 #gtest_discover_tests(GTSL_Test)

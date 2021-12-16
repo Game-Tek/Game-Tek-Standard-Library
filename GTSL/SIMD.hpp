@@ -4,6 +4,7 @@
 #include "GTSL/Core.h"
 
 #include <immintrin.h>
+#include <ammintrin.h>
 
 namespace GTSL
 {
@@ -334,17 +335,23 @@ namespace GTSL
 	template<>
 	class alignas(16) SIMD<int32, 4>;
 
+	namespace Math {};
+
 	template<>
 	class alignas(16) SIMD<float32, 4> {
 	public:
 		using type = float32;
 		static constexpr uint8 ElementCount = 4;
 
-		SIMD() = default;
+		SIMD() : vector(_mm_setzero_ps()) {}
 
-		explicit SIMD(const type a) : vector(_mm_set_ps1(a)) {}
+		SIMD(const type a) : vector(_mm_set_ps1(a)) {}
 
-		SIMD(const type* data) : vector(_mm_load_ps(data)) {}
+		SIMD(const SIMD a, const SIMD b, const SIMD mask) : vector(_mm_blendv_ps(a, b, mask)) {}
+
+		SIMD(const type* data) : vector(_mm_load_ps(data)) {
+			GTSL_ASSERT((uint64)data % 16 == 0, "Not aligned");
+		}
 
 		SIMD(const AlignedPointer<const type, 16> data) : vector(_mm_load_ps(data)) {}
 		SIMD(const UnalignedPointer<const type> data) : vector(_mm_loadu_ps(data)) {}
@@ -380,7 +387,10 @@ namespace GTSL
 		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
 		void CopyTo(const AlignedPointer<type, 16> data) const { _mm_store_ps(data, vector); }
 
-		void CopyTo(type* data) const { _mm_store_ps(data, vector); }
+		void CopyTo(type* data) const {
+			GTSL_ASSERT((uint64)data % 16 == 0, "Not aligned");
+			_mm_store_ps(data, vector);
+		}
 
 		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
 		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_ps(data, vector); }
@@ -456,6 +466,11 @@ namespace GTSL
 		SIMD operator^(const SIMD& other) const { return _mm_xor_ps(vector, other); }
 		SIMD& operator~() { vector = _mm_xor_ps(vector, _mm_cmpeq_ps(vector, vector)); return *this; }
 
+		static SIMD Modulo(SIMD a, SIMD b) { return _mm_fmod_ps(a.vector, b.vector); }
+		static SIMD Sine(SIMD v) { return _mm_sin_ps(v.vector); }
+		static SIMD Cosine(SIMD v) { return _mm_cos_ps(v.vector); }
+		static SIMD Tangent(SIMD v) { return _mm_tan_ps(v.vector); }
+
 	private:
 		__m128 vector;
 
@@ -471,13 +486,15 @@ namespace GTSL
 		using type = float32;
 		static constexpr uint8 ElementCount = 8;
 
-		SIMD() = default;
+		SIMD() : vector(_mm256_setzero_ps()) {}
 
-		explicit SIMD(const type a) : vector(_mm256_set1_ps(a)) {}
+		SIMD(const type a) : vector(_mm256_set1_ps(a)) {}
 
-		SIMD(const type* data) : vector(_mm256_load_ps(data)) {}
+		SIMD(const type* data) : vector(_mm256_load_ps(data)) {
+			GTSL_ASSERT((uint64)data % 32 == 0, "Not aligned");
+		}
 
-		SIMD(const AlignedPointer<const type, 16> data) : vector(_mm256_load_ps(data)) {}
+		SIMD(const AlignedPointer<const type, 32> data) : vector(_mm256_load_ps(data)) {}
 		SIMD(const UnalignedPointer<const type> data) : vector(_mm256_loadu_ps(data)) {}
 
 		/**
@@ -510,7 +527,7 @@ namespace GTSL
 
 		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
 		void CopyTo(const AlignedPointer<type, 32> data) const { _mm256_store_ps(data, vector); }
-
+		
 		void CopyTo(type* data) const { _mm256_store_ps(data, vector); }
 
 		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
@@ -579,11 +596,16 @@ namespace GTSL
 		SIMD operator^(const SIMD& other) const { return _mm256_xor_ps(vector, other); }
 		//SIMD& operator~() { vector = _mm256_xor_ps(vector, _mm256_cmpeq_ps(vector, vector)); return *this; }
 
+		static SIMD Modulo(SIMD a, SIMD b) { return _mm256_fmod_ps(a.vector, b.vector); }
+		static SIMD Sine(SIMD v) { return _mm256_sin_ps(v.vector); }
+		static SIMD Cosine(SIMD v) { return _mm256_cos_ps(v.vector); }
+		static SIMD Tangent(SIMD v) { return _mm256_tan_ps(v.vector); }
+
 	private:
 		__m256 vector;
 
-		operator __m256() const { return vector; }
 		SIMD(const __m256 m256) : vector(m256) {}
+		operator __m256() const { return vector; }
 
 		friend class SIMD<int32, 8>;
 	};
@@ -699,12 +721,12 @@ namespace GTSL
 
 		SIMD() = default;
 
-		explicit SIMD(const type a) : vector(_mm_set1_epi32(a)) {}
+		SIMD(const type a) : vector(_mm_set1_epi32(a)) {}
 
 		SIMD(const AlignedPointer<type, 16> data) : vector(_mm_load_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
 		SIMD(const UnalignedPointer<type> data) : vector(_mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
 
-		SIMD(const SIMD<float32, 4> other) : vector(_mm_castps_si128(other.vector)) {}
+		SIMD(const SIMD<float32, 4> other) : vector(_mm_cvtps_epi32(other.vector)) {}
 
 		SIMD(const type a, const type b, const type c, const type d) : vector(_mm_setr_epi32(a, b, c, d)) {}
 
@@ -757,8 +779,9 @@ namespace GTSL
 		SIMD& operator*=(const SIMD& other) { vector = _mm_mul_epi32(vector, other.vector); return *this; }
 		SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi32(vector, other.vector); return *this; }
 
-		SIMD operator==(const SIMD& other) const { return _mm_cmpeq_epi32(vector, other.vector); }
+		SIMD operator==(const SIMD other) const { return _mm_cmpeq_epi32(vector, other.vector); }
 		SIMD operator!=(const SIMD& other) const { return _mm_andnot_si128(_mm_cmpeq_epi32(vector, other.vector), _mm_set1_epi32(-1)); }
+		SIMD operator||(const SIMD other) const { return _mm_or_epi32(vector, other.vector); }
 		SIMD operator>(const SIMD& other)  const { return _mm_cmpgt_epi32(vector, other.vector); }
 		SIMD operator>=(const SIMD& other) const { return _mm_cmpeq_epi32(_mm_max_epi32(vector, other.vector), vector); }
 		SIMD operator<(const SIMD& other)  const { return _mm_andnot_si128(_mm_cmpeq_epi32(_mm_max_epi32(vector, other.vector), vector), _mm_set1_epi32(-1)); }
@@ -768,6 +791,8 @@ namespace GTSL
 		SIMD operator|(const SIMD& other) const { return _mm_or_si128(vector, other.vector); }
 		SIMD operator^(const SIMD& other) const { return _mm_xor_si128(vector, other); }
 		SIMD& operator~() { vector = _mm_xor_si128(vector, _mm_cmpeq_epi32(vector, vector)); return *this; }
+
+		SIMD operator<<(const SIMD other) const { return _mm_mullo_epi32(vector, other.vector); }
 
 	private:
 		__m128i vector;
@@ -786,7 +811,7 @@ namespace GTSL
 
 		SIMD() = default;
 
-		explicit SIMD(const type a) : vector(_mm256_set1_epi32(a)) {}
+		SIMD(const type a) : vector(_mm256_set1_epi32(a)) {}
 
 		SIMD(const AlignedPointer<type, 32> data) : vector(_mm256_load_si256(reinterpret_cast<__m256i*>(data.Get()))) {}
 		SIMD(const UnalignedPointer<type> data) : vector(_mm256_loadu_si256(reinterpret_cast<__m256i*>(data.Get()))) {}
@@ -834,15 +859,15 @@ namespace GTSL
 		template<uint8 I>
 		[[nodiscard]] type GetElement() const { return _mm_extract_epi32(vector, I); }
 
-		SIMD operator+(const SIMD& other) const { return _mm256_add_epi32(vector, other.vector); }
-		SIMD operator-(const SIMD& other) const { return _mm256_sub_epi32(vector, other.vector); }
-		SIMD operator*(const SIMD& other) const { return _mm256_mul_epi32(vector, other.vector); }
-		SIMD operator/(const SIMD& other) const { return _mm256_div_epi32(vector, other.vector); }
+		SIMD operator+(const SIMD other) const { return _mm256_add_epi32(vector, other.vector); }
+		SIMD operator-(const SIMD other) const { return _mm256_sub_epi32(vector, other.vector); }
+		SIMD operator*(const SIMD other) const { return _mm256_mul_epi32(vector, other.vector); }
+		SIMD operator/(const SIMD other) const { return _mm256_div_epi32(vector, other.vector); }
 
-		SIMD& operator+=(const SIMD& other) { vector = _mm256_add_epi32(vector, other.vector); return *this; }
-		SIMD& operator-=(const SIMD& other) { vector = _mm256_sub_epi32(vector, other.vector); return *this; }
-		SIMD& operator*=(const SIMD& other) { vector = _mm256_mul_epi32(vector, other.vector); return *this; }
-		SIMD& operator/=(const SIMD& other) { vector = _mm256_div_epi32(vector, other.vector); return *this; }
+		SIMD& operator+=(const SIMD other) { vector = _mm256_add_epi32(vector, other.vector); return *this; }
+		SIMD& operator-=(const SIMD other) { vector = _mm256_sub_epi32(vector, other.vector); return *this; }
+		SIMD& operator*=(const SIMD other) { vector = _mm256_mul_epi32(vector, other.vector); return *this; }
+		SIMD& operator/=(const SIMD other) { vector = _mm256_div_epi32(vector, other.vector); return *this; }
 
 		SIMD operator==(const SIMD& other) const { return _mm256_cmpeq_epi32(vector, other.vector); }
 		SIMD operator!=(const SIMD& other) const { return _mm256_andnot_si256(_mm256_cmpeq_epi32(vector, other.vector), _mm256_set1_epi32(-1)); }

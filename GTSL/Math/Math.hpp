@@ -221,14 +221,19 @@ namespace GTSL {
 			//return a > 0 ? static_cast<float32>(static_cast<int32>(a)) : static_cast<float32>(static_cast<int32>(a) - 1);
 #endif // __clang__
 		}
-		
-		inline float32 Modulo(const float32 a, const float32 b) {
-			const float32 c = a / b;
+
+		inline auto Floor(const SIMD<float32, 4> a) {
+			return decltype(a)::Floor(a);
+		}
+
+		auto Modulo(const auto a, const auto b) {
+			const auto c = a / b;
 			return (c - Floor(c)) * b;
 		}
 
-		inline float32 Wrap(const float32 a, const float32 range) {
-			return Modulo(a - range, range * 2) - range;
+		template<typename T>
+		T Wrap(const T a, const T range) {
+			return Modulo(a - range, range * T(2)) - range;
 		}
 
 		inline Vector2 Wrap(const Vector2 a, const Vector2 range) {
@@ -240,40 +245,20 @@ namespace GTSL {
 		 * \param radians Angle in radians.
 		 * \return Sine of radians
 		 */
-		//inline float32 Sine(float32 x) {
-		//	float32 c; int32 intC;
-		//	x = AdvancedMath::Modulo(x, static_cast<float32>(PI), c, intC);
-		//	constexpr float32 B = 4.0f / static_cast<float32>(PI);
-		//	constexpr float32 C = -4.0f / Square(static_cast<float32>(PI));
-		//	constexpr float32 P = 0.225f;
-		//
-		//	float32 y = B * x + C * x * x;
-		//	auto res = P * (y * y - y) + y;
-		//	return IsEven(intC) ? res : -res;
-		//}
+		 //http://lolengine.net/blog/2011/12/21/better-function-approximations
+		template<typename T>
+		T Sine(T x) {
+			x = Wrap(x, T(PI));
+
+			const T x2 = x * x, x4 = x2 * x2, x8 = x4 * x4, x9 = x8 * x;
+			const auto a = x * (T(1.0) + x2 * (T(-1.666666666640169148537065260055e-1) + x2 * (T(8.333333316490113523036717102793e-3) + x2 * T(-1.984126600659171392655484413285e-4))));
+			const auto b = T(2.755690114917374804474016589137e-6) + x2 * (T(- 2.502845227292692953118686710787e-8) + x2 * T(1.538730635926417598443354215485e-10));
+			return a + x9 * b;
+		}
 		
 		inline uint32 Abs(const int32 a) { return static_cast<uint32>(a < 0.0f ? -a : a); }
 		inline uint64 Abs(const int64 a) { return static_cast<uint64>(a < 0.0f ? -a : a); }
 		inline float32 Abs(const float32 a) { return a < 0.0f ? -a : a; }
-
-		inline float32 Sine(float32 x) { return sinf(x); }
-		
-		//inline float32 Sine(float32 x) {
-		//	constexpr float32 B = 4.0f / PI, C = -4.0f / Square(PI), P = 0.225f;
-		//	x = Wrap(x, PI);
-		//	float32 y = B * x + C * Abs(x) * x;
-		//	return P * (y * Abs(y) - y) + y;
-		//}
-
-		//http://lolengine.net/blog/2011/12/21/better-function-approximations
-		inline float32 sin(float32 x) {
-			x = Wrap(x, static_cast<float32>(PI));
-
-			const float32 x2 = x * x, x4 = x2 * x2, x8 = x4 * x4, x9 = x8 * x;
-			const auto a = x * (1.0f + x2 * (-1.666666666640169148537065260055e-1f + x2 * (8.333333316490113523036717102793e-3f + x2 * -1.984126600659171392655484413285e-4f)));
-			const auto b = 2.755690114917374804474016589137e-6f + x2 * (-2.502845227292692953118686710787e-8f + x2 * 1.538730635926417598443354215485e-10f);
-			return a + x9 * b;
-		}
 
 		/**
 		 * \brief Calculates the sine of an angle in a clockwise manner.
@@ -288,10 +273,6 @@ namespace GTSL {
 			const auto a = x * (-1.0f + x2 * (1.666666666640169148537065260055e-1f + x2 * (-8.333333316490113523036717102793e-3f + x2 * 1.984126600659171392655484413285e-4f)));
 			const auto b = -2.755690114917374804474016589137e-6f + x2 * (2.502845227292692953118686710787e-8f + x2 * -1.538730635926417598443354215485e-10f);
 			return a + x9 * b;
-		}
-
-		inline float32 cos(const float32 x) {
-			return sin(x + static_cast<float32>(PI) / 2.0f);
 		}
 
 		inline float32 cos_CW(const float32 x) {
@@ -310,7 +291,10 @@ namespace GTSL {
 		* \param radians Angle in radians.
 		* \return Cosine of radians
 		*/
-		inline float32 Cosine(float32 x) { return cosf(x); }
+		template<typename T>
+		T Cosine(const T x) {
+			return Sine<T>(x + PI / 2.0f);
+		}
 
 		//inline float32 Cosine(float32 x) {
 		//	x = (x > 0) ? -x : x;
@@ -333,14 +317,55 @@ namespace GTSL {
 			//return Sine(x) / Cosine(x);
 		//}
 
-		inline float32 Tangent(float32 x) { return tanf(x); }
+		template<typename T>
+		T Tangent(T x) {
+			return Sine(x) / Cosine(x);
+		}
+
+		//inline SIMD<float32, 4> TanTan(SIMD<float32, 4> x) {
+		//	x = Modulo(x, SIMD<float32, 4>(PI * 2)); //get rid of values over 2 PI
+		//	auto octant = SIMD<int32, 4>(x / SIMD<float32, 4>(PI / 4));
+		//
+		//	auto tan_82s = [](SIMD<float32, 4> x) {
+		//		const SIMD<float32, 4> c1 = 211.849369664121, c2 = -12.5288887278448, c3 = 269.73500131214121, c4 = -71.4145309347748;
+		//		auto x2 = x * x;
+		//		return x * (c1 + c2 * x2) / (c3 + x2 * (c4 + x2));
+		//	};
+		//
+		//	SIMD<float32, 4> xArg = x, halfPiMinX = SIMD<float32, 4>(PI / 2) - x, xMinHalfPi = x - SIMD<float32, 4>(PI / 2), piMinX = SIMD<float32, 4>(PI) - x, xMinPi = x - SIMD<float32, 4>(PI), threeHalfPiMinX = SIMD<float32, 4>(PI * 3/2) - x, xMinThreeHalfPi = SIMD<float32, 4>(PI * 3 / 2) - x, twoPiMinX = SIMD<float32, 4>(PI * 2) - x;
+		//
+		//	xArg = SIMD<float32, 4>(xArg, halfPiMinX, float4x(octant == 1));
+		//	xArg = SIMD<float32, 4>(xArg, xMinHalfPi, float4x(octant == 2));
+		//	xArg = SIMD<float32, 4>(xArg, piMinX, float4x(octant == 3));
+		//	xArg = SIMD<float32, 4>(xArg, xMinPi, float4x(octant == 4));
+		//	xArg = SIMD<float32, 4>(xArg, threeHalfPiMinX, float4x(octant == 5));
+		//	xArg = SIMD<float32, 4>(xArg, xMinThreeHalfPi, float4x(octant == 6));
+		//	xArg = SIMD<float32, 4>(xArg, twoPiMinX, float4x(octant == 7));
+		//
+		//	auto tanRes = tan_82s(xArg * SIMD<float32, 4>(4 / PI));
+		//
+		//	float4x divTerm;
+		//	divTerm = SIMD<float32, 4>(divTerm, tanRes * tanRes, float4x(octant == 0 || octant == 4));
+		//	divTerm = SIMD<float32, 4>(divTerm, 1, float4x(octant == 1 || octant == 5));
+		//	divTerm = SIMD<float32, 4>(divTerm, -1, float4x(octant == 2 || octant == 6));
+		//	divTerm = SIMD<float32, 4>(divTerm, (tanRes * tanRes) *= -1, float4x(octant == 3 || octant == 7));
+		//
+		//	return divTerm / tanRes;
+		//}
+
+		template<uint8 S>
+		SIMD<float32, S> Tangent(SIMD<float32, S> x) {
+			return SIMD<float32, S>::Tangent(x);
+		}
+
+		//inline float32 Tangent(float32 x) { return tanf(x); }
 		
 		/**
 		* \brief Returns the tangent of an angle.
 		* \param radians Angle in radians.
 		* \return Tangent of radians
 		*/
-		inline float64 Tangent(float64 radians) { return tan(radians); }
+		//inline float64 Tangent(float64 radians) { return tan(radians); }
 
 		/**
 		* \brief Returns the arcsine of A in radians.
@@ -369,7 +394,16 @@ namespace GTSL {
 		*/
 		inline float32 ArcTan2(float32 y, float32 x) { return atan2(y, x); }
 
-		inline void Sine(Range<float32*> n) {
+		//inline float32 Modulo(const float32 a, const float32 b) {
+		//	const float32 c = a / b;
+		//	return (c - Floor(c)) * b;
+		//}
+		//
+		//inline float32 Wrap(const float32 a, const float32 range) {
+		//	return Modulo(a - range, range * 2) - range;
+		//}
+
+		inline void Sine(Range<const float32*> n, Range<float32*> results) {
 			using SIMD = SIMD<float32, 4>;
 
 			uint32 i = 0;
@@ -383,22 +417,53 @@ namespace GTSL {
 			for (uint32 t = 0; t < n.ElementCount() / SIMD::ElementCount; ++t, i += SIMD::ElementCount) {
 				auto x = SIMD(AlignedPointer<const float32, 16>(n.begin() + i));
 
-				//wrap modulo PI
-				auto c = (x - SIMD(static_cast<float32>(PI))) / SIMD(static_cast<float32>(PI) * 2.0f);
-				x = (c - SIMD::Floor(c)) * SIMD(static_cast<float32>(PI) * 2.0f);
-				//wrap modulo PI
+				x = Wrap(x, SIMD(PI));
 
 				const SIMD x2 = x * x, x4 = x2 * x2, x8 = x4 * x4, x9 = x8 * x;
 				const auto a = x * (a0 + x2 * (a1 + x2 * (a2 + x2 * a3)));
 				const auto b = a4 + x2 * (a5 + x2 * a6);
-				(a + x9 * b).CopyTo(AlignedPointer<float32, 16>(n.begin() + i));
+				(a + x9 * b).CopyTo(AlignedPointer<float32, 16>(results.begin() + i));
 			}
 
 			for (; i < n.ElementCount(); ++i) {
-				n[i] = Sine(n[i]);
+				results[i] = Sine(n[i]);
 			}
 		}
-		
+
+		inline void Cosine(Range<const float32*> n, Range<float32*> results) {
+			using SIMD = SIMD<float32, 4>;
+
+			uint32 i = 0;
+
+			const SIMD a0(1.0f), a1(-1.666666666640169148537065260055e-1f), a2(8.333333316490113523036717102793e-3f),
+				a3(-1.984126600659171392655484413285e-4f),
+				a4(2.755690114917374804474016589137e-6f),
+				a5(-2.502845227292692953118686710787e-8f),
+				a6(1.538730635926417598443354215485e-10f);
+
+			for (uint32 t = 0; t < n.ElementCount() / SIMD::ElementCount; ++t, i += SIMD::ElementCount) {
+				Cosine(SIMD(n.begin() + i)).CopyTo(AlignedPointer<float32, 16>(results.begin() + i));
+			}
+
+			for (; i < n.ElementCount(); ++i) {
+				results[i] = Cosine(n[i]);
+			}
+		}
+
+		inline void Tangent(Range<const float32*> n, Range<float32*> results) {
+			using SIMD = SIMD<float32, 4>;
+
+			uint32 i = 0;
+
+			for (uint32 t = 0; t < n.ElementCount() / SIMD::ElementCount; ++t, i += SIMD::ElementCount) {
+				Tangent(SIMD(n.begin() + i)).CopyTo(AlignedPointer<float32, 16>(results.begin() + i));
+			}
+
+			for (; i < n.ElementCount(); ++i) {
+				results[i] = Tangent(n[i]);
+			}
+		}
+
 		inline float32 SquareRoot(const float32 a) {
 			if (a > 0.0f) { return AdvancedMath::SquareRoot(a); }
 			return 0.0f;
@@ -1489,4 +1554,171 @@ namespace GTSL {
 // /= float32
 // /  type
 // /= type
+
+	/* since sin256_ps and cos256_ps are almost identical, sincos256_ps could replace both of them..
+	it is almost as fast, and gives you a free cosine with your sine */
+	//void sincos256_ps(SIMD<float32, 8> x, SIMD<float32, 8>* s, SIMD<float32, 8>* c) {
+	//
+	//	SIMD<float32, 8> xmm1, xmm2, xmm3 = _mm256_setzero_ps(), sign_bit_sin, y;
+	//	SIMD<int32, 8> imm0, imm2, imm4;
+	//
+	//	sign_bit_sin = x;
+	//	/* take the absolute value */
+	//	x = _mm256_and_ps(x, *(SIMD<float32, 8>*)_ps256_inv_sign_mask);
+	//	/* extract the sign bit (upper one) */
+	//	sign_bit_sin = _mm256_and_ps(sign_bit_sin, *(SIMD<float32, 8>*)_ps256_sign_mask);
+	//
+	//	/* scale by 4/Pi */
+	//	y = _mm256_mul_ps(x, *(SIMD<float32, 8>*)_ps256_cephes_FOPI);
+	//	
+	//	/* store the integer part of y in imm2 */
+	//	imm2 = _mm256_cvttps_epi32(y);
+	//
+	//	/* j=(j+1) & (~1) (see the cephes sources) */
+	//	imm2 = avx2_mm256_add_epi32(imm2, *(SIMD<int32, 8>*)_pi32_256_1);
+	//	imm2 = avx2_mm256_and_si256(imm2, *(SIMD<int32, 8>*)_pi32_256_inv1);
+	//
+	//	y = _mm256_cvtepi32_ps(imm2);
+	//	imm4 = imm2;
+	//
+	//	/* get the swap sign flag for the sine */
+	//	imm0 = avx2_mm256_and_si256(imm2, *(SIMD<int32, 8>*)_pi32_256_4);
+	//	imm0 = avx2_mm256_slli_epi32(imm0, 29);
+	//	//SIMD<float32, 8> swap_sign_bit_sin = _mm256_castsi256_ps(imm0);
+	//
+	//	/* get the polynom selection mask for the sine*/
+	//	imm2 = avx2_mm256_and_si256(imm2, *(SIMD<int32, 8>*)_pi32_256_2);
+	//	imm2 = avx2_mm256_cmpeq_epi32(imm2, *(SIMD<int32, 8>*)_pi32_256_0);
+	//	//SIMD<float32, 8> poly_mask = _mm256_castsi256_ps(imm2);
+	//	SIMD<float32, 8> swap_sign_bit_sin = _mm256_castsi256_ps(imm0);
+	//	SIMD<float32, 8> poly_mask = _mm256_castsi256_ps(imm2);
+	//
+	//	/* The magic pass: "Extended precision modular arithmetic"
+	//	   x = ((x - y * DP1) - y * DP2) - y * DP3; */
+	//	xmm1 = *(SIMD<float32, 8>*)_ps256_minus_cephes_DP1;
+	//	xmm2 = *(SIMD<float32, 8>*)_ps256_minus_cephes_DP2;
+	//	xmm3 = *(SIMD<float32, 8>*)_ps256_minus_cephes_DP3;
+	//	xmm1 = _mm256_mul_ps(y, xmm1);
+	//	xmm2 = _mm256_mul_ps(y, xmm2);
+	//	xmm3 = _mm256_mul_ps(y, xmm3);
+	//	x = _mm256_add_ps(x, xmm1);
+	//	x = _mm256_add_ps(x, xmm2);
+	//	x = _mm256_add_ps(x, xmm3);
+	//	
+	//	imm4 = avx2_mm256_sub_epi32(imm4, *(SIMD<int32, 8>*)_pi32_256_2);
+	//	imm4 = avx2_mm256_andnot_si256(imm4, *(SIMD<int32, 8>*)_pi32_256_4);
+	//	imm4 = avx2_mm256_slli_epi32(imm4, 29);
+	//
+	//	SIMD<float32, 8> sign_bit_cos = _mm256_castsi256_ps(imm4);
+	//
+	//	sign_bit_sin = _mm256_xor_ps(sign_bit_sin, swap_sign_bit_sin);
+	//
+	//	/* Evaluate the first polynom  (0 <= x <= Pi/4) */
+	//	SIMD<float32, 8> z = _mm256_mul_ps(x, x);
+	//	y = *(SIMD<float32, 8>*)_ps256_coscof_p0;
+	//
+	//	y = _mm256_mul_ps(y, z);
+	//	y = _mm256_add_ps(y, *(SIMD<float32, 8>*)_ps256_coscof_p1);
+	//	y = _mm256_mul_ps(y, z);
+	//	y = _mm256_add_ps(y, *(SIMD<float32, 8>*)_ps256_coscof_p2);
+	//	y = _mm256_mul_ps(y, z);
+	//	y = _mm256_mul_ps(y, z);
+	//	SIMD<float32, 8> tmp = _mm256_mul_ps(z, *(SIMD<float32, 8>*)_ps256_0p5);
+	//	y = _mm256_sub_ps(y, tmp);
+	//	y = _mm256_add_ps(y, *(SIMD<float32, 8>*)_ps256_1);
+	//
+	//	/* Evaluate the second polynom  (Pi/4 <= x <= 0) */
+	//
+	//	SIMD<float32, 8> y2 = *(SIMD<float32, 8>*)_ps256_sincof_p0;
+	//	y2 = _mm256_mul_ps(y2, z);
+	//	y2 = _mm256_add_ps(y2, *(SIMD<float32, 8>*)_ps256_sincof_p1);
+	//	y2 = _mm256_mul_ps(y2, z);
+	//	y2 = _mm256_add_ps(y2, *(SIMD<float32, 8>*)_ps256_sincof_p2);
+	//	y2 = _mm256_mul_ps(y2, z);
+	//	y2 = _mm256_mul_ps(y2, x);
+	//	y2 = _mm256_add_ps(y2, x);
+	//
+	//	/* select the correct result from the two polynoms */
+	//	xmm3 = poly_mask;
+	//	SIMD<float32, 8> ysin2 = _mm256_and_ps(xmm3, y2);
+	//	SIMD<float32, 8> ysin1 = _mm256_andnot_ps(xmm3, y);
+	//	y2 = _mm256_sub_ps(y2, ysin2);
+	//	y = _mm256_sub_ps(y, ysin1);
+	//
+	//	xmm1 = _mm256_add_ps(ysin1, ysin2);
+	//	xmm2 = _mm256_add_ps(y, y2);
+	//
+	//	/* update the sign */
+	//	*s = _mm256_xor_ps(xmm1, sign_bit_sin);
+	//	*c = _mm256_xor_ps(xmm2, sign_bit_cos);
+	//}
+
+	//void tan() {
+	//	__asm {
+	//		push rbx
+	//		vmovapd ymm1, ymm0
+	//		vmovapd ymm2, [sign_mask]
+	//		vandnpd ymm0, ymm2, ymm0; make positive x
+	//		vandpd ymm1, ymm1, [sign_mask]; save sign bit
+	//
+	//		vbroadcastsd ymm2, [O4PI]
+	//		vmulpd ymm3, ymm0, ymm2;
+	//		vroundpd ymm3, ymm3, 3; truncate y
+	//
+	//			vmulpd ymm2, ymm3, [OD16]
+	//			vroundpd ymm2, ymm2, 3
+	//			vmulpd ymm2, ymm2, [S16]
+	//			vsubpd ymm2, ymm3, ymm2
+	//			vcvttpd2dq xmm2, ymm2; j
+	//
+	//			vpand xmm4, xmm2, [mask_1]
+	//			vpaddd xmm2, xmm4; j += 1
+	//			vcvtdq2pd ymm4, xmm4
+	//			vaddpd ymm3, ymm3, ymm4; y += 1.0
+	//
+	//			vpand xmm4, xmm2, [mask_2]
+	//			vpcmpeqd xmm4, xmm4, [mask_0]
+	//			vpmovsxdq xmm5, xmm4
+	//			vpsrldq xmm4, 8
+	//			vpmovsxdq xmm6, xmm4
+	//			vmovapd xmm4, xmm5
+	//			vinsertf128 ymm4, ymm4, xmm6, 1; selection mask 2
+	//
+	//			; Extended precision modular arithmetic
+	//			vmulpd ymm5, ymm3, [DP1]
+	//			vmulpd ymm6, ymm3, [DP2]
+	//			vmulpd ymm7, ymm3, [DP3]
+	//			vsubpd ymm0, ymm0, ymm5
+	//			vsubpd ymm0, ymm0, ymm6
+	//			vsubpd ymm0, ymm0, ymm7
+	//
+	//			vmulpd ymm5, ymm0, ymm0; x ^ 2
+	//
+	//			vcmpnlepd ymm6, ymm5, [prec]; selection mask 1
+	//
+	//			; calculate polynom
+	//			polevl ymm5, P, 2
+	//			vmovapd ymm13, ymm15
+	//			p1evl ymm5, Q, 4
+	//			vdivpd ymm13, ymm13, ymm15
+	//			vmulpd ymm13, ymm13, ymm5
+	//			vmulpd ymm13, ymm13, ymm0
+	//			vaddpd ymm13, ymm13, ymm0
+	//
+	//			vandpd ymm13, ymm6, ymm13
+	//			vandnpd ymm0, ymm6, ymm0; select according to mask 1
+	//			vaddpd ymm0, ymm13, ymm0
+	//
+	//			vmovapd ymm6, [mone]
+	//			vdivpd ymm7, ymm6, ymm0
+	//
+	//			vandpd ymm0, ymm4, ymm0
+	//			vandnpd ymm7, ymm4, ymm7; select according to mask 2
+	//			vaddpd ymm0, ymm0, ymm7
+	//
+	//			vxorpd ymm0, ymm0, ymm1; invert sign
+	//			pop rbx
+	//			ret
+	//	};
+	//}
 }

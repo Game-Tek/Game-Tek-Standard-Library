@@ -380,8 +380,8 @@ TEST(Tree, Iteration) {
 	i = 0;
 	ok = true;
 
-	auto visitLevel = [&](decltype(tree.begin()) iterator, auto&& self) -> void {
-		ok = ok && i++ == iterator.Get();
+	auto visitLevel = [&](decltype(tree)::iterator iterator, auto&& self) -> void {
+		ok = ok && i++ == iterator;
 
 		for(auto e : iterator) {
 			self(e, self);
@@ -397,7 +397,7 @@ TEST(Tree, Iteration) {
 	ok = true;
 
 	auto visitLevel1 = [&](decltype(tree.begin()) iterator, auto&& self) -> void {
-		ok = ok && i++ == iterator.Get();
+		ok = ok && i++ == *iterator;
 
 		{
 			auto b = iterator.begin();

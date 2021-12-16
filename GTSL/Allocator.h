@@ -179,6 +179,8 @@ namespace GTSL
 		StaticAllocator(StaticAllocator&&) = delete;
 		StaticAllocator& operator=(StaticAllocator&&) = delete;
 
+		byte* GetPointer() const { return buffer; }
+
 	private:
 		byte buffer[BYTES];
 	};
@@ -222,24 +224,24 @@ namespace GTSL
 	}
 
 	template<typename T, std::unsigned_integral N>
-	void Allocate(auto& allocator, uint64 n, T** data, N* allocatedElements) {
+	void Allocate(auto& allocator, uint64 n, T** data, N* allocatedElements, uint64 alignment = alignof(T)) {
 		uint64 allocatedBytes;
-		allocator.Allocate(sizeof(T) * n, alignof(T), reinterpret_cast<void**>(data), &allocatedBytes);
+		allocator.Allocate(sizeof(T) * n, alignment, reinterpret_cast<void**>(data), &allocatedBytes);
 		*allocatedElements = static_cast<N>(allocatedBytes / sizeof(T));
 	}
 
 	template<typename T>
-	void Deallocate(auto& allocator, uint64 n, T* data) {
-		allocator.Deallocate(sizeof(T) * n, alignof(T), reinterpret_cast<void*>(data));
+	void Deallocate(auto& allocator, uint64 n, T* data, uint64 alignment = alignof(T)) {
+		allocator.Deallocate(sizeof(T) * n, alignment, reinterpret_cast<void*>(data));
 	}
 
 	template<typename T>
 	concept Lambda = requires(T && t) { t.operator(); };
 
 	template<typename T, std::unsigned_integral C>
-	void Resize(auto& allocator, T** data, C* capacity, uint64 newCapacity, Lambda auto&& f) {
+	void Resize(auto& allocator, T** data, C* capacity, uint64 newCapacity, Lambda auto&& f, uint64 alignment = alignof(T)) {
 		T* newAlloc; uint64 allocatedElements;
-		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements);
+		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements, alignment);
 
 		f(*capacity, *data, allocatedElements, newAlloc);
 
@@ -249,19 +251,13 @@ namespace GTSL
 	}
 
 	template<typename T, std::unsigned_integral C>
-	void Resize(auto& allocator, T** data, C* capacity, uint64 newCapacity, uint64 length) {
+	void Resize(auto& allocator, T** data, C* capacity, uint64 newCapacity, uint64 length, uint64 alignment = alignof(T)) {
 		T* newAlloc; uint64 allocatedElements;
-		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements);
+		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements, alignment);
 
-		if constexpr (std::is_trivial_v<T>) {
-			Copy(length, *data, newAlloc);
-		} else {
-			for (uint64 i = 0; i < length; ++i) {
-				Move(*data + i, newAlloc + i);
-			}
-		}
+		Copy(length, *data, newAlloc);
 
-		Deallocate(allocator, *capacity, *data);
+		Deallocate(allocator, *capacity, *data, alignment);
 
 		*data = newAlloc; *capacity = static_cast<C>(allocatedElements);
 	}

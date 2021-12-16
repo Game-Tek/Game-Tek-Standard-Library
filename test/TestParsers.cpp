@@ -41,7 +41,7 @@ TEST(LUT, Invalid) {
 TEST(JSON, Serialize) {
 	GTSL::uint32 bananas = 5, apples = 2;
 
-	auto jsonString = u8R"({"bananas":5,"apples":2,"string":"test","array":[4,0,8,12],"obj":{"bool":true,"float":3.141000}})";
+	auto jsonString = u8R"({"bananas":5,"apples":2,"string":"test","array":[4,0,8,12],"obj":{"bool":true,"float":3.141000},"empty":[]})";
 
 	GTSL::StaticString<256> buffer;
 	GTSL::JSONSerializer serializer = GTSL::MakeSerializer(buffer);
@@ -62,6 +62,9 @@ TEST(JSON, Serialize) {
 		GTSL::Insert(serializer, buffer, u8"float", 3.141f);
 	GTSL::EndObject(serializer, buffer);
 
+	GTSL::StartArray(serializer, buffer, u8"empty");
+	GTSL::EndArray(serializer, buffer);
+
 	EndSerializer(buffer, serializer);
 
 	GTEST_ASSERT_EQ(buffer, jsonString);
@@ -75,6 +78,7 @@ TEST(JSON, Deserialize) {
     "input":["GlobalData"],
     "shaderVariables":[{ "type":"ImageReference", "name":"color", "defaultValue":"color" }],
     "localSize":[1,1,1],
+	"shaders":["a", "b"],
     "statements":[
         { "name":"Write", "params":[ { "name": "GetScreenPosition() "}, { "type":"float4", "params" : [{ "type":"float32", "params" : [1] }] } ] }
 	]
@@ -110,6 +114,10 @@ TEST(JSON, Deserialize) {
 	}
 
 	GTSL::uint64 x{ json[u8"localSize"][0] }, y{ json[u8"localSize"][1] }, z{ json[u8"localSize"][2] };
+
+	GTEST_ASSERT_EQ(json[u8"shaders"].GetCount(), 2);
+	GTEST_ASSERT_EQ(json[u8"shaders"][0].GetStringView(), u8"a");
+	GTEST_ASSERT_EQ(json[u8"shaders"][1].GetStringView(), u8"b");
 
 	GTEST_ASSERT_EQ(json[u8"statements"].GetCount(), 1);
 

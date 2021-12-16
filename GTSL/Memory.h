@@ -35,8 +35,14 @@ namespace GTSL
 	}
 
 	template<typename T>
-	void Copy(const uint64 elements, const T* from, T* to) {
-		std::memcpy(to, from, elements * sizeof(T));
+	void Copy(const uint64 elements, T* from, T* to) {
+		if constexpr (std::is_trivial_v<T>) {
+			std::memcpy(to, from, elements * sizeof(T));
+		} else {
+			for (uint64 i = 0; i < elements; ++i) {
+				Move(from + i, to + i);
+			}
+		}
 	}
 
 	inline void SetMemory(uint64 size, void* data, int32 value = 0) {

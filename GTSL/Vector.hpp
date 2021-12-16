@@ -482,12 +482,28 @@ namespace GTSL
 		}
 
 		template<uint32 M>
-		auto GetPointer(const uint32 index) -> typename TypeAt<M, TYPES...>::type* {
+		static auto GetPointer(byte* data, const uint32 capacity, const uint32 index) -> typename TypeAt<M, TYPES...>::type* {
 			if constexpr (AOS) {
 				return reinterpret_cast<typename TypeAt<M, TYPES...>::type*>(data + PackSize<TYPES...>() * index + PackSizeAt<M, TYPES...>());
-			} else {
+			}
+			else {
 				return reinterpret_cast<typename TypeAt<M, TYPES...>::type*>(data + capacity * PackSizeAt<M, TYPES...>() + index * sizeof(typename TypeAt<M, TYPES...>::type));
 			}
+		}
+
+		template<uint32 M>
+		static auto GetPointer(const byte* data, const uint32 capacity, const uint32 index) -> const typename TypeAt<M, TYPES...>::type* {
+			if constexpr (AOS) {
+				return reinterpret_cast<const typename TypeAt<M, TYPES...>::type*>(data + PackSize<TYPES...>() * index + PackSizeAt<M, TYPES...>());
+			}
+			else {
+				return reinterpret_cast<const typename TypeAt<M, TYPES...>::type*>(data + capacity * PackSizeAt<M, TYPES...>() + index * sizeof(typename TypeAt<M, TYPES...>::type));
+			}
+		}
+
+		template<uint32 M>
+		auto GetPointer(const uint32 index) -> typename TypeAt<M, TYPES...>::type* {
+			return GetPointer<M>(data, capacity, index);
 		}
 
 		template<uint32 M>
@@ -497,8 +513,8 @@ namespace GTSL
 
 		byte* GetData() { return data; }
 
-		operator MultiRange<TYPES...>() {
-			return [&]<uint64_t... I>(Indices<I...>) { return MultiRange<TYPES...>(capacity, length, GetPointer<I>(0)...); }(BuildIndices<sizeof...(TYPES)>{});
+		operator MultiRange<TYPES...>() requires(!AOS) {
+			return [&]<uint64_t... I>(Indices<I...>) { return MultiRange<TYPES...>(length, GetPointer<I>(0)...); }(BuildIndices<sizeof...(TYPES)>{});
 		}
 
 	private:
@@ -509,13 +525,39 @@ namespace GTSL
 		void tryResize(const uint32 delta) {
 			if(length + delta > capacity) {
 				if(data) {
-					Resize(allocator, &data, &capacity, capacity * 2 * PackSize<TYPES...>(), length * PackSize<TYPES...>());
+					uint32 ccapacity = capacity * PackSize<TYPES...>();
+
+					if constexpr (!AOS) {
+						auto copy = [&](uint64 currentCapacity, byte* from, uint64 newCapacity, byte* to) {
+							uint32 currCap = currentCapacity / PackSize<TYPES...>(), endCap = newCapacity / PackSize<TYPES...>();
+							[&]<uint64_t... I>(Indices<I...>) { (Copy(length, GetPointer<I>(from, currCap, 0), GetPointer<I>(to, endCap, 0)), ...); }(BuildIndices<sizeof...(TYPES)>{});
+						};
+
+						Resize(allocator, &data, &ccapacity, capacity * 2 * PackSize<TYPES...>(), copy, 32);
+					} else {
+						Resize(allocator, &data, &ccapacity, capacity * 2 * PackSize<TYPES...>(), length * PackSize<TYPES...>(), 32);
+					}
+
+					capacity = ccapacity;
 				} else {
-					Allocate(allocator, delta * PackSize<TYPES...>(), &data, &capacity);
+					Allocate(allocator, delta * PackSize<TYPES...>(), &data, &capacity, 32);
 				}
 
 				capacity /= PackSize<TYPES...>();
 			}
 		}
 	};
+
+	template<typename T, class ALLOC>
+	void Skim(Vector<T, ALLOC>& vec, auto&& predicate) {
+		StaticVector<uint32, 512> toSkim;
+
+		for (uint32 i = 0; i < vec; ++i) {
+			if (predicate(vec[i])) {
+				toSkim.EmplaceBack(i);
+			}
+		}
+
+		for(auto e : toSkim) { vec.Pop(e); }
+	}
 }

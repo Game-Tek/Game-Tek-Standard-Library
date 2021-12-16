@@ -34,9 +34,9 @@ TEST(String, CopyConstruct) {
 	GTEST_ASSERT_EQ(string1.GetCodepoints(), string0.GetCodepoints());
 	GTEST_ASSERT_EQ(string1.GetBytes(), string0.GetBytes());
 
-	for(uint32 i = 0; i < StringByteLength(testString); ++i) {
-		GTEST_ASSERT_EQ(string0.c_str()[i], testString[i]); //test original string hasn't been modified
-		GTEST_ASSERT_EQ(string0.c_str()[i], string1.c_str()[i]);
+	for(uint32 i = 0; i < StringLengths(testString).Second; ++i) {
+		GTEST_ASSERT_EQ(string0[i], GTSL::StringView(testString)[i]); //test original string hasn't been modified
+		GTEST_ASSERT_EQ(string0[i], string1[i]);
 	}
 }
 
@@ -229,6 +229,12 @@ TEST(String, Drop) {
 		GTEST_ASSERT_EQ(string.GetCodepoints(), 5);
 		GTEST_ASSERT_EQ(string.GetBytes(), 5);
 	}
+}
+
+TEST(String, BuildInPlace) {
+	GTEST_ASSERT_EQ(StaticString<64>(u8"a") + u8"b" + u8"c", u8"abc");
+	GTEST_ASSERT_EQ(StaticString<64>(u8"a") & u8"b" & u8"c", u8"a b c");
+	GTEST_ASSERT_EQ(StaticString<64>(u8"a") & u8"b" & u8"c" & 5, u8"a b c 5");
 }
 
 TEST(String, Iterator) {

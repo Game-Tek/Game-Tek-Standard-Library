@@ -52,8 +52,7 @@ namespace GTSL
 			return *this;
 		}
 
-		String& operator=(String&& other) noexcept requires std::move_constructible<ALLOCATOR>
-		{
+		String& operator=(String&& other) noexcept requires std::move_constructible<ALLOCATOR> {
 			//free current
 			allocator = MoveRef(other.allocator);
 			data = other.data;
@@ -125,9 +124,34 @@ namespace GTSL
 		explicit operator bool() const { return bytes; }
 		friend bool operator<(const uint32 i, const String& string) {
 			return i < string.GetCodepoints();
+		}		
+
+		String operator+(Range<const char8_t*> range) {
+			String res(*this, allocator);
+			res += range;
+			return res;
+		}
+
+		String operator&(Range<const char8_t*> range) {
+			String res(*this, allocator);
+			res += u8' '; res += range;
+			return res;
+		}
+
+		String operator&(uint32 number) {
+			String res(*this, allocator);
+			res += u8' ';
+			ToString(res, number);
+			return res;
 		}
 
 		String& operator+=(Range<const char8_t*> range) {
+			copy(range);
+			return *this;
+		}
+
+		String& operator&=(Range<const char8_t*> range) {
+			(*this) += u8' ';
 			copy(range);
 			return *this;
 		}
@@ -138,6 +162,11 @@ namespace GTSL
 			for (uint8 i = 0; i < 4; ++i)
 				data[bytes + i] = u8'\0';
 			++codePoints;
+			return *this;
+		}
+
+		String& operator<<(StringView other) {
+			(*this) += other;
 			return *this;
 		}
 
@@ -273,8 +302,8 @@ namespace GTSL
 		* \param c Char to Find.
 		* \return Index to found char.
 		*/
-		friend Result<uint32> FindFirst(const String& string, char8_t c) {
-			for (uint32 i = 0; i < string.GetBytes(); ++i) { if (string.data[i] == c) { return Result(MoveRef(i), true); } }
+		friend Result<uint32> FindFirst(const String& string, char32_t c) {
+			for (uint32 i = 0; auto e : string) { if (e == c) { return Result(MoveRef(i), true); } ++i; }
 			return Result<uint32>(false);
 		}
 	
@@ -315,9 +344,8 @@ namespace GTSL
 		
 		void copy(const Range<const char8_t*> string) {
 			tryResize(bytes + string.GetBytes());
-			for(uint32 i = 0; i < string.GetBytes(); ++i) { data[bytes + i] = string[i]; }
-			bytes += string.GetBytes();
-			codePoints += string.GetCodepoints();
+			for(uint32 i = 0; i < string.GetBytes(); ++i) { data[bytes + i] = string.GetData()[i]; }
+			bytes += string.GetBytes(); codePoints += string.GetCodepoints();
 			for (uint32 i = 0, pos = bytes; i < 3; ++i, ++pos) { data[pos] = u8'\0'; }
 		}
 
