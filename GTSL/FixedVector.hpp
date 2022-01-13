@@ -125,20 +125,20 @@ namespace GTSL
 		[[nodiscard]] uint32 GetCapacity() const { return capacity; }
 
 		T& operator[](const uint32 i) {
-			if constexpr (_DEBUG) {
+#ifdef _DEBUG
 				const auto number = i / BITS; const auto bit = static_cast<uint8>(i % BITS);
 				auto c = indices[number];
 				GTSL_ASSERT(CheckBit(bit, indices[number]), "No valid value in that slot!")
-			}
+#endif
 			return data[i];
 		}
 
 		const T& operator[](const uint32 i) const {
-			if constexpr (_DEBUG) {
+#ifdef _DEBUG
 				const auto number = i / BITS; const auto bit = static_cast<uint8>(i % BITS);
 				auto c = indices[number];
 				GTSL_ASSERT(CheckBit(bit, indices[number]), "No valid value in that slot!")
-			}
+#endif
 			return data[i];
 		}
 

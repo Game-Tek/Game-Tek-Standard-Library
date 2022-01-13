@@ -16,12 +16,5 @@ TEST(Range, StringView) {
 }
 
 TEST(Range, InitializerList) {
-	const auto a = Range({ 3, 5, 4 });
-
-	GTEST_ASSERT_EQ(a, Range({ 3, 5, 4 }));
-
-	const auto b = Range({ 7, 9, 6 });
-
-	GTEST_ASSERT_EQ(b, Range({ 7, 9, 6 }));
-	GTEST_ASSERT_EQ(a, Range({ 3, 5, 4 }));
+	GTEST_ASSERT_EQ(Range({ 3, 5, 4 }), Range({3, 5, 4}));
 }

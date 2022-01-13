@@ -61,12 +61,24 @@ namespace GTSL
 			return length;
 		}
 
+		void Remove(const uint32 node_handle) {
+			auto destroyNode = [&](iterator handle, auto&&self) -> void {
+				for(auto e : handle) {
+					self(e, self);
+				}
+
+				GTSL::Destroy(static_cast<T&>(handle));
+			};
+
+			destroyNode(begin(node_handle), destroyNode);
+		}
+
 		T& operator[](const Key handle) { return at(handle).Data; }
 		const T& operator[](const Key handle) const { return at(handle).Data; }
 
 		template<typename C>
 		struct Iterator {
-			Iterator(C* d, uint32 l, uint32 p) : data(d), level(l), pos(p) {}
+			Iterator(C* d, uint32 l, uint32 p, uint32 m) : data(d), level(l), pos(p), i(m) {}
 
 			void operator++() {
 				auto& node = data[pos - 1];
@@ -74,34 +86,39 @@ namespace GTSL
 				pos = node.TreeRight;
 			}
 
+			//bool operator<(const Iterator& other) {
+			//	return pos < other.pos;
+			//}
+
 			bool operator!=(const Iterator& other) {
-				return pos != other.pos;
+				return i != other.i;
 			}
 
-			Iterator operator*() { return { data, level, pos }; }
+			Iterator operator*() { return { data, level, pos, data[pos - 1].ChildrenCount }; }
 			operator T&() { return data[pos - 1].Data; }
 			operator const T&() const { return data[pos - 1].Data; }
 
 			uint32 GetLevel() const { return level; }
 			uint32 GetLength() const { return data[pos - 1].ChildrenCount; }
 
-			[[nodiscard]] auto begin() { return Iterator<C>{ data, level + 1, data[pos - 1].TreeDown }; }
-			[[nodiscard]] auto end() { return Iterator<C>{ data, level + 1, 0 }; }
+			[[nodiscard]] auto begin() { return Iterator<C>{ data, level + 1, data[pos - 1].TreeDown, 0 }; }
+			[[nodiscard]] auto end() { return Iterator<C>{ data, level + 1, data[pos - 1].TreeDown - 1, data[pos - 1].ChildrenCount }; }
 
 		private:
 			C* data;
 			uint32 level;
-			uint32 pos;
+			uint32 pos = 0;
+			uint32 i = 0;
 		};
 
 		using iterator = Iterator<Node>;
 		using const_iterator = Iterator<const Node>;
 
-		iterator begin() { return Iterator{ nodes, 0, 1 }; }
-		iterator end() { return Iterator{ nodes, 0, 0 }; }
+		iterator begin(const uint32 i = 1) { return Iterator{ nodes, 0, i, 0 }; }
+		iterator end(const uint32 i = 1) { return Iterator{ nodes, 0, i - 1, at(i).ChildrenCount }; }
 
-		[[nodiscard]] const_iterator begin() const { return Iterator{ nodes, 0, 1 }; }
-		[[nodiscard]] const_iterator end() const { return Iterator{ nodes, 0, 0 }; }
+		//[[nodiscard]] const_iterator begin() const { return Iterator{ nodes, 0, 1 }; }
+		//[[nodiscard]] const_iterator end() const { return Iterator{ nodes, 0, 0 }; }
 
 		operator Range<iterator>() { return Range<iterator>(begin(), end()); }
 		operator Range<const_iterator>() const { return Range<const_iterator>(begin(), end()); }
@@ -149,18 +166,11 @@ namespace GTSL
 		}
 	};
 
-	template<class ALLOCATOR, typename ALPHA, typename BETA, typename... CLASSES>
-	class AlphaBetaTree {
+	template<class ALLOCATOR, typename ALPHA, typename... CLASSES>
+	class MultiTree {
 	public:
 		using Key = uint32;
 		using Types = Tuple<CLASSES...>;
-
-		struct BetaNode {
-			//Next: indirection table entry
-			uint32 Position = 0, TreeDown = 0, TreeRight = 0;
-			uint8 TypeIndex = 0, ChildrenCount = 0;
-			bool Way = true;
-		};
 
 		struct AlphaNode {
 			template<typename... ARGS>
@@ -171,130 +181,72 @@ namespace GTSL
 			};
 			StaticVector<Children, 16> ChildrenList;
 
-			struct BetaNodeData {
-				Key Handle = 0;
-				uint64 Name = 0;
-			};
-			StaticVector<BetaNodeData, 8> InternalSiblings;
-
-			Key AlphaParent = 0;
+			Key Parent = 0;
 			ALPHA Alpha;
 		};
 
-		AlphaBetaTree(const ALLOCATOR& alloc = ALLOCATOR()) : allocator(alloc), outOfOrderNodes(16, allocator) {}
+		struct TraversalData {
+			uint32 TreeDown = 0, TreeRight = 0;
+			uint8 TypeIndex = 0, ChildrenCount = 0;
+			bool Way = true;
+		};
 
-		AlphaBetaTree(const uint32 minNodes, const ALLOCATOR& alloc = ALLOCATOR()) : allocator(alloc), outOfOrderNodes(16, allocator) {
-			tryResizeIndirectionTable(minNodes);
+		MultiTree(const ALLOCATOR& alloc = ALLOCATOR()) : allocator(alloc), outOfOrderNodes(16, allocator) {}
+
+		MultiTree(const uint32 minNodes, const ALLOCATOR& alloc = ALLOCATOR()) : allocator(alloc), outOfOrderNodes(16, allocator) {
 			tryResizeAlphaTable(minNodes);
-			tryResizeBetaTable(minNodes * 16);
-		}
-
-		template<typename... ARGS>
-		Key EmplaceAlpha(Key parentNodeHandle, ARGS&&... args) {
-			tryResizeAlphaTable(1);
-			::new(alphaTable + alphaEntries++) AlphaNode(GTSL::ForwardRef<ARGS>(args)...);
-
-			if(parentNodeHandle) {
-				getHelper(alphaEntries).AlphaParent = parentNodeHandle;
-				AlphaNode& alphaParent = getHelper(parentNodeHandle);
-				alphaParent.ChildrenList.EmplaceBack(alphaEntries);
-			}
-
-			return alphaEntries;
+			tryResizeMultiTable(minNodes * 16);
 		}
 
 		template<typename T, typename... ARGS>
-		Result<Key> EmplaceBeta(uint64 nodeName, Key alphaParentHandle, Key alphaSiblingHandle, ARGS&&... args) {
+		Key Emplace(Key parentNodeHandle, ARGS&&... params) {
 			static_assert(IsInPack<T, CLASSES...>(), "Type T is not in tree's type list.");
 
-			if constexpr (sizeof...(CLASSES)) {
-				tryResizeBetaTable(sizeof(BETA) + sizeof(T));
-			} else {
-				tryResizeBetaTable(sizeof(BETA));
-			}
+			auto index = entries++;
+			auto handleValue = entries;
 
-			tryResizeIndirectionTable(1);
+			tryResizeAlphaTable(1);
+			::new(alphaTable + index) AlphaNode();
+			
+			tryResizeMultiTable(sizeof(TraversalData) + sizeof(T));
 
-			BetaNode& entry = *::new(indirectionTable + indirectionEntries++) BetaNode();
-			entry.Position = betaLength;
-			entry.TypeIndex = GetTypeIndex<T>();
+			if(parentNodeHandle) {
+				getHelper(handleValue).Parent = parentNodeHandle;
 
-			Key currentNodeHandle = indirectionEntries;
+				AlphaNode& alphaParent = getHelper(parentNodeHandle);
+				alphaParent.ChildrenList.EmplaceBack(handleValue);
 
-			::new(betaTable + betaLength) BETA();
-			betaLength += sizeof(BETA);
-
-			if constexpr (sizeof...(CLASSES)) {
-				::new(betaTable + betaLength) T(GTSL::ForwardRef<ARGS>(args)...);
-				betaLength += sizeof(T);
-			}
-
-			AlphaNode& alphaSibling = getHelper(alphaSiblingHandle);
-
-			if (alphaParentHandle) {
-				AlphaNode& alphaParent = getHelper(alphaParentHandle);
-
-				auto r = Find(alphaSibling.InternalSiblings, [&](const typename AlphaNode::BetaNodeData& c) { return c.Name == nodeName; });
-				if (r) { return Result(static_cast<Key>(r.Get()->Handle), true); }
-
-				Key betaParentNodeHandle;
-
-				if(alphaSibling.InternalSiblings.GetLength()) {
-					betaParentNodeHandle = alphaSibling.InternalSiblings.back().Handle;
-				} else {
-					betaParentNodeHandle = alphaParent.InternalSiblings.back().Handle;
-				}
-
-				BetaNode& betaParentNode = at(betaParentNodeHandle);
+				TraversalData& betaParentNode = at(parentNodeHandle);
 				betaParentNode.ChildrenCount += 1;
 
-				if (!betaParentNode.TreeDown) { betaParentNode.TreeDown = currentNodeHandle; }
+				if (!betaParentNode.TreeDown) { betaParentNode.TreeDown = handleValue; }
 
 				//if(currentNodeHandle != hand + 1) {
 				//	outOfOrderNodes.EmplaceBack(currentNodeHandle);
 				//}
 
-				if ((alphaParent.ChildrenList.GetLength() - 1) && !alphaSibling.InternalSiblings.GetLength()) { //write "to the right" if there are elements to our left and we are the first sibling to the right
-					for (auto& e : getHelper(alphaParent.ChildrenList[alphaParent.ChildrenList.GetLength() - 2].NodeHandle).InternalSiblings) { //write to the right for every internal sibling of node to the left
-						at(e.Handle).TreeRight = currentNodeHandle;
-					}
+				if ((alphaParent.ChildrenList.GetLength() - 1)) { //write "to the right" if there are elements to our left
+					at(alphaParent.ChildrenList[alphaParent.ChildrenList.GetLength() - 2].NodeHandle).TreeRight = handleValue;
 				}
 			}
 
-			auto& internalSiblingEntry = alphaSibling.InternalSiblings.EmplaceBack();
-			internalSiblingEntry.Handle = currentNodeHandle;
+			indirectionTable[index] = dataTableLength;
 
-			//if (alphaSibling.InternalSiblings.GetLength() > 1) {
-			//	at(alphaSibling.InternalSiblings.back().Handle).ChildrenCount = at(alphaSibling.InternalSiblings[alphaSibling.InternalSiblings.GetLength() - 2]).ChildrenCount;
-			//	at(alphaSibling.InternalSiblings.back().Handle).ChildrenCount = 1;
-			//}
+			TraversalData& entry = *::new(multiTable + dataTableLength) TraversalData();
+			entry.TypeIndex = static_cast<uint8>(GetTypeIndex<T>());
 
-			return Result(static_cast<Key&&>(currentNodeHandle), true);
-		}
+			dataTableLength += sizeof(TraversalData);
 
-		template<typename T>
-		Result<Key> AddBeta(uint64 nodeName, Key alphaParentNodeHandle, Key alphaSiblingNodeHandle, T val) {
-			return EmplaceBeta<T>(nodeName, alphaParentNodeHandle, alphaSiblingNodeHandle, MoveRef(val));
+			::new(multiTable + dataTableLength) T(GTSL::ForwardRef<ARGS>(params)...);
+
+			dataTableLength += sizeof(T);
+
+			return handleValue;
 		}
 
 		void ToggleBranch(Key betaNodeBranchTop, bool toggle) {
-			auto& branchNode = at(betaNodeBranchTop);
-
+			TraversalData& branchNode = at(betaNodeBranchTop);
 			branchNode.Way = toggle;
-		}
-		
-		BETA& GetBeta(const Key betaNodeHandle) {
-			return *reinterpret_cast<BETA*>(betaTable + at(betaNodeHandle).Position);
-		}
-
-		[[nodiscard]] const BETA& GetBeta(const Key betaNodeHandle) const {
-			return *reinterpret_cast<const BETA*>(betaTable + at(betaNodeHandle).Position);
-		}
-
-		Key GetBetaHandleFromAlpha(const Key alphaSiblingHandle, uint32 index) const {
-			const auto& alphaSibling = getHelper(alphaSiblingHandle);
-			index = index >= alphaSibling.InternalSiblings.GetLength() ? alphaSibling.InternalSiblings.GetLength() - 1 : index;
-			return alphaSibling.InternalSiblings[index].Handle;
 		}
 
 		template<typename T>
@@ -302,24 +254,22 @@ namespace GTSL
 			return GTSL::GetTypeIndex<T, CLASSES...>();
 		}
 
-
 		ALPHA& GetAlpha(const Key i) { return alphaTable[i - 1].Alpha; }
 		const ALPHA& GetAlpha(const Key i) const { return alphaTable[i - 1].Alpha; }
 
-		Key GetAlphaNodeParent(const Key key) const { return getHelper(key).AlphaParent; }
+		Key GetNodeParent(const Key key) const { return getHelper(key).AlphaParent; }
 
-		uint32 GetBetaNodeChildrenCount(const Key betaNodeHandle) const { return at(betaNodeHandle).ChildrenCount; }
-		uint32 GetBetaNodeType(const Key handle) const { return at(handle).TypeIndex; }
+		uint32 GetChildrenCount(const Key betaNodeHandle) const { return at(betaNodeHandle).ChildrenCount; }
+		uint32 GetNodeType(const Key handle) const { return at(handle).TypeIndex; }
 
-		uint32 GetAlphaLength() const { return alphaEntries; }
-		uint32 GetBetaLength() const { return betaLength; }
+		uint32 GetAlphaLength() const { return entries; }
 
 		template<typename T>
 		T& GetClass(const Key nodeHandle) {
 #if _DEBUG
 			if (!(GetTypeIndex<T>() == at(nodeHandle).TypeIndex)) { __debugbreak(); }
 #endif
-			return *reinterpret_cast<T*>(betaTable + at(nodeHandle).Position + sizeof(BETA));
+			return *reinterpret_cast<T*>(getClass(nodeHandle));
 		}
 
 		template<typename T>
@@ -327,7 +277,7 @@ namespace GTSL
 #if _DEBUG
 			if (!(GetTypeIndex<T>() == at(nodeHandle).TypeIndex)) { __debugbreak(); }
 #endif
-			return *reinterpret_cast<const T*>(betaTable + at(nodeHandle).Position + sizeof(BETA));
+			return *reinterpret_cast<const T*>(multiTable + at(nodeHandle).Position + sizeof(T));
 		}
 
 		void Optimize() {
@@ -344,66 +294,74 @@ namespace GTSL
 			}
 		}
 
+		struct NodeReference {
+			NodeReference(MultiTree* multi_tree) : multiTree(multi_tree) {}
+
+			MultiTree* multiTree;
+		};
+
+		NodeReference GetNodeReference(const Key key) {
+			return { this };
+		}
+
 	private:
 		ALLOCATOR allocator;
 		
-		byte* betaTable = nullptr; uint32 betaLength = 0, betaCapacity = 0;
-		AlphaNode* alphaTable = nullptr; uint32 alphaEntries = 0, alphaCapacity = 0;
-		BetaNode* indirectionTable = nullptr; uint32 indirectionEntries = 0, indirectionCapacity = 0;
+		AlphaNode* alphaTable = nullptr; uint32 entries = 0, alphaCapacity = 0;
+		uint32* indirectionTable = nullptr;
+		byte* multiTable = nullptr; uint32 dataTableLength = 0, betaCapacity = 0;
 
 		Vector<Key, ALLOCATOR> outOfOrderNodes;
 
-		BetaNode& at(Key nodeHandle) {
-			return indirectionTable[nodeHandle - 1];
+		TraversalData& at(const Key key) {
+			return *reinterpret_cast<TraversalData*>(multiTable + indirectionTable[key - 1]);
 		}
 
-		const BetaNode& at(Key nodeHandle) const {
-			return indirectionTable[nodeHandle - 1];
+		const TraversalData& at(const Key key) const {
+			return *reinterpret_cast<const TraversalData*>(multiTable + indirectionTable[key - 1]);
+		}
+
+		byte* getClass(const Key key) {
+			return multiTable + indirectionTable[key - 1] + sizeof(TraversalData);
 		}
 
 		AlphaNode& getHelper(Key handle) {
 			return alphaTable[handle - 1];
 		}
 
-		const AlphaNode& getHelper(Key handle) const {
+		[[nodiscard]] const AlphaNode& getHelper(Key handle) const {
 			return alphaTable[handle - 1];
 		}
 
-		void tryResizeIndirectionTable(uint32 delta) {
-			if (indirectionEntries + delta > indirectionCapacity) {
-				if (indirectionTable) {
-					Resize(allocator, &indirectionTable, &indirectionCapacity, indirectionCapacity * 2, indirectionEntries);
+		void tryResizeMultiTable(uint32 delta) {
+			if (dataTableLength + delta > betaCapacity) {
+				if (multiTable) {
+					Resize(allocator, &multiTable, &betaCapacity, betaCapacity * 2, dataTableLength);
 				} else {
-					Allocate(allocator, delta, &indirectionTable, &indirectionCapacity);
-				}
-			}
-		}
-
-		void tryResizeBetaTable(uint32 delta) {
-			if (betaLength + delta > betaCapacity) {
-				if (betaTable) {
-					Resize(allocator, &betaTable, &betaCapacity, betaCapacity * 2, betaLength);
-				} else {
-					Allocate(allocator, delta, &betaTable, &betaCapacity);
+					Allocate(allocator, delta, &multiTable, &betaCapacity);
 				}
 			}
 		}
 
 		void tryResizeAlphaTable(uint32 delta) {
-			if(alphaEntries + delta > alphaCapacity) {
+			if(entries + delta > alphaCapacity) {
 				if(alphaTable) {
-					Resize(allocator, &alphaTable, &alphaCapacity, alphaCapacity * 2, alphaEntries);
+					auto ca = alphaCapacity; auto len = entries;
+
+					Resize(allocator, &alphaTable, &ca, ca * 2, entries);
+					Resize(allocator, &indirectionTable, &alphaCapacity, ca * 2, entries);
 				} else {
 					Allocate(allocator, delta, &alphaTable, &alphaCapacity);
+					Allocate(allocator, delta, &indirectionTable, &alphaCapacity);
 				}
 			}
 		}
 
 	public:
-		friend void ForEachBeta(AlphaBetaTree& tree, auto&& a) {
+		friend void ForEachBeta(MultiTree& tree, auto&& a, Key start = 1) {
 			if (!tree.GetAlphaLength()) { return; }
 
-			Key next = 1;
+			Key next = start;
 
 			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
 				const auto& node = tree.at(handle);
@@ -424,10 +382,10 @@ namespace GTSL
 			visitNode(next, 0, visitNode);			
 		}
 
-		friend void ForEachBeta(const AlphaBetaTree& tree, auto&& a, auto&& b) {
+		friend void ForEachBeta(const MultiTree& tree, auto&& a, auto&& b, uint32 start = 1) {
 			if (!tree.GetAlphaLength()) { return; }
 
-			Key next = 1;
+			Key next = start;
 			
 			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
 				const auto& node = tree.at(handle);
@@ -450,18 +408,18 @@ namespace GTSL
 			visitNode(next, 0, visitNode);			
 		}
 
-		~AlphaBetaTree() {
-			if (betaLength && betaTable) {
+		~MultiTree() {
+			if (dataTableLength && multiTable) {
 				auto visitNode = [&](uint32 key, uint32 level) -> void {
-					Destroy<CLASSES...>(at(key).TypeIndex, betaTable + at(key).Position + sizeof(BETA));
+					Destroy<CLASSES...>(at(key).TypeIndex, getClass(key));
 				};
 
 				ForEachBeta(*this, visitNode, [&](uint32 key, uint32 level) {});
 
-				for (uint32 i = 0; i < alphaEntries; ++i) { Destroy(alphaTable[i]); }
+				for (uint32 i = 0; i < entries; ++i) { Destroy(alphaTable[i].Alpha); }
 
-				Deallocate(allocator, betaCapacity, betaTable);
-				Deallocate(allocator, indirectionCapacity, indirectionTable);
+				Deallocate(allocator, betaCapacity, multiTable);
+				Deallocate(allocator, alphaCapacity, indirectionTable);
 				Deallocate(allocator, alphaCapacity, alphaTable);
 			}
 		}

@@ -76,6 +76,7 @@ namespace GTSL
 		}
 
 		void AddBytes(const int64 bytes) {
+			tryDeltaResize(bytes);
 			length += bytes;
 		}
 

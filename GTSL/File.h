@@ -106,7 +106,7 @@ namespace GTSL {
 			DWORD bytes{ 0 };
 			buffer.AddResize(bytes);
 			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), static_cast<uint32>(size), &bytes, nullptr);
-			buffer.AddBytes(GetSize());
+			buffer.AddBytes(bytes);
 			auto w = GetLastError();
 			return bytes;
 		}

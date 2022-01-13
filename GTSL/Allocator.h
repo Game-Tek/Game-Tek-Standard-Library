@@ -74,9 +74,7 @@ namespace GTSL
 	void Delete(T** data, const ALLOCATOR& allocator) {
 		GTSL::Destroy(**data);
 		allocator.Deallocate(sizeof(T), alignof(T), *data);
-		if constexpr (_DEBUG) {
-			*data = nullptr;
-		}
+		*data = nullptr;
 	}
 	
 	template<typename T, class ALLOCATOR>
