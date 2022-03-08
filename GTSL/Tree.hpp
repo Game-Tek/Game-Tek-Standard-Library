@@ -176,10 +176,10 @@ namespace GTSL
 			template<typename... ARGS>
 			AlphaNode(ARGS&&... args) : Alpha(ForwardRef<ARGS>(args)... ) {}
 
-			struct Children {
-				Key NodeHandle;
-			};
-			StaticVector<Children, 16> ChildrenList;
+			/**
+			 * \brief Keeps a list of the handles of the children of the node. Children are ordered in the list as they exist in the tree, left to right.
+			 */
+			//StaticVector<Key, 16> ChildrenList;
 
 			Key Parent = 0;
 			ALPHA Alpha;
@@ -199,36 +199,17 @@ namespace GTSL
 		}
 
 		template<typename T, typename... ARGS>
-		Key Emplace(Key parentNodeHandle, ARGS&&... params) {
+		Key Emplace(Key leftNodeHandle, Key parentNodeHandle, ARGS&&... params) {
 			static_assert(IsInPack<T, CLASSES...>(), "Type T is not in tree's type list.");
+
+			tryResizeAlphaTable(1);
 
 			auto index = entries++;
 			auto handleValue = entries;
 
-			tryResizeAlphaTable(1);
 			::new(alphaTable + index) AlphaNode();
 			
 			tryResizeMultiTable(sizeof(TraversalData) + sizeof(T));
-
-			if(parentNodeHandle) {
-				getHelper(handleValue).Parent = parentNodeHandle;
-
-				AlphaNode& alphaParent = getHelper(parentNodeHandle);
-				alphaParent.ChildrenList.EmplaceBack(handleValue);
-
-				TraversalData& betaParentNode = at(parentNodeHandle);
-				betaParentNode.ChildrenCount += 1;
-
-				if (!betaParentNode.TreeDown) { betaParentNode.TreeDown = handleValue; }
-
-				//if(currentNodeHandle != hand + 1) {
-				//	outOfOrderNodes.EmplaceBack(currentNodeHandle);
-				//}
-
-				if ((alphaParent.ChildrenList.GetLength() - 1)) { //write "to the right" if there are elements to our left
-					at(alphaParent.ChildrenList[alphaParent.ChildrenList.GetLength() - 2].NodeHandle).TreeRight = handleValue;
-				}
-			}
 
 			indirectionTable[index] = dataTableLength;
 
@@ -240,6 +221,42 @@ namespace GTSL
 			::new(multiTable + dataTableLength) T(GTSL::ForwardRef<ARGS>(params)...);
 
 			dataTableLength += sizeof(T);
+
+			if(parentNodeHandle) {
+				getHelper(handleValue).Parent = parentNodeHandle;
+
+				AlphaNode& alphaParent = getHelper(parentNodeHandle);
+				TraversalData& parentNodeTraversalData = at(parentNodeHandle);
+
+				if (leftNodeHandle) {
+					if(leftNodeHandle == 0xFFFFFFFF) {
+						if (parentNodeTraversalData.ChildrenCount) {
+							auto handle = parentNodeTraversalData.TreeDown;
+
+							while (auto e = at(handle).TreeRight) {
+								handle = e;
+							}
+
+							at(handle).TreeRight = handleValue;
+						} else {
+							parentNodeTraversalData.TreeDown = handleValue;							
+						}
+					} else {
+						auto handle = at(leftNodeHandle).TreeRight;
+						at(handleValue).TreeRight = handle;
+						at(leftNodeHandle).TreeRight = handleValue;
+					}
+				} else {
+					at(handleValue).TreeRight = parentNodeTraversalData.TreeDown;
+					parentNodeTraversalData.TreeDown = handleValue;
+				}
+
+				//if(currentNodeHandle != hand + 1) {
+				//	outOfOrderNodes.EmplaceBack(currentNodeHandle);
+				//}
+
+				parentNodeTraversalData.ChildrenCount += 1;
+			}
 
 			return handleValue;
 		}
@@ -349,7 +366,7 @@ namespace GTSL
 					auto ca = alphaCapacity; auto len = entries;
 
 					Resize(allocator, &alphaTable, &ca, ca * 2, entries);
-					Resize(allocator, &indirectionTable, &alphaCapacity, ca * 2, entries);
+					Resize(allocator, &indirectionTable, &alphaCapacity, ca, entries);
 				} else {
 					Allocate(allocator, delta, &alphaTable, &alphaCapacity);
 					Allocate(allocator, delta, &indirectionTable, &alphaCapacity);

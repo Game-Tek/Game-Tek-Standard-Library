@@ -20,22 +20,41 @@ TEST(MultiTree, Construct) {
 
 	{
 		GTSL::MultiTree<GTSL::DefaultAllocatorReference, uint32_t, uint32_t, DestructionTester> tree(4);		
-		tree.Emplace<DestructionTester>(0, &counter);
+		tree.Emplace<DestructionTester>(0, 0, &counter);
 	}
 	
 	GTEST_ASSERT_EQ(counter, 1); //test destructor is run on object
 }
 
 TEST(MultiTree, Insertion) {
-	GTSL::MultiTree<GTSL::DefaultAllocatorReference, uint32_t, uint32_t> tree;
-	
-	//auto handle = tree.AddBeta(0, 55u);
-	//GTEST_ASSERT_EQ(tree.At<GTSL::uint32>(handle), 55);
-	//
-	//GTEST_ASSERT_EQ(tree.At<uint32_t>(tree.AddBeta(handle, 66u)), 66u);
-	//GTEST_ASSERT_EQ(tree.At<uint32_t>(tree.AddBeta(handle, 77u)), 77u);
-	//GTEST_ASSERT_EQ(tree.At<uint32_t>(tree.AddBeta(handle, 88u)), 88u);
-	//GTEST_ASSERT_EQ(tree.At<uint32_t>(tree.AddBeta(handle, 99u)), 99u);
+	using TreeType = GTSL::MultiTree<GTSL::DefaultAllocatorReference, GTSL::uint32, GTSL::uint32, GTSL::float32>;
+	TreeType tree;
+
+	auto top = tree.Emplace<GTSL::float32>(0xFFFFFFFF, 0, 0.0f);
+	auto left = tree.Emplace<GTSL::float32>(0xFFFFFFFF, top, 1.0f);
+	tree.Emplace<GTSL::float32>(0xFFFFFFFF, top, 3.0f);
+
+	tree.Emplace<GTSL::float32>(left, top, 2.0f);
+
+	{
+		GTSL::StaticVector<GTSL::float32, 16> test;
+
+		auto visitNode = [&](uint32_t node, GTSL::uint32 level) {
+			switch (tree.GetNodeType(node)) {
+			case TreeType::GetTypeIndex<GTSL::float32>():
+				test.EmplaceBack(tree.GetClass<GTSL::float32>(node));
+				break;
+			}
+		};
+
+		auto endNode = [&](uint32_t value, GTSL::uint32 level) {
+		};
+
+		ForEachBeta(tree, visitNode, endNode);
+
+		GTSL::StaticVector<GTSL::float32, 16> testRes{ 0, 1, 2, 3 };
+		GTEST_ASSERT_EQ(test.GetRange(), testRes.GetRange());
+	}
 }
 
 TEST(MultiTree, Removal) {
@@ -47,29 +66,29 @@ TEST(MultiTree, Iteration) {
 
 	TreeType tree(8);
 
-	auto alphaRoot = tree.Emplace<GTSL::float32>(0, 0.0f);
+	auto alphaRoot = tree.Emplace<GTSL::float32>(0xFFFFFFFF, 0, 0.0f);
 
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(alphaRoot), 0);
 
-	auto lRoot = tree.Emplace<GTSL::float32>(alphaRoot, 1.0f);
+	auto lRoot = tree.Emplace<GTSL::float32>(0xFFFFFFFF, alphaRoot, 1.0f);
 
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(alphaRoot), 1);
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(lRoot), 0);
 
-	auto llRoot = tree.Emplace<GTSL::float32>(lRoot, 2.0f);
+	auto llRoot = tree.Emplace<GTSL::float32>(0xFFFFFFFF, lRoot, 2.0f);
 
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(alphaRoot), 1);
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(lRoot), 1);
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(llRoot), 0);
 
-	auto lrRoot = tree.Emplace<GTSL::float32>(lRoot, 3.0f);
+	auto lrRoot = tree.Emplace<GTSL::float32>(0xFFFFFFFF, lRoot, 3.0f);
 
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(alphaRoot), 1);
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(lRoot), 2);
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(llRoot), 0);
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(lrRoot), 0);
 
-	auto rRoot = tree.Emplace<GTSL::float32>(alphaRoot, 4.0f);
+	auto rRoot = tree.Emplace<GTSL::float32>(0xFFFFFFFF, alphaRoot, 4.0f);
 
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(alphaRoot), 2);
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(lRoot), 2);
@@ -77,7 +96,7 @@ TEST(MultiTree, Iteration) {
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(lrRoot), 0);
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(rRoot), 0);
 
-	auto rlRoot = tree.Emplace<GTSL::float32>(rRoot, 5.0f);
+	auto rlRoot = tree.Emplace<GTSL::float32>(0xFFFFFFFF, rRoot, 5.0f);
 
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(alphaRoot), 2);
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(lRoot), 2);
@@ -86,7 +105,7 @@ TEST(MultiTree, Iteration) {
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(rRoot), 1);
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(rlRoot), 0);
 
-	auto rrRoot = tree.Emplace<GTSL::float32>(rRoot, 6.0f);
+	auto rrRoot = tree.Emplace<GTSL::float32>(0xFFFFFFFF, rRoot, 6.0f);
 
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(alphaRoot), 2);
 	GTEST_ASSERT_EQ(tree.GetChildrenCount(lRoot), 2);

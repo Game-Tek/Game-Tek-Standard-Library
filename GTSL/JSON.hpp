@@ -182,11 +182,8 @@ namespace GTSL {
 		EndArray(serializer, buffer);
 	}
 
-#undef NULL
-#undef BOOL
-
 	enum class JSONObjectType : uint8 {
-		NULL, BOOL, INT, UINT, FLOAT, STRING, ARRAY, OBJECT
+		NONE, BOOL, INT, UINT, FLOAT, STRING, ARRAY, OBJECT
 	};
 
 	bool ParseJSON(StringView string, auto&& whenBool, auto&& whenInt, auto&& whenUint, auto&& whenFloat, auto&& whenString, auto&& whenKey, auto&& whenArray, auto&& whenObject) {
@@ -333,7 +330,7 @@ namespace GTSL {
 		uint32 of = 1/*type*/ + 8/*object name*/;
 
 		switch (interpretBytes<JSONObjectType>(data, offset)) {
-		case JSONObjectType::NULL: of += 0; break;
+		case JSONObjectType::NONE: of += 0; break;
 		case JSONObjectType::BOOL: of += 1; break;
 		case JSONObjectType::INT: of += 8; break;
 		case JSONObjectType::UINT: of += 8; break;
@@ -488,7 +485,7 @@ namespace GTSL {
 		const byte* buffer = nullptr;
 		uint32 offset = 0;
 		bool valid = true;
-		JSONObjectType type = JSONObjectType::NULL;
+		JSONObjectType type = JSONObjectType::NONE;
 	};
 
 	inline bool operator<(uint32 a, const JSONMember& m) {

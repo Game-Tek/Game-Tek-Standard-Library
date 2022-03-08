@@ -36,6 +36,8 @@ namespace GTSL
 		//template <class T, RET(T::* CONST_METHOD)(ARGS...) const>
 		//static constexpr FunctionPointer Create() { return FunctionPointer(constMethodCaller<T, CONST_METHOD>); }
 
+		explicit operator bool() const { return callerFunction; }
+
 		template<typename T>
 		constexpr RET operator()(T* callee, ARGS... args) const { return callerFunction(static_cast<void*>(callee), GTSL::ForwardRef<ARGS>(args)...); }
 	};

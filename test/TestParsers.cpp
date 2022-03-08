@@ -81,7 +81,8 @@ TEST(JSON, Deserialize) {
 	"shaders":["a", "b"],
     "statements":[
         { "name":"Write", "params":[ { "name": "GetScreenPosition() "}, { "type":"float4", "params" : [{ "type":"float32", "params" : [1] }] } ] }
-	]
+	],
+	"debug":3
 })";
 
 	//todo if key val pattern is not followed error
@@ -138,4 +139,39 @@ TEST(JSON, Deserialize) {
 	GTEST_ASSERT_EQ(GTSL::StringView(json[u8"statements"][0][u8"params"][1][u8"type"]), u8"float4");
 	GTEST_ASSERT_EQ(GTSL::StringView(json[u8"statements"][0][u8"params"][1][u8"params"][0][u8"type"]), u8"float32");
 	GTEST_ASSERT_EQ(GTSL::uint64(json[u8"statements"][0][u8"params"][1][u8"params"][0][u8"params"][0]), 1);
+	
+	GTEST_ASSERT_EQ(GTSL::uint64(json[u8"debug"]), 3ull);
+}
+
+TEST(JSON, Deserialize2) {
+	auto jsonString = u8R"({
+	"threadCount":1,
+	"language":"en_US",
+
+	"rayTracing":false,
+	"hdr":false,
+	"buffer":2,
+	"resolution":[1280, 720],
+	"fullScreen":false,
+	"debugSync":true,
+	"trace":false,
+
+	"bitDepth":16,
+	"channels":2,
+	"kHz":48000,
+
+	"debug":3
+})";
+
+	//todo if key val pattern is not followed error
+
+	GTSL::StaticString<64> name, type, outputSemantics, renderPass;
+
+	GTSL::StaticVector<GTSL::StaticString<64>, 8> inputs;
+	GTSL::StaticVector<GTSL::Tuple<GTSL::StaticString<64>, GTSL::StaticString<64>, GTSL::StaticString<64>>, 8> shaderVariables;
+
+	GTSL::Buffer<GTSL::DefaultAllocatorReference> buffer;
+	auto json = GTSL::Parse(jsonString, buffer);
+
+	GTEST_ASSERT_EQ(GTSL::uint64(json[u8"debug"]), 3ull);
 }

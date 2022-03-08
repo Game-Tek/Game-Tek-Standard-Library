@@ -2,11 +2,13 @@
 
 #include "Core.h"
 
-namespace GTSL
-{
+namespace GTSL {
 	//Used to specify a RGB color with floating point precision.
-	struct RGB
-	{
+	struct RGB {
+		RGB() = default;
+		RGB(const float32 x) : array{ x, x, x } {}
+		RGB(const float32 r, const float32 g, const float32 b) : array{ r, g, b } {}
+
 		float32& R() { return array[0]; }
 		float32& G() { return array[1];	}
 		float32& B() { return array[2];	}
@@ -19,9 +21,9 @@ namespace GTSL
 		float32 array[3]{ 0.0f };
 	};
 
-	struct alignas(16) RGBA
-	{
+	struct alignas(16) RGBA {
 		RGBA() = default;
+		RGBA(const float32 x) : array{ x, x, x, x } {}
 		RGBA(const float32 r, const float32 g, const float32 b, const float32 a) : array{r, g, b, a} {}
 		
 		float32& R() { return array[0]; }

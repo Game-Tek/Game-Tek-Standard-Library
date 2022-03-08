@@ -11,7 +11,6 @@
 #include "StringCommon.h"
 
 #if (_WIN64)
-#include <Windows.h>
 #define WIN32_LEAN_AND_MEAN
 #include "ShObjIdl_core.h"
 #include <WinUser.h>
@@ -102,11 +101,41 @@ namespace GTSL
 			MOUSE_BUTTON, FOCUS, JOYSTICK_UPDATE, DEVICE_CHANGE, PPI_CHANGE
 		};
 
+		struct MouseButtonEventData {
+			MouseButton Button; bool State;
+		};
+
+		struct KeyboardKeyEventData {
+			KeyboardKeys Key; bool State; bool IsFirstTime;
+		};
+
+		using CharEventData = uint32;
+
+		struct WindowMoveEventData {
+			uint16 X, Y;
+		};
+
+		/**
+		 * \brief Delegate called when mouse moves, the first two floats are the X;Y in the -1 <-> 1 range, and the other two floats are delta position in the same range in respect to the last update to the screen.
+		 */
+		using MouseMoveEventData = Vector2;
+		using WindowSizeEventData = Extent2D;
+		using MouseWheelEventData = float32;
+
+		struct FocusEventData {
+			bool Focus, HadFocus;
+		};
+
+		struct PPIChangeData {
+			uint32 PPI = 0;
+		};
+
 		struct WindowsCallData {
 			void* UserData;
 			Delegate<void(void*, WindowEvents, void*)> FunctionToCall;
 			Window* WindowPointer;
 			bool hadResize = false;
+			MouseMoveEventData MouseMove;
 		};
 
 		struct DeviceChangeData {
@@ -158,10 +187,11 @@ namespace GTSL
 		}
 
 		void Update(void* userData, Delegate<void(void*, WindowEvents, void*)> function) {
-			Window::WindowsCallData windowsCallData;
+			WindowsCallData windowsCallData;
 			windowsCallData.WindowPointer = this;
 			windowsCallData.UserData = userData;
 			windowsCallData.FunctionToCall = function;
+			windowsCallData.MouseMove = MouseMoveEventData{ 0 };
 			SetWindowLongPtrA(windowHandle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&windowsCallData));
 
 			MSG message;
@@ -172,6 +202,10 @@ namespace GTSL
 			}
 
 			SetWindowLongPtrA(windowHandle, GWLP_USERDATA, 0);
+
+			if(windowsCallData.MouseMove != 0) {
+				function(userData, WindowEvents::MOUSE_MOVE, &windowsCallData.MouseMove);
+			}
 		}
 		
 		void SetTitle(const char* title) {
@@ -279,7 +313,7 @@ namespace GTSL
 				RAWINPUTDEVICE rid;
 				rid.usUsagePage = HID_USAGE_PAGE_GENERIC; //generic usage
 				rid.usUsage = HID_USAGE_GENERIC_MOUSE;
-				rid.dwFlags = RIDEV_INPUTSINK;
+				rid.dwFlags = 0;
 				rid.hwndTarget = windowHandle;
 				rawInputDevices.EmplaceBack(rid);
 				break;
@@ -328,35 +362,6 @@ namespace GTSL
 		void SetProgressValue(float32 value) const {
 			//static_cast<ITaskbarList3*>(iTaskbarList)->SetProgressValue(static_cast<HWND>(windowHandle), value * 1000u, 1000u);
 		}
-
-		struct MouseButtonEventData {
-			MouseButton Button; bool State;
-		};
-
-		struct KeyboardKeyEventData {
-			KeyboardKeys Key; bool State; bool IsFirstTime;
-		};
-
-		using CharEventData = uint32;
-
-		struct WindowMoveEventData {
-			uint16 X, Y;
-		};
-
-		/**
-		 * \brief Delegate called when mouse moves, the first two floats are the X;Y in the -1 <-> 1 range, and the other two floats are delta position in the same range in respect to the last update to the screen.
-		 */
-		using MouseMoveEventData = Vector2;
-		using WindowSizeEventData = Extent2D;
-		using MouseWheelEventData = float32;
-		
-		struct FocusEventData {
-			bool Focus, HadFocus;
-		};
-
-		struct PPIChangeData {
-			uint32 PPI = 0;
-		};
 	
 	protected:
 		WindowSizeState windowSizeState;
@@ -479,7 +484,7 @@ namespace GTSL
 				return true;
 			}			
 
-			HANDLE handle = CreateFileA(path, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+			HANDLE handle = CreateFileA(path, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 			if (handle == INVALID_HANDLE_VALUE) {
 				return false;
 			}
@@ -754,7 +759,8 @@ namespace GTSL
 						result.X() = static_cast<float32>(x); result.Y() = static_cast<float32>(-y);
 					}
 
-					windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_MOVE, &result);
+					//set mouse move variable, then at end of window update cycle it will be read and only the last event will be reported
+					windowCallData->MouseMove = result;
 
 					// Wheel data needs to be pointer casted to interpret an unsigned short as a short, with no conversion
 					// otherwise it'll overflow when going negative.
