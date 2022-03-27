@@ -2,6 +2,8 @@
 
 #include "Core.h"
 
+#undef RGB
+
 namespace GTSL {
 	//Used to specify a RGB color with floating point precision.
 	struct RGB {

@@ -4,7 +4,7 @@
 #include "GTSL/Core.h"
 #include "Vectors.hpp"
 #include "Quaternion.h"
-#include "Matrix4.h"
+#include "Matrix.hpp"
 #include "Plane.h"
 #include "Rotator.h"
 #include "GTSL/Assert.h"
@@ -841,7 +841,7 @@ namespace GTSL {
 		//////////////////////////////////////////////////////////////
 		
 		//Modifies the given matrix to make it a translation matrix.
-		inline void AddTranslation(Matrix4& matrix, const Vector3 vector) {
+		inline void Translatie(Matrix4& matrix, const Vector3 vector) {
 			matrix(0, 3) += vector[0]; matrix(1, 3) += vector[1]; matrix(2, 3) += vector[2];
 		}
 
@@ -877,8 +877,7 @@ namespace GTSL {
 		inline void AddRotation(Matrix4& matrix, const Rotator rotator) { matrix *= Matrix4(rotator); }
 		inline void SetRotation(Matrix4& matrix, const Rotator rotator) { matrix *= Matrix4(rotator); }
 		
-		//Modifies the given matrix to make it a translation matrix.
-		inline void AddScale(Matrix4& matrix, const Vector3 vector) {
+		inline void Scale(Matrix4& matrix, const Vector3 vector) {
 			matrix(0, 0) *= vector[0]; matrix(0, 1) *= vector[0]; matrix(0, 2) *= vector[0]; matrix(0, 3) *= vector[0];
 			matrix(1, 0) *= vector[1]; matrix(1, 1) *= vector[1]; matrix(1, 2) *= vector[1]; matrix(1, 3) *= vector[1];
 			matrix(2, 0) *= vector[2]; matrix(2, 1) *= vector[2]; matrix(2, 2) *= vector[2]; matrix(2, 3) *= vector[2];
@@ -923,6 +922,11 @@ namespace GTSL {
 			return Result;
 		}
 		
+		inline void Scale(Matrix3x4& matrix, const Vector3& scale) {
+			Matrix3x4 scalingMatrix(1.0f); scalingMatrix[0][0] = scale.X(); scalingMatrix[1][1] = scale.Y(); scalingMatrix[2][2] = scale.Z();
+			matrix *= scalingMatrix;
+		}
+
 		inline void Scale(Matrix4& matrix, const Vector3& scale) {
 			matrix *= Scaling(scale);
 		}

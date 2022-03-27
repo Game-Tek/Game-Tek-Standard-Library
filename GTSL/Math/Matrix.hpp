@@ -119,14 +119,12 @@ namespace GTSL
 		[[nodiscard]] Vector4 GetWBasisVector() const { return Vector4(array[3][0], array[3][1], array[3][2], array[3][3]); }
 		
 		void Transpose() {
-
 			auto a{ float4x(AlignedPointer<const float32, 16>(array[0])) }, b{ float4x(AlignedPointer<const float32, 16>(array[1])) }, c{ float4x(AlignedPointer<const float32, 16>(array[2])) }, d{ float4x(AlignedPointer<const float32, 16>(array[3])) };
 			float4x::Transpose(a, b, c, d);
 			a.CopyTo(UnalignedPointer(array[0])); b.CopyTo(UnalignedPointer(array[1])); c.CopyTo(UnalignedPointer(array[2])); d.CopyTo(UnalignedPointer(array[3]));
 		}
 
-		Matrix4& operator+=(const float32 other)
-		{
+		Matrix4& operator+=(const float32 other) {
 			array[0][0] -= other; array[0][1] -= other; array[0][2] -= other; array[0][3] -= other;
 			array[1][0] -= other; array[1][1] -= other; array[1][2] -= other; array[1][3] -= other;
 			array[2][0] -= other; array[2][1] -= other; array[2][2] -= other; array[2][3] -= other;
@@ -135,8 +133,7 @@ namespace GTSL
 			return *this;
 		}
 
-		Matrix4& operator+=(const Matrix4& other)
-		{
+		Matrix4& operator+=(const Matrix4& other) {
 			array[0][0] += other[0][0]; array[0][1] += other[0][1]; array[0][2] += other[0][2]; array[0][3] += other[0][3];
 			array[1][0] += other[1][0]; array[1][1] += other[1][1]; array[1][2] += other[1][2]; array[1][3] += other[1][3];
 			array[2][0] += other[2][0]; array[2][1] += other[2][1]; array[2][2] += other[2][2]; array[2][3] += other[2][3];
@@ -145,8 +142,7 @@ namespace GTSL
 			return *this;
 		}
 
-		Matrix4& operator-=(const float other)
-		{
+		Matrix4& operator-=(const float other) {
 			array[0][0] -= other; array[0][1] -= other; array[0][2] -= other; array[0][3] -= other;
 			array[1][0] -= other; array[1][1] -= other; array[1][2] -= other; array[1][3] -= other;
 			array[2][0] -= other; array[2][1] -= other; array[2][2] -= other; array[2][3] -= other;
@@ -155,8 +151,7 @@ namespace GTSL
 			return *this;
 		}
 
-		Matrix4& operator-=(const Matrix4& other)
-		{
+		Matrix4& operator-=(const Matrix4& other) {
 			array[0][0] -= other[0][0]; array[0][1] -= other[0][1]; array[0][2] -= other[0][2]; array[0][3] -= other[0][3];
 			array[1][0] -= other[1][0]; array[1][1] -= other[1][1]; array[1][2] -= other[1][2]; array[1][3] -= other[1][3];
 			array[2][0] -= other[2][0]; array[2][1] -= other[2][1]; array[2][2] -= other[2][2]; array[2][3] -= other[2][3];
@@ -176,8 +171,7 @@ namespace GTSL
 			return result;
 		}
 
-		Vector3 operator*(const Vector3& other) const
-		{
+		Vector3 operator*(const Vector3& other) const {
 			Vector3 result;
 
 			result.X() = array[0][0] * other.X() + array[0][1] * other.Y() + array[0][2] * other.Z() + array[0][3] * 1/*W*/;
@@ -288,6 +282,10 @@ namespace GTSL
 		
 		float32* operator[](const uint8 index) { return array[index]; }
 		const float32* operator[](const uint8 index) const { return array[index]; }
+
+		Vector3 operator*(const Vector3& other) const {
+			return Vector3(array[0][0] * other.X() + array[0][1] * other.Y() + array[0][2] * other.Z() + array[0][3] * 1/*W*/, array[1][0] * other.X() + array[1][1] * other.Y() + array[1][2] * other.Z() + array[1][3] * 1/*W*/, array[2][0] * other.X() + array[2][1] * other.Y() + array[2][2] * other.Z() + array[2][3] * 1/*W*/);
+		}
 
 		Matrix3x4& operator*=(const Matrix3x4& other) {
 			//https://codereview.stackexchange.com/questions/101144/simd-matrix-multiplication

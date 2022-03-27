@@ -10,11 +10,13 @@ namespace GTSL {
 		Pair() = default;
 		constexpr Pair(const A& first, const B& second) noexcept : First(first), Second(second) {}
 		constexpr Pair(A&& first, B&& second) noexcept : First(GTSL::MoveRef(first)), Second(GTSL::MoveRef(second)) {}
+
+		bool operator==(const Pair&) const = default;
 	};
 
 	template<typename T>
-	Pair(const T& a)->Pair<T, T>;
+	Pair(const T& a) -> Pair<T, T>;
 
 	template<typename T>
-	Pair(T&& a)->Pair<T, T>;
+	Pair(T&& a) -> Pair<T, T>;
 }
