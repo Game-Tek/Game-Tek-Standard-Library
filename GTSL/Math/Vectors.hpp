@@ -57,8 +57,8 @@ namespace GTSL
 		float32& X() { return values[0]; }
 		float32& Y() { return values[1]; }
 
-		float32 X() const { return values[0]; }
-		float32 Y() const { return values[1]; }
+		constexpr float32 X() const { return values[0]; }
+		constexpr float32 Y() const { return values[1]; }
 
 		float32* GetData() { return values; }
 		const float32* GetData() const { return values; }
@@ -77,6 +77,7 @@ namespace GTSL
 
 		constexpr Vector3(const float32 a) : values{ a, a, a } {}
 
+		constexpr Vector3(const Vector2 a, const float32 z) : values{ a.X(), a.Y(), z} {}
 		constexpr Vector3(const float32 x, const float32 y, const float32 z) : values{ x, y, z } {}
 
 		explicit Vector3(const class Rotator& rotator);

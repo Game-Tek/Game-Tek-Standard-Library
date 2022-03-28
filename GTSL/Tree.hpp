@@ -176,18 +176,14 @@ namespace GTSL
 			template<typename... ARGS>
 			AlphaNode(ARGS&&... args) : Alpha(ForwardRef<ARGS>(args)... ) {}
 
-			/**
-			 * \brief Keeps a list of the handles of the children of the node. Children are ordered in the list as they exist in the tree, left to right.
-			 */
-			//StaticVector<Key, 16> ChildrenList;
-
 			Key Parent = 0;
 			ALPHA Alpha;
 		};
 
 		struct TraversalData {
 			uint32 TreeDown = 0, TreeRight = 0;
-			uint8 TypeIndex = 0, ChildrenCount = 0;
+			uint16 ChildrenCount = 0;
+			uint8 TypeIndex = 0;
 			bool Way = true;
 		};
 
@@ -399,7 +395,7 @@ namespace GTSL
 			visitNode(next, 0, visitNode);			
 		}
 
-		friend void ForEachBeta(const MultiTree& tree, auto&& a, auto&& b, uint32 start = 1) {
+		friend void ForEach(const MultiTree& tree, auto&& a, auto&& b, uint32 start = 1) {
 			if (!tree.GetAlphaLength()) { return; }
 
 			Key next = start;
@@ -425,13 +421,37 @@ namespace GTSL
 			visitNode(next, 0, visitNode);			
 		}
 
+		friend void ForEachWithDisabled(const MultiTree& tree, auto&& a, auto&& b, uint32 start = 1) {
+			if (!tree.GetAlphaLength()) { return; }
+
+			Key next = start;
+
+			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
+				const auto& node = tree.at(handle);
+				
+				a(handle, level, node.Way);
+
+				next = node.TreeDown ? node.TreeDown : node.TreeRight;
+
+				for (uint32 i = 0; i < node.ChildrenCount; ++i) {
+					self(next, level + 1, self);
+				}
+
+				b(handle, level, node.Way);
+
+				next = node.TreeRight;
+			};
+
+			visitNode(next, 0, visitNode);
+		}
+
 		~MultiTree() {
 			if (dataTableLength && multiTable) {
 				auto visitNode = [&](uint32 key, uint32 level) -> void {
 					Destroy<CLASSES...>(at(key).TypeIndex, getClass(key));
 				};
 
-				ForEachBeta(*this, visitNode, [&](uint32 key, uint32 level) {});
+				ForEach(*this, visitNode, [&](uint32 key, uint32 level) {});
 
 				for (uint32 i = 0; i < entries; ++i) { Destroy(alphaTable[i].Alpha); }
 

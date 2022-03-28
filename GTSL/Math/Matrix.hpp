@@ -9,7 +9,22 @@
 
 namespace GTSL
 {
-	
+	template<typename T, uint32 N, uint32 M>
+	struct Matrix {
+		static constexpr uint32 MATRIX_SIZE = N * M;
+
+		template<typename... ARGS>
+		Matrix(ARGS... args) : array{ args... } {}
+
+		T& operator()(const uint32 x, const uint32 y) { return array[x][y]; }
+		T operator()(const uint32 x, const uint32 y) const { return array[x][y]; }
+
+		T* operator[](const uint32 row) { return array[row]; }
+		const T* operator[](const uint32 row) const { return array[row]; }
+
+		T array[N][M];
+	};
+
 	/**
 	 * \brief Defines a 4x4 matrix with floating point precision in row major order. Is an identity matrix by default.\n
 	 * E.J:\n
@@ -27,9 +42,7 @@ namespace GTSL
 	 * Operations follow ordering convention.	
 	 *
 	 */
-	class alignas(16) Matrix4 {
-		static constexpr uint8 MATRIX_SIZE = 16;
-		
+	struct alignas(16) Matrix4 : Matrix<float32, 4, 4> {		
 	public:
 		/**
 		 * \brief Default constructor. Constructs and identity matrix.
@@ -50,7 +63,7 @@ namespace GTSL
 		 *
 		 * \param a float to set each of the matrix identity elements value as.
 		 */
-		explicit Matrix4(const float32 a) : array{ a, 0, 0, 0, 0, a, 0, 0, 0, 0, a, 0, 0, 0, 0, a }
+		explicit Matrix4(const float32 a) : Matrix{ a, 0.f, 0.f, 0.f, 0.f, a, 0.f, 0.f, 0.f, 0.f, a, 0.f, 0.f, 0.f, 0.f, a }
 		{
 		}
 
@@ -77,7 +90,7 @@ namespace GTSL
 				const float row1Column0, const float row1Column1, const float row1Column2, const float row1Column3,
 				const float row2Column0, const float row2Column1, const float row2Column2, const float row2Column3,
 				const float row3Column0, const float row3Column1, const float row3Column2, const float row3Column3) :
-		array{
+		Matrix{
 				row0Column0, row0Column1, row0Column2, row0Column3,
 				row1Column0, row1Column1, row1Column2, row1Column3,
 				row2Column0, row2Column1, row2Column2, row2Column3,
@@ -257,27 +270,18 @@ namespace GTSL
 			auto d = array[3][0] == other[3][0] && array[3][1] == other[3][1] && array[3][2] == other[3][2] && array[3][3] == other[3][3];
 			return a && b && c && d;
 		}
-
-		float32& operator()(const uint8 row, const uint8 column) { return array[row][column]; }
-		float32 operator()(const uint8 row, const uint8 column) const { return array[row][column]; }
-
-		float32* operator[](const uint8 row) { return array[row]; }
-		const float32* operator[](const uint8 row) const { return array[row]; }
-		
-	private:
-		float32 array[4][4]{ { 1.0f, 0, 0, 0 }, { 0, 1.0f, 0, 0 }, { 0, 0, 1.0f, 0 }, { 0, 0, 0, 1.0f } };
 	};
 
-	class Matrix3x4 {
+	struct Matrix3x4 : Matrix<float32, 3, 4> {
 	public:
 		Matrix3x4() = default;
 
-		explicit Matrix3x4(const float32 i) : array{ i, 0.0f, 0.0f, 0.0f, 0.0f, i, 0.0f, 0.0f, 0.0f, 0.0f, i, 0.0f } {}
-		explicit Matrix3x4(const Matrix4& matrix4) : array{ matrix4[0][0], matrix4[0][1], matrix4[0][2], matrix4[0][3],
+		explicit Matrix3x4(const float32 i) : Matrix{ i, 0.0f, 0.0f, 0.0f, 0.0f, i, 0.0f, 0.0f, 0.0f, 0.0f, i, 0.0f } {}
+		explicit Matrix3x4(const Matrix4& matrix4) : Matrix{ matrix4[0][0], matrix4[0][1], matrix4[0][2], matrix4[0][3],
 			matrix4[1][0], matrix4[1][1], matrix4[1][2], matrix4[1][3],
 			matrix4[2][0], matrix4[2][1], matrix4[2][2], matrix4[2][3] }
 		{}
-		explicit Matrix3x4(const Vector3 vector3) : array{ 0, 0, 0, vector3.X(), 0, 0, 0, vector3.Y(), 0, 0, 0, vector3.Z() } {}
+		explicit Matrix3x4(const Vector3 vector3) : Matrix{ 0.f, 0.f, 0.f, vector3.X(), 0.f, 0.f, 0.f, vector3.Y(), 0.f, 0.f, 0.f, vector3.Z() } {}
 		explicit Matrix3x4(const class Quaternion& quaternion);
 		
 		float32* operator[](const uint8 index) { return array[index]; }
@@ -308,8 +312,6 @@ namespace GTSL
 			return *this;
 		}
 	private:
-		float32 array[3][4]{ { 1, 0, 0, 0 }, { 0, 1, 0, 0 }, { 0, 0, 1, 0 } };
-
 		friend Matrix4;
 	};
 
@@ -317,11 +319,11 @@ namespace GTSL
 		(*this)(0, 3) = position.X(); (*this)(1, 3) = position.Y(); (*this)(2, 3) = position.Z();
 	}
 
-	inline Matrix4::Matrix4(const Matrix3x4& matrix) : array{
+	inline Matrix4::Matrix4(const Matrix3x4& matrix) : Matrix{
 		matrix.array[0][0], matrix.array[0][1], matrix.array[0][2], matrix.array[0][3],
 		matrix.array[1][0], matrix.array[1][1], matrix.array[1][2], matrix.array[1][3],
 		matrix.array[2][0], matrix.array[2][1], matrix.array[2][2], matrix.array[2][3],
-		0, 0, 0, 1 }
+		0.f, 0.f, 0.f, 1.f }
 	{
 
 	}

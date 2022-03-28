@@ -50,7 +50,7 @@ TEST(MultiTree, Insertion) {
 		auto endNode = [&](uint32_t value, GTSL::uint32 level) {
 		};
 
-		ForEachBeta(tree, visitNode, endNode);
+		ForEach(tree, visitNode, endNode);
 
 		GTSL::StaticVector<GTSL::float32, 16> testRes{ 0, 1, 2, 3 };
 		GTEST_ASSERT_EQ(test.GetRange(), testRes.GetRange());
@@ -129,7 +129,7 @@ TEST(MultiTree, Iteration) {
 		auto endNode = [&](uint32_t value, GTSL::uint32 level) {
 		};
 
-		ForEachBeta(tree, visitNode, endNode);
+		ForEach(tree, visitNode, endNode);
 
 		GTSL::StaticVector<GTSL::float32, 16> testRes{ 0, 1, 2, 3, 4, 5, 6 };
 		GTEST_ASSERT_EQ(test.GetRange(), testRes.GetRange());
@@ -149,7 +149,7 @@ TEST(MultiTree, Iteration) {
 		auto endNode = [&](uint32_t value, GTSL::uint32 level) {
 		};
 
-		ForEachBeta(tree, visitNode, endNode, rRoot);
+		ForEach(tree, visitNode, endNode, rRoot);
 
 		GTSL::StaticVector<GTSL::float32, 16> testRes{ 4, 5, 6 };
 		GTEST_ASSERT_EQ(test.GetRange(), testRes.GetRange());

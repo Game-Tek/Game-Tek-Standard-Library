@@ -841,7 +841,11 @@ namespace GTSL {
 		//////////////////////////////////////////////////////////////
 		
 		//Modifies the given matrix to make it a translation matrix.
-		inline void Translatie(Matrix4& matrix, const Vector3 vector) {
+		inline void Translate(Matrix3x4& matrix, const Vector3 vector) {
+			matrix(0, 3) += vector[0]; matrix(1, 3) += vector[1]; matrix(2, 3) += vector[2];
+		}
+
+		inline void Translate(Matrix4& matrix, const Vector3 vector) {
 			matrix(0, 3) += vector[0]; matrix(1, 3) += vector[1]; matrix(2, 3) += vector[2];
 		}
 
