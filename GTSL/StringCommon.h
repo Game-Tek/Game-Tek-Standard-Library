@@ -454,7 +454,7 @@ namespace GTSL
 	inline bool IsSymbol(const char32_t character) {
 		switch (character) {
 		case U'!': case U'\"': case U'#': case U'|': case U'\'': case U'$': case U'%': case U'&': case U'/': case U'(': case U')':
-		case U'=': case U'?':  case U'[': case U']': case U'^':  case U'*': case U'{': case U'}': case U',': case U'.': case U';':
+		case U'=': case U'?':  case U'[': case U']': case U'^':  case U'*': case U'{': case U'}': case U',': case U'.': case U';': case U':':
 		case U'<': case U'>':  case U'_': case U'~': case U'-':  case U'+':
 			return true;
 		}

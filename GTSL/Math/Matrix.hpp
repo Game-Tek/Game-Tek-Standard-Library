@@ -10,8 +10,14 @@
 namespace GTSL
 {
 	template<typename T, uint32 N, uint32 M>
-	struct Matrix {
+	struct alignas(16) Matrix {
 		static constexpr uint32 MATRIX_SIZE = N * M;
+
+		Matrix() {
+			for(uint32 i = 0, j = 0; i < N; ++i, ++j) {
+				array[i][j] = static_cast<T>(1);
+			}
+		}
 
 		template<typename... ARGS>
 		Matrix(ARGS... args) : array{ args... } {}
@@ -22,7 +28,7 @@ namespace GTSL
 		T* operator[](const uint32 row) { return array[row]; }
 		const T* operator[](const uint32 row) const { return array[row]; }
 
-		T array[N][M];
+		T array[N][M]{ static_cast<T>(0) };
 	};
 
 	/**
@@ -42,7 +48,7 @@ namespace GTSL
 	 * Operations follow ordering convention.	
 	 *
 	 */
-	struct alignas(16) Matrix4 : Matrix<float32, 4, 4> {		
+	struct Matrix4 : Matrix<float32, 4, 4> {
 	public:
 		/**
 		 * \brief Default constructor. Constructs and identity matrix.

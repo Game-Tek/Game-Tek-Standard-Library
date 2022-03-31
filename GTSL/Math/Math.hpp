@@ -71,10 +71,8 @@ namespace GTSL {
 			const uint32 iterations = static_cast<uint32>(a * static_cast<T>(0.008));
 
 			auto loop = [&]() { aS = a / s;	s = (s + aS) * static_cast<T>(0.5); };
-
-			loop(); loop(); loop(); //3 fixed iterations
 			
-			for(uint32 i = 0; i < iterations; ++i) { loop(); } //variable iterations for extra precision on larger numbers
+			for(uint32 i = 0; i < iterations + 5; ++i) { loop(); } //variable iterations for extra precision on larger numbers
 
 			return s;
 		}

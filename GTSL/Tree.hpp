@@ -81,9 +81,8 @@ namespace GTSL
 			Iterator(C* d, uint32 l, uint32 p, uint32 m) : data(d), level(l), pos(p), i(m) {}
 
 			void operator++() {
-				auto& node = data[pos - 1];
-				bool down = (bool)node.TreeDown;
-				pos = node.TreeRight;
+				++i;
+				pos = data[pos - 1].TreeRight;
 			}
 
 			//bool operator<(const Iterator& other) {
@@ -102,7 +101,7 @@ namespace GTSL
 			uint32 GetLength() const { return data[pos - 1].ChildrenCount; }
 
 			[[nodiscard]] auto begin() { return Iterator<C>{ data, level + 1, data[pos - 1].TreeDown, 0 }; }
-			[[nodiscard]] auto end() { return Iterator<C>{ data, level + 1, data[pos - 1].TreeDown - 1, data[pos - 1].ChildrenCount }; }
+			[[nodiscard]] auto end() { return Iterator<C>{ data, level + 1, data[pos - 1].TreeDown, data[pos - 1].ChildrenCount }; }
 
 		private:
 			C* data;

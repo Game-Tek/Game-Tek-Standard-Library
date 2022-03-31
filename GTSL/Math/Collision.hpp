@@ -1,10 +1,15 @@
-module;
+//module;
+
+#pragma once
 
 #include "Math.hpp"
 #include "Vectors.hpp"
 #include <array>
 
-export module Collision;
+#include "GTSL/Pair.hpp"
+#include "GTSL/Vector.hpp"
+
+//export module Collision;
 
 namespace GTSL {
 	class Simplex {
@@ -14,22 +19,22 @@ namespace GTSL {
 		}
 
 		void Remove(const uint8 index) {
-			for (uint8 i = index; i < length - 1; ++i) {
-				points[i] = points[i + 1];
-			}
+			//for (uint8 i = index; i < length - 1; ++i) {
+			//	points[i] = points[i + 1];
+			//}
 
 			--length;
 		}
 
 		uint8 GetLength() const { return length; }
 
-		GTSL::Vector3 operator[](const uint8 index) const { return points[3 - index]; }
+		GTSL::Vector3 operator[](const uint8 index) const { return points[index]; }
 
 	private:
 		GTSL::Vector3 points[4]; uint8 length = 0;
 	};
 
-	export bool GJK(auto& objectA, auto& objectB) {
+	inline bool GJK(auto& objectA, auto& objectB) {
 		GTSL::Vector3 direction = GTSL::Math::Normalized(objectB.GetPosition() - objectA.GetPosition());
 
 		auto supportPoint = objectA.GetSupportPointInDirection(direction) - objectB.GetSupportPointInDirection(-direction);
@@ -115,12 +120,12 @@ namespace GTSL {
 		}
 	}
 
-	export struct CollisionInfo {
+	struct CollisionInfo {
 		GTSL::Vector3 A, B, Normal;
 		float32 Depth;
 	};
 
-	void GetFaceNormals(GTSL::Range<const GTSL::Vector3*> polytope, GTSL::Range<const std::array<uint16, 3>*> indices, auto& normals, uint32& minFace) {
+	inline void GetFaceNormals(GTSL::Range<const GTSL::Vector3*> polytope, GTSL::Range<const std::array<uint16, 3>*> indices, auto& normals, uint32& minFace) {
 		float32 minDistance = FLT_MAX;
 
 		for (uint32 f = 0; f < indices.ElementCount(); ++f) {
@@ -143,13 +148,13 @@ namespace GTSL {
 	}
 
 	template<class ALLOCATOR>
-	export CollisionInfo EPA(auto& objectA, auto& objectB, const Simplex& simplex, const ALLOCATOR& allocator) {
+	CollisionInfo EPA(auto& objectA, auto& objectB, const Simplex& simplex, const ALLOCATOR& allocator) {
 		GTSL::SemiVector<GTSL::Vector3, 64, ALLOCATOR> polytope(4, allocator);
 		polytope.EmplaceBack(simplex[0]); polytope.EmplaceBack(simplex[1]); polytope.EmplaceBack(simplex[2]); polytope.EmplaceBack(simplex[3]);
 		GTSL::SemiVector<std::array<GTSL::uint16, 3>, 64, ALLOCATOR> indices(4, allocator);
 		indices.EmplaceBack({ 0, 1, 2 }); indices.EmplaceBack({ 0, 3, 1 }); indices.EmplaceBack({ 0, 2, 3 }); indices.EmplaceBack({ 1, 3, 2 });
 
-		GTSL::SemiVector<GTSL::Pair<GTSL::Vector3, float32>, 64, ALLOCATOR> normals(4, allocator); uint32 minFace = 0;
+		SemiVector<Pair<GTSL::Vector3, float32>, 64, ALLOCATOR> normals(4, allocator); uint32 minFace = 0;
 		GetFaceNormals(polytope, indices, normals, minFace);
 
 		constexpr float32 FLOAT_MAX = 3.402823466e+38F;
