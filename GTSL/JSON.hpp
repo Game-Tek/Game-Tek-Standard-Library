@@ -51,7 +51,7 @@ namespace GTSL {
 	template<class S = StaticString<1024>>
 	void EndSerializer(auto& buffer, JSONSerializer& serializer) {
 		if(serializer.stack.back() > 0)
-			DropLast(buffer, u8',');
+			RTrimLast(buffer, u8',');
 
 		ToString(buffer, u8'}');
 
@@ -77,7 +77,7 @@ namespace GTSL {
 
 	void EndJSONObject(JSONSerializer& serializer, auto& buffer) {
 		if (serializer.stack.back())
-			DropLast(buffer, ',');
+			RTrimLast(buffer, ',');
 
 		serializer.stack.PopBack();
 	}

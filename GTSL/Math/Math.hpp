@@ -95,6 +95,24 @@ namespace GTSL {
 
 	namespace Math
 	{
+		struct RandomSeed {
+			int64 x = 123456789, y = -362436069, z = 521288629;
+
+			int64 operator()() {
+				//period 2^96-1
+
+				x ^= x << 16; x ^= x >> 5; x ^= x << 1;
+
+				const int64 t = x; x = y; y = z; z = t ^ x ^ y;
+
+				return z;
+			}
+
+			int64 operator()(const int64 min, const int64 max) {
+				return (*this)() % (max - min + 1) + min;
+			}
+		};
+
 		struct float16
 		{
 			explicit float16(const float32 a) : float16(*((uint32*)&a))
@@ -131,24 +149,6 @@ namespace GTSL {
 		inline constexpr Vector3 Right = Vector3(1.0f, 0.0f, 0.0f);
 		inline constexpr Vector3 Up = Vector3(0.0f, 1.0f, 0.0f);
 		inline constexpr Vector3 Forward = Vector3(0.0f, 0.0f, 1.0f);
-		
-		inline int64 Random()
-		{
-			static thread_local int64 x = 123456789, y = -362436069, z = 521288629;
-
-			//period 2^96-1
-			
-			int64 t{ 0 };
-			x ^= x << 16; x ^= x >> 5; x ^= x << 1;
-
-			t = x; x = y; y = z; z = t ^ x ^ y;
-
-			return z;
-		}
-
-		inline int64 Random(const int64 min, const int64 max) { return Random() % (max - min + 1) + min; }
-
-		inline float64 RandomFloat() { return Random() * 0.8123495678; }
 
 		//inline
 

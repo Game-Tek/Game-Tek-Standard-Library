@@ -4,11 +4,10 @@
 #include "Mutex.h"
 #include "ConditionVariable.h"
 #include "Assert.h"
+#include "Atomic.hpp"
 
-namespace GTSL
-{
-    class Semaphore
-    {
+namespace GTSL {
+    class Semaphore {
     public:
         Semaphore() = default;
     
@@ -42,6 +41,32 @@ namespace GTSL
     private:
         int32 count = 0;
         Mutex mutex;
+        ConditionVariable cv;
+    };
+
+    class Notification {
+    public:
+        Notification() = default;
+
+        void Add() noexcept { ++count; }
+
+        Notification& operator++() { Add(); return *this; }
+
+        void Post() noexcept {
+        	--count;
+            cv.NotifyAll();
+        }
+
+        Notification& operator--() { Post(); return *this; }
+
+        void Wait() noexcept {
+            if (!count) { return; }
+            GTSL::Mutex lock; lock.Lock();
+            cv.Wait(lock);
+        }
+
+    private:
+        Atomic<uint32> count = 0;
         ConditionVariable cv;
     };
 }

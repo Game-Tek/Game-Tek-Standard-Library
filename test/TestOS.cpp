@@ -53,7 +53,7 @@ TEST(Thread, Construct) {
 	GTSL::Thread thread;
 }
 
-TEST(Font, Font) {
+TEST(Font, FontCOOPBL) {
 	GTSL::File file;
 
 #ifdef _WIN32
@@ -179,4 +179,48 @@ TEST(Font, Font) {
 		GTEST_ASSERT_EQ(contour[6].Points[2], GTSL::Vector2(542, 418));
 		ASSERT_TRUE(contour[6].IsBezierCurve());
 	}
+}
+
+TEST(Font, FontARIAL) {
+	GTSL::File file;
+
+#ifdef _WIN32
+	auto res = file.Open(u8"C:/Windows/Fonts/arial.TTF", GTSL::File::READ, false);
+	if (res == GTSL::File::OpenResult::ERROR) { GTEST_SKIP_("Could not open test file."); }
+#endif
+
+	GTSL::Buffer<GTSL::DefaultAllocatorReference> buffer;
+
+	GTSL::Font font{ GTSL::DefaultAllocatorReference() };
+
+	file.Read(buffer);
+
+	auto result = MakeFont(buffer.GetRange(), &font);
+
+	{
+		auto& a = font.GetGlyph(U'Ë');
+
+		GTSL::Vector<GTSL::Vector<GTSL::Segment<3>, GTSL::DefaultAllocatorReference>, GTSL::DefaultAllocatorReference> contours;
+
+		GTSL::MakePath(a, &contours);
+
+		GTEST_ASSERT_EQ(a.Min.X(), 162);
+		GTEST_ASSERT_EQ(a.Min.Y(), 0);
+		GTEST_ASSERT_EQ(a.Max.X(), 1256);
+		GTEST_ASSERT_EQ(a.Max.Y(), 1761);
+		GTEST_ASSERT_EQ(a.GlyphIndex, 201);
+		GTEST_ASSERT_EQ(a.AdvanceWidth, 1366);
+		GTEST_ASSERT_EQ(a.LeftSideBearing, 162);
+		GTEST_ASSERT_EQ(a.Contours.GetLength(), 3);
+
+		//glyph 142 at dx = 364, dy = 286
+
+		const auto& contour = contours[1];
+
+		GTEST_ASSERT_EQ(contour[0].Points[0], GTSL::Vector2(61 + 364, 1270 + 286));
+		GTEST_ASSERT_EQ(contour[0].Points[2], GTSL::Vector2(61 + 364, 1475 + 286));
+		ASSERT_TRUE(!contour[0].IsBezierCurve());
+	}
+
+	ASSERT_TRUE(result);
 }

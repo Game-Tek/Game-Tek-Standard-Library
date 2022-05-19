@@ -204,30 +204,48 @@ TEST(String, Drop) {
 
 	{
 		String<DefaultAllocatorReference> string(u8"Drop \U0001F34C");
-		DropLast(string, u8' ');
+		RTrimLast(string, u8' ');
 		GTEST_ASSERT_EQ(string.GetCodepoints(), 4);
 		GTEST_ASSERT_EQ(string.GetBytes(), 4);
 	}
 
 	{
 		String<DefaultAllocatorReference> string(u8"Drop \U0001F34C");
-		DropLast(string, u8' ', 1);
+		RTrimLast(string, u8' ', 1);
 		GTEST_ASSERT_EQ(string.GetCodepoints(), 5);
 		GTEST_ASSERT_EQ(string.GetBytes(), 5);
 	}
 
 	{
 		String<DefaultAllocatorReference> string(u8"Drop \U0001F34C");
-		DropFirst(string, u8' ');
+		RTrimFirst(string, u8' ');
 		GTEST_ASSERT_EQ(string.GetCodepoints(), 4);
 		GTEST_ASSERT_EQ(string.GetBytes(), 4);
+		GTEST_ASSERT_EQ(string, u8"Drop");
 	}
 
 	{
 		String<DefaultAllocatorReference> string(u8"Drop \U0001F34C");
-		DropFirst(string, u8' ', 1);
+		RTrimFirst(string, u8' ', 1);
 		GTEST_ASSERT_EQ(string.GetCodepoints(), 5);
 		GTEST_ASSERT_EQ(string.GetBytes(), 5);
+		GTEST_ASSERT_EQ(string, u8"Drop ");
+	}
+
+	{
+		String<DefaultAllocatorReference> string(u8"Drop \U0001F34C");
+		LTrimFirst(string, u8' ');
+		GTEST_ASSERT_EQ(string.GetCodepoints(), 1);
+		GTEST_ASSERT_EQ(string.GetBytes(), 4);
+		GTEST_ASSERT_EQ(string, u8"\U0001F34C");
+	}
+
+	{
+		String<DefaultAllocatorReference> string(u8"Drop \U0001F34C");
+		LTrimFirst(string, u8' ', -1);
+		GTEST_ASSERT_EQ(string.GetCodepoints(), 2);
+		GTEST_ASSERT_EQ(string.GetBytes(), 5);
+		GTEST_ASSERT_EQ(string, u8" \U0001F34C");
 	}
 }
 

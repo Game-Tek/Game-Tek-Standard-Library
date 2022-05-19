@@ -126,19 +126,19 @@ namespace GTSL
 			return i < string.GetCodepoints();
 		}		
 
-		String operator+(Range<const char8_t*> range) {
+		String operator+(Range<const char8_t*> range) const {
 			String res(*this, allocator);
 			res += range;
 			return res;
 		}
 
-		String operator&(Range<const char8_t*> range) {
+		String operator&(Range<const char8_t*> range) const {
 			String res(*this, allocator);
 			res += u8' '; res += range;
 			return res;
 		}
 
-		String operator&(uint32 number) {
+		String operator&(uint32 number) const {
 			String res(*this, allocator);
 			res += u8' ';
 			ToString(res, number);
@@ -264,6 +264,21 @@ namespace GTSL
 			return Result<uint32>(false);
 		}
 
+		/**
+		 * \brief Chops an string at the first occurrence of a character in the string and shifts the chop position by the nudge amount.
+		 * \param string String to modify.
+		 * \param c Character to search for.
+		 * \param nudge Amount to shift codepoint to be dropped.
+		 * \return Whether or not a drop has occurred.
+		 */
+		friend bool RTrimFirst(String& string, char8_t c, int32 nudge = 0) {
+			auto pos = FindFirst(string, c);
+			if (pos.State()) {
+				string.Drop(pos.Get() + nudge);
+				return true;
+			}
+			return false;
+		}
 
 		/**
 		 * \brief Chops an string at the last occurrence of a character in the string and shifts the chop position by the nudge amount.
@@ -272,7 +287,7 @@ namespace GTSL
 		 * \param nudge Amount to shift codepoint to be dropped.
 		 * \return Whether or not a drop has occurred.
 		 */
-		friend bool DropLast(String& string, char8_t c, int32 nudge = 0) {
+		friend bool RTrimLast(String& string, char8_t c, int32 nudge = 0) {
 			auto pos = FindLast(string, c);
 			if (pos.State()) {
 				string.Drop(pos.Get() + nudge);
@@ -288,10 +303,22 @@ namespace GTSL
 		 * \param nudge Amount to shift codepoint to be dropped.
 		 * \return Whether or not a drop has occurred.
 		 */
-		friend bool DropFirst(String& string, char8_t c, int32 nudge = 0) {
+		friend bool LTrimFirst(String& string, char8_t c, int32 nudge = 0) {
 			auto pos = FindFirst(string, c);
 			if (pos.State()) {
-				string.Drop(pos.Get() + nudge);
+				auto p = string.getByteAndLengthForCodePoint(pos.Get() + 1 + nudge);
+
+				string.bytes -= Get<0>(p);
+
+				for(uint32 i = 0, j = Get<0>(p); i < string.bytes; ++i, ++j) {
+					string.data[i] = string.data[j];
+				}
+
+				string.codePoints -= Get<1>(p);
+
+				for (uint8 i = 0; i < 4; ++i)
+					string.data[string.bytes + i] = u8'\0';
+
 				return true;
 			}
 			return false;

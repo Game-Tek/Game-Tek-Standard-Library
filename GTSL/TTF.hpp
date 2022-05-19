@@ -497,15 +497,16 @@ namespace GTSL {
 		std::string NameTable[25];
 		HashMap<uint32, int16, DefaultAllocatorReference> KerningTable;
 		HashMap<uint32, Glyph, DefaultAllocatorReference> Glyphs;
+		HashMap<uint32, uint32, DefaultAllocatorReference> AB;
 		FontMetaData Metadata;
 		uint64 LastUsed;
 
 		[[nodiscard]] const Glyph& GetGlyph(const char32_t ch) const {
-			return Glyphs[ch];
+			return Glyphs[AB[ch]];
 		}
 
 		[[nodiscard]] int16 GetKerning(const char32_t left, const char32_t right) const {
-			const auto kern_data = KerningTable.TryGet((left << 16) | right);
+			const auto kern_data = KerningTable.TryGet((AB[left] << 16) | AB[right]);
 			return kern_data ? kern_data.Get() : 0;
 		}
 	};
@@ -591,7 +592,7 @@ namespace GTSL {
 		auto loca_table_entry = tables.TryGet(u8"loca");
 		if (!loca_table_entry) { return false; }
 
-		std::vector<uint32> glyph_index(max_profile.numGlyphs);
+		std::vector<uint32> glyphIndices(max_profile.numGlyphs);
 
 		uint32 end_of_glyf = 0;
 
@@ -601,7 +602,7 @@ namespace GTSL {
 			for (uint16 i = 0; i < max_profile.numGlyphs; i++) {
 				uint16 t = 0;
 				read(&t, data, &byte_offset);
-				glyph_index[i] = static_cast<uint32>(t) << 1u;
+				glyphIndices[i] = static_cast<uint32>(t) << 1u;
 			}
 
 			uint16 eog;
@@ -610,7 +611,7 @@ namespace GTSL {
 		} else {
 			uint32 byte_offset = loca_table_entry.Get().offsetPos;
 			for (uint16 i = 0; i < max_profile.numGlyphs; i++) {
-				read(&glyph_index[i], data, &byte_offset);
+				read(&glyphIndices[i], data, &byte_offset);
 			}
 			read(&end_of_glyf, data, &byte_offset);
 		}
@@ -623,7 +624,8 @@ namespace GTSL {
 		read(&cmapNumberOfSubtables, data, &cmap_offset);
 
 		//std::map<uint16, uint32> glyphReverseMap;
-		HashMap<uint16, uint32, DefaultAllocatorReference> glyphReverseMap;
+		//HashMap<uint16, uint32, DefaultAllocatorReference> glyphReverseMap;
+		//HashMap<uint32, uint16, DefaultAllocatorReference> glyphMap;
 
 		bool valid_cmap_table = false;
 		for (uint16 st = 0; st < cmapNumberOfSubtables; st++) {
@@ -675,27 +677,30 @@ namespace GTSL {
 			auto glyphIndexArrayTableOffset = cmap_subtable_offset;
 
 			for (uint16 i = 0; i < segCount; i++) { //Glyph index array (arbitrary length)
-				if (get<uint16>(data, idRangeOffsetTableOffset + i * 2)) { //If the idRangeOffset value for the segment is not 0, the mapping of the character codes relies on the glyphIndexArray.
+				const auto idRangeOffset = get<uint16>(data, idRangeOffsetTableOffset + i * 2);
+				if (!idRangeOffset) {
+					for (uint32 unicodeIndex = get<uint16>(data, startCodeTableOffset + i * 2); unicodeIndex <= get<uint16>(data, endCodeTableOffset + i * 2); unicodeIndex++) {
+						//fontData->GlyphMap.Emplace(unicodeIndex, unicodeIndex + get<uint16>(data, idDeltaTableOffset + i * 2));
+						//fontData->Glyphs.Emplace(unicodeIndex);
+						//fontData->AB.TryEmplace(unicodeIndex, unicodeIndex + get<int16>(data, idDeltaTableOffset + i * 2));
+						auto val = unicodeIndex + get<int16>(data, idDeltaTableOffset + i * 2);
+						//glyphReverseMap.TryEmplace(val, unicodeIndex);
+						fontData->AB.TryEmplace(unicodeIndex, val);
+					}
+				} else { //If the idRangeOffset value for the segment is not 0, the mapping of the character codes relies on the glyphIndexArray.
 					//uint32 glyph_address_offset = cmap_subtable_offset + sizeof(uint16) * segCount * 2; //idRangeOffset_ptr
 					uint32 glyph_address_offset = cmap_subtable_offset - (segCount - i) * 2; //idRangeOffset_ptr
 					for (uint32 unicodeIndex = get<uint16>(data, startCodeTableOffset + i * 2); unicodeIndex <= get<uint16>(data, endCodeTableOffset + i * 2); unicodeIndex++) {
 						uint32 glyph_address_index_offset = get<uint16>(data, idRangeOffsetTableOffset + i * 2) + 2 * (unicodeIndex - get<uint16>(data, startCodeTableOffset + i * 2)) + glyph_address_offset;
-						uint16 glyphIndex;
-						read(&glyphIndex, data, &glyph_address_index_offset);
-						glyphIndex += get<uint16>(data, idDeltaTableOffset + i * 2);
+						//uint16& glyphMapValue = glyphMap.TryEmplace(unicodeIndex, 0).Get();
+						uint32& glyphMapValue = fontData->AB.TryEmplace(unicodeIndex, 0).Get();
+						uint16 ttt;
+						read(&ttt, data, &glyph_address_index_offset);
+						glyphMapValue = ttt;
+						glyphMapValue += get<int16>(data, idDeltaTableOffset + i * 2);
 						//fontData->GlyphMap.Emplace(unicodeIndex, glyphIndex);
-						fontData->Glyphs.Emplace(unicodeIndex);
-						if (auto res = glyphReverseMap.TryEmplace(glyphIndex, unicodeIndex); !res) {
-							res.Get() = unicodeIndex;
-						}
-					}
-				} else {
-					for (uint32 unicodeIndex = get<uint16>(data, startCodeTableOffset + i * 2); unicodeIndex <= get<uint16>(data, endCodeTableOffset + i * 2); unicodeIndex++) {
-						//fontData->GlyphMap.Emplace(unicodeIndex, unicodeIndex + get<uint16>(data, idDeltaTableOffset + i * 2));
-						fontData->Glyphs.Emplace(unicodeIndex);
-						if (auto res = glyphReverseMap.TryEmplace(unicodeIndex + get<uint16>(data, idDeltaTableOffset + i * 2), unicodeIndex); !res) {
-							res.Get() = unicodeIndex;
-						}						
+						//fontData->Glyphs.Emplace(unicodeIndex);
+						//auto res = glyphReverseMap.TryEmplace(glyphMapValue, unicodeIndex);
 					}
 				}				
 			}
@@ -739,14 +744,17 @@ namespace GTSL {
 		Vector<bool, DefaultAllocatorReference> glyphLoaded(max_profile.numGlyphs, DefaultAllocatorReference());
 		glyphLoaded.EmplaceGroup(max_profile.numGlyphs, false);
 
-		auto parseGlyph = [&](uint32 i, auto&& self) -> bool {
-			if (glyphLoaded[i]) { return true; }
+		auto parseGlyph = [&](uint32 glyph_index, auto&& self) -> bool {
+			if (glyphLoaded[glyph_index]) { return true; }
+			//if (!glyphReverseMap.Find(i)) { return true; }
 
-			Glyph& currentGlyph = fontData->Glyphs.TryEmplace(glyphReverseMap.TryEmplace(static_cast<int16>(i), 0).Get()).Get();
-			currentGlyph.GlyphIndex = static_cast<int16>(i);
+			//auto glyphIndex = glyphReverseMap.TryEmplace(static_cast<int16>(i), 0).Get();
+			//auto characterIndexForGlyph = glyphReverseMap.TryEmplace(static_cast<int16>(i)).Get();
+			Glyph& currentGlyph = fontData->Glyphs.Emplace(glyph_index);
+			currentGlyph.GlyphIndex = static_cast<int16>(glyph_index);
 
-			if (i < hheaTable.numberOfHMetrics) {
-				ptr = hmtx_offset + i * sizeof(uint32);
+			if (glyph_index < hheaTable.numberOfHMetrics) {
+				ptr = hmtx_offset + glyph_index * sizeof(uint32);
 
 				read(&currentGlyph.AdvanceWidth, data, &ptr);
 				last_glyph_advance_width = currentGlyph.AdvanceWidth;
@@ -755,14 +763,14 @@ namespace GTSL {
 				currentGlyph.AdvanceWidth = last_glyph_advance_width;
 			}
 
-			if (i != max_profile.numGlyphs - 1 && glyph_index[i] == glyph_index[i + 1]) {
-				glyphLoaded[i] = true;
+			if (glyph_index != max_profile.numGlyphs - 1 && glyphIndices[glyph_index] == glyphIndices[glyph_index + 1]) {
+				glyphLoaded[glyph_index] = true;
 				return true;
 			}
 
-			if (glyph_index[i] >= end_of_glyf) { return false; }
+			if (glyphIndices[glyph_index] >= end_of_glyf) { return false; }
 
-			uint32 currentOffset = glyf_offset + glyph_index[i];
+			uint32 currentOffset = glyf_offset + glyphIndices[glyph_index];
 			int16 numContours = 0;
 
 			{
@@ -949,13 +957,16 @@ namespace GTSL {
 							}
 						}
 
-						const Glyph& compositeGlyphElement = fontData->Glyphs[glyphReverseMap[glyphIndex]];
+						Glyph& glyph = fontData->Glyphs[glyph_index]; // Fetch glyph after calling self() to load unloaded glyph, as a resize can occur during load and invalidate references
+
+						//const Glyph& compositeGlyphElement = fontData->Glyphs[glyphReverseMap[glyphIndex]];
+						const Glyph& compositeGlyphElement = fontData->Glyphs[glyphIndex];
 
 						uint32 compositeGlyphPathCount = compositeGlyphElement.Contours.GetLength();
 						for (uint32 glyphPointIndex = 0; glyphPointIndex < compositeGlyphPathCount; glyphPointIndex++) {
 							const auto& currentPointsList = compositeGlyphElement.Contours[glyphPointIndex].Points;
 
-							auto& newContour = currentGlyph.Contours.EmplaceBack(currentPointsList.GetLength(), DefaultAllocatorReference());
+							auto& newContour = glyph.Contours.EmplaceBack(currentPointsList.GetLength(), DefaultAllocatorReference());
 
 							if (!matched_points) {
 								for (uint32 glyphCurvesPointIndex = 0; glyphCurvesPointIndex < currentPointsList.GetLength(); glyphCurvesPointIndex++) {
@@ -974,7 +985,7 @@ namespace GTSL {
 				}
 			}
 
-			glyphLoaded[i] = true;
+			glyphLoaded[glyph_index] = true;
 
 			return true;
 		};
@@ -1014,7 +1025,7 @@ namespace GTSL {
 					read(&kern_right, data, &currentOffset);
 					read(&kern_value, data, &currentOffset);
 
-					fontData->KerningTable.Emplace((glyphReverseMap[kern_left] << 16) | glyphReverseMap[kern_right], kern_value);
+					fontData->KerningTable.Emplace((kern_left << 16) | kern_right, kern_value);
 				}
 			}
 		}

@@ -99,6 +99,7 @@ namespace GTSL
 
 			uint32 GetLevel() const { return level; }
 			uint32 GetLength() const { return data[pos - 1].ChildrenCount; }
+			uint32 GetHandle() const { return pos; }
 
 			[[nodiscard]] auto begin() { return Iterator<C>{ data, level + 1, data[pos - 1].TreeDown, 0 }; }
 			[[nodiscard]] auto end() { return Iterator<C>{ data, level + 1, data[pos - 1].TreeDown, data[pos - 1].ChildrenCount }; }

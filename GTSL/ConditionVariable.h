@@ -10,26 +10,22 @@ namespace GTSL
 	template<class T>
 	class Lock;
 	
-	class ConditionVariable
-	{
+	class ConditionVariable {
 	public:
 		ConditionVariable() noexcept { InitializeConditionVariable(&conditionVariable); }
 
 		~ConditionVariable() = default;
 
-		void Wait(const class Mutex& mutex)
-		{
+		void Wait(const class Mutex& mutex) {
 			SleepConditionVariableCS(&conditionVariable, PCRITICAL_SECTION(&mutex), 0xFFFFFFFF);
 		}
 		
-		void Wait(const class ReadWriteMutex& mutex, const bool isInReadMode)
-		{
+		void Wait(const class ReadWriteMutex& mutex, const bool isInReadMode) {
 			SleepConditionVariableSRW(&conditionVariable, PSRWLOCK(&mutex), 0xFFFFFFFF, isInReadMode);
 		}
 
 		template<typename L>
-		void Wait(const Lock<Mutex>& lock, L&& predicate)
-		{
+		void Wait(const Lock<Mutex>& lock, L&& predicate) {
 			while (!predicate()) { Wait(lock); }
 		}
 
@@ -41,22 +37,18 @@ namespace GTSL
 		CONDITION_VARIABLE conditionVariable;
 	};
 	
-	class ConditionalLock
-	{
+	class ConditionalLock {
 	public:
-		ConditionalLock()
-		{
+		ConditionalLock() {
 			InitializeCriticalSection(&criticalSection);
 			InitializeConditionVariable(&conditionVariable);
 		}
 
-		~ConditionalLock()
-		{
+		~ConditionalLock() {
 			DeleteCriticalSection(&criticalSection);
 		}
 
-		void Wait()
-		{
+		void Wait() {
 			SleepConditionVariableCS(&conditionVariable, &criticalSection, 0xFFFFFFFF);
 		}
 
