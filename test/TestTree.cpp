@@ -190,12 +190,35 @@ TEST(Tree, Iteration) {
 				self(e, self);
 			}
 		};
-	
-		visitLevel(tree.begin(), visitLevel);
+
+		for(auto e : tree) {
+			visitLevel(e, visitLevel);
+		}
 	
 		GTSL::StaticVector<GTSL::uint32, 9> testRes{ 0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u };
 		GTEST_ASSERT_EQ(test.GetRange(), testRes.GetRange());
 		
+	}
+
+	{
+		GTSL::Tree<GTSL::uint32, GTSL::DefaultAllocatorReference> empTree;
+
+		GTSL::StaticVector<GTSL::uint32, 9> test;
+	
+		auto visitLevel = [&](decltype(tree)::iterator iterator, auto&& self) -> void {
+			test.EmplaceBack(iterator);
+	
+			for (auto e : iterator) {
+				self(e, self);
+			}
+		};
+
+		for(auto e : empTree) {
+			visitLevel(e, visitLevel);
+		}
+	
+		GTSL::StaticVector<GTSL::uint32, 9> testRes{};
+		GTEST_ASSERT_EQ(test.GetRange(), testRes.GetRange());
 	}
 
 	//auto visitLevel1 = [&](decltype(tree.begin()) iterator, auto&& self) -> void {

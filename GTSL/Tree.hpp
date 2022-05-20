@@ -75,25 +75,21 @@ namespace GTSL
 
 		T& operator[](const Key handle) { return at(handle).Data; }
 		const T& operator[](const Key handle) const { return at(handle).Data; }
-
-		template<typename C>
-		struct Iterator {
-			Iterator(C* d, uint32 l, uint32 p, uint32 m) : data(d), level(l), pos(p), i(m) {}
+		
+		struct iterator {
+			iterator(Node* d, uint32 l, uint32 p) : data(d), level(l), pos(p) {}
 
 			void operator++() {
-				++i;
 				pos = data[pos - 1].TreeRight;
 			}
 
-			//bool operator<(const Iterator& other) {
+			//bool operator<(const iterator& other) {
 			//	return pos < other.pos;
 			//}
 
-			bool operator!=(const Iterator& other) {
-				return i != other.i;
-			}
+			bool operator!=(const iterator& other) const { return pos != other.pos; }
 
-			Iterator operator*() { return { data, level, pos, data[pos - 1].ChildrenCount }; }
+			iterator operator*() { return { data, level, pos }; }
 			operator T&() { return data[pos - 1].Data; }
 			operator const T&() const { return data[pos - 1].Data; }
 
@@ -101,24 +97,22 @@ namespace GTSL
 			uint32 GetLength() const { return data[pos - 1].ChildrenCount; }
 			uint32 GetHandle() const { return pos; }
 
-			[[nodiscard]] auto begin() { return Iterator<C>{ data, level + 1, data[pos - 1].TreeDown, 0 }; }
-			[[nodiscard]] auto end() { return Iterator<C>{ data, level + 1, data[pos - 1].TreeDown, data[pos - 1].ChildrenCount }; }
+			[[nodiscard]] auto begin() { return iterator{ data, level + 1, data[pos - 1].TreeDown }; }
+			[[nodiscard]] auto end() { return iterator{ data, level + 1, 0 }; }
 
 		private:
-			C* data;
+			Node* data;
 			uint32 level;
 			uint32 pos = 0;
-			uint32 i = 0;
 		};
+		
+		using const_iterator = iterator;
 
-		using iterator = Iterator<Node>;
-		using const_iterator = Iterator<const Node>;
+		iterator begin(const uint32 i = 1) { return iterator{ nodes, 0, length ? i : 0 }; }
+		iterator end(const uint32 i = 0) { return iterator{ nodes, 0, 0 }; }
 
-		iterator begin(const uint32 i = 1) { return Iterator{ nodes, 0, i, 0 }; }
-		iterator end(const uint32 i = 1) { return Iterator{ nodes, 0, i - 1, at(i).ChildrenCount }; }
-
-		//[[nodiscard]] const_iterator begin() const { return Iterator{ nodes, 0, 1 }; }
-		//[[nodiscard]] const_iterator end() const { return Iterator{ nodes, 0, 0 }; }
+		[[nodiscard]] const_iterator begin() const { return iterator{ nodes, 0, 1 }; }
+		[[nodiscard]] const_iterator end() const { return iterator{ nodes, 0, 0 }; }
 
 		operator Range<iterator>() { return Range<iterator>(begin(), end()); }
 		operator Range<const_iterator>() const { return Range<const_iterator>(begin(), end()); }
