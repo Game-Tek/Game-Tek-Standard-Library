@@ -120,6 +120,12 @@ namespace GTSL
 		}
 	}
 
+	template<typename... ARGS>
+	uint64 GetTypeSize(uint32 index) {
+		static constexpr uint64 sizes[sizeof...(ARGS)]{ sizeof(ARGS)... };
+		return sizes[index];
+	}
+
 	template<class C>
 	constexpr auto Find(C& iterable, auto&& function) -> Result<typename C::iterator> {
 		for (auto begin = iterable.begin(); begin != iterable.end(); ++begin) {

@@ -207,7 +207,7 @@ namespace GTSL
 		uint32 num = 0;
 		for (auto& index : keepVector.getIndices()) {
 			for (uint32 i = 0; i < 32; ++i) {
-				if (GTSL::CheckBit(i, index)) { lambda(keepVector.getObjects()[num + i]); }
+				if (GTSL::CheckBit(i, index)) { lambda(keepVector[num + i]); }
 			}
 
 			num += 32;
@@ -220,7 +220,7 @@ namespace GTSL
 		uint32 num = 0;
 		for (auto& index : keepVector.getIndices()) {
 			for (uint32 i = 0; i < 32; ++i) {
-				if (GTSL::CheckBit(i, index)) { lambda(num + i, keepVector.getObjects()[num + i]); }
+				if (GTSL::CheckBit(i, index)) { lambda(num + i, keepVector[num + i]); }
 			}
 
 			num += 32;
@@ -233,7 +233,7 @@ namespace GTSL
 		uint32 num = 0;
 		for (auto& index : keepVector.getIndices()) {
 			for (uint32 i = 0; i < 32; ++i) {
-				if (GTSL::CheckBit(i, index)) { lambda(num + i, keepVector.getObjects()[num + i]); }
+				if (GTSL::CheckBit(i, index)) { lambda(num + i, keepVector[num + i]); }
 			}
 
 			num += 32;

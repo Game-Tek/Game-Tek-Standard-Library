@@ -24,6 +24,22 @@ namespace GTSL
 		Destroy<CLASSES...>(index, p, BuildIndices<sizeof...(CLASSES)>{});
 	}
 
+	template<typename CLASS, std::size_t INDEX>
+	bool Copy(uint32 index, void* from, void* to) {
+		if (index == INDEX) { Move(static_cast<CLASS*>(from), static_cast<CLASS*>(to)); return true; }
+		return false;
+	}
+
+	template<typename... CLASSES, std::size_t... Is>
+	void Copy(uint32 index, void* from, void* to, Indices<Is...>) {
+		(Copy<CLASSES, Is>(index, from, to), ...);
+	}
+
+	template<typename... CLASSES>
+	void Copy(uint32 index, void* from, void* to) {
+		Copy<CLASSES...>(index, from, to, BuildIndices<sizeof...(CLASSES)>{});
+	}
+
 	template<typename T, class ALLOCATOR>
 	class Tree {
 		struct Node {
@@ -171,6 +187,7 @@ namespace GTSL
 			AlphaNode(ARGS&&... args) : Alpha(ForwardRef<ARGS>(args)... ) {}
 
 			Key Parent = 0;
+			uint64 Key = ~0ULL;
 			ALPHA Alpha;
 		};
 
@@ -185,59 +202,81 @@ namespace GTSL
 
 		MultiTree(const uint32 minNodes, const ALLOCATOR& alloc = ALLOCATOR()) : allocator(alloc), outOfOrderNodes(16, allocator) {
 			tryResizeAlphaTable(minNodes);
-			tryResizeMultiTable(minNodes * 16);
+			tryResizeMultiTable(minNodes * 32);
 		}
 
 		template<typename T, typename... ARGS>
-		Key Emplace(Key leftNodeHandle, Key parentNodeHandle, ARGS&&... params) {
+		GTSL::Result<Key> Emplace(uint64 key, Key leftNodeHandle, Key parentNodeHandle, ARGS&&... params) {
 			static_assert(IsInPack<T, CLASSES...>(), "Type T is not in tree's type list.");
+
+			auto typeIndex = static_cast<uint8>(GetTypeIndex<T>());
+
+			// Check if node key already exists, if so, return existing node and don't emplace a new one
+			if(parentNodeHandle) {
+				TraversalData tD = getTraversalData(parentNodeHandle);
+				Key l = tD.TreeDown;
+
+				while(l) {
+					TraversalData p = getTraversalData(l);
+
+					if(p.TypeIndex == typeIndex) { // If current node is of the same type as we are checking
+						if(AlphaNode& t = getHelper(l); t.Key == key) {
+							return { GTSL::MoveRef(l), false };
+						}
+					}
+
+					l = p.TreeRight;
+				}
+			}
 
 			tryResizeAlphaTable(1);
 
 			auto index = entries++;
 			auto handleValue = entries;
 
-			::new(alphaTable + index) AlphaNode();
-			
+			AlphaNode* alphaNode = ::new(alphaTable + index) AlphaNode();
+
+			alphaNode->Key = key;
+
 			tryResizeMultiTable(sizeof(TraversalData) + sizeof(T));
 
-			indirectionTable[index] = dataTableLength;
+			indirectionTable[index] = multiTableSize;
 
-			TraversalData& entry = *::new(multiTable + dataTableLength) TraversalData();
-			entry.TypeIndex = static_cast<uint8>(GetTypeIndex<T>());
+			TraversalData& entry = *::new(multiTable + multiTableSize) TraversalData();
+			entry.TypeIndex = typeIndex;
 
-			dataTableLength += sizeof(TraversalData);
+			multiTableSize += sizeof(TraversalData);
 
-			::new(multiTable + dataTableLength) T(GTSL::ForwardRef<ARGS>(params)...);
+			::new(multiTable + multiTableSize) T(GTSL::ForwardRef<ARGS>(params)...);
 
-			dataTableLength += sizeof(T);
+			multiTableSize += sizeof(T);
 
 			if(parentNodeHandle) {
-				getHelper(handleValue).Parent = parentNodeHandle;
+				alphaNode->Parent = parentNodeHandle;
 
 				AlphaNode& alphaParent = getHelper(parentNodeHandle);
-				TraversalData& parentNodeTraversalData = at(parentNodeHandle);
+				TraversalData& parentNodeTraversalData = getTraversalData(parentNodeHandle);
 
 				if (leftNodeHandle) {
 					if(leftNodeHandle == 0xFFFFFFFF) {
 						if (parentNodeTraversalData.ChildrenCount) {
 							auto handle = parentNodeTraversalData.TreeDown;
 
-							while (auto e = at(handle).TreeRight) {
+							while (auto e = getTraversalData(handle).TreeRight) {
 								handle = e;
 							}
 
-							at(handle).TreeRight = handleValue;
+							getTraversalData(handle).TreeRight = handleValue;
 						} else {
 							parentNodeTraversalData.TreeDown = handleValue;							
 						}
 					} else {
-						auto handle = at(leftNodeHandle).TreeRight;
-						at(handleValue).TreeRight = handle;
-						at(leftNodeHandle).TreeRight = handleValue;
+						auto handle = getTraversalData(leftNodeHandle).TreeRight;
+						getTraversalData(handleValue).TreeRight = handle;
+						getTraversalData(leftNodeHandle).TreeRight = handleValue;
 					}
 				} else {
-					at(handleValue).TreeRight = parentNodeTraversalData.TreeDown;
+					getTraversalData(handleValue).TreeRight = parentNodeTraversalData.TreeDown;
 					parentNodeTraversalData.TreeDown = handleValue;
 				}
 
@@ -248,11 +287,11 @@ namespace GTSL
 				parentNodeTraversalData.ChildrenCount += 1;
 			}
 
-			return handleValue;
+			return { GTSL::MoveRef(handleValue), true };
 		}
 
 		void ToggleBranch(Key betaNodeBranchTop, bool toggle) {
-			TraversalData& branchNode = at(betaNodeBranchTop);
+			TraversalData& branchNode = getTraversalData(betaNodeBranchTop);
 			branchNode.Way = toggle;
 		}
 
@@ -262,19 +301,19 @@ namespace GTSL
 		}
 
 		ALPHA& GetAlpha(const Key i) { return alphaTable[i - 1].Alpha; }
-		const ALPHA& GetAlpha(const Key i) const { return alphaTable[i - 1].Alpha; }
+		[[nodiscard]] const ALPHA& GetAlpha(const Key i) const { return alphaTable[i - 1].Alpha; }
 
-		Key GetNodeParent(const Key key) const { return getHelper(key).AlphaParent; }
+		[[nodiscard]] Key GetNodeParent(const Key key) const { return getHelper(key).AlphaParent; }
 
-		uint32 GetChildrenCount(const Key betaNodeHandle) const { return at(betaNodeHandle).ChildrenCount; }
-		uint32 GetNodeType(const Key handle) const { return at(handle).TypeIndex; }
+		[[nodiscard]] uint32 GetChildrenCount(const Key betaNodeHandle) const { return getTraversalData(betaNodeHandle).ChildrenCount; }
+		[[nodiscard]] uint32 GetNodeType(const Key handle) const { return getTraversalData(handle).TypeIndex; }
 
-		uint32 GetAlphaLength() const { return entries; }
+		[[nodiscard]] uint32 GetAlphaLength() const { return entries; }
 
 		template<typename T>
 		T& GetClass(const Key nodeHandle) {
 #if _DEBUG
-			if (!(GetTypeIndex<T>() == at(nodeHandle).TypeIndex)) { __debugbreak(); }
+			if (!(GetTypeIndex<T>() == getTraversalData(nodeHandle).TypeIndex)) { __debugbreak(); }
 #endif
 			return *reinterpret_cast<T*>(getClass(nodeHandle));
 		}
@@ -282,9 +321,9 @@ namespace GTSL
 		template<typename T>
 		const T& GetClass(const Key nodeHandle) const {
 #if _DEBUG
-			if (!(GetTypeIndex<T>() == at(nodeHandle).TypeIndex)) { __debugbreak(); }
+			if (!(GetTypeIndex<T>() == getTraversalData(nodeHandle).TypeIndex)) { __debugbreak(); }
 #endif
-			return *reinterpret_cast<const T*>(multiTable + at(nodeHandle).Position + sizeof(T));
+			return *reinterpret_cast<const T*>(multiTable + getTraversalData(nodeHandle).Position + sizeof(T));
 		}
 
 		void Optimize() {
@@ -293,7 +332,7 @@ namespace GTSL
 				SortG(outOfOrderNodes);
 				groups.EmplaceBack(1, outOfOrderNodes.front());
 				for (uint32 i = 1; i < outOfOrderNodes.GetLength(); ++i) {
-					if (outOfOrderNodes[i] == groups.back().Second + 1) { ++groups.back().First; }
+					if (outOfOrderNodes[i] == groups.back().Second + 1) { ++groups.back().First; } // If next node
 					else { groups.EmplaceBack(1, outOfOrderNodes[i]); }
 				}
 				//do shifts
@@ -316,19 +355,19 @@ namespace GTSL
 		
 		AlphaNode* alphaTable = nullptr; uint32 entries = 0, alphaCapacity = 0;
 		uint32* indirectionTable = nullptr;
-		byte* multiTable = nullptr; uint32 dataTableLength = 0, betaCapacity = 0;
+		byte* multiTable = nullptr; uint32 multiTableSize = 0, multiTableCapacity = 0;
 
 		Vector<Key, ALLOCATOR> outOfOrderNodes;
 
-		TraversalData& at(const Key key) {
+		TraversalData& getTraversalData(const Key key) {
 			return *reinterpret_cast<TraversalData*>(multiTable + indirectionTable[key - 1]);
 		}
 
-		const TraversalData& at(const Key key) const {
+		[[nodiscard]] const TraversalData& getTraversalData(const Key key) const {
 			return *reinterpret_cast<const TraversalData*>(multiTable + indirectionTable[key - 1]);
 		}
 
-		byte* getClass(const Key key) {
+		byte* getClass(const Key key) const {
 			return multiTable + indirectionTable[key - 1] + sizeof(TraversalData);
 		}
 
@@ -341,11 +380,21 @@ namespace GTSL
 		}
 
 		void tryResizeMultiTable(uint32 delta) {
-			if (dataTableLength + delta > betaCapacity) {
+			if (multiTableSize + delta > multiTableCapacity) {
 				if (multiTable) {
-					Resize(allocator, &multiTable, &betaCapacity, betaCapacity * 2, dataTableLength);
+					auto copyFunction = [&](uint64 capacity, byte* data, uint64 allocatedElements, byte* newAlloc) {
+						for(uint32 i =0, offset = 0; i < entries; ++i) {
+							uint8 typeIndex = reinterpret_cast<TraversalData*>(data + offset)->TypeIndex;
+							Move(reinterpret_cast<TraversalData*>(data + offset), reinterpret_cast<TraversalData*>(newAlloc + offset)); // Move traversal data block first
+							offset += sizeof(TraversalData);
+							Copy<CLASSES...>(typeIndex, reinterpret_cast<void*>(data + offset), newAlloc + offset); // Move with appropriate operator the class element
+							offset += GetTypeSize<CLASSES...>(typeIndex);
+						}
+					};
+
+					Resize(allocator, &multiTable, &multiTableCapacity, multiTableCapacity * 2, copyFunction);
 				} else {
-					Allocate(allocator, delta, &multiTable, &betaCapacity);
+					Allocate(allocator, delta, &multiTable, &multiTableCapacity);
 				}
 			}
 		}
@@ -371,7 +420,7 @@ namespace GTSL
 			Key next = start;
 
 			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
-				const auto& node = tree.at(handle);
+				const auto& node = tree.getTraversalData(handle);
 
 				if (node.Way) {
 					a(handle, level);
@@ -395,7 +444,7 @@ namespace GTSL
 			Key next = start;
 			
 			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
-				const auto& node = tree.at(handle);
+				const auto& node = tree.getTraversalData(handle);
 
 				if (node.Way) {
 					a(handle, level);
@@ -421,7 +470,7 @@ namespace GTSL
 			Key next = start;
 
 			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
-				const auto& node = tree.at(handle);
+				const auto& node = tree.getTraversalData(handle);
 				
 				a(handle, level, node.Way);
 
@@ -440,16 +489,16 @@ namespace GTSL
 		}
 
 		~MultiTree() {
-			if (dataTableLength && multiTable) {
+			if (multiTableSize && multiTable) {
 				auto visitNode = [&](uint32 key, uint32 level) -> void {
-					Destroy<CLASSES...>(at(key).TypeIndex, getClass(key));
+					Destroy<CLASSES...>(getTraversalData(key).TypeIndex, getClass(key));
 				};
 
 				ForEach(*this, visitNode, [&](uint32 key, uint32 level) {});
 
 				for (uint32 i = 0; i < entries; ++i) { Destroy(alphaTable[i].Alpha); }
 
-				Deallocate(allocator, betaCapacity, multiTable);
+				Deallocate(allocator, multiTableCapacity, multiTable);
 				Deallocate(allocator, alphaCapacity, indirectionTable);
 				Deallocate(allocator, alphaCapacity, alphaTable);
 			}

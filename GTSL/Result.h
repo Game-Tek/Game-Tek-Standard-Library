@@ -3,8 +3,7 @@
 namespace GTSL
 {
 	template<typename R, typename E = bool>
-	class Result
-	{
+	class Result {
 	public:
 		constexpr Result(R&& result, E err) : result(result), success(err) {}
 		explicit Result(E err) : result(), success(err) {}
@@ -17,8 +16,7 @@ namespace GTSL
 	};
 
 	template<typename R>
-	class Result<R, bool>
-	{
+	class Result<R, bool> {
 	public:
 		constexpr Result(R&& result, bool err) : result(result), success(err) {}
 		explicit Result(const bool err) : result(), success(err) {}
@@ -26,6 +24,15 @@ namespace GTSL
 		[[nodiscard]] constexpr bool State() const { return success; }
 		explicit constexpr operator bool() const { return success; }
 		[[nodiscard]] constexpr const R& Get() const { return result; }
+
+		Result& operator=(const R& value) {
+			result = value;
+			return *this;
+		}
+
+		R& operator->() {
+			return result;
+		}
 	private:
 		R result;
 		bool success;
