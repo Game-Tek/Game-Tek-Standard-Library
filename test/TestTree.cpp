@@ -61,6 +61,51 @@ TEST(MultiTree, Insertion) {
 	}
 }
 
+TEST(MultiTree, Folding) {
+	using TreeType = GTSL::MultiTree<GTSL::DefaultAllocatorReference, GTSL::uint32, GTSL::uint32, GTSL::float32>;
+	TreeType tree;
+
+	auto top = tree.Emplace<GTSL::float32>(0, 0xFFFFFFFF, 0, 0.0f);
+	auto left = tree.Emplace<GTSL::float32>(1, 0xFFFFFFFF, top.Get(), 1.0f);
+	auto right = tree.Emplace<GTSL::float32>(3, 0xFFFFFFFF, top.Get(), 3.0f);
+
+	auto center = tree.Emplace<GTSL::float32>(2, left.Get(), top.Get(), 2.0f); // Insertion in level, with left node reference
+
+	auto extra = tree.Emplace<GTSL::float32>(4, 0xFFFFFFFF, top.Get(), 32.f); // Node to merge
+	auto extraLeft = tree.Emplace<GTSL::float32>(66, 0xFFFFFFFF, extra.Get(), 4.f); // Node to merge
+	auto extraRight = tree.Emplace<GTSL::float32>(77, 0xFFFFFFFF, extra.Get(), 5.f); // Node to merge
+
+	auto existingKeyResult = tree.Emplace<GTSL::float32>(2, left.Get(), top.Get(), 18.0f); // Insertion in with existing key
+
+	tree.UpdateNodeKey(extra.Get(), 1);
+	tree.UpdateNodeKey(extraLeft.Get(), 7);
+	tree.UpdateNodeKey(extraRight.Get(), 7);
+
+	tree.Optimize();
+
+	EXPECT_FALSE(existingKeyResult);
+
+	{
+		GTSL::StaticVector<GTSL::float32, 16> test;
+
+		auto visitNode = [&](uint32_t node, GTSL::uint32 level) {
+			switch (tree.GetNodeType(node)) {
+			case TreeType::GetTypeIndex<GTSL::float32>():
+				test.EmplaceBack(tree.GetClass<GTSL::float32>(node));
+				break;
+			}
+		};
+
+		auto endNode = [&](uint32_t value, GTSL::uint32 level) {
+		};
+
+		ForEach(tree, visitNode, endNode);
+
+		GTSL::StaticVector<GTSL::float32, 16> testRes{ 0.f, 1.f, 4.f, 2.f, 3.f };
+		GTEST_ASSERT_EQ(test.GetRange(), testRes.GetRange());
+	}
+}
+
 TEST(MultiTree, Removal) {
 
 }

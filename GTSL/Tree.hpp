@@ -25,19 +25,19 @@ namespace GTSL
 	}
 
 	template<typename CLASS, std::size_t INDEX>
-	bool Copy(uint32 index, void* from, void* to) {
+	bool Move(void* from, void* to, uint32 index) {
 		if (index == INDEX) { Move(static_cast<CLASS*>(from), static_cast<CLASS*>(to)); return true; }
 		return false;
 	}
 
 	template<typename... CLASSES, std::size_t... Is>
-	void Copy(uint32 index, void* from, void* to, Indices<Is...>) {
-		(Copy<CLASSES, Is>(index, from, to), ...);
+	void Move(void* from, void* to, uint32 index, Indices<Is...>) {
+		(Move<CLASSES, Is>(from, to, index), ...);
 	}
 
 	template<typename... CLASSES>
-	void Copy(uint32 index, void* from, void* to) {
-		Copy<CLASSES...>(index, from, to, BuildIndices<sizeof...(CLASSES)>{});
+	void Move(void* from, void* to, uint32 index) {
+		Move<CLASSES...>(from, to, index, BuildIndices<sizeof...(CLASSES)>{});
 	}
 
 	template<typename T, class ALLOCATOR>
@@ -186,14 +186,14 @@ namespace GTSL
 			template<typename... ARGS>
 			AlphaNode(ARGS&&... args) : Alpha(ForwardRef<ARGS>(args)... ) {}
 
+			uint64 NodeKey = ~0ULL;
 			Key Parent = 0;
-			uint64 Key = ~0ULL;
+			bool Mergeable = true;
 			ALPHA Alpha;
 		};
 
 		struct TraversalData {
 			uint32 TreeDown = 0, TreeRight = 0;
-			uint16 ChildrenCount = 0;
 			uint8 TypeIndex = 0;
 			bool Way = true;
 		};
@@ -220,7 +220,7 @@ namespace GTSL
 					TraversalData p = getTraversalData(l);
 
 					if(p.TypeIndex == typeIndex) { // If current node is of the same type as we are checking
-						if(AlphaNode& t = getHelper(l); t.Key == key) {
+						if(AlphaNode& t = getHelper(l); t.NodeKey == key) {
 							return { GTSL::MoveRef(l), false };
 						}
 					}
@@ -236,7 +236,7 @@ namespace GTSL
 
 			AlphaNode* alphaNode = ::new(alphaTable + index) AlphaNode();
 
-			alphaNode->Key = key;
+			alphaNode->NodeKey = key;
 
 			tryResizeMultiTable(sizeof(TraversalData) + sizeof(T));
 
@@ -259,7 +259,7 @@ namespace GTSL
 
 				if (leftNodeHandle) {
 					if(leftNodeHandle == 0xFFFFFFFF) {
-						if (parentNodeTraversalData.ChildrenCount) {
+						if (parentNodeTraversalData.TreeDown) { // If has children
 							auto handle = parentNodeTraversalData.TreeDown;
 
 							while (auto e = getTraversalData(handle).TreeRight) {
@@ -284,10 +284,20 @@ namespace GTSL
 				//	outOfOrderNodes.EmplaceBack(currentNodeHandle);
 				//}
 
-				parentNodeTraversalData.ChildrenCount += 1;
+				//parentNodeTraversalData.ChildrenCount += 1;
 			}
 
 			return { GTSL::MoveRef(handleValue), true };
+		}
+
+		void UpdateNodeKey(Key node_handle, const uint64 new_key) {
+			AlphaNode& node = getHelper(node_handle);
+
+			node.NodeKey = new_key;
+		}
+
+		void SetIsMergeable(Key node_handle, bool is_mergeable) {
+			getHelper(node_handle).Mergeable = is_mergeable;
 		}
 
 		void ToggleBranch(Key betaNodeBranchTop, bool toggle) {
@@ -305,7 +315,24 @@ namespace GTSL
 
 		[[nodiscard]] Key GetNodeParent(const Key key) const { return getHelper(key).AlphaParent; }
 
-		[[nodiscard]] uint32 GetChildrenCount(const Key betaNodeHandle) const { return getTraversalData(betaNodeHandle).ChildrenCount; }
+		//[[nodiscard]] uint32 GetChildrenCount(const Key betaNodeHandle) const { return getTraversalData(betaNodeHandle).ChildrenCount; }
+
+		[[nodiscard]] uint32 GetChildrenCount(const Key betaNodeHandle) const {
+			uint32 count = 0;
+			const TraversalData& td = getTraversalData(betaNodeHandle);
+
+			Key p = td.TreeDown;
+
+			while(p) {
+				++count;
+				p = getTraversalData(p).TreeRight;
+			}
+
+			return count;
+		}
+
+		[[nodiscard]] bool GetNodeState(const Key node_handle) const { return getTraversalData(node_handle).Way; }
+
 		[[nodiscard]] uint32 GetNodeType(const Key handle) const { return getTraversalData(handle).TypeIndex; }
 
 		[[nodiscard]] uint32 GetAlphaLength() const { return entries; }
@@ -327,17 +354,31 @@ namespace GTSL
 		}
 
 		void Optimize() {
-			if (outOfOrderNodes.GetLength()) {
-				Vector<Pair<uint32, uint32>, ALLOCATOR> groups;
-				SortG(outOfOrderNodes);
-				groups.EmplaceBack(1, outOfOrderNodes.front());
-				for (uint32 i = 1; i < outOfOrderNodes.GetLength(); ++i) {
-					if (outOfOrderNodes[i] == groups.back().Second + 1) { ++groups.back().First; } // If next node
-					else { groups.EmplaceBack(1, outOfOrderNodes[i]); }
+			//if (outOfOrderNodes.GetLength()) {
+			//	Vector<Pair<uint32, uint32>, ALLOCATOR> groups;
+			//	SortG(outOfOrderNodes);
+			//	groups.EmplaceBack(1, outOfOrderNodes.front());
+			//	for (uint32 i = 1; i < outOfOrderNodes.GetLength(); ++i) {
+			//		if (outOfOrderNodes[i] == groups.back().Second + 1) { ++groups.back().First; } // If next node
+			//		else { groups.EmplaceBack(1, outOfOrderNodes[i]); }
+			//	}
+			//	//do shifts
+			//	outOfOrderNodes.Resize(0);
+			//}
+
+			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
+				mergeNodes(handle, getHelper(handle).NodeKey);
+
+				const TraversalData& node = getTraversalData(handle);
+				auto next = node.TreeDown;
+
+				while(next) {
+					self(next, level + 1, self);
+					next = getTraversalData(next).TreeRight;
 				}
-				//do shifts
-				outOfOrderNodes.Resize(0);
-			}
+			};
+
+			visitNode(1, 0, visitNode);
 		}
 
 		struct NodeReference {
@@ -358,6 +399,110 @@ namespace GTSL
 		byte* multiTable = nullptr; uint32 multiTableSize = 0, multiTableCapacity = 0;
 
 		Vector<Key, ALLOCATOR> outOfOrderNodes;
+
+		void removeNode(Key parent_node_handle, Key left_node_handle, Key node_handle) {
+			TraversalData& nodeTD = getTraversalData(node_handle);
+
+			if(parent_node_handle) {
+				TraversalData& parentNodeTD = getTraversalData(parent_node_handle);
+				if(!left_node_handle) {
+					parentNodeTD.TreeDown = nodeTD.TreeRight;
+				}
+			}
+
+			if(left_node_handle) {
+				TraversalData& leftNodeTD = getTraversalData(left_node_handle);
+				leftNodeTD.TreeRight = nodeTD.TreeRight;
+			}
+		}
+
+		Key mergeNodes(Key node_handle, uint64 new_key) {
+			AlphaNode& node = getHelper(node_handle);
+
+			Key parentNodeHandle = node.Parent;
+
+			if(!parentNodeHandle) { return 0; }
+
+			// Get leftmost node with the same key as new key, this is because we transfer all children from nodes with equal keys to the leftmost node
+
+			Key firstSameKeyNodeHandle = 0;
+
+			{
+				Key l = getTraversalData(parentNodeHandle).TreeDown;
+				while(l) {
+					if(getHelper(l).NodeKey == new_key && getTraversalData(l).TypeIndex == getTraversalData(node_handle).TypeIndex) {
+						firstSameKeyNodeHandle = l;
+						break;
+					}
+
+					l = getTraversalData(l).TreeRight;
+				}
+			}
+
+			{
+				Key currentNode = firstSameKeyNodeHandle, lastLowerLevelRightNodeHandle = 0, nextLink = 0, leftMostChildNode = 0, m = 0;
+
+				while(currentNode) { // While there are nodes in this branch, to the right of the first node with the key we are looking for
+					TraversalData& td = getTraversalData(currentNode);
+
+					if(getHelper(currentNode).NodeKey != new_key or getTraversalData(currentNode).TypeIndex != getTraversalData(node_handle).TypeIndex or !getHelper(currentNode).Mergeable) { // If node is not mergeable
+						if(!nextLink) { // Annotate node which will now be the node to the right of the leftmost node with the same key
+							nextLink = currentNode;
+						}
+
+						if(td.TreeRight) { //If there is more than one node to our right continue iterating right
+							m = currentNode;
+							currentNode = td.TreeRight;
+						} else {
+							m = 0; // Because the last node in this branch isn't of the same key, therefore won't be merged/deleted, we don't have to modify it's previous' nodes (left brother) TreeRight entry.
+							break;
+						}
+
+						continue;
+					}
+
+					// Link the rightmost child from the last mergeable node to the left most node of the current node (which is a mergeable one). This is beacuse all children from all nodes with the same key now have to live under a single parent.
+					if(lastLowerLevelRightNodeHandle) {
+						getTraversalData(lastLowerLevelRightNodeHandle).TreeRight = td.TreeDown;						
+					}
+
+					if(!leftMostChildNode) { // Set leftmost child node which belongs to a node with the key we are looking for.
+						leftMostChildNode = td.TreeDown;
+					}
+
+					Key currentNodeChild = td.TreeDown;
+
+					// Find rightmost child node to continue hooking up children from different parents
+					while(currentNodeChild && getTraversalData(currentNodeChild).TreeRight) {
+						currentNodeChild = getTraversalData(currentNodeChild).TreeRight;
+					}
+
+					lastLowerLevelRightNodeHandle = currentNodeChild;
+
+					indirectionTable[currentNode - 1] = indirectionTable[firstSameKeyNodeHandle - 1]; // Since we will be "removing nodes" we need to updated their indirection table entries to point to the new node that equates their previous one
+
+					if(currentNode != firstSameKeyNodeHandle) {
+						removeNode(parentNodeHandle, m, currentNode);
+					}
+
+					if(td.TreeRight) {  //If there is more than one node to our right continue iterating right
+						m = currentNode;
+						currentNode = td.TreeRight;
+					} else {
+						break;
+					}
+				}
+
+				getTraversalData(firstSameKeyNodeHandle).TreeRight = nextLink;
+				getTraversalData(firstSameKeyNodeHandle).TreeDown = leftMostChildNode;
+
+				if(m) {
+					getTraversalData(m).TreeRight = 0;
+				}
+
+				return firstSameKeyNodeHandle;
+			}
+		}
 
 		TraversalData& getTraversalData(const Key key) {
 			return *reinterpret_cast<TraversalData*>(multiTable + indirectionTable[key - 1]);
@@ -387,7 +532,7 @@ namespace GTSL
 							uint8 typeIndex = reinterpret_cast<TraversalData*>(data + offset)->TypeIndex;
 							Move(reinterpret_cast<TraversalData*>(data + offset), reinterpret_cast<TraversalData*>(newAlloc + offset)); // Move traversal data block first
 							offset += sizeof(TraversalData);
-							Copy<CLASSES...>(typeIndex, reinterpret_cast<void*>(data + offset), newAlloc + offset); // Move with appropriate operator the class element
+							Move<CLASSES...>(data + offset, newAlloc + offset, typeIndex); // Move with appropriate operator the class element
 							offset += GetTypeSize<CLASSES...>(typeIndex);
 						}
 					};
@@ -417,31 +562,26 @@ namespace GTSL
 		friend void ForEachBeta(MultiTree& tree, auto&& a, Key start = 1) {
 			if (!tree.GetAlphaLength()) { return; }
 
-			Key next = start;
-
 			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
 				const auto& node = tree.getTraversalData(handle);
 
 				if (node.Way) {
 					a(handle, level);
 
-					next = node.TreeDown ? node.TreeDown : node.TreeRight;
+					auto next = node.TreeDown;
 
-					for (uint32 i = 0; i < node.ChildrenCount; ++i) {
+					while(next) {
 						self(next, level + 1, self);
+						next = tree.getTraversalData(next).TreeRight;
 					}
 				}
-
-				next = node.TreeRight;
 			};
 
-			visitNode(next, 0, visitNode);			
+			visitNode(start, 0, visitNode);
 		}
 
 		friend void ForEach(const MultiTree& tree, auto&& a, auto&& b, uint32 start = 1) {
 			if (!tree.GetAlphaLength()) { return; }
-
-			Key next = start;
 			
 			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
 				const auto& node = tree.getTraversalData(handle);
@@ -449,43 +589,39 @@ namespace GTSL
 				if (node.Way) {
 					a(handle, level);
 
-					next = node.TreeDown ? node.TreeDown : node.TreeRight;
+					auto next = node.TreeDown;
 
-					for (uint32 i = 0; i < node.ChildrenCount; ++i) {
+					while(next) {
 						self(next, level + 1, self);
+						next = tree.getTraversalData(next).TreeRight;
 					}
 
 					b(handle, level);
 				}
-
-				next = node.TreeRight;
 			};
 
-			visitNode(next, 0, visitNode);			
+			visitNode(start, 0, visitNode);
 		}
 
 		friend void ForEachWithDisabled(const MultiTree& tree, auto&& a, auto&& b, uint32 start = 1) {
 			if (!tree.GetAlphaLength()) { return; }
-
-			Key next = start;
 
 			auto visitNode = [&](Key handle, uint32 level, auto&& self) -> void {
 				const auto& node = tree.getTraversalData(handle);
 				
 				a(handle, level, node.Way);
 
-				next = node.TreeDown ? node.TreeDown : node.TreeRight;
+				auto next = node.TreeDown;
 
-				for (uint32 i = 0; i < node.ChildrenCount; ++i) {
+				while(next) {
 					self(next, level + 1, self);
+					next = tree.getTraversalData(next).TreeRight;
 				}
 
 				b(handle, level, node.Way);
-
-				next = node.TreeRight;
 			};
 
-			visitNode(next, 0, visitNode);
+			visitNode(start, 0, visitNode);
 		}
 
 		~MultiTree() {
