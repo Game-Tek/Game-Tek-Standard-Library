@@ -4,7 +4,7 @@
 #include <GTSL/Core.h>
 #include "GTSL/StringCommon.h"
 
-#include "File.h"
+#include "File.hpp"
 #include "Math/Math.hpp"
 
 #if (_WIN64)

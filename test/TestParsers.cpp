@@ -1,13 +1,13 @@
 
 #include <gtest/gtest.h>
 
-#include "GTSL/File.h"
+#include "GTSL/File.hpp"
 #include "GTSL/LUT.hpp"
 #include "GTSL/JSON.hpp"
 #include "GTSL/Vector.hpp"
 
 TEST(LUT, Valid) {
-	GTSL::File lutFile; lutFile.Open(u8"../../../test/Kodak Ektachrome 64.cube", GTSL::File::READ, false);
+	GTSL::File lutFile(u8"../../../test/Kodak Ektachrome 64.cube", GTSL::File::READ, false);
 	GTSL::Buffer<GTSL::DefaultAllocatorReference> buffer;
 	lutFile.Read(buffer);
 

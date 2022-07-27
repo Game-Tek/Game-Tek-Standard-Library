@@ -284,4 +284,17 @@ namespace GTSL
 
 		*data = newAlloc;
 	}
+
+	template<typename T, std::unsigned_integral C>
+	void AllocateOrResize(auto& allocator, T** data, C* capacity, uint64 newCapacity, uint64 length, uint64 alignment = alignof(T)) {
+		T* newAlloc; uint64 allocatedElements;
+		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements, alignment);
+
+		if(*data) {
+			Copy(length, *data, newAlloc);
+			Deallocate(allocator, *capacity, *data, alignment);
+		}
+
+		*data = newAlloc; *capacity = static_cast<C>(allocatedElements);
+	}
 }

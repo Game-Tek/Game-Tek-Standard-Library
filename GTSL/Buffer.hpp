@@ -71,13 +71,8 @@ namespace GTSL
 			tryResize(size);
 		}
 		
-		void AddResize(const int64 delta) {
+		void DeltaResize(const int64 delta) {
 			tryDeltaResize(delta);
-		}
-
-		void AddBytes(const int64 bytes) {
-			tryDeltaResize(bytes);
-			length += bytes;
 		}
 
 		void Write(const uint64 size, const byte* from) {
@@ -109,7 +104,13 @@ namespace GTSL
 	
 	private:
 		[[no_unique_address]] ALLOCATOR allocator;
-		
+
+		friend class File;
+
+		void modifyOccupiedBytes(int64 bytes) {
+			length += bytes;
+		}
+
 		byte* data{ nullptr };
 		uint32 alignment = 16;
 		uint64 capacity = 0;

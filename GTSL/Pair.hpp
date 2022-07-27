@@ -1,5 +1,7 @@
 #pragma once
 
+#include <concepts>
+
 #include "Core.h"
 
 namespace GTSL {
@@ -8,7 +10,7 @@ namespace GTSL {
 		A First; B Second;
 
 		Pair() = default;
-		constexpr Pair(const A& first, const B& second) noexcept requires(std::is_copy_constructible_v<A>&& std::is_copy_constructible_v<B>) : First(first), Second(second) {}
+		constexpr Pair(const A& first, const B& second) noexcept requires(std::copy_constructible<A>&& std::copy_constructible<B>) : First(first), Second(second) {}
 		constexpr Pair(A&& first, B&& second) noexcept : First(GTSL::MoveRef(first)), Second(GTSL::MoveRef(second)) {}
 
 		Pair(const Pair& other) noexcept : First(other.First), Second(other.Second) {}

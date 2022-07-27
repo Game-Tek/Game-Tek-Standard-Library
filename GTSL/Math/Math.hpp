@@ -96,6 +96,9 @@ namespace GTSL {
 	namespace Math
 	{
 		struct RandomSeed {
+			RandomSeed() = default;
+			RandomSeed(int64 seed) : x(seed) {}
+
 			int64 x = 123456789, y = -362436069, z = 521288629;
 
 			int64 operator()() {
@@ -671,8 +674,8 @@ namespace GTSL {
 		template<typename T>
 		T Limit(const T a, const T max) { return a > max ? max : a; }
 		
-		template <typename T>
-		T Min(const T& A, const T& B) { return (A < B) ? A : B; }
+		template <typename T, typename U>
+		T Min(const T& A, const U& B) { return (A < B) ? A : B; }
 
 		template <typename T>
 		T Max(const T& A, const T& B) { return (A > B) ? A : B; }

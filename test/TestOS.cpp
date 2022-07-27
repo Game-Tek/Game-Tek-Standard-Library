@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "GTSL/File.h"
+#include "GTSL/File.hpp"
 #include "GTSL/DLL.h"
 #include "GTSL/MappedFile.hpp"
 #include "GTSL/Filesystem.h"
@@ -20,21 +20,62 @@ TEST(File, Open) {
 
 #ifdef _WIN32
 	auto res = file.Open(u8"C:/Windows/Fonts/times.ttf", GTSL::File::READ, false);
+	GTEST_ASSERT_EQ(res, GTSL::File::OpenResult::OK);
 #endif
+}
+
+TEST(File, Write) {
+	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::WRITE, true);
+
+	file.Resize(0);
+
+	GTSL::Buffer<GTSL::StaticAllocator<1024>> buffer;
+
+	buffer.AllocateStructure<GTSL::uint64>(32ull);
+
+	file.Write(buffer.GetRange());
+
+	GTEST_ASSERT_EQ(file.GetSize(), 8);
+
+	file.Write(buffer);
+
+	GTEST_ASSERT_EQ(file.GetSize(), 16);
+}
+
+TEST(File, Read) {
+	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::READ, false);
+
+#ifdef _WIN32
+	GTEST_ASSERT_EQ(file.GetSize(), 16);
+	GTEST_ASSERT_EQ(file.GetFileHash(), file.GetFileHash());
+#endif
+
+	GTSL::Buffer<GTSL::StaticAllocator<1024>> buffer;
+
+	file.Read(buffer, 8);
+
+	GTEST_ASSERT_EQ(buffer.GetSize(), 8);
+
+	file.Read(buffer, 8);
+
+	GTEST_ASSERT_EQ(buffer.GetSize(), 16);
+
+	GTSL::uint64 array[] = { 32ull, 32ull };
+
+	GTEST_ASSERT_EQ(GTSL::Range(16, reinterpret_cast<const byte*>(array)), buffer.GetRange());
 }
 
 TEST(MappedFile, Construct) {
 	GTSL::MappedFile mapped_file;
 }
 
-TEST(FileQuery, Construct) {
-	GTSL::FileQuery file_query;
-}
-
 TEST(FileQuery, Do) {
-	GTSL::FileQuery file_query;
-	auto res = file_query.DoQuery(u8"*.exe");
+	GTSL::FileQuery file_query(u8"*.exe");
+	auto res = file_query();
 	GTEST_ASSERT_EQ(res.Get(), u8"GTSL_Test.exe");
+
+	res = file_query();
+	GTEST_ASSERT_EQ(res.State(), false);
 }
 
 TEST(DLL, Construct) {

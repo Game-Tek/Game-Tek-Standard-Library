@@ -66,7 +66,7 @@ namespace GTSL {
         }
 
     private:
-        Atomic<uint32> count = 0;
+        Atomic<uint32> count;
         ConditionVariable cv;
     };
 }

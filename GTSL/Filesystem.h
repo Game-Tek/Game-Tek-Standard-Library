@@ -16,25 +16,26 @@ namespace GTSL {
 	public:
 		using handle_type = void*;
 		
-		FileQuery() {}
+		FileQuery(const StringView query) {
+			handle = FindFirstFileA(reinterpret_cast<const char*>(query.GetData()), &findData);
+		}
 		
-		Result<StaticString<256>> DoQuery(const StringView query) {
-			WIN32_FIND_DATAA find_data;
+		Result<StaticString<256>> operator()() {
+			if (!counter) {
+				++counter;
 
-			if (!handle) {
-				const auto handle_res = FindFirstFileA(reinterpret_cast<const char*>(query.GetData()), &find_data);
-
-				if (reinterpret_cast<uint64>(handle_res) != ERROR_FILE_NOT_FOUND && handle_res != INVALID_HANDLE_VALUE) {
-					handle = handle_res;
-					return Result(StaticString<256>(reinterpret_cast<const char8_t*>(find_data.cFileName)), true);
+				if (reinterpret_cast<uint64>(handle) != ERROR_FILE_NOT_FOUND && handle != INVALID_HANDLE_VALUE) {
+					return Result(StaticString<256>(reinterpret_cast<const char8_t*>(findData.cFileName)), true);
 				}
 
 				return Result<StaticString<256>>(false);
 			} else {
-				const auto handle_res = FindNextFileA(handle, &find_data);
+				++counter;
 
-				if (handle_res) {
-					return Result(StaticString<256>(reinterpret_cast<const char8_t*>(find_data.cFileName)), true);
+				auto res = FindNextFileA(handle, &findData);
+
+				if (res) {
+					return Result(StaticString<256>(reinterpret_cast<const char8_t*>(findData.cFileName)), true);
 				}
 
 				FindClose(handle);
@@ -42,9 +43,15 @@ namespace GTSL {
 				return Result<StaticString<256>>(false);
 			}
 		}
-	
+
+		[[nodiscard]] uint64 GetFileHash() const {
+			return static_cast<uint64>(findData.ftLastWriteTime.dwHighDateTime) << 32ull | findData.ftLastWriteTime.dwLowDateTime;
+		}
+
 	private:
 		handle_type handle = nullptr;
+		uint64 counter = 0u;
+		WIN32_FIND_DATAA findData;
 	};
 
 	class DirectoryQuery {

@@ -16,17 +16,24 @@
 #endif
 
 namespace GTSL {
+	template<typename T>
+	struct OptionalParameter {
+		OptionalParameter() = default;
+		OptionalParameter(const T value) : isSet(true), value(value) {}
+
+		explicit operator bool() const { return isSet; }
+
+		T operator()(const T alternative) { return isSet ? value : alternative; }
+
+		operator T() { return value; }
+	private:
+		bool isSet = false;
+		T value;
+	};
+
 	class File {
 	public:
 		File() = default;
-		
-		~File() {
-#if (_WIN64)
-			if (fileHandle) { CloseHandle(fileHandle); fileHandle = nullptr; }
-#elif (__linux__)
-			if (file)
-#endif
-		}
 
 		using AccessMode = Flags<uint8, struct AccessModeFlag>;
 		static constexpr AccessMode READ{ 1 }, WRITE{ 2 };
@@ -34,6 +41,18 @@ namespace GTSL {
 		enum class OpenMode : uint8 { LEAVE_CONTENTS, CLEAR };
 
 		enum class OpenResult { OK, CREATED, ERROR };
+
+		File(StringView path, AccessMode accessMode = READ, bool create = false) {
+			auto result = Open(path, accessMode, create);
+		}
+
+		~File() {
+#if (_WIN64)
+			if (fileHandle) { CloseHandle(fileHandle); fileHandle = nullptr; }
+#elif (__linux__)
+			if (file)
+#endif
+		}
 		
 		[[nodiscard]] OpenResult Open(StringView path, AccessMode accessMode = READ, bool create = false) {
 			DWORD desiredAccess = 0;  DWORD shareMode = 0;
@@ -48,8 +67,8 @@ namespace GTSL {
 			OpenResult openResult;
 
 			switch (GetLastError()) {
-			case ERROR_SUCCESS: openResult = OpenResult::CREATED; break;
-			case ERROR_ALREADY_EXISTS: openResult = OpenResult::OK; break;
+			case ERROR_SUCCESS: openResult = OpenResult::OK; break;
+			case ERROR_ALREADY_EXISTS: openResult = OpenResult::CREATED; break;
 			default: openResult = OpenResult::ERROR; break;
 			}
 
@@ -62,60 +81,26 @@ namespace GTSL {
 			return bytes;
 		}
 
-		uint32 Read(const uint64 size, byte* d) const {
-			DWORD bytes{ 0 };
-			ReadFile(fileHandle, d, static_cast<uint32>(size), &bytes, nullptr);
-			return bytes;
-		}
-
 		uint32 Write(const Range<const byte*> buffer) const {
 			DWORD bytes{ 0 };
 			WriteFile(fileHandle, buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
-			//GTSL_ASSERT(GetLastError() == ERROR_SUCCESS, "Win32 Error!");
-			return bytes;
-		}
-		
-		template<class B>
-		uint32 Write(B& buffer) const {
-			DWORD bytes{ 0 };
-			WriteFile(fileHandle, buffer.begin(), static_cast<uint32>(buffer.GetLength()), &bytes, nullptr);
-			buffer.AddBytes(-static_cast<int64>(bytes));
-			return bytes;
-		}
-		
-		[[nodiscard]] uint32 Read(const Range<byte*> buffer) const {
-			DWORD bytes{ 0 };
-			ReadFile(fileHandle, buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
-			auto w = GetLastError();
-			//GTSL_ASSERT(w , "Win32 Error!");
 			return bytes;
 		}
 
 		template<class B>
-		uint32 Read(B& buffer) const {
+		uint32 Write(B& buffer, OptionalParameter<uint64> offset = {0}, OptionalParameter<uint64> size = {}) const {
 			DWORD bytes{ 0 };
-			buffer.AddResize(GetSize());
-			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), static_cast<DWORD>(GetSize()), &bytes, nullptr);
-			buffer.AddBytes(GetSize());
-			auto w = GetLastError();
+			WriteFile(fileHandle, buffer.begin(), static_cast<uint32>(size(buffer.GetLength())), &bytes, nullptr);
+			buffer.modifyOccupiedBytes(-static_cast<int64>(size(buffer.GetLength())));
 			return bytes;
 		}
 		
 		template<class B>
-		uint32 Read(uint64 size, B& buffer) const {
+		uint32 Read(B& buffer, OptionalParameter<uint64> size = {}) const {
 			DWORD bytes{ 0 };
-			buffer.AddResize(bytes);
-			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), static_cast<uint32>(size), &bytes, nullptr);
-			buffer.AddBytes(bytes);
-			auto w = GetLastError();
-			return bytes;
-		}
-		
-		uint32 Read(uint64 size, uint64 offset, Range<byte*> buffer) const {
-			DWORD bytes{ 0 };
-			ReadFile(fileHandle, buffer.begin() + offset, static_cast<uint32>(size), &bytes, nullptr);
-			auto w = GetLastError();
-			GTSL_ASSERT(buffer.begin() + offset + size <= buffer.end(), "Trying to write outside of buffer!");
+			buffer.DeltaResize(size(GetSize()));
+			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), static_cast<uint32>(size(GetSize())), &bytes, nullptr);
+			buffer.modifyOccupiedBytes(bytes);
 			return bytes;
 		}
 
@@ -137,6 +122,12 @@ namespace GTSL {
 			auto res = GetFileSizeEx(fileHandle, &size);
 			GTSL_ASSERT(res != 0, "Win32 Error!");
 			return size.QuadPart;
+		}
+
+		uint64 GetFileHash() const {
+			FILETIME filetime;
+			GetFileTime(fileHandle, nullptr, nullptr, &filetime);
+			return filetime.dwLowDateTime | static_cast<uint64>(filetime.dwHighDateTime) << 32ull;
 		}
 
 		explicit operator bool() const { return fileHandle; }
