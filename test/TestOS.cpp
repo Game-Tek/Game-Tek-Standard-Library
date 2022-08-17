@@ -50,19 +50,31 @@ TEST(File, Read) {
 	GTEST_ASSERT_EQ(file.GetFileHash(), file.GetFileHash());
 #endif
 
-	GTSL::Buffer<GTSL::StaticAllocator<1024>> buffer;
+	{
+		GTSL::Buffer<GTSL::StaticAllocator<1024>> buffer;
 
-	file.Read(buffer, 8);
+		file.Read(buffer, 8);
 
-	GTEST_ASSERT_EQ(buffer.GetSize(), 8);
+		GTEST_ASSERT_EQ(buffer.GetSize(), 8);
 
-	file.Read(buffer, 8);
+		file.Read(buffer, 8);
 
-	GTEST_ASSERT_EQ(buffer.GetSize(), 16);
+		GTEST_ASSERT_EQ(buffer.GetSize(), 16);
 
-	GTSL::uint64 array[] = { 32ull, 32ull };
+		GTSL::uint64 array[] = { 32ull, 32ull };
 
-	GTEST_ASSERT_EQ(GTSL::Range(16, reinterpret_cast<const byte*>(array)), buffer.GetRange());
+		GTEST_ASSERT_EQ(GTSL::Range(16, reinterpret_cast<const byte*>(array)), buffer.GetRange());
+	}
+
+	{
+		file.SetPointer(0);
+
+		GTSL::Buffer<GTSL::StaticAllocator<1024>> buffer(file);
+
+		GTSL::uint64 array[] = { 32ull, 32ull };
+
+		GTEST_ASSERT_EQ(GTSL::Range(16, reinterpret_cast<const byte*>(array)), buffer.GetRange());
+	}
 }
 
 TEST(MappedFile, Construct) {
@@ -76,6 +88,14 @@ TEST(FileQuery, Do) {
 
 	res = file_query();
 	GTEST_ASSERT_EQ(res.State(), false);
+}
+
+TEST(DirectoryQuery, Construct) {
+	GTSL::DirectoryQuery directoryQuery(u8".", true, GTSL::DirectoryQuery::CHANGE_FILE_NAME);
+	auto result = directoryQuery([](GTSL::StringView file_path, GTSL::DirectoryQuery::FileAction){});
+	GTEST_ASSERT_EQ(result, false);
+	result = directoryQuery([](GTSL::StringView file_path, GTSL::DirectoryQuery::FileAction){});
+	GTEST_ASSERT_EQ(result, false);
 }
 
 TEST(DLL, Construct) {

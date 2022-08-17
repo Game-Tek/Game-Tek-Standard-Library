@@ -32,6 +32,12 @@ TEST(StringCommon, NumberToString) {
 		ToString(string, 3.141f);
 		GTEST_ASSERT_EQ(string, Range(u8"3.141000"));
 	}
+
+	{
+		GTSL::ShortString<32> string;
+		ToString(string, -3.141f);
+		GTEST_ASSERT_EQ(string, Range(u8"-3.141000"));
+	}
 }
 
 TEST(StringCommon, StringToNumber) {
@@ -120,4 +126,24 @@ TEST(StringCommon, ForEachSubstring) {
 	GTEST_ASSERT_EQ(vector[1], u8"bcd");
 	GTEST_ASSERT_EQ(vector[2], u8"efghi");
 	GTEST_ASSERT_EQ(vector[3], u8"j");
+}
+
+TEST(StringCommon, Join) {
+	{
+		GTSL::StaticString<128> string;
+		string += Join({}, u8"-");
+		GTEST_ASSERT_EQ(string, u8"");
+	}
+
+	{
+		GTSL::StaticString<128> string;
+		string += Join({ u8"a" }, u8"-");
+		GTEST_ASSERT_EQ(string, u8"a");
+	}
+
+	{
+		GTSL::StaticString<128> string;
+		string += Join({ u8"a", u8"b", u8"c" }, u8"-");
+		GTEST_ASSERT_EQ(string, u8"a-b-c");
+	}
 }

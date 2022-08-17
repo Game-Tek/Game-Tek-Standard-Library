@@ -60,75 +60,111 @@ namespace GTSL {
 
 		using WatchFilterFlag = Flags<uint16, struct WatchFilter>;
 
-		static constexpr auto CHANGE_FILE_NAME = WatchFilterFlag(1), CHANGE_DIR_NAME = WatchFilterFlag(2), FILE_WRITE = WatchFilterFlag(4);
+		static constexpr auto CREATE_FILE = WatchFilterFlag(1), CHANGE_FILE_NAME = WatchFilterFlag(2), CHANGE_FILE_HASH = WatchFilterFlag(4), DELETE_FILE = WatchFilterFlag(8), CHANGE_DIRECTORY_NAME = WatchFilterFlag(16);
 
-		DirectoryQuery(const StringView pathToWatch, bool watch_subtree, WatchFilterFlag flags) : watchSubtree(watch_subtree) {
-			if (flags & CHANGE_FILE_NAME) { dwNotifyFilter |= FILE_NOTIFY_CHANGE_FILE_NAME; }
-			if (flags & CHANGE_DIR_NAME) { dwNotifyFilter |= FILE_NOTIFY_CHANGE_DIR_NAME; }
-			if (flags & FILE_WRITE) { dwNotifyFilter |= FILE_NOTIFY_CHANGE_LAST_WRITE; }
-			notificationHandle = FindFirstChangeNotificationA(reinterpret_cast<const char*>(pathToWatch.GetData()), watchSubtree, dwNotifyFilter);
-		}
-
-		void Watch() {
-			WaitForSingleObject(notificationHandle, INFINITE);
-			FindNextChangeNotification(notificationHandle);
-		}
-
-		void EndQuery() {
-			FindCloseChangeNotification(notificationHandle);
-			notificationHandle = nullptr;
+		DirectoryQuery(const StringView path, bool watch_subtree, WatchFilterFlag flags) : watchFilter(flags), watchSubtree(watch_subtree) {
+			directoryHandle = CreateFileA(reinterpret_cast<const char*>(path.GetData()), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
+			overlapped.hEvent = CreateEventA(nullptr, false, false, nullptr);
 		}
 
 		enum class FileAction {
 			ADDED, REMOVED, MODIFIED, OLD_NAME, NEW_NAME
 		};
 
-		bool ReadNotifications(auto&& f) {
+		bool operator()(auto&& f) {
 			BOOL bWatchSubtree = watchSubtree;
 
-			alignas(DWORD) byte notify_informations[sizeof(FILE_NOTIFY_INFORMATION) * 16];
-
 			DWORD lpBytesReturned = 0;
-			auto readResult = ReadDirectoryChangesW(notificationHandle, notify_informations, sizeof(FILE_NOTIFY_INFORMATION) * 16, bWatchSubtree, dwNotifyFilter, &lpBytesReturned, nullptr, nullptr);
+			auto result = WaitForSingleObject(directoryHandle, 0);
 
-			if (!readResult) { return false; }
+			if(result == WAIT_OBJECT_0) { //Only if object is unsignaled
+				ReadDirectoryChangesW(directoryHandle, notify_informations, sizeof(FILE_NOTIFY_INFORMATION) * 512, bWatchSubtree, makeFlags(watchFilter), &lpBytesReturned, &overlapped, nullptr);
+			}
 
-			uint32 i = 0; 
-			while(true) {
+			auto getResult = GetOverlappedResult(directoryHandle, &overlapped, &lpBytesReturned, false);
+			auto getError = GetLastError();
+
+			uint32 i = 0;
+			while(i != lpBytesReturned) {
 				const auto& e = *reinterpret_cast<FILE_NOTIFY_INFORMATION*>(notify_informations + i);
 
 				FileAction action;
 
+				bool skip = false;
+
 				switch (e.Action) {
-				case FILE_ACTION_ADDED: action = FileAction::ADDED; break;
-				case FILE_ACTION_REMOVED: action = FileAction::REMOVED; break;
-				case FILE_ACTION_MODIFIED: action = FileAction::MODIFIED; break;
-				case FILE_ACTION_RENAMED_OLD_NAME: action = FileAction::OLD_NAME; break;
-				case FILE_ACTION_RENAMED_NEW_NAME: action = FileAction::NEW_NAME; break;
+				case FILE_ACTION_ADDED:
+					if(!(watchFilter & CREATE_FILE)) { skip = true; break; }
+					action = FileAction::ADDED;
+					break;
+				case FILE_ACTION_REMOVED:
+					if(!(watchFilter & DELETE_FILE)) { skip = true; break; }
+					action = FileAction::REMOVED;
+					break;
+				case FILE_ACTION_MODIFIED:
+					if(!(watchFilter & CHANGE_FILE_HASH)) { skip = true; break; }
+					action = FileAction::MODIFIED;
+					break;
+				case FILE_ACTION_RENAMED_OLD_NAME:
+					if(!(watchFilter & CHANGE_FILE_NAME)) { skip = true; break; }
+					action = FileAction::OLD_NAME;
+					break;
+				case FILE_ACTION_RENAMED_NEW_NAME:
+					if(!(watchFilter & CHANGE_FILE_NAME)) { skip = true; break; }
+					action = FileAction::NEW_NAME;
+					break;
 				}
 
-				char8_t convertedPath[256];
+				if(skip) { if(!e.NextEntryOffset) { ++i; break; } i += e.NextEntryOffset; continue; }
 
-				auto bytesWritten = WideCharToMultiByte(CP_UTF8, 0, e.FileName, e.FileNameLength / 2, reinterpret_cast<char*>(convertedPath), 256, nullptr, nullptr);
+				char8_t convertedPath[512];
+
+				wchar_t tempPath[512];
+				GTSL::MemCopy(e.FileNameLength, e.FileName, tempPath);
+				GTSL_ASSERT(e.FileNameLength < 512, "");
+				tempPath[e.FileNameLength / sizeof(wchar_t)] = L'\0';
+
+				auto bytesWritten = WideCharToMultiByte(CP_UTF8, 0, tempPath, -1, reinterpret_cast<char*>(convertedPath), 512, nullptr, nullptr);
 
 				f(StringView(Byte(bytesWritten), convertedPath), action);
 
-				if(!e.NextEntryOffset) { break; }
+				if(!e.NextEntryOffset) { ++i; break; }
 
 				i += e.NextEntryOffset;
 			}
 
-			return true;
+			return static_cast<bool>(i);
 		}
 
 		~DirectoryQuery() {
-			if(notificationHandle) {
-				EndQuery();
+			if(directoryHandle) {
+				CloseHandle(directoryHandle);
+			}
+
+			if(overlapped.hEvent) {
+				CloseHandle(overlapped.hEvent);
 			}
 		}
 
 	private:
-		DWORD dwNotifyFilter = 0; bool watchSubtree = true;
-		HANDLE notificationHandle = nullptr;
+		alignas(DWORD) byte notify_informations[sizeof(FILE_NOTIFY_INFORMATION) * 512];
+		WatchFilterFlag watchFilter;
+		bool watchSubtree = true;
+		HANDLE directoryHandle = nullptr, completionPort = nullptr;
+		OVERLAPPED overlapped{};
+
+		static DWORD makeFlags(WatchFilterFlag watch_filter) {
+			DWORD dwNotifyFilter = 0;
+
+			if (watch_filter & CREATE_FILE) { dwNotifyFilter |= FILE_NOTIFY_CHANGE_FILE_NAME; }
+			if (watch_filter & CHANGE_FILE_NAME) { dwNotifyFilter |= FILE_NOTIFY_CHANGE_FILE_NAME; }
+			if (watch_filter & DELETE_FILE) { dwNotifyFilter |= FILE_NOTIFY_CHANGE_FILE_NAME; }
+
+			if (watch_filter & CHANGE_DIRECTORY_NAME) { dwNotifyFilter |= FILE_NOTIFY_CHANGE_DIR_NAME; }
+
+			if (watch_filter & CHANGE_FILE_HASH) { dwNotifyFilter |= FILE_NOTIFY_CHANGE_LAST_WRITE; }
+
+			return dwNotifyFilter;
+		}
 	};
 }

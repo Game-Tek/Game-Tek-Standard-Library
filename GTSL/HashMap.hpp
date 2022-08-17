@@ -19,8 +19,9 @@
 #include "Assert.h"
 #endif
 
-namespace GTSL
-{
+namespace GTSL {
+	constexpr uint64 Hash(Integral auto value) { return static_cast<uint64>(value); }
+
 	template<typename K, typename V, Allocator ALLOCATOR>
 	class HashMap {
 	public:
@@ -128,22 +129,22 @@ namespace GTSL
 
 		template<typename... ARGS>
 		V& Emplace(const K key, ARGS&&... args) {
-			auto bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), this->bucketCount);
+			auto bucketIndex = ModuloByPowerOf2(Hash(key), this->bucketCount);
 			GTSL_ASSERT(findKeyInBucket(bucketIndex, key) == nullptr, "Key already exists!")
 			
 			if (getBucketLength(bucketIndex) + 1 > bucketCapacity) {
 				resize();
-				bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), this->bucketCount);
+				bucketIndex = ModuloByPowerOf2(Hash(key), this->bucketCount);
 			}
 
 			uint32 i = 0;
 			for (; i < getBucketLength(bucketIndex); ++i) {
-				if (getKeysBucket(bucketIndex)[i] > static_cast<uint64>(key)) {
+				if (getKeysBucket(bucketIndex)[i] > Hash(key)) {
 					break;
 				}
 			}
 
-			InsertElement(bucketCapacity, getBucketLength(bucketIndex), getKeysBucketPointer(bucketIndex) + 1, i, static_cast<uint64>(key));
+			InsertElement(bucketCapacity, getBucketLength(bucketIndex), getKeysBucketPointer(bucketIndex) + 1, i, Hash(key));
 			InsertElement(bucketCapacity, getBucketLength(bucketIndex), getValuesBucketPointer(bucketIndex), i, GTSL::ForwardRef<ARGS>(args)...);
 
 			++getBucketLength(bucketIndex);
@@ -162,34 +163,34 @@ namespace GTSL
 			}
 		}
 
-		[[nodiscard]] bool Find(const K key) const { return findKeyInBucket(ModuloByPowerOf2(static_cast<uint64>(key), this->bucketCount), key); }
+		[[nodiscard]] bool Find(const K key) const { return findKeyInBucket(ModuloByPowerOf2(Hash(key), this->bucketCount), key); }
 
 		[[nodiscard]] Result<V&> TryGet(const K key) {
-			const auto bucket = ModuloByPowerOf2(static_cast<uint64>(key), this->bucketCount);
+			const auto bucket = ModuloByPowerOf2(Hash(key), this->bucketCount);
 			auto result = getIndexForKeyInBucket(bucket, key);
 			return GTSL::Result<V&>(*(getValuesBucketPointer(bucket) + result.Get()), result.State());
 		}
 
 		[[nodiscard]] Result<const V&> TryGet(const K key) const {
-			const auto bucket = ModuloByPowerOf2(static_cast<uint64>(key), this->bucketCount);
+			const auto bucket = ModuloByPowerOf2(Hash(key), this->bucketCount);
 			auto result = getIndexForKeyInBucket(bucket, key);
 			return GTSL::Result<const V&>(*(getValuesBucketPointer(bucket) + result.Get()), result.State());
 		}
 
 		V& At(const K key) {
-			const auto bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), bucketCount); const auto elementIndex = getIndexForKeyInBucket(bucketIndex, key);
+			const auto bucketIndex = ModuloByPowerOf2(Hash(key), bucketCount); const auto elementIndex = getIndexForKeyInBucket(bucketIndex, key);
 			GTSL_ASSERT(elementIndex.State(), "No element with that key!");
 			return getValuesBucket(bucketIndex)[elementIndex.Get()];
 		}
 
 		const V& At(const K key) const {
-			const auto bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), bucketCount); const auto elementIndex = getIndexForKeyInBucket(bucketIndex, key);
+			const auto bucketIndex = ModuloByPowerOf2(Hash(key), bucketCount); const auto elementIndex = getIndexForKeyInBucket(bucketIndex, key);
 			GTSL_ASSERT(elementIndex.State(), "No element with that key!");
 			return getValuesBucket(bucketIndex)[elementIndex.Get()];
 		}
 
 		void Remove(const K key) {
-			auto bucketIndex = ModuloByPowerOf2(static_cast<uint64>(key), this->bucketCount); auto elementIndex = getIndexForKeyInBucket(bucketIndex, key);
+			auto bucketIndex = ModuloByPowerOf2(Hash(key), this->bucketCount); auto elementIndex = getIndexForKeyInBucket(bucketIndex, key);
 			GTSL_ASSERT(elementIndex.State(), "Key doesn't exist!")
 			PopElement(bucketCapacity, getBucketLength(bucketIndex), getKeysBucketPointer(bucketIndex) + 1, elementIndex.Get());
 			PopElement(bucketCapacity, getBucketLength(bucketIndex), getValuesBucketPointer(bucketIndex), elementIndex.Get());
@@ -219,15 +220,15 @@ namespace GTSL
 
 		[[nodiscard]] uint64* findKeyInBucket(const uint32 keys_bucket, const K& key) const {
 			for (auto& e : getKeysBucket(keys_bucket)) {
-				if(e > static_cast<uint64>(key)) { break; }
-				if (e == static_cast<uint64>(key)) { return &e; }
+				if(e > Hash(key)) { break; }
+				if (e == Hash(key)) { return &e; }
 			}
 			return nullptr;
 		}
 
 		[[nodiscard]] Result<uint32> getIndexForKeyInBucket(const uint32 bucketIndex, const K& key) const
 		{
-			for (auto& e : getKeysBucket(bucketIndex)) { if (e == static_cast<uint64>(key)) { return GTSL::Result(static_cast<uint32>(&e - getKeysBucket(bucketIndex).begin()), true); } }
+			for (auto& e : getKeysBucket(bucketIndex)) { if (e == Hash(key)) { return GTSL::Result(static_cast<uint32>(&e - getKeysBucket(bucketIndex).begin()), true); } }
 			return GTSL::Result<uint32>(0, false);
 		}
 
@@ -253,12 +254,12 @@ namespace GTSL
 
 					uint32 i = 0;
 					for (; i < newBucketLength; ++i) {
-						if (getKeysBucket(newAlloc, newBucketIndex, newBucketCapacity)[i] > static_cast<uint64>(getKeysBucket(bucketIndex)[bucketElementIndex])) {
+						if (getKeysBucket(newAlloc, newBucketIndex, newBucketCapacity)[i] > getKeysBucket(bucketIndex)[bucketElementIndex]) {
 							break;
 						}
 					}
 
-					InsertElement(newBucketCapacity, newBucketLength, getKeysBucket(newAlloc, newBucketIndex, newBucketCapacity), i, static_cast<uint64>(getKeysBucket(bucketIndex)[bucketElementIndex]));
+					InsertElement(newBucketCapacity, newBucketLength, getKeysBucket(newAlloc, newBucketIndex, newBucketCapacity), i, getKeysBucket(bucketIndex)[bucketElementIndex]);
 					InsertElement(newBucketCapacity, newBucketLength, getValuesBucketPointer(newAlloc, newBucketIndex, newBucketCapacity, newBucketCount), i, MoveRef(getValuesBucketPointer(data, bucketIndex, bucketCapacity, bucketCount)[bucketElementIndex]));
 
 					++newBucketLength;

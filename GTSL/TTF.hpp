@@ -547,7 +547,7 @@ namespace GTSL {
 	inline bool MakeFont(const Range<const byte*> buffer, Font* fontData) {
 		const char* data = reinterpret_cast<const char*>(buffer.begin());
 
-		HashMap<Id64, TableEntry, DefaultAllocatorReference> tables;
+		HashMap<StringView, TableEntry, DefaultAllocatorReference> tables;
 
 		uint32 ptr = 0;
 

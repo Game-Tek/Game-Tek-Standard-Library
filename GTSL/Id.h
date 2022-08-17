@@ -7,7 +7,7 @@
 
 namespace GTSL
 {
-	constexpr uint64 Hash(const Range<const char8_t*> string) {
+	constexpr uint64 Hash(const StringView string) {
 		uint64 primary_hash(525201411107845655ull);
 
 		for (uint32 i = 0; i < string.GetBytes(); ++i) {

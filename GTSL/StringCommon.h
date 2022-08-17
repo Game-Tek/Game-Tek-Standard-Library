@@ -84,7 +84,7 @@ namespace GTSL
 		}
 
 		constexpr Range(const Byte bytes, const char8_t* string) : data(string), bytes(bytes) {
-			for (uint32 i = 0; i < bytes.GetCount();) { i += UTF8CodePointLength(data[bytes]); ++codepoints; }
+			for (uint32 i = 0; i < bytes.GetCount();) { i += UTF8CodePointLength(data[i]); ++codepoints; }
 		}
 
 		constexpr Range(const uint32 bytes, const uint32 codePoints, const char8_t* string) : data(string), codepoints(codePoints), bytes(bytes) {
@@ -214,7 +214,7 @@ namespace GTSL
 		bool hasDecimalSeparator = false;
 
 		for (const auto e : string) {
-			if (e != U'0' and e != U'1' and e != U'2' and e != U'3' and e != U'4' and e != U'5' and e != U'6' and e != U'7' and e != U'8' and e != U'9' and e != U'.') {
+			if (e != U'0' and e != U'1' and e != U'2' and e != U'3' and e != U'4' and e != U'5' and e != U'6' and e != U'7' and e != U'8' and e != U'9' and e != U'.' and e != U'-') {
 				return false;
 			}
 
@@ -461,4 +461,9 @@ namespace GTSL
 
 		return false;
 	}
+
+	struct Join {
+		GTSL::Range<const GTSL::StringView*> Strings;
+		GTSL::StringView Connector;
+	};
 }

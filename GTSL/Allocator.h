@@ -184,15 +184,13 @@ namespace GTSL
 	};
 
 	template<uint32 BYTES, class A>
-	class DoubleAllocator
-	{
+	class DoubleAllocator {
 	public:
 		DoubleAllocator(const A& alloc = A()) : a(alloc) {}
 
 		DoubleAllocator(const DoubleAllocator& other) : allocator(other.allocator), a(other.a) {}
 		
-		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size)
-		{
+		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size) {
 			if(size <= BYTES) {
 				*data = buffer;
 				*allocated_size = BYTES;
@@ -203,11 +201,14 @@ namespace GTSL
 			}
 		}
 
-		void Deallocate(const uint64 size, uint64 alignment, void* data)
-		{
+		void Deallocate(const uint64 size, uint64 alignment, void* data) {
 			if(!allocator) {
 				a.Deallocate(size, alignment, data);
 			}
+		}
+
+		const A& GetAllocator() const {
+			return a;
 		}
 
 	private:

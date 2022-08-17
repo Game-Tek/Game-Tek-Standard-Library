@@ -6,7 +6,6 @@
 #include <initializer_list>
 
 #include "Tuple.hpp"
-#include "Algorithm.hpp"
 
 namespace GTSL
 {

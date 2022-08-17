@@ -170,6 +170,21 @@ namespace GTSL
 			return *this;
 		}
 
+		String& operator+=(const Join& join) {			
+			if(join.Strings.ElementCount()) {
+				(*this) += join.Strings[0];
+			} else {
+				return (*this);
+			}
+
+			for(auto begin = join.Strings.begin() + 1; begin != join.Strings.end(); ++begin) {
+				(*this) += join.Connector;
+				(*this) += *begin;
+			}
+
+			return *this;
+		}
+
 		//String& operator+=(char32_t character) {
 		//	auto p = ToUTF8(character);
 		//	bytes += utf8_length(p[0]);

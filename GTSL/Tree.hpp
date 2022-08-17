@@ -356,7 +356,7 @@ namespace GTSL
 		void Optimize() {
 			//if (outOfOrderNodes.GetLength()) {
 			//	Vector<Pair<uint32, uint32>, ALLOCATOR> groups;
-			//	SortG(outOfOrderNodes);
+			//	SortAscending(outOfOrderNodes);
 			//	groups.EmplaceBack(1, outOfOrderNodes.front());
 			//	for (uint32 i = 1; i < outOfOrderNodes.GetLength(); ++i) {
 			//		if (outOfOrderNodes[i] == groups.back().Second + 1) { ++groups.back().First; } // If next node

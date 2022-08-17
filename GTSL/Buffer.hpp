@@ -16,6 +16,10 @@ namespace GTSL
 	public:
 		Buffer(const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {
 		}
+
+		Buffer(auto& source, const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {
+			source.Read(*this);
+		}
 		
 		Buffer(uint32 size, uint32 alignment, const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {
 			Allocate(size, alignment);
@@ -97,7 +101,7 @@ namespace GTSL
 		explicit operator Range<byte*>() const { return Range<byte*>(length, data); }
 		explicit operator Range<const byte*>() const { return Range<const byte*>(length, data); }
 
-		explicit operator StringView() const { return { Byte(length), data }; }
+		explicit operator StringView() const { return GTSL::StringView(Byte(length), reinterpret_cast<const char8_t*>(data)); }
 
 		Range<byte*> GetRange() { return Range<byte*>(length, data); }
 		Range<const byte*> GetRange() const { return Range<const byte*>(length, data); }

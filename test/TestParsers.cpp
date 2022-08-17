@@ -82,7 +82,9 @@ TEST(JSON, Deserialize) {
     "statements":[
         { "name":"Write", "params":[ { "name": "GetScreenPosition() "}, { "type":"float4", "params" : [{ "type":"float32", "params" : [1] }] } ] }
 	],
-	"debug":3
+	"debug":3,
+	"index":-1,
+	"position":-3.0
 })";
 
 	//todo if key val pattern is not followed error
@@ -91,9 +93,8 @@ TEST(JSON, Deserialize) {
 
 	GTSL::StaticVector<GTSL::StaticString<64>, 8> inputs;
 	GTSL::StaticVector<GTSL::Tuple<GTSL::StaticString<64>, GTSL::StaticString<64>, GTSL::StaticString<64>>, 8> shaderVariables;
-
-	GTSL::Buffer<GTSL::DefaultAllocatorReference> buffer;
-	auto json = GTSL::Parse(jsonString, buffer);
+	
+	auto json = GTSL::JSON(jsonString, GTSL::DefaultAllocatorReference{});
 
 	ASSERT_TRUE(json);
 
@@ -128,6 +129,10 @@ TEST(JSON, Deserialize) {
 	GTEST_ASSERT_EQ(renderPass, u8"ColorCorrectionRenderPass");
 	ASSERT_TRUE(json[u8"localSize"]);
 
+	for(auto e : json[u8"nonExistingArray"]) {
+		ASSERT_FALSE(true);
+	}
+
 	GTEST_ASSERT_EQ(x, 1); GTEST_ASSERT_EQ(y, 1); GTEST_ASSERT_EQ(z, 1);
 
 	GTEST_ASSERT_EQ(GTSL::StringView(json[u8"statements"][0][u8"name"]), u8"Write");
@@ -138,9 +143,11 @@ TEST(JSON, Deserialize) {
 	
 	GTEST_ASSERT_EQ(GTSL::StringView(json[u8"statements"][0][u8"params"][1][u8"type"]), u8"float4");
 	GTEST_ASSERT_EQ(GTSL::StringView(json[u8"statements"][0][u8"params"][1][u8"params"][0][u8"type"]), u8"float32");
-	GTEST_ASSERT_EQ(GTSL::uint64(json[u8"statements"][0][u8"params"][1][u8"params"][0][u8"params"][0]), 1);
-	
+	GTEST_ASSERT_EQ(GTSL::uint64(json[u8"statements"][0][u8"params"][1][u8"params"][0][u8"params"][0]), 1);	
+
 	GTEST_ASSERT_EQ(GTSL::uint64(json[u8"debug"]), 3ull);
+	GTEST_ASSERT_EQ(GTSL::int64(json[u8"index"]), -1ll);
+	GTEST_ASSERT_EQ(GTSL::float32(json[u8"position"]), -3.0f);
 }
 
 TEST(JSON, Deserialize2) {
@@ -169,9 +176,8 @@ TEST(JSON, Deserialize2) {
 
 	GTSL::StaticVector<GTSL::StaticString<64>, 8> inputs;
 	GTSL::StaticVector<GTSL::Tuple<GTSL::StaticString<64>, GTSL::StaticString<64>, GTSL::StaticString<64>>, 8> shaderVariables;
-
-	GTSL::Buffer<GTSL::DefaultAllocatorReference> buffer;
-	auto json = GTSL::Parse(jsonString, buffer);
+	
+	auto json = GTSL::JSON(jsonString, GTSL::DefaultAllocatorReference{});
 
 	GTEST_ASSERT_EQ(GTSL::uint64(json[u8"debug"]), 3ull);
 }

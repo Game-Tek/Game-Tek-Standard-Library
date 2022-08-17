@@ -6,32 +6,42 @@
 #include "GTSL/ArrayCommon.hpp"
 #include "GTSL/Delegate.hpp"
 
-TEST(CrossSearch, Invalid) {
+TEST(AllContain, Invalid) {
 	GTSL::StaticVector<GTSL::uint32, 8> a{ 1, 2, 3, 4, 5, 6, 7, 8 };
 	GTSL::StaticVector<GTSL::uint32, 8> b{ 9, 10, 11, 12, 13, 14, 15 };
 
-	GTEST_ASSERT_EQ(CrossSearch(a, b, 6u), false);
-	GTEST_ASSERT_EQ(CrossSearch(a, b, 15), false);
-	GTEST_ASSERT_EQ(CrossSearch(a, b, 1u), false);
-	GTEST_ASSERT_EQ(CrossSearch(a, b, 9u), false);
-	GTEST_ASSERT_EQ(CrossSearch(a, b, 18u), false);
+	GTEST_ASSERT_EQ(GTSL::Contain(GTSL::ref_tuple(a, b), 6u), false);
+	GTEST_ASSERT_EQ(GTSL::Contain(GTSL::ref_tuple(a, b), 15), false);
+	GTEST_ASSERT_EQ(GTSL::Contain(GTSL::ref_tuple(a, b), 1u), false);
+	GTEST_ASSERT_EQ(GTSL::Contain(GTSL::ref_tuple(a, b), 9u), false);
+	GTEST_ASSERT_EQ(GTSL::Contain(GTSL::ref_tuple(a, b), 18u), false);
 }
 
-TEST(CrossSearch, Valid) {
+TEST(AllContain, Valid) {
 	GTSL::StaticVector<GTSL::uint32, 8> a{ 1, 2, 3, 4, 5, 6, 7, 8 };
 	GTSL::StaticVector<GTSL::uint32, 8> b{ 7, 6, 5, 4, 3, 2, 1, 0 };
 
-	GTEST_ASSERT_EQ(CrossSearch(a, b, 1u), true);
-	GTEST_ASSERT_EQ(CrossSearch(a, b, 2u), true);
-	GTEST_ASSERT_EQ(CrossSearch(a, b, 3u), true);
-	GTEST_ASSERT_EQ(CrossSearch(a, b, 4u), true);
-	GTEST_ASSERT_EQ(CrossSearch(a, b, 5u), true);
+	GTEST_ASSERT_EQ(GTSL::Contain(GTSL::ref_tuple(a, b), 1u), true);
+	GTEST_ASSERT_EQ(GTSL::Contain(GTSL::ref_tuple(a, b), 2u), true);
+	GTEST_ASSERT_EQ(GTSL::Contain(GTSL::ref_tuple(a, b), 3u), true);
+	GTEST_ASSERT_EQ(GTSL::Contain(GTSL::ref_tuple(a, b), 4u), true);
+	GTEST_ASSERT_EQ(GTSL::Contain(GTSL::ref_tuple(a, b), 5u), true);
+}
+
+TEST(Contains, Array) {
+	GTSL::StaticVector<GTSL::uint32, 8> a{ 3u, 6u, 9u, 2u, 4u };
+
+	ASSERT_TRUE(Contains(a, 6u));
+	ASSERT_TRUE(Contains(a, 4u));
+	ASSERT_TRUE(Contains(a, 3u));
+
+	ASSERT_FALSE(Contains(a, 0u));
 }
 
 TEST(Sort, Greater) {
 	GTSL::StaticVector<GTSL::uint32, 16> a{ 7, 6, 5, 4, 3, 2, 1, 0, 16, 67, 128, 111, 37 };
 
-	SortG(a);
+	SortAscending(a);
 
 	GTEST_ASSERT_EQ(a[0], 0);
 	GTEST_ASSERT_EQ(a[1], 1);
@@ -46,7 +56,7 @@ TEST(Sort, Greater) {
 TEST(Sort, Less) {
 	GTSL::StaticVector<GTSL::uint32, 16> a{ 0, 1, 2, 3, 4, 5, 6, 7 };
 
-	SortL(a);
+	SortDescending(a);
 
 	GTEST_ASSERT_EQ(a[0], 7);
 	GTEST_ASSERT_EQ(a[1], 6);

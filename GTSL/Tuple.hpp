@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core.h"
-#include "Algorithm.hpp"
+#include "TypeTraits.hpp"
 
 namespace GTSL
 {	
@@ -9,12 +9,29 @@ namespace GTSL
 
 	template <> class Tuple<> {};
 
+	template <class T>
+	struct unwrap_refwrapper
+	{
+	    using type = T;
+	};
+	 
+	template <class T>
+	struct unwrap_refwrapper<std::reference_wrapper<T>>
+	{
+	    using type = T&;
+	};
+	 
+	template <class T>
+	using unwrap_decay_t = typename unwrap_refwrapper<typename std::decay<T>::type>::type;
+	// or use std::unwrap_ref_decay_t (since C++20)
+
 	template<typename T>
 	class Tuple<T> {
 	public:
 		Tuple() = default;
-		Tuple(T&& arg) : element(GTSL::ForwardRef<T>(arg))
-		{}
+		//Tuple(const T arg) : element(arg) {}
+		//Tuple(const T& arg) : element(arg) {}
+		Tuple(T&& arg) : element(GTSL::ForwardRef<T>(arg)) {}
 
 		T element;
 	};
@@ -23,14 +40,27 @@ namespace GTSL
 	class Tuple<T, TYPES...> {
 	public:
 		Tuple() = default;
-		Tuple(T&& arg, TYPES&&... types) : element(GTSL::ForwardRef<T>(arg)), rest(GTSL::ForwardRef<TYPES>(types)...)
-		{}
+		//Tuple(const T arg, const TYPES... types) : element(arg), rest(types...) {}
+		//Tuple(const T& arg, const TYPES&... types) : element(arg), rest(types...) {}
+		Tuple(T&& arg, TYPES&&... types) : element(GTSL::ForwardRef<T>(arg)), rest(GTSL::ForwardRef<TYPES>(types)...) {}
 
 		using type = T;
 		
 		T element;
 		Tuple<TYPES...> rest;
 	};
+
+	template <class... Types>
+	constexpr // since C++14
+	auto make_tuple(Types&&... args) {
+	    return Tuple<unwrap_decay_t<Types>...>(GTSL::ForwardRef<Types>(args)...);
+	}
+
+	template <class... Types>
+	constexpr // since C++14
+	auto ref_tuple(const Types&... args) {
+	    return Tuple<const Types&...>(GTSL::ref(args)...);
+	}
 
 	template<uint64 N, typename T>
 	struct TupleElement;
