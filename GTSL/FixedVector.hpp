@@ -35,7 +35,7 @@ namespace GTSL
 			}
 		}
 
-		template<typename T>
+		template<typename TT>
 		struct FixedVectorIterator {
 			//begin
 			FixedVectorIterator(FixedVector* keepVector) : keepVector(keepVector) {}
@@ -52,12 +52,12 @@ namespace GTSL
 				return *this;
 			}
 
-			T& operator*() { return keepVector->data[pos]; }
-			T* operator->() { return keepVector->data + pos; }
+			TT& operator*() { return keepVector->data[pos]; }
+			TT* operator->() { return keepVector->data + pos; }
 
 		private:
 			uint32 pos = 0;
-			FixedVector<T, ALLOCATOR>* keepVector = nullptr;
+			FixedVector<TT, ALLOCATOR>* keepVector = nullptr;
 
 			static constexpr uint32 modulo(const uint32 key) { return key & (BITS - 1); }
 		};

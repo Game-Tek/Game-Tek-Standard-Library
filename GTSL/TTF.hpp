@@ -30,7 +30,7 @@ namespace GTSL {
 	};
 
 	inline void read(int64* dst, const char* src, uint32* offset) {
-		if constexpr (_WIN64) {
+#if (_WIN64 || __linux__)
 			reinterpret_cast<uint8_t*>(dst)[0] = src[*offset + 7];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[*offset + 6];
 			reinterpret_cast<uint8_t*>(dst)[2] = src[*offset + 5];
@@ -39,7 +39,7 @@ namespace GTSL {
 			reinterpret_cast<uint8_t*>(dst)[5] = src[*offset + 2];
 			reinterpret_cast<uint8_t*>(dst)[6] = src[*offset + 1];
 			reinterpret_cast<uint8_t*>(dst)[7] = src[*offset + 0];
-		} else {
+#else
 			reinterpret_cast<uint8_t*>(dst)[0] = src[0];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[1];
 			reinterpret_cast<uint8_t*>(dst)[2] = src[2];
@@ -48,13 +48,13 @@ namespace GTSL {
 			reinterpret_cast<uint8_t*>(dst)[5] = src[5];
 			reinterpret_cast<uint8_t*>(dst)[6] = src[6];
 			reinterpret_cast<uint8_t*>(dst)[7] = src[7];
-		}
+#endif
 	
 		*offset += 8;
 	}
 
 	inline void read(uint64* dst, const char* src, uint32* offset) {
-		if constexpr (_WIN64) {
+#if (_WIN64 || __linux__)
 			reinterpret_cast<uint8_t*>(dst)[0] = src[*offset + 7];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[*offset + 6];
 			reinterpret_cast<uint8_t*>(dst)[2] = src[*offset + 5];
@@ -63,7 +63,7 @@ namespace GTSL {
 			reinterpret_cast<uint8_t*>(dst)[5] = src[*offset + 2];
 			reinterpret_cast<uint8_t*>(dst)[6] = src[*offset + 1];
 			reinterpret_cast<uint8_t*>(dst)[7] = src[*offset + 0];
-		} else {
+#else
 			reinterpret_cast<uint8_t*>(dst)[0] = src[0];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[1];
 			reinterpret_cast<uint8_t*>(dst)[2] = src[2];
@@ -72,63 +72,63 @@ namespace GTSL {
 			reinterpret_cast<uint8_t*>(dst)[5] = src[5];
 			reinterpret_cast<uint8_t*>(dst)[6] = src[6];
 			reinterpret_cast<uint8_t*>(dst)[7] = src[7];
-		}
+#endif
 	
 		*offset += 8;
 	}
 
 	inline void read(float32* dst, const char* src, uint32* offset) {
-		if constexpr (_WIN64) {
+#if (_WIN64 || __linux__)
 			reinterpret_cast<uint8_t*>(dst)[0] = src[*offset + 3];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[*offset + 2];
 			reinterpret_cast<uint8_t*>(dst)[2] = src[*offset + 1];
 			reinterpret_cast<uint8_t*>(dst)[3] = src[*offset + 0];
-		} else {
+#else
 			reinterpret_cast<uint8_t*>(dst)[0] = src[0];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[1];
 			reinterpret_cast<uint8_t*>(dst)[2] = src[2];
 			reinterpret_cast<uint8_t*>(dst)[3] = src[3];
-		}
+#endif
 	
 		*offset += 4;
 	}
 
 	inline void read(uint32* dst, const char* src, uint32* offset) {
-		if constexpr (_WIN64) {
+#if (_WIN64 || __linux__)
 			reinterpret_cast<uint8_t*>(dst)[0] = src[*offset + 3];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[*offset + 2];
 			reinterpret_cast<uint8_t*>(dst)[2] = src[*offset + 1];
 			reinterpret_cast<uint8_t*>(dst)[3] = src[*offset + 0];
-		} else {
+#else
 			reinterpret_cast<uint8_t*>(dst)[0] = src[0];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[1];
 			reinterpret_cast<uint8_t*>(dst)[2] = src[2];
 			reinterpret_cast<uint8_t*>(dst)[3] = src[3];
-		}
+#endif
 	
 		*offset += 4;
 	}
 
 	inline void read(int16* dst, const char* src, uint32* offset) {
-		if constexpr (_WIN64) {
+#if (_WIN64 || __linux__)
 			reinterpret_cast<uint8_t*>(dst)[0] = src[*offset + 1];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[*offset + 0];
-		} else {
+#else
 			reinterpret_cast<uint8_t*>(dst)[0] = src[0];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[1];
-		}
+#endif
 	
 		*offset += 2;
 	}
 
 	inline void read(uint16* dst, const char* src, uint32* offset) {
-		if constexpr (_WIN64) {
+#if (_WIN64 || __linux__)
 			reinterpret_cast<uint8_t*>(dst)[0] = src[*offset + 1];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[*offset + 0];
-		} else {
+#else
 			reinterpret_cast<uint8_t*>(dst)[0] = src[0];
 			reinterpret_cast<uint8_t*>(dst)[1] = src[1];
-		}
+#endif
 	
 		*offset += 2;
 	}
@@ -147,13 +147,13 @@ namespace GTSL {
 	T get(const char* source, uint32 offset) {
 		T result;
 
-		if constexpr (_WIN64) {
+		#if (_WIN64 || __linux__)
 			reinterpret_cast<uint8_t*>(&result)[0] = source[offset + 1];
 			reinterpret_cast<uint8_t*>(&result)[1] = source[offset + 0];
-		} else {
+		#else
 			reinterpret_cast<uint8_t*>(&result)[0] = source[0];
 			reinterpret_cast<uint8_t*>(&result)[1] = source[1];
-		}
+		#endif
 
 		return result;
 	}
@@ -413,7 +413,7 @@ namespace GTSL {
 	struct CPALTable {
 		uint16 numPaletteEntries, numPalettes, numColorRecords;
 		uint32 colorRecordsArrayOffset;
-		std::vector<uint16> colorRecordIndices; //Index of each palette’s first color record in the combined color record array.
+		std::vector<uint16> colorRecordIndices; //Index of each paletteï¿½s first color record in the combined color record array.
 
 		struct BGRAColor {
 			uint8 Blue, Green, Red, Alpha;

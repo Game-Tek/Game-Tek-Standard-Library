@@ -115,7 +115,6 @@ namespace GTSL {
 
 				break;
 			}
-			default: __debugbreak();
 			}
 		}
 	}

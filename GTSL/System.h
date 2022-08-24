@@ -23,7 +23,7 @@ namespace GTSL
 		Byte ProcessAvailableMemory;
 	};
 
-	struct VectorInfo {
+	struct CPUVectorInfo {
 		bool HW_MMX, HW_x64, HW_ABM, HW_RDRAND, HW_BMI1, HW_BMI2, HW_ADX, HW_PREFETCHWT1, HW_MPX;
 
 		//  SIMD: 128-bit
@@ -38,7 +38,7 @@ namespace GTSL
 
 	struct SystemInfo {
 		struct CPUInfo {
-			VectorInfo VectorInfo;
+			CPUVectorInfo VectorInfo;
 			uint8 CoreCount = 0;
 		} CPU;
 
@@ -60,7 +60,7 @@ namespace GTSL
 #endif
 		}
 
-		static void GetVectorInfo(VectorInfo& vectorInfo) {
+		static void GetVectorInfo(CPUVectorInfo& vectorInfo) {
 #if (_WIN32)
 			//https://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set
 
@@ -135,11 +135,13 @@ namespace GTSL
 		}
 
 		static Extent2D GetScreenExtent() {
-			if constexpr (_WIN32) {
-				int width = GetSystemMetrics(SM_CXSCREEN);
-				int height = GetSystemMetrics(SM_CYSCREEN);
-				return Extent2D(width, height);
-			}
+#if _WIN64
+			int width = GetSystemMetrics(SM_CXSCREEN);
+			int height = GetSystemMetrics(SM_CYSCREEN);
+			return Extent2D(width, height);
+#elif __linux__
+			return Extent2D();
+#endif
 		}
 
 		static void QueryParameter(const Range<const char8_t*> name) {

@@ -143,7 +143,7 @@ namespace GTSL
 		};
 		
 		void BindToOS(StringView name, Extent2D extent, const Application& application, void* userData, Delegate<void(void*, WindowEvents, void*)> function, Window parentWindow = Window(), WindowType type = WindowType::OS_WINDOW) {
-#if (_WIN32)
+#if (_WIN64)
 			WNDCLASSA wndclass{};
 			wndclass.lpfnWndProc = reinterpret_cast<WNDPROC>(Win32_windowProc);
 			wndclass.cbClsExtra = 0;
@@ -183,10 +183,14 @@ namespace GTSL
 		}
 		
 		~Window() {
+#if (_WIN64)
 			DestroyWindow(windowHandle);
+#elif __linux__
+#endif
 		}
 
 		void Update(void* userData, Delegate<void(void*, WindowEvents, void*)> function) {
+#if (_WIN64)
 			WindowsCallData windowsCallData;
 			windowsCallData.WindowPointer = this;
 			windowsCallData.UserData = userData;
@@ -206,17 +210,27 @@ namespace GTSL
 			if(windowsCallData.MouseMove != 0) {
 				function(userData, WindowEvents::MOUSE_MOVE, &windowsCallData.MouseMove);
 			}
+#elif __linux__
+#endif
 		}
 		
 		void SetTitle(const char* title) {
+#if (_WIN64)
 			SetWindowTextA(windowHandle, title);
+#elif __linux__
+#endif
 		}
 		
 		void Notify() {
+#if (_WIN64)
 			FlashWindow(windowHandle, true);
+#elif __linux__
+#endif
 		}
 
+#if (_WIN64)
 		HWND GetHWND() const { return windowHandle; }
+#endif
 
 		struct WindowIconInfo
 		{
@@ -226,32 +240,49 @@ namespace GTSL
 		void SetIcon(const WindowIconInfo & windowIconInfo);
 
 		Extent2D GetFramebufferExtent() const {
+#if (_WIN64)
 			RECT rect; GTSL::Extent2D extent;
 			GetClientRect(windowHandle, &rect);
 			extent.Width = static_cast<uint16>(rect.right);
 			extent.Height = static_cast<uint16>(rect.bottom);
 			return extent;
+#elif __linux__
+#endif
 		}
 		
 		Extent2D GetWindowExtent() const {
+#if (_WIN64)
 			RECT rect; GTSL::Extent2D extent;
 			GetWindowRect(windowHandle, &rect);
 			extent.Width = static_cast<uint16>(rect.right - rect.left);
 			extent.Height = static_cast<uint16>(rect.bottom - rect.top);
 			return extent;
+#elif __linux__
+#endif
 		}
 
 		void SetMousePosition(Extent2D position) {
+#if (_WIN64)
 			SetCursorPos(position.Width, position.Height);
+#elif __linux__
+#endif
 		}
 		
 		void LimitMousePosition(Extent2D range) {
+#if (_WIN64)
 			RECT rect;
 			GetClientRect(windowHandle, &rect);
 			ClipCursor(&rect);
+#elif __linux__
+#endif
 		}
 
-		void ShowMouse(bool show){ ShowCursor(show); }
+		void ShowMouse(bool show) {
+#if (_WIN64)
+			ShowCursor(show);
+#elif __linux__
+#endif
+		}
 		
 		static void GetAspectRatio(const Extent2D & extent, float& aspectRatio) { aspectRatio = static_cast<float>(extent.Width) / static_cast<float>(extent.Height); }
 
@@ -263,6 +294,7 @@ namespace GTSL
 			uint8 NewBitsPerPixel = 8;
 		};
 		void SetState(const WindowState & windowState) {
+	#if (_WIN64)
 			switch (windowState.NewWindowSizeState) {
 			case WindowSizeState::MAXIMIZED: {
 				SetWindowLongPtrA(windowHandle, GWL_STYLE, defaultWindowStyle);
@@ -289,23 +321,35 @@ namespace GTSL
 				break;
 			}
 			}
+#elif __linux__
+#endif
 		}
 
 		struct NativeHandles {
+#if (_WIN64)
 			HWND HWND{ nullptr };
+#elif __linux__
+#endif
 		};
 		void GetNativeHandles(void* nativeHandlesStruct) const {
+#if (_WIN64)
 			static_cast<NativeHandles*>(nativeHandlesStruct)->HWND = windowHandle;
+#elif __linux__
+#endif
 		}
 
 		void SetWindowVisibility(bool visible) {
+#if (_WIN64)
 			// Call async version to ensure window proc does not get called at the moment this is called, as we will not have a valid window proc state set
 			ShowWindowAsync(windowHandle, visible ? SW_SHOW : SW_HIDE);
+#elif __linux__
+#endif
 		}
 
 		enum class DeviceType : uint8 { MOUSE, GAMEPAD };
 		
 		void AddDevice(const DeviceType deviceType) {
+#if (_WIN64)
 			StaticVector<RAWINPUTDEVICE, 8> rawInputDevices;
 
 			switch (deviceType) {
@@ -333,6 +377,8 @@ namespace GTSL
 				auto errorCode = GetLastError();
 				GTSL_ASSERT(false, "Failed to register devices");
 			}
+#elif __linux__
+#endif
 		}
 		
 		enum class ProgressState {
@@ -343,6 +389,7 @@ namespace GTSL
 			ERROR
 		};
 		void SetProgressState(ProgressState progressState) const {
+#if (_WIN64)
 			TBPFLAG flags = TBPF_NOPROGRESS;
 
 #undef ERROR
@@ -357,6 +404,8 @@ namespace GTSL
 			}
 
 			//static_cast<ITaskbarList3*>(iTaskbarList)->SetProgressState(static_cast<HWND>(windowHandle), flags);
+#elif __linux__
+#endif
 		}
 		
 		void SetProgressValue(float32 value) const {
@@ -365,14 +414,13 @@ namespace GTSL
 	
 	protected:
 		WindowSizeState windowSizeState;
+		bool focus;
 
+#if (_WIN64)
 		HWND windowHandle = nullptr;
 		uint32 defaultWindowStyle{ 0 };
 
-		bool focus : 1 = false;
 		//void* iTaskbarList;
-
-#ifdef _WIN32
 		//https://gist.github.com/mmozeiko/b8ccc54037a5eaf35432396feabbe435
 		struct xbox_state {
 			DWORD packet;

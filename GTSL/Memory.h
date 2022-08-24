@@ -4,12 +4,14 @@
 #include "Range.hpp"
 
 #include <memory>
+#include <cstring>
 
 #if (_WIN64)
 #define WIN32_LEAN_AND_MEAN
 #define NO_COMM
 #include <Windows.h>
 #endif
+
 #include <immintrin.h>
 #include <GTSL/Math/Math.hpp>
 
@@ -78,6 +80,7 @@ namespace GTSL
 	inline byte* AlignPointer(const uint64 alignment, const byte* data) { return reinterpret_cast<byte*>(reinterpret_cast<uint64>(data) + (alignment - 1) & ~(alignment - 1)); }
 
 	inline void SysAlloc(uint64 size, void** data, uint64* allocatedSize) {
+#if (_WIN64)
 		DWORD allocationInfo = 0;
 
 		allocationInfo |= MEM_COMMIT; allocationInfo |= MEM_RESERVE;
@@ -89,9 +92,12 @@ namespace GTSL
 
 		*allocatedSize = GTSL::Math::RoundUpByPowerOf2(size, systemInfo.dwPageSize);
 		*data = allocatedAddress;
+#endif
 	}
 
 	inline void SysDealloc(uint64 size, void** data) {
+#if (_WIN64)
 		VirtualFree(*data, 0, MEM_RELEASE);
+#endif
 	}
 }

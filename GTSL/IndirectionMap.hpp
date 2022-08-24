@@ -3,6 +3,8 @@
 #include "GTSL/Core.h"
 #include "GTSL/ArrayCommon.hpp"
 
+#include <ranges>
+
 namespace GTSL {
 
 	//

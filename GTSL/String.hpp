@@ -75,23 +75,6 @@ namespace GTSL
 			return ToUTF32(d[0], d[1], d[2], d[3], Get<2>(pos)).Get();
 		}
 
-		//Returns true if the two String's contents are the same. Comparison is case sensitive.
-		template<class ALLOCATOR>
-		bool operator==(const String<ALLOCATOR>& other) const {
-			//Discard if Length of strings is not equal, first because it helps us discard before even starting, second because we can't compare strings of different sizes.
-			if (codePoints != other.codePoints or bytes != other.bytes) return false;
-			for (uint32 i = 0; i < bytes; ++i) { if (data[i] != other.data[i]) { return false; } }
-			return true;
-		}
-
-		bool operator==(const char8_t* text) const {
-			auto l = StringByteLength(text);
-			//Discard if Length of strings is not equal, first because it helps us discard before even starting, second because we can't compare strings of different sizes.
-			if (bytes != l) return false;
-			for (uint32 i = 0; i < bytes; ++i) { if (data[i] != text[i]) { return false; } }
-			return true;
-		}
-
 		////Returns true if the two String's contents are the same. Comparison is case insensitive.
 		//[[nodiscard]] bool NonSensitiveComp(const String& other) const
 		//{
@@ -120,6 +103,10 @@ namespace GTSL
 		[[nodiscard]] uint32 GetCapacity() const { return capacity; }
 		//Returns whether this String is empty.
 		[[nodiscard]] bool IsEmpty() const { return !bytes; }
+
+		friend bool operator==(const String& string, const GTSL::StringView string_view) {
+			return GTSL::StringView(string) == string_view;
+		}
 
 		explicit operator bool() const { return bytes; }
 		friend bool operator<(const uint32 i, const String& string) {

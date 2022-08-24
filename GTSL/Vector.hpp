@@ -13,6 +13,7 @@
 #include "Allocator.h"
 #include "ArrayCommon.hpp"
 #include "Tuple.hpp"
+#include "TypeTraits.hpp"
 
 namespace GTSL
 {	
@@ -507,14 +508,14 @@ namespace GTSL
 		}
 
 		template<uint32 M>
-		auto At(const uint32 index) -> typename TypeAt<M, TYPES...>::type {
+		auto At(const uint32 index) -> typename TypeAt<M, TYPES...>::type& {
 			return *GetPointer<M>(index);
 		}
 
 		byte* GetData() { return data; }
 
 		operator MultiRange<TYPES...>() requires(!AOS) {
-			return [&]<uint64_t... I>(Indices<I...>) { return MultiRange<TYPES...>(length, GetPointer<I>(0)...); }(BuildIndices<sizeof...(TYPES)>{});
+			return [&]<uint64... I>(Indices<I...>) { return MultiRange<TYPES...>(length, GetPointer<I>(0)...); }(BuildIndices<sizeof...(TYPES)>{});
 		}
 
 	private:
@@ -530,10 +531,10 @@ namespace GTSL
 					if constexpr (!AOS) {
 						auto copy = [&](uint64 currentCapacity, byte* from, uint64 newCapacity, byte* to) {
 							uint32 currCap = currentCapacity / PackSize<TYPES...>(), endCap = newCapacity / PackSize<TYPES...>();
-							[&]<uint64_t... I>(Indices<I...>) { (Copy(length, GetPointer<I>(from, currCap, 0), GetPointer<I>(to, endCap, 0)), ...); }(BuildIndices<sizeof...(TYPES)>{});
+							[&]<uint64... I>(Indices<I...>) { (Copy(length, GetPointer<I>(from, currCap, 0), GetPointer<I>(to, endCap, 0)), ...); }(BuildIndices<sizeof...(TYPES)>{});
 						};
 
-						Resize(allocator, &data, &ccapacity, capacity * 2 * PackSize<TYPES...>(), copy, 32);
+						ResizeCustom(allocator, &data, &ccapacity, capacity * 2 * PackSize<TYPES...>(), copy, 32);
 					} else {
 						Resize(allocator, &data, &ccapacity, capacity * 2 * PackSize<TYPES...>(), length * PackSize<TYPES...>(), 32);
 					}

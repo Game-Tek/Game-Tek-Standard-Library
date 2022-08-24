@@ -63,7 +63,7 @@ TEST(File, Read) {
 
 		GTSL::uint64 array[] = { 32ull, 32ull };
 
-		GTEST_ASSERT_EQ(GTSL::Range(16, reinterpret_cast<const byte*>(array)), buffer.GetRange());
+		GTEST_ASSERT_EQ(GTSL::Range(16, reinterpret_cast<const GTSL::byte*>(array)), buffer.GetRange());
 	}
 
 	{
@@ -73,7 +73,7 @@ TEST(File, Read) {
 
 		GTSL::uint64 array[] = { 32ull, 32ull };
 
-		GTEST_ASSERT_EQ(GTSL::Range(16, reinterpret_cast<const byte*>(array)), buffer.GetRange());
+		GTEST_ASSERT_EQ(GTSL::Range(16, reinterpret_cast<const GTSL::byte*>(array)), buffer.GetRange());
 	}
 }
 
@@ -141,7 +141,7 @@ TEST(Font, FontCOOPBL) {
 
 	GTEST_ASSERT_EQ(font.GetKerning(U',', U'1'), -18);
 	GTEST_ASSERT_EQ(font.GetKerning(U'r', U'q'), -11); //85, 84 : -11
-	GTEST_ASSERT_EQ(font.GetKerning(U'Ù', U'A'), -105); //212, 36 : -105
+	GTEST_ASSERT_EQ(font.GetKerning(U'ï¿½', U'A'), -105); //212, 36 : -105
 
 	{ //a
 		auto& a = font.GetGlyph(U'a');
@@ -178,7 +178,7 @@ TEST(Font, FontCOOPBL) {
 	}
 
 	{ //a tilde
-		auto& aTilde = font.GetGlyph(U'á');
+		auto& aTilde = font.GetGlyph(U'ï¿½');
 		GTEST_ASSERT_EQ(aTilde.Min.X(), 27);
 		GTEST_ASSERT_EQ(aTilde.Min.Y(), -27);
 		GTEST_ASSERT_EQ(aTilde.Max.X(), 1134);
@@ -259,7 +259,7 @@ TEST(Font, FontARIAL) {
 	auto result = MakeFont(buffer.GetRange(), &font);
 
 	{
-		auto& a = font.GetGlyph(U'Ë');
+		auto& a = font.GetGlyph(U'ï¿½');
 
 		GTSL::Vector<GTSL::Vector<GTSL::Segment<3>, GTSL::DefaultAllocatorReference>, GTSL::DefaultAllocatorReference> contours;
 

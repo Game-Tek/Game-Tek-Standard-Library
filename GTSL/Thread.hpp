@@ -35,6 +35,7 @@ namespace GTSL
 			LOW, LOW_MID, MID, MID_HIGH, HIGH
 		};
 		void SetPriority(Priority threadPriority) const noexcept {
+#if (_WIN64)
 			int32 priority{ THREAD_PRIORITY_NORMAL };
 			switch (threadPriority)
 			{
@@ -47,6 +48,8 @@ namespace GTSL
 			}
 
 			SetThreadPriority(handle, priority);
+#elif __linux__
+#endif
 		}
 
 		void static SetThreadId(const uint8 id) { threadId = id; }
@@ -59,25 +62,34 @@ namespace GTSL
 		
 		void Detach() noexcept { handle = nullptr; }
 
-		[[nodiscard]] uint32 GetId() const noexcept { return GetThreadId(handle); }
+		[[nodiscard]] uint32 GetId() const noexcept {
+#if (_WIN64)
+			return GetThreadId(handle);
+#elif __linux__
+			return 0;
+#endif
+		}
 
 		[[nodiscard]] bool CanBeJoined() const noexcept { return !handle; }
 		
 		static uint8 ThreadCount() {
+#if (_WIN64)
 			SYSTEM_INFO system_info;
 			GetSystemInfo(&system_info);
 			return static_cast<uint8>(system_info.dwNumberOfProcessors);
+#elif __linux__
+#endif
 		}
 		
 	private:
 		template<typename FT, typename... ARGS>
 		struct FunctionCallData {
-			FunctionCallData(const uint8 tId, Delegate<FT> delegate, ARGS&&... args) : ThreadId(tId), Delegate(delegate), Parameters(GTSL::ForwardRef<ARGS>(args)...)
+			FunctionCallData(const uint8 tId, Delegate<FT> delegate, ARGS&&... args) : ThreadId(tId), delegate(delegate), Parameters(GTSL::ForwardRef<ARGS>(args)...)
 			{
 			}
 
 			uint8 ThreadId;
-			Delegate<FT> Delegate;
+			Delegate<FT> delegate;
 			Tuple<ARGS...> Parameters;
 		};
 
@@ -91,15 +103,25 @@ namespace GTSL
 
 			threadId = functionData->ThreadId;
 			
-			Call(functionData->Delegate, GTSL::MoveRef(functionData->Parameters));
+			Call(functionData->delegate, GTSL::MoveRef(functionData->Parameters));
 
 			return 0;
 		}
 		
-		static void* createThread(unsigned long(*function)(void*), void* data) noexcept { return CreateThread(0, 0, function, data, 0, nullptr); }
+		static void* createThread(unsigned long(*function)(void*), void* data) noexcept { 
+#if (_WIN64)
+			return CreateThread(0, 0, function, data, 0, nullptr);
+#elif __linux__
+#endif
+		}
 
 		inline thread_local static uint8 threadId = 0;
 
-		void join() noexcept { WaitForSingleObject(handle, INFINITE); handle = nullptr; }
+		void join() noexcept {
+#if (_WIN64)
+			WaitForSingleObject(handle, INFINITE); handle = nullptr;
+#elif __linux__
+#endif
+		}
 	};
 }

@@ -67,7 +67,7 @@ TEST(JSON, Serialize) {
 
 	EndSerializer(buffer, serializer);
 
-	GTEST_ASSERT_EQ(buffer, jsonString);
+	GTEST_ASSERT_EQ(buffer, GTSL::StringView(jsonString));
 }
 
 TEST(JSON, Deserialize) {

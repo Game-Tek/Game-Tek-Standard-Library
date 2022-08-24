@@ -148,7 +148,7 @@ namespace GTSL
 
 		friend struct SmartPointer;	
 	public:
-		friend SmartPointer<T, ALLOCATOR> Create(const T& obj, const ALLOCATOR& allocator = ALLOCATOR());
+		friend SmartPointer<T, ALLOCATOR> Create(const T& obj, const ALLOCATOR& allocator);
 	};
 
 	//template<typename T, class ALLOCATOR>
@@ -235,10 +235,10 @@ namespace GTSL
 	}
 
 	template<typename T>
-	concept Lambda = requires(T && t) { t.operator(); };
+	concept Lambda = requires(T && t) { t(); };
 
 	template<typename T, std::unsigned_integral C>
-	void Resize(auto& allocator, T** data, C* capacity, uint64 newCapacity, Lambda auto&& f, uint64 alignment = alignof(T)) {
+	inline void ResizeCustom(auto& allocator, T** data, C* capacity, uint64 newCapacity, auto&& f, uint64 alignment = alignof(T)) {
 		T* newAlloc; uint64 allocatedElements;
 		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements, alignment);
 
@@ -250,7 +250,7 @@ namespace GTSL
 	}
 
 	template<typename T, std::unsigned_integral C>
-	void Resize(auto& allocator, T** data, C* capacity, uint64 newCapacity, uint64 length, uint64 alignment = alignof(T)) {
+	inline void Resize(auto& allocator, T** data, C* capacity, uint64 newCapacity, uint64 length, uint64 alignment = alignof(T)) {
 		T* newAlloc; uint64 allocatedElements;
 		Allocate(allocator, newCapacity, &newAlloc, &allocatedElements, alignment);
 

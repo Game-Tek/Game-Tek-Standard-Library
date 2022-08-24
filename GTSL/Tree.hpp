@@ -8,13 +8,13 @@
 
 namespace GTSL
 {
-	template<typename CLASS, std::size_t INDEX>
+	template<typename CLASS, uint64 INDEX>
 	bool Destroy(uint32 index, void* p) {
 		if (index == INDEX) { Destroy(*static_cast<CLASS*>(p)); return true; }
 		return false;
 	}
 
-	template<typename... CLASSES, std::size_t... Is>
+	template<typename... CLASSES, uint64... Is>
 	void Destroy(uint32 index, void* p, Indices<Is...>) {
 		(Destroy<CLASSES, Is>(index, p), ...);
 	}
@@ -24,13 +24,13 @@ namespace GTSL
 		Destroy<CLASSES...>(index, p, BuildIndices<sizeof...(CLASSES)>{});
 	}
 
-	template<typename CLASS, std::size_t INDEX>
+	template<typename CLASS, uint64 INDEX>
 	bool Move(void* from, void* to, uint32 index) {
 		if (index == INDEX) { Move(static_cast<CLASS*>(from), static_cast<CLASS*>(to)); return true; }
 		return false;
 	}
 
-	template<typename... CLASSES, std::size_t... Is>
+	template<typename... CLASSES, uint64... Is>
 	void Move(void* from, void* to, uint32 index, Indices<Is...>) {
 		(Move<CLASSES, Is>(from, to, index), ...);
 	}
@@ -524,7 +524,7 @@ namespace GTSL
 			return alphaTable[handle - 1];
 		}
 
-		void tryResizeMultiTable(uint32 delta) {
+		inline void tryResizeMultiTable(uint32 delta) {
 			if (multiTableSize + delta > multiTableCapacity) {
 				if (multiTable) {
 					auto copyFunction = [&](uint64 capacity, byte* data, uint64 allocatedElements, byte* newAlloc) {
@@ -537,7 +537,7 @@ namespace GTSL
 						}
 					};
 
-					Resize(allocator, &multiTable, &multiTableCapacity, multiTableCapacity * 2, copyFunction);
+					//Resize(allocator, &multiTable, &multiTableCapacity, multiTableCapacity * 2, copyFunction);
 				} else {
 					Allocate(allocator, delta, &multiTable, &multiTableCapacity);
 				}

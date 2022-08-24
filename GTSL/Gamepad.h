@@ -45,6 +45,7 @@ namespace GTSL
 
 		template<typename F>
 		static bool Update(Gamepad& gamepadQuery, F&& updateFunction, uint8 controllerId) noexcept {
+#if (_WIN64)
 			XINPUT_STATE xinput_state;
 
 			if (XInputGetState(controllerId, &xinput_state) != ERROR_SUCCESS) { return false; }
@@ -161,6 +162,8 @@ namespace GTSL
 			}
 
 			return true;
+#endif
+			return false;
 		}
 
 		/**
@@ -168,12 +171,13 @@ namespace GTSL
 		 * \param lowFrequency Amount of low frequency vibration, 0 is none, 1 is max.
 		 * \param highFrequency Amount of high frequency vibration, 0 is none, 1 is max.
 		 */
-		void SetVibration(float32 lowFrequency, float32 highFrequency) const noexcept
-		{
+		void SetVibration(float32 lowFrequency, float32 highFrequency) const noexcept {
+#if (_WIN64)
 			XINPUT_VIBRATION xinput_vibration;
 			xinput_vibration.wLeftMotorSpeed = static_cast<WORD>(lowFrequency * 65535);
 			xinput_vibration.wRightMotorSpeed = static_cast<WORD>(highFrequency * 65535);
 			XInputSetState(controllerId, &xinput_vibration);
+#endif
 		}
 	};
 }

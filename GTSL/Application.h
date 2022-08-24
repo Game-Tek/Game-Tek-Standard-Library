@@ -27,9 +27,12 @@ namespace GTSL
 		struct ApplicationCreateInfo
 		{
 		};
+
+#ifdef _WIN32
 		Application(const ApplicationCreateInfo& applicationCreateInfo) : handle(GetModuleHandleA(nullptr))
 		{
 		}
+#endif
 		
 		~Application() = default;
 		

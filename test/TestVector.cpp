@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
-#include <GTSL/Vector.hpp>
+
+#include "GTSL/Vector.hpp"
 
 TEST(Vector, Construct) {
 	GTSL::Vector<GTSL::uint32, GTSL::DefaultAllocatorReference> vector(18);

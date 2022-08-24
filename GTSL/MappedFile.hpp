@@ -19,7 +19,7 @@ namespace GTSL {
 		MappedFile() = default;
 
 		bool Open(const StringView path, uint64 fileSize, File::AccessMode access_mode) {
-
+#if (_WIN64)
 			DWORD shareMode = 0; /*exlusive use*/
 			DWORD desiredAccess = GENERIC_READ; /*can be or'd*/
 			DWORD creationDisposition = OPEN_ALWAYS;
@@ -52,17 +52,28 @@ namespace GTSL {
 			if (!data) { return false; }			
 
 			return true;
+#elif __linux__
+			return false;
+#endif
 		}
 
 		byte* GetData() {
+#if (_WIN64)
 			return static_cast<byte*>(data);
+#elif __linux__
+			return nullptr;
+#endif
 		}
 
 		void Resize(const uint64 newSize) {
+#if (_WIN64)
 			size = newSize;
+#elif __linux__
+#endif
 		}
 		
 		~MappedFile() {
+#if (_WIN64)
 			if (data)
 				UnmapViewOfFile(data);
 
@@ -71,10 +82,15 @@ namespace GTSL {
 
 			if (file)
 				CloseHandle(file);
+#elif __linux__
+#endif
 		}
 
 	private:
+#if (_WIN64)
 		HANDLE file = nullptr, fileMapping = nullptr;
 		void* data = nullptr; uint64 size = 0;
+#elif __linux__
+#endif
 	};
 }

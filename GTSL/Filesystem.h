@@ -17,10 +17,14 @@ namespace GTSL {
 		using handle_type = void*;
 		
 		FileQuery(const StringView query) {
+#if (_WIN64)
 			handle = FindFirstFileA(reinterpret_cast<const char*>(query.GetData()), &findData);
+#elif __linux__
+#endif
 		}
 		
 		Result<StaticString<256>> operator()() {
+#if (_WIN64)
 			if (!counter) {
 				++counter;
 
@@ -42,16 +46,24 @@ namespace GTSL {
 
 				return Result<StaticString<256>>(false);
 			}
+#elif __linux__
+#endif
 		}
 
 		[[nodiscard]] uint64 GetFileHash() const {
+#if (_WIN64)
 			return static_cast<uint64>(findData.ftLastWriteTime.dwHighDateTime) << 32ull | findData.ftLastWriteTime.dwLowDateTime;
+#elif __linux__
+#endif
 		}
 
 	private:
+#if (_WIN64)
 		handle_type handle = nullptr;
 		uint64 counter = 0u;
 		WIN32_FIND_DATAA findData;
+#elif __linux__
+#endif
 	};
 
 	class DirectoryQuery {
@@ -62,9 +74,14 @@ namespace GTSL {
 
 		static constexpr auto CREATE_FILE = WatchFilterFlag(1), CHANGE_FILE_NAME = WatchFilterFlag(2), CHANGE_FILE_HASH = WatchFilterFlag(4), DELETE_FILE = WatchFilterFlag(8), CHANGE_DIRECTORY_NAME = WatchFilterFlag(16);
 
-		DirectoryQuery(const StringView path, bool watch_subtree, WatchFilterFlag flags) : watchFilter(flags), watchSubtree(watch_subtree) {
+		DirectoryQuery(const StringView path, bool watch_subtree, WatchFilterFlag flags)
+#if (_WIN64)
+		: watchFilter(flags), watchSubtree(watch_subtree) {
 			directoryHandle = CreateFileA(reinterpret_cast<const char*>(path.GetData()), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
 			overlapped.hEvent = CreateEventA(nullptr, false, false, nullptr);
+#elif __linux__
+		{
+#endif
 		}
 
 		enum class FileAction {
@@ -72,6 +89,7 @@ namespace GTSL {
 		};
 
 		bool operator()(auto&& f) {
+#if (_WIN64)
 			BOOL bWatchSubtree = watchSubtree;
 
 			DWORD lpBytesReturned = 0;
@@ -134,9 +152,12 @@ namespace GTSL {
 			}
 
 			return static_cast<bool>(i);
+#elif __linux__
+#endif
 		}
 
 		~DirectoryQuery() {
+#if (_WIN64)
 			if(directoryHandle) {
 				CloseHandle(directoryHandle);
 			}
@@ -144,9 +165,12 @@ namespace GTSL {
 			if(overlapped.hEvent) {
 				CloseHandle(overlapped.hEvent);
 			}
+#elif __linux__
+#endif
 		}
 
 	private:
+#if (_WIN64)
 		alignas(DWORD) byte notify_informations[sizeof(FILE_NOTIFY_INFORMATION) * 512];
 		WatchFilterFlag watchFilter;
 		bool watchSubtree = true;
@@ -166,5 +190,7 @@ namespace GTSL {
 
 			return dwNotifyFilter;
 		}
+#elif __linux__
+#endif
 	};
 }

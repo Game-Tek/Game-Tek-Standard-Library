@@ -218,7 +218,7 @@ namespace GTSL {
 #elif defined(__clang__)
 			return __builtin_floorf(_Xx);
 #else // ^^^ __clang__ / !__clang__ vvv
-			return __floorf(a);
+			return floorf(a);
 			//return a > 0 ? static_cast<float32>(static_cast<int32>(a)) : static_cast<float32>(static_cast<int32>(a) - 1);
 #endif // __clang__
 		}
@@ -354,10 +354,10 @@ namespace GTSL {
 		//	return divTerm / tanRes;
 		//}
 
-		template<uint8 S>
-		SIMD<float32, S> Tangent(SIMD<float32, S> x) {
-			return SIMD<float32, S>::Tangent(x);
-		}
+		//template<uint8 S>
+		//SIMD<float32, S> Tangent(SIMD<float32, S> x) {
+		//	return SIMD<float32, S>::Tangent(x);
+		//}
 
 		//inline float32 Tangent(float32 x) { return tanf(x); }
 		

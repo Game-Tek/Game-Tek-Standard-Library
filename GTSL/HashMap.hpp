@@ -303,17 +303,17 @@ namespace GTSL {
 
 		static V* getValuesBucketPointer(byte* to, const uint32 bucketIndex, const uint32 bucketCapacity, const uint32 bucketCount) { return reinterpret_cast<V*>(to + getKeysAllocationSize(bucketCount, bucketCapacity)) + bucketIndex * bucketCapacity; }
 
-		template<typename KK, typename VV, class ALLOCATOR, typename L>
-		friend void ForEach(HashMap<KK, VV, ALLOCATOR>& collection, L&& lambda);
+		template<typename KK, typename VV, class A, typename L>
+		friend void ForEach(HashMap<KK, VV, A>& collection, L&& lambda);
 
-		template<typename KK, typename VV, class ALLOCATOR, typename L>
-		friend void ForEach(const HashMap<KK, VV, ALLOCATOR>& collection, L&& lambda);
+		template<typename KK, typename VV, class A, typename L>
+		friend void ForEach(const HashMap<KK, VV, A>& collection, L&& lambda);
 
-		template<typename KK, typename VV, class ALLOCATOR, typename L>
-		friend void PairForEach(HashMap<KK, VV, ALLOCATOR>& collection, L&& lambda);
+		template<typename KK, typename VV, class A, typename L>
+		friend void PairForEach(HashMap<KK, VV, A>& collection, L&& lambda);
 
-		template<typename KK, typename VV, class ALLOCATOR, typename L>
-		friend void ForEachKey(HashMap<KK, VV, ALLOCATOR>& collection, L&& lambda);
+		template<typename KK, typename VV, class A, typename L>
+		friend void ForEachKey(HashMap<KK, VV, A>& collection, L&& lambda);
 
 	public:
 		friend void Insert(const HashMap& map, auto& buffer) {

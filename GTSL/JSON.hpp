@@ -213,7 +213,9 @@ namespace GTSL {
 					} else {
 						auto res = ToNumber<uint64>(str);
 						if (!res) {
+#if _WIN64
 							__debugbreak();
+#endif
 						}
 
 						whenUint(res.Get());

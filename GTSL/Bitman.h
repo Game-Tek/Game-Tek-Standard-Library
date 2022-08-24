@@ -6,15 +6,38 @@
 #include <Windows.h>
 #include <intrin.h>
 #undef BitScanForward
+#include <xtr1common>
 #endif
 
-#include <xtr1common>
+#include <immintrin.h>
 
 #include "Core.h"
 #include "Result.h"
 
 namespace GTSL
 {
+	inline Result<uint8> FindFirstSetBit(uint32 number) {
+		#if _WIN64
+			unsigned long setBit{ 0 };
+			const bool anySetBit = _BitScanForward(&setBit, number);
+			return Result(static_cast<uint8>(setBit), anySetBit);
+		#elif __linux__
+			const auto setBit = __bsfd(number);
+			return Result(static_cast<uint8>(setBit), static_cast<bool>(number));
+		#endif
+	}
+	
+	inline Result<uint8> FindFirstSetBit(uint64 number) {
+		#if _WIN64
+			unsigned long setBit{ 0 };
+			const bool anySetBit = _BitScanForward64(&setBit, number);
+			return Result(static_cast<uint8>(setBit), anySetBit);
+		#elif __linux__
+			const auto setBit = __builtin_clzll(number);
+			return Result(static_cast<uint8>(setBit), static_cast<bool>(number));
+		#endif
+	}
+
 	constexpr Result<uint8> FindFirstSetBit(uint8 number) {
 		if (std::is_constant_evaluated()) {
 			uint8 r = 0; bool anySet = true;
@@ -34,28 +57,12 @@ namespace GTSL
 
 			return Result(MoveRef(r), anySet);
 		} else {
-			unsigned long setBit{ 0 };
-			const bool anySetBit = _BitScanForward(&setBit, number);
-			return Result(static_cast<uint8>(setBit), anySetBit);
+			return FindFirstSetBit(static_cast<uint32>(number));
 		}
 	}
 
-	inline Result<uint8> FindFirstSetBit(uint32 number) {
-		unsigned long setBit{ 0 };
-		const bool anySetBit = _BitScanForward(&setBit, number);
-		return Result(static_cast<uint8>(setBit), anySetBit);
-	}
-	
-	inline Result<uint8> FindFirstSetBit(uint64 number) {
-		unsigned long setBit{ 0 };
-		const bool anySetBit = _BitScanForward64(&setBit, number);
-		return Result(static_cast<uint8>(setBit), anySetBit);
-	}
-
 	inline Result<uint8> FindFirstClearBit(uint32 number) {
-		unsigned long setBit{ 0 };
-		const bool anySetBit = _BitScanForward(&setBit, ~number);
-		return Result(static_cast<uint8>(setBit), anySetBit);
+		return FindFirstSetBit(~number);
 	}
 	
 	inline Result<uint8> FindLastSetBit(const uint32 number) {
@@ -64,48 +71,39 @@ namespace GTSL
 		return Result(static_cast<uint8>(setBit), anySetBit);
 #endif // WIN64
 #ifdef __linux__
-		__builtin_clz();
+		const auto setBit = __builtin_ctz(number);
+		return Result(static_cast<uint8>(setBit), static_cast<bool>(number));
 #endif // __linux__
-
-	}
-	
-	inline Result<uint8> FindLastClearBit(const uint8 number) {
-#ifdef WIN32
-		unsigned long setBit{ 0 }; const bool anySetBit = _BitScanReverse(&setBit, (uint32)~number);
-		return Result(static_cast<uint8>(setBit), anySetBit);
-#endif // WIN64
-#ifdef __linux__
-		__builtin_clz();
-#endif // __linux__
-
 	}
 
 	inline Result<uint8> FindLastClearBit(const uint32 number) {
-#ifdef WIN32
-		unsigned long setBit{ 0 }; const bool anySetBit = _BitScanReverse(&setBit, ~number);
-		return Result(static_cast<uint8>(setBit), anySetBit);
-#endif // WIN64
-#ifdef __linux__
-		__builtin_clz();
-#endif // __linux__
-
+		return FindLastSetBit(~number);
 	}
 
 	inline Result<uint8> FindLastSetBit(const uint64 number) {
+		#if _WIN64
 		unsigned long setBit{ 0 }; const bool anySetBit = _BitScanReverse64(&setBit, number);
 		return Result(static_cast<uint8>(setBit), anySetBit);
-	}
-
-	inline uint8 NumberOfSetBits(const uint16 number) {
-		return static_cast<uint8>(__popcnt16(number));
+		#elif __linux__		
+		const auto setBit = __builtin_ctzll(number);
+		return Result(static_cast<uint8>(setBit), static_cast<bool>(number));
+		#endif
 	}
 
 	inline uint8 NumberOfSetBits(const uint32 number) {
+		#if _WIN64
 		return static_cast<uint8>(__popcnt(number));
+		#elif __linux__
+		return static_cast<uint8>(__builtin_popcount(number));
+		#endif
 	}
 
 	inline uint8 NumberOfSetBits(const uint64 number) {
+				#if _WIN64
 		return static_cast<uint8>(__popcnt64(number));
+		#elif __linux__
+		return static_cast<uint8>(__builtin_popcountll(number));
+		#endif
 	}
 
 	constexpr uint8 FFSB(uint32 number) {

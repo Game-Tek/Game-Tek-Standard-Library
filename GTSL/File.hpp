@@ -13,6 +13,11 @@
 #define NO_MIN_MAX
 #include <Windows.h>
 #undef ERROR
+#elif __linux__
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 namespace GTSL {
@@ -50,11 +55,12 @@ namespace GTSL {
 #if (_WIN64)
 			if (fileHandle) { CloseHandle(fileHandle); fileHandle = nullptr; }
 #elif (__linux__)
-			if (file)
+			if (fileHandle) { close(fileHandle); }
 #endif
 		}
 		
 		[[nodiscard]] OpenResult Open(StringView path, AccessMode accessMode = READ, bool create = false) {
+#if (_WIN64)
 			DWORD desiredAccess = 0;  DWORD shareMode = 0;
 
 			if (static_cast<uint8>(accessMode) & static_cast<uint8>(READ)) { desiredAccess |= GENERIC_READ; shareMode |= FILE_SHARE_READ; }
@@ -73,66 +79,98 @@ namespace GTSL {
 			}
 
 			return openResult;
+#elif (__linux__)
+			int openFlags = 0;
+			open((const char*)path.GetData(), openFlags);
+#endif
 		}
 
 		uint32 Write(const uint64 size, const byte* d) const {
+#if (_WIN64)
 			DWORD bytes{ 0 };
 			WriteFile(fileHandle, d, static_cast<uint32>(size), &bytes, nullptr);
 			return bytes;
+#elif (__linux__)
+#endif
 		}
 
 		uint32 Write(const Range<const byte*> buffer) const {
+#if (_WIN64)
 			DWORD bytes{ 0 };
 			WriteFile(fileHandle, buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
 			return bytes;
+#elif (__linux__)
+#endif
 		}
 
 		template<class B>
 		uint32 Write(B& buffer, OptionalParameter<uint64> offset = {0}, OptionalParameter<uint64> size = {}) const {
+#if (_WIN64)
 			DWORD bytes{ 0 };
 			WriteFile(fileHandle, buffer.begin(), static_cast<uint32>(size(buffer.GetLength())), &bytes, nullptr);
 			buffer.modifyOccupiedBytes(-static_cast<int64>(size(buffer.GetLength())));
 			return bytes;
+#elif (__linux__)
+#endif
 		}
 		
 		template<class B>
 		uint32 Read(B& buffer, OptionalParameter<uint64> size = {}) const {
+#if (_WIN64)
 			DWORD bytes{ 0 };
 			buffer.DeltaResize(size(GetSize()));
 			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), static_cast<uint32>(size(GetSize())), &bytes, nullptr);
 			buffer.modifyOccupiedBytes(bytes);
 			return bytes;
+#elif (__linux__)
+#endif
 		}
 
 		void Resize(const uint64 newSize) {
+#if (_WIN64)
 			GTSL_ASSERT(newSize < (~(0ULL)) / 2, "Number too large.");
 			const LARGE_INTEGER bytes{ .QuadPart = static_cast<LONGLONG>(newSize) };
 			SetFilePointerEx(fileHandle, bytes, nullptr, FILE_BEGIN);
 			SetEndOfFile(fileHandle);
+#elif (__linux__)
+#endif
 		}
 		
 		void SetPointer(uint64 byte) {
+#if (_WIN64)
 			GTSL_ASSERT(byte < (~(0ULL)) / 2, "Number too large.");
 			const LARGE_INTEGER bytes{ .QuadPart = static_cast<LONGLONG>(byte) };
 			SetFilePointerEx(fileHandle, bytes, nullptr, FILE_BEGIN);
+#elif (__linux__)
+#endif
 		}
 
 		[[nodiscard]] uint64 GetSize() const {
+#if (_WIN64)
 			LARGE_INTEGER size;
 			auto res = GetFileSizeEx(fileHandle, &size);
 			GTSL_ASSERT(res != 0, "Win32 Error!");
 			return size.QuadPart;
+#elif (__linux__)
+#endif
 		}
 
 		uint64 GetFileHash() const {
+#if (_WIN64)
 			FILETIME filetime;
 			GetFileTime(fileHandle, nullptr, nullptr, &filetime);
 			return filetime.dwLowDateTime | static_cast<uint64>(filetime.dwHighDateTime) << 32ull;
+#elif (__linux__)
+#endif
 		}
 
 		explicit operator bool() const { return fileHandle; }
 	
 	private:
+	#if _WIN64
 		void* fileHandle{ nullptr };
+	#elif __linux__
+		int fileHandle = 0;
+	#endif
 	};
 }

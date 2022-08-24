@@ -349,3 +349,5 @@ out/
 *.ifc
 
 WriteFile
+
+build/

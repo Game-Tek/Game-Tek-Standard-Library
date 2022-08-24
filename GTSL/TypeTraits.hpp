@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core.h"
+
 #include <type_traits>
 
 namespace GTSL {
@@ -41,7 +43,7 @@ namespace GTSL {
 		return (std::is_same_v<T, Ts> || ...);
 	}
 
-	template<size_t POS, typename... TYPES>
+	template<uint64 POS, typename... TYPES>
 	struct TypeAt;
 
 	template<typename HEAD, typename... TAIL >
@@ -49,7 +51,7 @@ namespace GTSL {
 		using type = HEAD;
 	};
 
-	template<size_t POS, typename HEAD, typename... TAIL >
+	template<uint64 POS, typename HEAD, typename... TAIL >
 	struct TypeAt<POS, HEAD, TAIL...> {
 		using type = typename TypeAt<POS - 1, TAIL...>::type;
 	};
@@ -58,7 +60,7 @@ namespace GTSL {
 	constexpr bool IsSame() { return std::is_same_v<A, B>; }
 
 	template<typename... ARGS>
-	consteval size_t PackSize() {
+	consteval uint64 PackSize() {
 		return (sizeof(ARGS) + ... + 0);
 	}
 
@@ -77,7 +79,7 @@ namespace GTSL {
 	}
 
 	template<uint32 AT, uint32 I, typename HEAD, typename... TAIL>
-	consteval size_t PackSizeAt_impl() {
+	consteval uint64 PackSizeAt_impl() {
 		if constexpr (AT == I)
 			return 0;
 		else
@@ -85,7 +87,7 @@ namespace GTSL {
 	}
 
 	template<uint32 AT, typename... ARGS>
-	consteval size_t PackSizeAt() {
+	consteval uint64 PackSizeAt() {
 		return PackSizeAt_impl<AT, 0, ARGS...>();
 	}
 

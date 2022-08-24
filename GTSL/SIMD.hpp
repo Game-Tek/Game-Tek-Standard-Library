@@ -113,12 +113,12 @@ namespace GTSL
 		SIMD operator+(const SIMD& other) const { return _mm_add_epi8(vector, other.vector); }
 		SIMD operator-(const SIMD& other) const { return _mm_sub_epi8(vector, other.vector); }
 		//SIMD operator*(const SIMD& other) const { return _mm_mul_epi8(vector, other.vector); }
-		SIMD operator/(const SIMD& other) const { return _mm_div_epi8(vector, other.vector); }
+		//SIMD operator/(const SIMD& other) const { return _mm_div_epi8(vector, other.vector); }
 
 		SIMD& operator+=(const SIMD& other) { vector = _mm_add_epi8(vector, other.vector); return *this; }
 		SIMD& operator-=(const SIMD& other) { vector = _mm_sub_epi8(vector, other.vector); return *this; }
 		//SIMD& operator*=(const SIMD& other) { vector = _mm_mul_epi8(vector, other.vector); return *this; }
-		SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi8(vector, other.vector); return *this; }
+		//SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi8(vector, other.vector); return *this; }
 
 		SIMD operator==(const SIMD& other) const { return _mm_cmpeq_epi8(vector, other.vector); }
 		//SIMD operator!=(const SIMD& other) const { return _mm_cmpneq_(vector, other.vector); }
@@ -209,12 +209,12 @@ namespace GTSL
 		SIMD operator+(const SIMD& other) const { return _mm_add_epi8(vector, other.vector); }
 		SIMD operator-(const SIMD& other) const { return _mm_sub_epi8(vector, other.vector); }
 		//SIMD operator*(const SIMD& other) const { return _mm_mul_epi8(vector, other.vector); }
-		SIMD operator/(const SIMD& other) const { return _mm_div_epi8(vector, other.vector); }
+		//SIMD operator/(const SIMD& other) const { return _mm_div_epi8(vector, other.vector); }
 
 		SIMD& operator+=(const SIMD& other) { vector = _mm_add_epi8(vector, other.vector); return *this; }
 		SIMD& operator-=(const SIMD& other) { vector = _mm_sub_epi8(vector, other.vector); return *this; }
 		//SIMD& operator*=(const SIMD& other) { vector = _mm_mul_epi8(vector, other.vector); return *this; }
-		SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi8(vector, other.vector); return *this; }
+		//SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi8(vector, other.vector); return *this; }
 
 		SIMD operator==(const SIMD& other) const { return _mm_cmpeq_epi8(vector, other.vector); }
 		SIMD operator!=(const SIMD& other) const { return _mm_andnot_si128(_mm_cmpeq_epi64(vector, other.vector), _mm_set1_epi64x(-1)); }
@@ -306,12 +306,12 @@ namespace GTSL
 		SIMD operator+(const SIMD& other) const { return _mm_add_epi64(vector, other.vector); }
 		SIMD operator-(const SIMD& other) const { return _mm_sub_epi64(vector, other.vector); }
 		//SIMD operator*(const SIMD& other) const { return _mm_mul_epi64(vector, other.vector); }
-		SIMD operator/(const SIMD& other) const { return _mm_div_epi64(vector, other.vector); }
+		//SIMD operator/(const SIMD& other) const { return _mm_div_epi64(vector, other.vector); }
 
 		SIMD& operator+=(const SIMD& other) { vector = _mm_add_epi64(vector, other.vector); return *this; }
 		SIMD& operator-=(const SIMD& other) { vector = _mm_sub_epi64(vector, other.vector); return *this; }
 		//SIMD& operator*=(const SIMD& other) { vector = _mm_mul_epi64(vector, other.vector); return *this; }
-		SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi64(vector, other.vector); return *this; }
+		//SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi64(vector, other.vector); return *this; }
 
 		SIMD operator==(const SIMD& other) const { return _mm_cmpeq_epi64(vector, other.vector); }
 		SIMD operator!=(const SIMD& other) const { return _mm_andnot_si128(_mm_cmpeq_epi64(vector, other.vector), _mm_set1_epi64x(-1)); }
@@ -466,10 +466,10 @@ namespace GTSL
 		SIMD operator^(const SIMD& other) const { return _mm_xor_ps(vector, other); }
 		SIMD& operator~() { vector = _mm_xor_ps(vector, _mm_cmpeq_ps(vector, vector)); return *this; }
 
-		static SIMD Modulo(SIMD a, SIMD b) { return _mm_fmod_ps(a.vector, b.vector); }
-		static SIMD Sine(SIMD v) { return _mm_sin_ps(v.vector); }
-		static SIMD Cosine(SIMD v) { return _mm_cos_ps(v.vector); }
-		static SIMD Tangent(SIMD v) { return _mm_tan_ps(v.vector); }
+		//static SIMD Modulo(SIMD a, SIMD b) { return _mm_fmod_ps(a.vector, b.vector); }
+		//static SIMD Sine(SIMD v) { return _mm_sin_ps(v.vector); }
+		//static SIMD Cosine(SIMD v) { return _mm_cos_ps(v.vector); }
+		//static SIMD Tangent(SIMD v) { return _mm_tan_ps(v.vector); }
 
 	private:
 		__m128 vector;
@@ -596,10 +596,10 @@ namespace GTSL
 		SIMD operator^(const SIMD& other) const { return _mm256_xor_ps(vector, other); }
 		//SIMD& operator~() { vector = _mm256_xor_ps(vector, _mm256_cmpeq_ps(vector, vector)); return *this; }
 
-		static SIMD Modulo(SIMD a, SIMD b) { return _mm256_fmod_ps(a.vector, b.vector); }
-		static SIMD Sine(SIMD v) { return _mm256_sin_ps(v.vector); }
-		static SIMD Cosine(SIMD v) { return _mm256_cos_ps(v.vector); }
-		static SIMD Tangent(SIMD v) { return _mm256_tan_ps(v.vector); }
+		//static SIMD Modulo(SIMD a, SIMD b) { return _mm256_fmod_ps(a.vector, b.vector); }
+		//static SIMD Sine(SIMD v) { return _mm256_sin_ps(v.vector); }
+		//static SIMD Cosine(SIMD v) { return _mm256_cos_ps(v.vector); }
+		//static SIMD Tangent(SIMD v) { return _mm256_tan_ps(v.vector); }
 
 	private:
 		__m256 vector;
@@ -772,12 +772,12 @@ namespace GTSL
 		SIMD operator+(const SIMD& other) const { return _mm_add_epi32(vector, other.vector); }
 		SIMD operator-(const SIMD& other) const { return _mm_sub_epi32(vector, other.vector); }
 		SIMD operator*(const SIMD& other) const { return _mm_mul_epi32(vector, other.vector); }
-		SIMD operator/(const SIMD& other) const { return _mm_div_epi32(vector, other.vector); }
+		//SIMD operator/(const SIMD& other) const { return _mm_div_epi32(vector, other.vector); }
 
 		SIMD& operator+=(const SIMD& other) { vector = _mm_add_epi32(vector, other.vector); return *this; }
 		SIMD& operator-=(const SIMD& other) { vector = _mm_sub_epi32(vector, other.vector); return *this; }
 		SIMD& operator*=(const SIMD& other) { vector = _mm_mul_epi32(vector, other.vector); return *this; }
-		SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi32(vector, other.vector); return *this; }
+		//SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi32(vector, other.vector); return *this; }
 
 		SIMD operator==(const SIMD other) const { return _mm_cmpeq_epi32(vector, other.vector); }
 		SIMD operator!=(const SIMD& other) const { return _mm_andnot_si128(_mm_cmpeq_epi32(vector, other.vector), _mm_set1_epi32(-1)); }
@@ -862,12 +862,12 @@ namespace GTSL
 		SIMD operator+(const SIMD other) const { return _mm256_add_epi32(vector, other.vector); }
 		SIMD operator-(const SIMD other) const { return _mm256_sub_epi32(vector, other.vector); }
 		SIMD operator*(const SIMD other) const { return _mm256_mul_epi32(vector, other.vector); }
-		SIMD operator/(const SIMD other) const { return _mm256_div_epi32(vector, other.vector); }
+		//SIMD operator/(const SIMD other) const { return _mm256_div_epi32(vector, other.vector); }
 
 		SIMD& operator+=(const SIMD other) { vector = _mm256_add_epi32(vector, other.vector); return *this; }
 		SIMD& operator-=(const SIMD other) { vector = _mm256_sub_epi32(vector, other.vector); return *this; }
 		SIMD& operator*=(const SIMD other) { vector = _mm256_mul_epi32(vector, other.vector); return *this; }
-		SIMD& operator/=(const SIMD other) { vector = _mm256_div_epi32(vector, other.vector); return *this; }
+		//SIMD& operator/=(const SIMD other) { vector = _mm256_div_epi32(vector, other.vector); return *this; }
 
 		SIMD operator==(const SIMD& other) const { return _mm256_cmpeq_epi32(vector, other.vector); }
 		SIMD operator!=(const SIMD& other) const { return _mm256_andnot_si256(_mm256_cmpeq_epi32(vector, other.vector), _mm256_set1_epi32(-1)); }

@@ -17,11 +17,11 @@ namespace GTSL {
 
 	static constexpr utf_t utf[] = {
 		/*mask        lead        beg      end       bits */
-		{ 0b00111111, 0b10000000, 0,       0,        6 },
-		{ 0b01111111, 0b00000000, 0000,    0177,     7 },
-		{ 0b00011111, 0b11000000, 0200,    03777,    5 },
-		{ 0b00001111, 0b11100000, 04000,   0177777,  4 },
-		{ 0b00000111, 0b11110000, 0200000, 04177777, 3 },
+		{ static_cast<char>(0b00111111), static_cast<char>(0b10000000), 0u,       0u,        6u },
+		{ static_cast<char>(0b01111111), static_cast<char>(0b00000000), 0000u,    0177u,     7u },
+		{ static_cast<char>(0b00011111), static_cast<char>(0b11000000), 0200u,    03777u,    5u },
+		{ static_cast<char>(0b00001111), static_cast<char>(0b11100000), 04000u,   0177777u,  4u },
+		{ static_cast<char>(0b00000111), static_cast<char>(0b11110000), 0200000u, 04177777u, 3u },
 	};
 
 	constexpr uint8_t UTF8CodePointLength(const char8_t buf) {

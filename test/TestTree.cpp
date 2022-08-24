@@ -19,7 +19,7 @@ TEST(MultiTree, Construct) {
 	GTSL::uint32 counter = 0;
 
 	{
-		GTSL::MultiTree<GTSL::DefaultAllocatorReference, uint32_t, uint32_t, DestructionTester> tree(4);		
+		GTSL::MultiTree<GTSL::DefaultAllocatorReference, GTSL::uint32, GTSL::uint32, DestructionTester> tree(4);
 		tree.Emplace<DestructionTester>(0, 0, 0, &counter);
 	}
 	
