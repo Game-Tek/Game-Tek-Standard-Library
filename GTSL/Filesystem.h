@@ -8,7 +8,12 @@
 #if (_WIN64)
 #define WIN32_LEAN_AND_MEAN
 #define NO_COMM
+#define NO_MIN_MAX
 #include <Windows.h>
+#undef ERROR
+#elif __linux__
+#include <glob.h>
+#include <sys/inotify.h>
 #endif
 
 namespace GTSL {
@@ -20,6 +25,7 @@ namespace GTSL {
 #if (_WIN64)
 			handle = FindFirstFileA(reinterpret_cast<const char*>(query.GetData()), &findData);
 #elif __linux__
+			glob64(reinterpret_cast<const char*>(query.GetData()), GLOB_NOSORT, nullptr, &globData);
 #endif
 		}
 		
@@ -47,6 +53,13 @@ namespace GTSL {
 				return Result<StaticString<256>>(false);
 			}
 #elif __linux__
+			if(counter != globData.gl_pathc) {
+				auto path = GTSL::StaticString<256>(GTSL::StringView((const char8_t*)globData.gl_pathv[counter++]));
+				LTrimLast(path, u8'/');
+				return Result<StaticString<256>>(GTSL::MoveRef(path), true);
+			} else {
+				return Result<StaticString<256>>(false);
+			}
 #endif
 		}
 
@@ -57,12 +70,21 @@ namespace GTSL {
 #endif
 		}
 
+		~FileQuery() {
+#if (_WIN64)
+#elif __linux__
+			globfree64(&globData);
+#endif
+		}
+
 	private:
+		uint64 counter = 0u;
+
 #if (_WIN64)
 		handle_type handle = nullptr;
-		uint64 counter = 0u;
 		WIN32_FIND_DATAA findData;
 #elif __linux__
+		glob64_t globData;
 #endif
 	};
 
@@ -74,13 +96,20 @@ namespace GTSL {
 
 		static constexpr auto CREATE_FILE = WatchFilterFlag(1), CHANGE_FILE_NAME = WatchFilterFlag(2), CHANGE_FILE_HASH = WatchFilterFlag(4), DELETE_FILE = WatchFilterFlag(8), CHANGE_DIRECTORY_NAME = WatchFilterFlag(16);
 
-		DirectoryQuery(const StringView path, bool watch_subtree, WatchFilterFlag flags)
+		DirectoryQuery(const StringView path, bool watch_subtree, WatchFilterFlag watch_flags)
 #if (_WIN64)
-		: watchFilter(flags), watchSubtree(watch_subtree) {
+		: watchFilter(watch_flags), watchSubtree(watch_subtree) {
 			directoryHandle = CreateFileA(reinterpret_cast<const char*>(path.GetData()), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
 			overlapped.hEvent = CreateEventA(nullptr, false, false, nullptr);
 #elif __linux__
 		{
+			handle = inotify_init();
+			if(handle == -1) { return; }
+			uint32 flags = 0;
+			if(watch_flags & CREATE_FILE) { flags |= IN_CREATE; }
+			if(watch_flags & DELETE_FILE) { flags |= IN_DELETE; }
+			if(watch_flags & CHANGE_DIRECTORY_NAME) { flags |= IN_MODIFY; }
+			watch = inotify_add_watch(handle, reinterpret_cast<const char*>(path.GetData()), flags);
 #endif
 		}
 
@@ -153,6 +182,62 @@ namespace GTSL {
 
 			return static_cast<bool>(i);
 #elif __linux__
+			timeval time;
+			fd_set rfds;
+			int ret = -1;
+
+			/* timeout instantly */
+			time.tv_sec = 0;
+			time.tv_usec = 0;
+
+			/*
+			* add the inotify fd to the fd_set -- of course,
+			* your application will probably want to add
+			* other file descriptors here, too
+			*/
+			FD_SET (handle, &rfds);
+
+			ret = select(handle + 1, &rfds, nullptr, nullptr, &time);
+			if (ret < 0) {
+				perror ("select");
+			} else if (!ret) {
+				return false;
+			} else if (FD_ISSET (handle, &rfds)) {
+				/* inotify events are available! */
+			}
+
+			inotify_event event;
+
+			GTSL::byte buffer[128 * (sizeof(inotify_event) + 64)];
+
+			int len, i = 0;
+
+			len = read(handle, buffer, sizeof(buffer));
+			if (len < 0) {
+				if (errno == EINTR) {
+					/* need to reissue system call */
+				}
+			} else if (!len) {
+				/* BUF_LEN too small? */
+			}
+
+			while (i < len) {
+				inotify_event* event = nullptr;
+
+				event = (inotify_event*)&buffer[i];
+
+				printf("wd=%d mask=%u cookie=%u len=%u\n",
+					event->wd, event->mask,
+					event->cookie, event->len);
+
+				if (event->len) {
+					printf ("name=%s\n", event->name);
+				}
+
+				i += sizeof(inotify_event) + event->len;
+			}
+
+			return i;
 #endif
 		}
 
@@ -166,6 +251,13 @@ namespace GTSL {
 				CloseHandle(overlapped.hEvent);
 			}
 #elif __linux__
+			if(handle != -1) {
+				close(handle);
+			}
+
+			if(watch != -1) {
+				close(watch);
+			}
 #endif
 		}
 
@@ -191,6 +283,7 @@ namespace GTSL {
 			return dwNotifyFilter;
 		}
 #elif __linux__
+		int handle = -1, watch = -1;
 #endif
 	};
 }

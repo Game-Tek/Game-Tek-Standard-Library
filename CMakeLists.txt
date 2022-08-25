@@ -18,8 +18,15 @@ install(TARGETS GTSL DESTINATION lib)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 
-#find_package(GTest CONFIG REQUIRED)
-if(true)
+find_package(X11 REQUIRED)
+
+target_link_libraries(GTSL INTERFACE ${X11_LIBRARIES})
+target_link_libraries(GTSL INTERFACE xcb)
+target_include_directories(GTSL INTERFACE ${X11_INCLUDE_DIR})
+
+if(CMAKE_TESTING_ENABLED)
+	message("CMAKE testing enabled.")
+
 	enable_testing()
 	FetchContent_Declare(googletest URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip)
 	# For Windows: Prevent overriding the parent project's compiler/linker settings
@@ -45,7 +52,10 @@ if(true)
 	"${PROJECT_SOURCE_DIR}/test/TestBuffer.cpp" "test/TestCollision.cpp" "test/TestIndirectionTable.cpp")
 	target_include_directories(GTSL_Test PUBLIC "${PROJECT_SOURCE_DIR}")
 	target_link_libraries(GTSL_Test gtest_main)
+	target_link_libraries(GTSL_Test GTSL)
 
 	include(GoogleTest)
 	gtest_discover_tests(GTSL_Test)
+else()
+	message("CMAKE testing disabled.")
 endif()

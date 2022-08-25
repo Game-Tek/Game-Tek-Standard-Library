@@ -7,7 +7,12 @@
 
 #if (_WIN64)
 #define WIN32_LEAN_AND_MEAN
+#define NO_COMM
+#define NO_MIN_MAX
 #include <Windows.h>
+#undef ERROR
+#elif __linux__
+#include <pthread.h>
 #endif
 
 namespace GTSL
@@ -17,7 +22,7 @@ namespace GTSL
 		Thread() = default;
 
 		template<class ALLOCATOR, typename T, typename... ARGS>
-		Thread(const ALLOCATOR& allocator, const uint8 threadIdParam, Delegate<T> delegate, ARGS... args) noexcept
+		Thread(ALLOCATOR allocator, const uint8 threadIdParam, Delegate<T> delegate, ARGS... args) noexcept
 		{
 			uint64 allocatedSize;
 			
@@ -28,6 +33,8 @@ namespace GTSL
 			
 			this->handle = createThread(&Thread::launchThread<T, ARGS...>, this->data);
 		}
+
+		~Thread() = default;
 
 		static uint32 ThisTreadID() noexcept { return threadId; }
 
@@ -55,7 +62,7 @@ namespace GTSL
 		void static SetThreadId(const uint8 id) { threadId = id; }
 		
 		template<class ALLOCATOR>
-		void Join(const ALLOCATOR& allocator) noexcept {
+		void Join(ALLOCATOR allocator) noexcept {
 			this->join(); //wait first
 			allocator.Deallocate(this->dataSize, 8, this->data); //deallocate next
 		}
@@ -66,7 +73,7 @@ namespace GTSL
 #if (_WIN64)
 			return GetThreadId(handle);
 #elif __linux__
-			return 0;
+			return pthread_self();
 #endif
 		}
 
@@ -78,9 +85,14 @@ namespace GTSL
 			GetSystemInfo(&system_info);
 			return static_cast<uint8>(system_info.dwNumberOfProcessors);
 #elif __linux__
+			return sysconf(_SC_NPROCESSORS_ONLN);
 #endif
 		}
 		
+		explicit operator bool() const {
+			return handle;
+		}
+
 	private:
 		template<typename FT, typename... ARGS>
 		struct FunctionCallData {
@@ -95,8 +107,9 @@ namespace GTSL
 
 		void* handle{ nullptr };
 		void* data;
-		uint32 dataSize;
-		
+		uint32 dataSize;		
+
+#if (_WIN64)
 		template<typename FT, typename... ARGS>
 		static unsigned long launchThread(void* data) {
 			FunctionCallData<FT, ARGS...>* functionData = static_cast<FunctionCallData<FT, ARGS...>*>(data);
@@ -107,11 +120,27 @@ namespace GTSL
 
 			return 0;
 		}
+#elif __linux__
+		template<typename FT, typename... ARGS>
+		static void* launchThread(void* data) {
+			FunctionCallData<FT, ARGS...>* functionData = static_cast<FunctionCallData<FT, ARGS...>*>(data);
+
+			threadId = functionData->ThreadId;
+			
+			Call(functionData->delegate, GTSL::MoveRef(functionData->Parameters));
+
+			return 0;
+		}
+#endif
 		
-		static void* createThread(unsigned long(*function)(void*), void* data) noexcept { 
 #if (_WIN64)
+		static void* createThread(unsigned long(*function)(void*), void* data) noexcept { 
 			return CreateThread(0, 0, function, data, 0, nullptr);
 #elif __linux__
+		static void* createThread(void*(*function)(void*), void* data) noexcept { 
+			pthread_t handle = 0;
+			pthread_create(&handle, nullptr, function, data);
+			return reinterpret_cast<void*>(handle);
 #endif
 		}
 
@@ -121,6 +150,7 @@ namespace GTSL
 #if (_WIN64)
 			WaitForSingleObject(handle, INFINITE); handle = nullptr;
 #elif __linux__
+			pthread_join((pthread_t)handle, nullptr);
 #endif
 		}
 	};

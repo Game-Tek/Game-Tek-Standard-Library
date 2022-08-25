@@ -7,7 +7,12 @@
 #include "GTSL/Vector.hpp"
 
 TEST(LUT, Valid) {
+#if _WIN64
 	GTSL::File lutFile(u8"../../../test/Kodak Ektachrome 64.cube", GTSL::File::READ, false);
+#elif __linux__
+	GTSL::File lutFile(u8"../test/Kodak Ektachrome 64.cube", GTSL::File::READ, false);
+#endif
+
 	GTSL::Buffer<GTSL::DefaultAllocatorReference> buffer;
 	lutFile.Read(buffer);
 

@@ -10,6 +10,11 @@
 #include "GTSL/TTF.hpp"
 #include "GTSL/System.h"
 #include "GTSL/Thread.hpp"
+#include "GTSL/Delegate.hpp"
+
+#include "GTSL/Mutex.h"
+#include "GTSL/ConditionVariable.h"
+#include "GTSL/Atomic.hpp"
 
 TEST(File, Construct) {
 	GTSL::File file;
@@ -25,7 +30,11 @@ TEST(File, Open) {
 }
 
 TEST(File, Write) {
+#if _WIN64
 	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::WRITE, true);
+#elif __linux__
+	GTSL::File file(u8"../test/WriteFile", GTSL::File::WRITE, true);
+#endif
 
 	file.Resize(0);
 
@@ -43,12 +52,15 @@ TEST(File, Write) {
 }
 
 TEST(File, Read) {
-	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::READ, false);
 
 #ifdef _WIN32
+	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::READ, false);
+#elif __linux__
+	GTSL::File file(u8"../test/WriteFile", GTSL::File::READ, false);
+#endif
+
 	GTEST_ASSERT_EQ(file.GetSize(), 16);
 	GTEST_ASSERT_EQ(file.GetFileHash(), file.GetFileHash());
-#endif
 
 	{
 		GTSL::Buffer<GTSL::StaticAllocator<1024>> buffer;
@@ -82,9 +94,17 @@ TEST(MappedFile, Construct) {
 }
 
 TEST(FileQuery, Do) {
+#ifdef _WIN32
 	GTSL::FileQuery file_query(u8"*.exe");
+
 	auto res = file_query();
 	GTEST_ASSERT_EQ(res.Get(), u8"GTSL_Test.exe");
+#elif __linux__
+	GTSL::FileQuery file_query(u8"../test/*.cube");
+
+	auto res = file_query();
+	GTEST_ASSERT_EQ(res.Get(), u8"Kodak Ektachrome 64.cube");
+#endif
 
 	res = file_query();
 	GTEST_ASSERT_EQ(res.State(), false);
@@ -100,10 +120,27 @@ TEST(DirectoryQuery, Construct) {
 
 TEST(DLL, Construct) {
 	GTSL::DLL dll;
+	dll.LoadLibrary(u8"");
+	void(*function)() = nullptr;
+	dll.LoadDynamicFunction(u8"none", &function);
+
+	GTEST_ASSERT_EQ(function, nullptr);
 }
 
 TEST(Window, Construct) {
 	GTSL::Window window;
+
+	auto onEvent = [](void*, GTSL::Window::WindowEvents, void*) {
+		ASSERT_FALSE(true);
+	};
+
+	window.BindToOS(u8"Hello", { 1280, 720 }, nullptr, GTSL::Delegate<void(void*, GTSL::Window::WindowEvents, void*)>::Create(onEvent));
+
+	window.SetWindowVisibility(true);
+
+	auto extent = window.GetFramebufferExtent();
+
+	GTEST_ASSERT_EQ(extent, GTSL::Extent2D(1280, 720));
 }
 
 TEST(Console, Print) {
@@ -111,7 +148,19 @@ TEST(Console, Print) {
 }
 
 TEST(Thread, Construct) {
-	GTSL::Thread thread;
+	GTSL::uint64 value = 0;
+
+	auto increment = [](GTSL::uint64* value) {
+		(*value) += 4;
+	};
+
+	GTSL::Thread thread(GTSL::DefaultAllocatorReference{}, 0, GTSL::Delegate<void(GTSL::uint64*)>::Create(increment), &value);
+
+	ASSERT_TRUE(thread);
+
+	thread.Join(GTSL::DefaultAllocatorReference{});
+
+	GTEST_ASSERT_EQ(value, 4);
 }
 
 TEST(Font, FontCOOPBL) {
@@ -119,8 +168,10 @@ TEST(Font, FontCOOPBL) {
 
 #ifdef _WIN32
 	auto res = file.Open(u8"C:/Windows/Fonts/COOPBL.TTF", GTSL::File::READ, false);
-	if (res == GTSL::File::OpenResult::ERROR) { GTEST_SKIP_("Could not open test file."); }
 #endif
+	if (!file) { 
+		GTEST_SKIP_("Could not open test file.");
+	}
 
 	GTSL::Buffer<GTSL::DefaultAllocatorReference> buffer;
 
@@ -247,8 +298,8 @@ TEST(Font, FontARIAL) {
 
 #ifdef _WIN32
 	auto res = file.Open(u8"C:/Windows/Fonts/arial.TTF", GTSL::File::READ, false);
-	if (res == GTSL::File::OpenResult::ERROR) { GTEST_SKIP_("Could not open test file."); }
 #endif
+	if (!file) { GTEST_SKIP_("Could not open font test file."); }
 
 	GTSL::Buffer<GTSL::DefaultAllocatorReference> buffer;
 
@@ -284,4 +335,44 @@ TEST(Font, FontARIAL) {
 	}
 
 	ASSERT_TRUE(result);
+}
+
+TEST(Mutex, Create) {
+	GTSL::Mutex mutex;
+	mutex.Lock();
+	mutex.Unlock();
+
+	auto tryResult = mutex.TryLock();
+
+	ASSERT_TRUE(tryResult);
+
+	mutex.Unlock();
+}
+
+TEST(ConditionVariable, Create) {
+	GTSL::ConditionVariable conditionVariable;
+
+	conditionVariable.NotifyAll();
+	conditionVariable.NotifyOne();
+
+	GTSL::Mutex mutex;
+	conditionVariable.Wait(mutex);
+}
+
+TEST(Atomic, Create) {
+	GTSL::Atomic<GTSL::uint32> atomic;
+
+	++atomic;
+
+	GTEST_ASSERT_EQ(atomic, 1u);
+}
+
+TEST(RWMutex, Create) {
+	GTSL::ReadWriteMutex rwmutex;
+
+	rwmutex.ReadLock();
+	rwmutex.ReadUnlock();
+
+	rwmutex.WriteLock();
+	rwmutex.WriteUnlock();
 }

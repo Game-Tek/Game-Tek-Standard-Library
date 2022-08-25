@@ -7,6 +7,8 @@
 #if (_WIN64)
 #include <Windows.h>
 #undef LoadLibrary
+#elif __linux__
+#include <dlfcn.h>
 #endif
 
 namespace GTSL
@@ -15,7 +17,7 @@ namespace GTSL
 #if _WIN64
 		HMODULE handle{ nullptr };
 #elif __linux__
-		int handle = 0;
+		void* handle = nullptr;
 #endif
 
 	public:
@@ -45,12 +47,13 @@ namespace GTSL
 			TryUnload();
 		}
 		
-		bool LoadLibrary(const StringView ranger) {
+		bool LoadLibrary(const StringView path) {
 #if (_WIN64)
-			handle = LoadLibraryA(reinterpret_cast<const char*>(ranger.GetData()));
+			handle = LoadLibraryA(reinterpret_cast<const char*>(path.GetData()));
 			return handle;
 #elif __linux__
-			return false;
+			handle = dlopen(reinterpret_cast<const char*>(path.GetData()), RTLD_NOW);
+			return handle;
 #endif
 		}
 		
@@ -63,7 +66,8 @@ namespace GTSL
 			FreeLibrary(handle);
 			handle = nullptr;
 #elif __linux__
-			handle = 0;
+			dlclose(handle);
+			handle = nullptr;
 #endif
 		}
 
@@ -72,6 +76,7 @@ namespace GTSL
 #if _WIN64
 			*func = reinterpret_cast<T>(GetProcAddress(handle, reinterpret_cast<const char*>(name)));
 #elif __linux__
+			*func = reinterpret_cast<T>(dlsym(handle, reinterpret_cast<const char*>(name)));
 #endif
 		}
 
@@ -80,14 +85,16 @@ namespace GTSL
 #if _WIN64
 			return FunctionPointer<RET(PARAMS...)>(reinterpret_cast<RET(__stdcall *)(PARAMS...)>(GetProcAddress(handle, reinterpret_cast<const char*>(name))));
 #elif __linux__
+			return FunctionPointer<RET(PARAMS...)>(reinterpret_cast<RET(*)(PARAMS...)>(dlsym(handle, reinterpret_cast<const char*>(name))));
 #endif
 		}
 
 		template<typename RET, typename... PARAMS>
-		[[nodiscard]] auto LoadDynamicFunction(const Range<const char8_t*> ranger) const {
+		[[nodiscard]] auto LoadDynamicFunction(const StringView name) const {
 #if _WIN64
-			return FunctionPointer<RET(PARAMS...)>(reinterpret_cast<RET(__stdcall *)(PARAMS...)>(GetProcAddress(handle, reinterpret_cast<const char*>(ranger.begin()))));
+			return FunctionPointer<RET(PARAMS...)>(reinterpret_cast<RET(__stdcall *)(PARAMS...)>(GetProcAddress(handle, reinterpret_cast<const char*>(name.GetData()))));
 #elif __linux__
+			return FunctionPointer<RET(PARAMS...)>(reinterpret_cast<RET(*)(PARAMS...)>(dlsym(handle, reinterpret_cast<const char*>(name.GetData()))));
 #endif
 		}
 	};

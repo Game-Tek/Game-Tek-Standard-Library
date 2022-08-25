@@ -80,8 +80,15 @@ namespace GTSL {
 
 			return openResult;
 #elif (__linux__)
-			int openFlags = 0;
-			open((const char*)path.GetData(), openFlags);
+			int openFlags = O_APPEND;
+
+			if (static_cast<uint8>(accessMode) & static_cast<uint8>(READ)) { openFlags |= O_RDONLY; }
+			if (static_cast<uint8>(accessMode) & static_cast<uint8>(WRITE)) { openFlags |= O_RDWR; }
+			if(create) { openFlags |= O_CREAT; }
+
+			fileHandle = open((const char*)path.GetData(), openFlags, 0644);
+			auto err = errno;
+			return fileHandle != -1 ? OpenResult::OK : OpenResult::ERROR;
 #endif
 		}
 
@@ -100,6 +107,7 @@ namespace GTSL {
 			WriteFile(fileHandle, buffer.begin(), static_cast<uint32>(buffer.Bytes()), &bytes, nullptr);
 			return bytes;
 #elif (__linux__)
+			return ::write(fileHandle, buffer.begin(), buffer.Bytes());
 #endif
 		}
 
@@ -108,22 +116,24 @@ namespace GTSL {
 #if (_WIN64)
 			DWORD bytes{ 0 };
 			WriteFile(fileHandle, buffer.begin(), static_cast<uint32>(size(buffer.GetLength())), &bytes, nullptr);
-			buffer.modifyOccupiedBytes(-static_cast<int64>(size(buffer.GetLength())));
-			return bytes;
 #elif (__linux__)
+			auto bytes = ::write(fileHandle, buffer.begin(), size(buffer.GetLength()));
 #endif
+			buffer.modifyOccupiedBytes(-static_cast<int64>(size(bytes)));
+			return bytes;
 		}
 		
 		template<class B>
 		uint32 Read(B& buffer, OptionalParameter<uint64> size = {}) const {
+			buffer.DeltaResize(size(GetSize()));
 #if (_WIN64)
 			DWORD bytes{ 0 };
-			buffer.DeltaResize(size(GetSize()));
 			ReadFile(fileHandle, buffer.begin() + buffer.GetLength(), static_cast<uint32>(size(GetSize())), &bytes, nullptr);
+#elif (__linux__)
+			auto bytes = ::read(fileHandle, buffer.begin() + buffer.GetLength(), size(GetSize()));
+#endif
 			buffer.modifyOccupiedBytes(bytes);
 			return bytes;
-#elif (__linux__)
-#endif
 		}
 
 		void Resize(const uint64 newSize) {
@@ -133,6 +143,7 @@ namespace GTSL {
 			SetFilePointerEx(fileHandle, bytes, nullptr, FILE_BEGIN);
 			SetEndOfFile(fileHandle);
 #elif (__linux__)
+			ftruncate(fileHandle, newSize);
 #endif
 		}
 		
@@ -142,6 +153,7 @@ namespace GTSL {
 			const LARGE_INTEGER bytes{ .QuadPart = static_cast<LONGLONG>(byte) };
 			SetFilePointerEx(fileHandle, bytes, nullptr, FILE_BEGIN);
 #elif (__linux__)
+			lseek(fileHandle, byte, SEEK_SET);
 #endif
 		}
 
@@ -152,6 +164,9 @@ namespace GTSL {
 			GTSL_ASSERT(res != 0, "Win32 Error!");
 			return size.QuadPart;
 #elif (__linux__)
+			struct stat64 stats;
+			fstat64(fileHandle, &stats);
+			return stats.st_size;
 #endif
 		}
 
@@ -161,6 +176,9 @@ namespace GTSL {
 			GetFileTime(fileHandle, nullptr, nullptr, &filetime);
 			return filetime.dwLowDateTime | static_cast<uint64>(filetime.dwHighDateTime) << 32ull;
 #elif (__linux__)
+			struct stat64 stats;
+			fstat64(fileHandle, &stats);
+			return stats.st_mtim.tv_nsec;
 #endif
 		}
 

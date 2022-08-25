@@ -285,8 +285,6 @@ TEST(Math, ProjectionMatrix) {
 }
 
 TEST(Math, DotProduct) {
-	std::cout << "Helllo";
-	
 	alignas(32) float32 xxxx[] = { 1.0f, 5.0f, 4.0f, 8.0f, 2.33f, 2.77f, 8.1f, 9.3f, 4.5f };
 	alignas(32) float32 yyyy[] = { 2.5f, 1.1f, 7.6f, 9.2f, 4.22f, 7.2f, 4.1f, 11.11f, 12.3f };
 	alignas(32) float32 zzzz[] = { 3.f, 9.f, 2.f, 1.f, 7.f };
@@ -298,7 +296,6 @@ TEST(Math, DotProduct) {
 		GTSL::Math::DotProduct(res, MultiRange<const float, const float>(9u, xxxx, yyyy), GTSL::Vector2(1.0f, 2.0f));
 
 		for (uint32 i = 0; i < 9; ++i) {
-			std::cout << res[i] << ", ";
 			ASSERT_FLOAT_EQ(res[i], xxxx[i] * 1.0f + yyyy[i] * 2.0f);
 		}
 	}

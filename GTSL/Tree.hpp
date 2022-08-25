@@ -537,7 +537,7 @@ namespace GTSL
 						}
 					};
 
-					//Resize(allocator, &multiTable, &multiTableCapacity, multiTableCapacity * 2, copyFunction);
+					ResizeCustom(allocator, &multiTable, &multiTableCapacity, multiTableCapacity * 2, copyFunction);
 				} else {
 					Allocate(allocator, delta, &multiTable, &multiTableCapacity);
 				}

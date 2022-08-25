@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Application.h"
 #include "Extent.h"
 
 #include "Delegate.hpp"
@@ -18,6 +17,9 @@
 #include <SetupAPI.h>
 #include <Dbt.h>
 #undef ERROR
+#elif __linux__
+#include <X11/X.h>
+#include <xcb/xcb.h>
 #endif
 
 namespace GTSL
@@ -83,7 +85,11 @@ namespace GTSL
 			MINIMIZED, MAXIMIZED, FULLSCREEN
 		};
 		
+#if _WIN64
 		Window() = default;
+#elif __linux__
+		Window() : connection(nullptr), window(0), screen(nullptr) {}
+#endif
 
 		struct JoystickUpdate {
 			Gamepad::Side Side;
@@ -142,7 +148,7 @@ namespace GTSL
 			bool isController = false;
 		};
 		
-		void BindToOS(StringView name, Extent2D extent, const Application& application, void* userData, Delegate<void(void*, WindowEvents, void*)> function, Window parentWindow = Window(), WindowType type = WindowType::OS_WINDOW) {
+		void BindToOS(StringView name, Extent2D extent, void* userData, Delegate<void(void*, WindowEvents, void*)> function, Window parentWindow = Window(), WindowType type = WindowType::OS_WINDOW) {
 #if (_WIN64)
 			WNDCLASSA wndclass{};
 			wndclass.lpfnWndProc = reinterpret_cast<WNDPROC>(Win32_windowProc);
@@ -154,7 +160,7 @@ namespace GTSL
 			wndclass.style = 0;
 			wndclass.cbWndExtra = 0;
 			wndclass.lpszClassName = reinterpret_cast<const char*>(name.GetData());
-			wndclass.hInstance = application.GetHINSTANCE();
+			wndclass.hInstance = GetModuleHandle(nullptr);
 			RegisterClassA(&wndclass);
 
 			uint32 style = 0;
@@ -172,13 +178,50 @@ namespace GTSL
 			windowRect.top = 0; windowRect.left = 0;
 			windowRect.bottom = extent.Height; windowRect.right = extent.Width;
 			AdjustWindowRect(&windowRect, style, false);
-			windowHandle = CreateWindowExA(0, wndclass.lpszClassName, reinterpret_cast<const char*>(name.GetData()), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, application.GetHINSTANCE(), &windowsCallData);
+			windowHandle = CreateWindowExA(0, wndclass.lpszClassName, reinterpret_cast<const char*>(name.GetData()), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, GetModuleHandle(nullptr), &windowsCallData);
 
 			GTSL_ASSERT(windowHandle, "Window failed to create!");
 
 			defaultWindowStyle = GetWindowLongA(windowHandle, GWL_STYLE);
 
 			//CoCreateInstance(IID_ITaskbarList3, nullptr, CLSCTX::CLSCTX_INPROC_SERVER, IID_ITaskbarList, &iTaskbarList);
+#elif __linux__
+			int screenp = 0;
+
+			connection = xcb_connect(nullptr, &screenp);
+
+			if(xcb_connection_has_error(connection) != 0) {
+				return;
+			}
+
+			xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(connection));
+
+			for(uint32 i = screenp; i > 0; --i) {
+				xcb_screen_next(&iter);
+			}
+
+			screen = iter.data;
+
+			window = xcb_generate_id(connection);
+
+			uint32 eventMask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
+
+			uint32 valueList[] = { screen->black_pixel, 0u };
+
+			xcb_create_window(connection, XCB_COPY_FROM_PARENT, window, screen->root, 0, 0, extent.Width, extent.Height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, eventMask, valueList);
+
+			SetTitle(name);
+
+			xcb_intern_atom_cookie_t wmDeleteCookie = xcb_intern_atom(connection, 0, strlen("WM_DELETE_WINDOW"), "WM_DELETE_WINDOW");
+			xcb_intern_atom_cookie_t wmProtocolsCookie = xcb_intern_atom(connection, 0, strlen("WM_PROTOCOLS"), "WM_PROTOCOLS");
+			xcb_intern_atom_reply_t *wmDeleteReply = xcb_intern_atom_reply(connection, wmDeleteCookie, nullptr);
+			xcb_intern_atom_reply_t *wmProtocolsReply = xcb_intern_atom_reply(connection, wmProtocolsCookie, nullptr);
+			wmDeleteWin = wmDeleteReply->atom;
+			wmProtocols = wmProtocolsReply->atom;
+
+			xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, wmProtocolsReply->atom, 4, 32, 1, &wmDeleteReply->atom);
+
+			this->framebufferExtent = extent;
 #endif
 		}
 		
@@ -186,6 +229,9 @@ namespace GTSL
 #if (_WIN64)
 			DestroyWindow(windowHandle);
 #elif __linux__
+			if(connection && window) {
+				xcb_destroy_window(connection, window);
+			}
 #endif
 		}
 
@@ -211,13 +257,32 @@ namespace GTSL
 				function(userData, WindowEvents::MOUSE_MOVE, &windowsCallData.MouseMove);
 			}
 #elif __linux__
+			xcb_generic_event_t* event = nullptr;
+			xcb_client_message_event_t* clientMessage = nullptr;
+			
+			while(event = xcb_poll_for_event(connection)) {
+				switch (event->response_type & ~0x80) {
+				case XCB_CLIENT_MESSAGE: {
+					clientMessage = (xcb_client_message_event_t *)event;
+
+					if (clientMessage->data.data32[0] == wmDeleteWin) {
+						// ON delete window
+					}
+
+					break;
+				}
+				}
+
+				free(event);
+			}
 #endif
 		}
 		
-		void SetTitle(const char* title) {
+		void SetTitle(const GTSL::StringView title) {
 #if (_WIN64)
-			SetWindowTextA(windowHandle, title);
+			SetWindowTextA(windowHandle, title.GetData());
 #elif __linux__
+			xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8, title.GetBytes(), title.GetData());
 #endif
 		}
 		
@@ -230,10 +295,12 @@ namespace GTSL
 
 #if (_WIN64)
 		HWND GetHWND() const { return windowHandle; }
+#elif __linux__
+		auto GetXCBConnection() const { return connection; }
+		auto GetXCBWindow() const { return window; }
 #endif
 
-		struct WindowIconInfo
-		{
+		struct WindowIconInfo {
 			byte* Data = nullptr;
 			Extent2D Extent;
 		};
@@ -247,6 +314,7 @@ namespace GTSL
 			extent.Height = static_cast<uint16>(rect.bottom);
 			return extent;
 #elif __linux__
+			return framebufferExtent;
 #endif
 		}
 		
@@ -329,12 +397,16 @@ namespace GTSL
 #if (_WIN64)
 			HWND HWND{ nullptr };
 #elif __linux__
+			xcb_connection_t* Connection = nullptr;
+			xcb_window_t Window = 0;
 #endif
 		};
-		void GetNativeHandles(void* nativeHandlesStruct) const {
+		void GetNativeHandles(NativeHandles* nativeHandlesStruct) const {
 #if (_WIN64)
-			static_cast<NativeHandles*>(nativeHandlesStruct)->HWND = windowHandle;
+			nativeHandlesStruct->HWND = windowHandle;
 #elif __linux__
+			nativeHandlesStruct->Connection = connection;
+			nativeHandlesStruct->Window = window;
 #endif
 		}
 
@@ -343,6 +415,8 @@ namespace GTSL
 			// Call async version to ensure window proc does not get called at the moment this is called, as we will not have a valid window proc state set
 			ShowWindowAsync(windowHandle, visible ? SW_SHOW : SW_HIDE);
 #elif __linux__
+			xcb_map_window(connection, window);
+			xcb_flush(connection);
 #endif
 		}
 
@@ -415,6 +489,15 @@ namespace GTSL
 	protected:
 		WindowSizeState windowSizeState;
 		bool focus;
+
+#if __linux__
+		xcb_connection_t * connection = nullptr;
+		xcb_window_t window;
+		xcb_screen_t * screen = nullptr;
+		xcb_atom_t wmProtocols;
+		xcb_atom_t wmDeleteWin;
+		GTSL::Extent2D framebufferExtent;
+#endif
 
 #if (_WIN64)
 		HWND windowHandle = nullptr;
@@ -1193,7 +1276,5 @@ namespace GTSL
 			bool leftShoulder : 1 = false, rightShoulder : 1 = false;
 			bool a : 1 = false, b : 1 = false, x : 1 = false, y : 1 = false;
 		};
-
-		friend class Application;
 	};
 }

@@ -326,6 +326,27 @@ namespace GTSL
 			return false;
 		}
 
+		friend bool LTrimLast(String& string, char8_t c, int32 nudge = 0) {
+			auto pos = FindLast(string, c);
+			if (pos.State()) {
+				auto p = string.getByteAndLengthForCodePoint(pos.Get() + 1 + nudge);
+
+				string.bytes -= Get<0>(p);
+
+				for(uint32 i = 0, j = Get<0>(p); i < string.bytes; ++i, ++j) {
+					string.data[i] = string.data[j];
+				}
+
+				string.codePoints -= Get<1>(p);
+
+				for (uint8 i = 0; i < 4; ++i)
+					string.data[string.bytes + i] = u8'\0';
+
+				return true;
+			}
+			return false;
+		}
+
 		/**
 		* \brief Returns an index to the first char in the string that is equal to c. If no such character is found npos() is returned.
 		* \param c Char to Find.
