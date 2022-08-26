@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 include(FetchContent)
 
-project(GTSL VERSION 1.0.0)
+project(GTSL VERSION 1.0.0 LANGUAGES CXX)
 
-option(GTSL_TESTS_ENABLED OFF)
+option(GTSL_TESTS_ENABLED ON)
 
 # requirements
 set(CMAKE_CXX_STANDARD 20)
@@ -16,19 +16,19 @@ target_include_directories(GTSL INTERFACE "${PROJECT_SOURCE_DIR}")
 
 install(TARGETS GTSL DESTINATION lib)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-
-find_package(X11 REQUIRED)
-
-target_link_libraries(GTSL INTERFACE ${X11_LIBRARIES})
-target_link_libraries(GTSL INTERFACE xcb)
-target_include_directories(GTSL INTERFACE ${X11_INCLUDE_DIR})
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+	find_package(X11 REQUIRED)
+	target_link_libraries(GTSL INTERFACE ${X11_LIBRARIES})
+	target_link_libraries(GTSL INTERFACE xcb)
+	target_include_directories(GTSL INTERFACE ${X11_INCLUDE_DIR})
+endif()
 
 if(CMAKE_TESTING_ENABLED)
 	message("CMAKE testing enabled.")
 
 	enable_testing()
-	FetchContent_Declare(googletest URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip)
+	FetchContent_Declare(googletest URL https://github.com/google/googletest/archive/refs/tags/release-1.12.1.zip)
 	# For Windows: Prevent overriding the parent project's compiler/linker settings
 	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 	FetchContent_MakeAvailable(googletest)

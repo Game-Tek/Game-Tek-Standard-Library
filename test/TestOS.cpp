@@ -30,10 +30,10 @@ TEST(File, Open) {
 }
 
 TEST(File, Write) {
-#if _WIN64
 	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::WRITE, true);
+#if _WIN64
 #elif __linux__
-	GTSL::File file(u8"../test/WriteFile", GTSL::File::WRITE, true);
+	//GTSL::File file(u8"../test/WriteFile", GTSL::File::WRITE, true);
 #endif
 
 	file.Resize(0);
@@ -53,10 +53,10 @@ TEST(File, Write) {
 
 TEST(File, Read) {
 
-#ifdef _WIN32
 	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::READ, false);
+#ifdef _WIN32
 #elif __linux__
-	GTSL::File file(u8"../test/WriteFile", GTSL::File::READ, false);
+	//GTSL::File file(u8"../test/WriteFile", GTSL::File::READ, false);
 #endif
 
 	GTEST_ASSERT_EQ(file.GetSize(), 16);
@@ -100,7 +100,7 @@ TEST(FileQuery, Do) {
 	auto res = file_query();
 	GTEST_ASSERT_EQ(res.Get(), u8"GTSL_Test.exe");
 #elif __linux__
-	GTSL::FileQuery file_query(u8"../test/*.cube");
+	GTSL::FileQuery file_query(u8"../../../test/*.cube");
 
 	auto res = file_query();
 	GTEST_ASSERT_EQ(res.Get(), u8"Kodak Ektachrome 64.cube");
@@ -144,7 +144,7 @@ TEST(Window, Construct) {
 }
 
 TEST(Console, Print) {
-	GTSL::Console::Print(u8"Test print.\n");
+	GTSL::Console::Print(u8"Test print. 😁\n");
 }
 
 TEST(Thread, Construct) {

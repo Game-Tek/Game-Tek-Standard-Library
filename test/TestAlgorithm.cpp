@@ -5,6 +5,7 @@
 
 #include "GTSL/ArrayCommon.hpp"
 #include "GTSL/Delegate.hpp"
+#include "GTSL/Bitman.h"
 
 TEST(AllContain, Invalid) {
 	GTSL::StaticVector<GTSL::uint32, 8> a{ 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -129,3 +130,31 @@ static_assert(GTSL::PackSizeAt<0, GTSL::uint32, GTSL::uint32, GTSL::uint32, GTSL
 static_assert(GTSL::PackSizeAt<1, GTSL::uint32, GTSL::uint32, GTSL::uint32, GTSL::uint32>() == 4);
 static_assert(GTSL::PackSizeAt<2, GTSL::uint32, GTSL::uint32, GTSL::uint32, GTSL::uint32>() == 8);
 static_assert(GTSL::PackSizeAt<3, GTSL::uint32, GTSL::uint32, GTSL::uint32, GTSL::uint32>() == 12);
+
+TEST(Bit, FindFirstSet) {
+	auto result = GTSL::FindFirstSetBit((GTSL::uint8)1);
+
+	ASSERT_TRUE(result.State());
+	GTEST_ASSERT_EQ(result.Get(), 0);
+}
+
+TEST(Bit, FindLastSet) {
+	auto result = GTSL::FindLastSetBit(1u);
+
+	ASSERT_TRUE(result.State());
+	GTEST_ASSERT_EQ(result.Get(), 0);
+}
+
+TEST(Bit, FindFirstClear) {
+	auto result = GTSL::FindFirstClearBit(1u);
+
+	ASSERT_TRUE(result.State());
+	GTEST_ASSERT_EQ(result.Get(), 1);
+}
+
+TEST(Bit, FindLastClear) {
+	auto result = GTSL::FindLastClearBit(1u);
+
+	ASSERT_TRUE(result.State());
+	GTEST_ASSERT_EQ(result.Get(), 1);
+}

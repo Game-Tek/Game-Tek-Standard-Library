@@ -1,0 +1,26 @@
+{
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "Default",
+            "displayName": "x86_64-linux-gnu",
+            "description": "Using compilers: C = /usr/bin/gcc, CXX = /usr/bin/g++",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_TESTING_ENABLED": "true"
+            }
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "test",
+            "description": "",
+            "displayName": "Testing",
+            "configurePreset": "Default"
+        }
+    ]
+}

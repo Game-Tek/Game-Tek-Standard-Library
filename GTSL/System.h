@@ -184,6 +184,8 @@ namespace GTSL
 		static void Print(const Range<const char8_t*> text) {
 #ifdef _WIN32
 			WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), text.GetData(), text.GetBytes(), nullptr, nullptr);
+#elif __linux__
+			write(1, reinterpret_cast<const void*>(text.GetData()), text.GetBytes());
 #endif
 		}
 

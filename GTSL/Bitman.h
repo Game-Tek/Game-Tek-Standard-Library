@@ -77,7 +77,7 @@ namespace GTSL
 	}
 
 	inline Result<uint8> FindLastClearBit(const uint32 number) {
-		return FindLastSetBit(~number);
+		return FindFirstSetBit(~number);
 	}
 
 	inline Result<uint8> FindLastSetBit(const uint64 number) {
