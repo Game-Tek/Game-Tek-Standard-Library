@@ -89,6 +89,19 @@ TEST(File, Read) {
 	}
 }
 
+TEST(File, ReadRaw) {
+	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::READ, false);
+
+	GTSL::byte buffer[16];
+
+	auto bytesRead = file.Read(16, buffer);
+
+	GTEST_ASSERT_EQ(bytesRead, 16);
+
+	GTSL::uint64 array[] = { 32ull, 32ull };
+	GTEST_ASSERT_EQ(GTSL::Range(16, reinterpret_cast<const byte*>(array)), GTSL::Range(16, buffer));
+}
+
 TEST(MappedFile, Construct) {
 	GTSL::MappedFile mapped_file;
 }

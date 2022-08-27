@@ -122,7 +122,14 @@ namespace GTSL {
 			buffer.modifyOccupiedBytes(-static_cast<int64>(size(bytes)));
 			return bytes;
 		}
-		
+
+		template<typename T>
+		uint64 Read(uint64 size, T* buffer) const {
+			DWORD bytes{ 0 };
+			ReadFile(fileHandle, buffer, static_cast<uint32>(size), &bytes, nullptr);
+			return bytes;
+		}
+
 		template<class B>
 		uint32 Read(B& buffer, OptionalParameter<uint64> size = {}) const {
 			buffer.DeltaResize(size(GetSize()));

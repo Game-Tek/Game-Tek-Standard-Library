@@ -15,6 +15,8 @@
 #include <immintrin.h>
 #include <GTSL/Math/Math.hpp>
 
+#include "Algorithm.hpp"
+
 namespace GTSL
 {
 	template<typename T>

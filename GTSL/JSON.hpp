@@ -563,7 +563,7 @@ namespace GTSL {
 				o += getJumpLengthSameLevel(buffer, o);
 			}
 
-			return { buffer, o };
+			return { buffer, o, allocator.GetAllocator() };
 		}
 
 		uint32 GetCount() const {
