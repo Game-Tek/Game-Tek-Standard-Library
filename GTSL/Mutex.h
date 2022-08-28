@@ -72,6 +72,7 @@ namespace GTSL
         explicit Lock(Mutex& mutex) noexcept : object(&mutex) { mutex.Lock(); }
         ~Lock() noexcept { object->Unlock(); }
 
+        operator Mutex& () { return *object; }
         operator const Mutex& () const { return *object; }
     private:
         Mutex* object = nullptr;

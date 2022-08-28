@@ -43,7 +43,7 @@ namespace GTSL
 
 		template<typename L>
 		void Wait(Lock<Mutex>& lock, L&& predicate) {
-			while (!predicate()) { Wait(*lock.object); }
+			while (!predicate()) { Wait(lock); }
 		}
 
 		void NotifyAll() {

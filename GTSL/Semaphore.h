@@ -34,7 +34,7 @@ namespace GTSL {
         Semaphore& operator--() { Post(); return *this; }
     
         void Wait() noexcept {
-            const Lock lock(mutex);
+            Lock lock(mutex);
             cv.Wait(lock, [&]() { return count == 0; });
         }
     

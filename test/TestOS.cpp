@@ -15,6 +15,7 @@
 #include "GTSL/Mutex.h"
 #include "GTSL/ConditionVariable.h"
 #include "GTSL/Atomic.hpp"
+#include "GTSL/Semaphore.h"
 
 TEST(File, Construct) {
 	GTSL::File file;
@@ -331,4 +332,9 @@ TEST(RWMutex, Create) {
 
 	rwmutex.WriteLock();
 	rwmutex.WriteUnlock();
+}
+
+TEST(Semaphore, Semaphore) {
+	GTSL::Semaphore semaphore;
+	semaphore.Wait();
 }
