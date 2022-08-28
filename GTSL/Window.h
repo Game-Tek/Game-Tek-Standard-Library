@@ -280,7 +280,7 @@ namespace GTSL
 		
 		void SetTitle(const GTSL::StringView title) {
 #if (_WIN64)
-			SetWindowTextA(windowHandle, title.GetData());
+			SetWindowTextA(windowHandle, (LPCSTR)title.GetData());
 #elif __linux__
 			xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8, title.GetBytes(), title.GetData());
 #endif

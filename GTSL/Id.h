@@ -2,36 +2,24 @@
 
 #include "Core.h"
 
-#include "Range.hpp"
 #include "StringCommon.h"
 
 namespace GTSL
 {
-	constexpr uint64 Hash(const StringView string) {
-		uint64 primary_hash(525201411107845655ull);
-
-		for (uint32 i = 0; i < string.GetBytes(); ++i) {
-			primary_hash ^= string[i]; primary_hash *= 0x5bd1e9955bd1e995; primary_hash ^= primary_hash >> 47;
-		}
-
-		return primary_hash;
-	}
-
-	class Id64
-	{
+	class Id64 {
 	public:
 		using HashType = uint64;
 
 		constexpr Id64() = default;
 
 		template<uint64 N>
-		constexpr Id64(const char8_t(&string)[N]) noexcept : hashValue(Hash(GTSL::Range<const char8_t*>(string))) {}
+		constexpr Id64(const char8_t(&string)[N]) noexcept : hashValue(Hash(StringView(string))) {}
 
 		//template<char8_t... str>
 		//constexpr Id64() noexcept : hashValue(hashString<str...>()) {}
 		
-		constexpr Id64(const Range<const char8_t*>& ranger) noexcept : hashValue(Hash(ranger)) {}
-		constexpr Id64(const char8_t* text) noexcept : hashValue(Hash(text)) {}
+		constexpr Id64(const StringView ranger) noexcept : hashValue(Hash<StringView>(StringView(ranger))) {}
+		constexpr Id64(const char8_t* text) noexcept : hashValue(Hash<StringView>(StringView(text))) {}
 		constexpr Id64(const Id64& other) noexcept = default;
 		constexpr explicit Id64(uint64 value) noexcept : hashValue(value) {}
 

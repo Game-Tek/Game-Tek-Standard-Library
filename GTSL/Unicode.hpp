@@ -4,7 +4,7 @@
 #include <array>
 #include "Result.h"
 #include "Pair.hpp"
-#include <GTSL/Bitman.h>
+#include "Bitman.h"
 
 namespace GTSL {
 	struct utf_t {

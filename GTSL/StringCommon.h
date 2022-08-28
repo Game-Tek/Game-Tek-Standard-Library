@@ -1,13 +1,14 @@
 #pragma once
 #include <regex>
-#include <GTSL/Core.h>
+
+#include "Core.h"
 
 #include "DataSizes.h"
-#include "Range.hpp"
 #include "Result.h"
 #include "Tuple.hpp"
 #include "Math/Math.hpp"
 #include "Unicode.hpp"
+#include "Algorithm.hpp"
 
 namespace GTSL
 {
@@ -121,6 +122,25 @@ namespace GTSL
 	Range(const char8_t*) -> Range<const char8_t*>;
 
 	using StringView = Range<const char8_t*>;
+
+	template<>
+	struct Hash<StringView> {
+		const StringView& value;
+
+		Hash(const StringView& val) : value(val) {}
+
+		constexpr operator uint64() const {
+			uint64 primary_hash(525201411107845655ull);
+
+			for (uint32 i = 0; i < value.GetBytes(); ++i) {
+				primary_hash ^= value[i]; primary_hash *= 0x5bd1e9955bd1e995; primary_hash ^= primary_hash >> 47;
+			}
+
+			return primary_hash;
+		}
+	};
+
+	Hash(const StringView) -> Hash<StringView>;
 
 	class SubstringIterator {
 	public:

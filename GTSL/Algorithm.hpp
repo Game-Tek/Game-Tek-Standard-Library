@@ -9,6 +9,8 @@ namespace GTSL
 {
 	constexpr uint32 ModuloByPowerOf2(const uint64 key, const uint32 size) { return key & (size - 1); }
 
+	template<typename T> struct Hash;
+
 	template<typename T>
 	void Destroy(T& object) { object.~T(); }
 	

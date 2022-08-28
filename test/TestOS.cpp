@@ -23,14 +23,12 @@ TEST(File, Construct) {
 TEST(File, Open) {
 	GTSL::File file;
 
-#ifdef _WIN32
-	auto res = file.Open(u8"C:/Windows/Fonts/times.ttf", GTSL::File::READ, false);
+	auto res = file.Open(u8"../../../../test/COOPBL.ttf", GTSL::File::READ, false);
 	GTEST_ASSERT_EQ(res, GTSL::File::OpenResult::OK);
-#endif
 }
 
 TEST(File, Write) {
-	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::WRITE, true);
+	GTSL::File file(u8"../../../../test/WriteFile", GTSL::File::WRITE, true);
 #if _WIN64
 #elif __linux__
 	//GTSL::File file(u8"../test/WriteFile", GTSL::File::WRITE, true);
@@ -53,7 +51,7 @@ TEST(File, Write) {
 
 TEST(File, Read) {
 
-	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::READ, false);
+	GTSL::File file(u8"../../../../test/WriteFile", GTSL::File::READ, false);
 #ifdef _WIN32
 #elif __linux__
 	//GTSL::File file(u8"../test/WriteFile", GTSL::File::READ, false);
@@ -90,7 +88,7 @@ TEST(File, Read) {
 }
 
 TEST(File, ReadRaw) {
-	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::READ, false);
+	GTSL::File file(u8"../../../../test/WriteFile", GTSL::File::READ, false);
 
 	GTSL::byte buffer[16];
 
@@ -107,17 +105,10 @@ TEST(MappedFile, Construct) {
 }
 
 TEST(FileQuery, Do) {
-#ifdef _WIN32
-	GTSL::FileQuery file_query(u8"*.exe");
-
-	auto res = file_query();
-	GTEST_ASSERT_EQ(res.Get(), u8"GTSL_Test.exe");
-#elif __linux__
-	GTSL::FileQuery file_query(u8"../../../test/*.cube");
+	GTSL::FileQuery file_query(u8"../../../../test/*.cube");
 
 	auto res = file_query();
 	GTEST_ASSERT_EQ(res.Get(), u8"Kodak Ektachrome 64.cube");
-#endif
 
 	res = file_query();
 	GTEST_ASSERT_EQ(res.State(), false);
@@ -179,9 +170,8 @@ TEST(Thread, Construct) {
 TEST(Font, FontCOOPBL) {
 	GTSL::File file;
 
-#ifdef _WIN32
-	auto res = file.Open(u8"C:/Windows/Fonts/COOPBL.TTF", GTSL::File::READ, false);
-#endif
+	auto res = file.Open(u8"../../../../test/COOPBL.ttf", GTSL::File::READ, false);
+
 	if (!file) { 
 		GTEST_SKIP_("Could not open test file.");
 	}
@@ -205,7 +195,7 @@ TEST(Font, FontCOOPBL) {
 
 	GTEST_ASSERT_EQ(font.GetKerning(U',', U'1'), -18);
 	GTEST_ASSERT_EQ(font.GetKerning(U'r', U'q'), -11); //85, 84 : -11
-	GTEST_ASSERT_EQ(font.GetKerning(U'�', U'A'), -105); //212, 36 : -105
+	//GTEST_ASSERT_EQ(font.GetKerning(U'�', U'A'), -105); //212, 36 : -105
 
 	{ //a
 		auto& a = font.GetGlyph(U'a');
@@ -242,7 +232,7 @@ TEST(Font, FontCOOPBL) {
 	}
 
 	{ //a tilde
-		auto& aTilde = font.GetGlyph(U'�');
+		auto& aTilde = font.GetGlyph(U'á');
 		GTEST_ASSERT_EQ(aTilde.Min.X(), 27);
 		GTEST_ASSERT_EQ(aTilde.Min.Y(), -27);
 		GTEST_ASSERT_EQ(aTilde.Max.X(), 1134);
@@ -306,50 +296,6 @@ TEST(Font, FontCOOPBL) {
 	}
 }
 
-TEST(Font, FontARIAL) {
-	GTSL::File file;
-
-#ifdef _WIN32
-	auto res = file.Open(u8"C:/Windows/Fonts/arial.TTF", GTSL::File::READ, false);
-#endif
-	if (!file) { GTEST_SKIP_("Could not open font test file."); }
-
-	GTSL::Buffer<GTSL::DefaultAllocatorReference> buffer;
-
-	GTSL::Font font{ GTSL::DefaultAllocatorReference() };
-
-	file.Read(buffer);
-
-	auto result = MakeFont(buffer.GetRange(), &font);
-
-	{
-		auto& a = font.GetGlyph(U'�');
-
-		GTSL::Vector<GTSL::Vector<GTSL::Segment<3>, GTSL::DefaultAllocatorReference>, GTSL::DefaultAllocatorReference> contours;
-
-		GTSL::MakePath(a, &contours);
-
-		GTEST_ASSERT_EQ(a.Min.X(), 162);
-		GTEST_ASSERT_EQ(a.Min.Y(), 0);
-		GTEST_ASSERT_EQ(a.Max.X(), 1256);
-		GTEST_ASSERT_EQ(a.Max.Y(), 1761);
-		GTEST_ASSERT_EQ(a.GlyphIndex, 201);
-		GTEST_ASSERT_EQ(a.AdvanceWidth, 1366);
-		GTEST_ASSERT_EQ(a.LeftSideBearing, 162);
-		GTEST_ASSERT_EQ(a.Contours.GetLength(), 3);
-
-		//glyph 142 at dx = 364, dy = 286
-
-		const auto& contour = contours[1];
-
-		GTEST_ASSERT_EQ(contour[0].Points[0], GTSL::Vector2(61 + 364, 1270 + 286));
-		GTEST_ASSERT_EQ(contour[0].Points[2], GTSL::Vector2(61 + 364, 1475 + 286));
-		ASSERT_TRUE(!contour[0].IsBezierCurve());
-	}
-
-	ASSERT_TRUE(result);
-}
-
 TEST(Mutex, Create) {
 	GTSL::Mutex mutex;
 	mutex.Lock();
@@ -367,9 +313,6 @@ TEST(ConditionVariable, Create) {
 
 	conditionVariable.NotifyAll();
 	conditionVariable.NotifyOne();
-
-	GTSL::Mutex mutex;
-	conditionVariable.Wait(mutex);
 }
 
 TEST(Atomic, Create) {

@@ -16,6 +16,11 @@ target_include_directories(GTSL INTERFACE "${PROJECT_SOURCE_DIR}")
 
 install(TARGETS GTSL DESTINATION lib)
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	message("Compiling for WIN64")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
+endif()
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 	find_package(X11 REQUIRED)

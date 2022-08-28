@@ -2,25 +2,53 @@
     "version": 2,
     "configurePresets": [
         {
-            "name": "Default",
-            "displayName": "x86_64-linux-gnu",
-            "description": "Using compilers: C = /usr/bin/gcc, CXX = /usr/bin/g++",
+            "name": "base",
+            "description": "Sets base build and install directory.",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_BUILD_TYPE":"Release"
+            }
+        },
+        {
+            "inherits":["base"],
+            "name": "linux-x64",
+            "description": "Using compilers: C = /usr/bin/gcc, CXX = /usr/bin/g++",
             "generator": "Unix Makefiles",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_CXX_COMPILER": "g++",
-                "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_TESTING_ENABLED": "true"
             }
+        },
+        {
+            "inherits":["base"],
+            "name": "win-x64",
+            "description": "Using compilers for Visual Studio 17 2022 (x64 architecture)",
+            "toolset": "host=x64",
+            "architecture": "x64",
+            "generator": "Visual Studio 17 2022",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "cl.exe",
+                "CMAKE_TESTING_ENABLED": "true",
+                "CMAKE_BUILD_TYPE":"Release"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "win-x64-release",
+            "configurePreset": "win-x64",
+            "configuration": "Release"
         }
     ],
     "testPresets": [
         {
-            "name": "test",
+            "name": "debug-win-x64",
             "description": "",
-            "displayName": "Testing",
-            "configurePreset": "Default"
+            "displayName": "Windows Testing",
+            "configurePreset": "win-x64",
+            "configuration": "Release"
         }
     ]
 }

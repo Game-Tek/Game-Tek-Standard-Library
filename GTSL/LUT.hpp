@@ -1,9 +1,8 @@
 #pragma once
-#include <GTSL/StringCommon.h>
 
 #include "Id.h"
 #include "String.hpp"
-
+#include "StringCommon.h"
 
 namespace GTSL {
 	struct LUTData {
@@ -25,20 +24,20 @@ namespace GTSL {
 						vec[component] = ToNumber<float32>(token).Get();
 						++component;						
 					} else {
-						if (lastToken == Hash(u8"LUT_3D_SIZE")) {
+						if (lastToken == Hash(StringView(u8"LUT_3D_SIZE"))) {
 							lutData.Size = ToNumber<uint32>(token).Get();
 						}
 					}
 				} else {
-					lastToken = Hash(token);					
+					lastToken = Hash(StringView(token));
 				}
 
 			}, u8' ');
 
 			if(component == 3) {
-				if(lastToken == Hash(u8"DOMAIN_MIN")) {
+				if(lastToken == Hash(StringView(u8"DOMAIN_MIN"))) {
 					lutData.Min = vec;									
-				} else if(lastToken == Hash(u8"DOMAIN_MAX")) {
+				} else if(lastToken == Hash(StringView(u8"DOMAIN_MAX"))) {
 					lutData.Max = vec;
 				} else {
 					f(vec);

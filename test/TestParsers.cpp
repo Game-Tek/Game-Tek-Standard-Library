@@ -7,7 +7,7 @@
 #include "GTSL/Vector.hpp"
 
 TEST(LUT, Valid) {
-	GTSL::File lutFile(u8"../../../test/Kodak Ektachrome 64.cube", GTSL::File::READ, false);
+	GTSL::File lutFile(u8"../../../../test/Kodak Ektachrome 64.cube", GTSL::File::READ, false);
 #if _WIN64
 #elif __linux__
 	//GTSL::File lutFile(u8"../test/Kodak Ektachrome 64.cube", GTSL::File::READ, false);

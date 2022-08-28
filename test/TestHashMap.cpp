@@ -17,6 +17,19 @@ TEST(HashMap, Emplace) {
 	GTEST_ASSERT_EQ(ref1, 1);
 }
 
+TEST(HashMap, AlternateKeyEmplace) {
+	GTSL::HashMap<char32_t, GTSL::uint64, GTSL::DefaultAllocatorReference> hashMap(2);
+
+	auto& ref0 = hashMap.Emplace(U'😳', 0);
+	GTEST_ASSERT_EQ(ref0, 0);
+
+	auto& ref1 = hashMap.Emplace(U'😏', 1);
+	GTEST_ASSERT_EQ(ref1, 1);
+
+	GTEST_ASSERT_EQ(hashMap[U'😳'], 0);
+	GTEST_ASSERT_EQ(hashMap[U'😏'], 1);
+}
+
 TEST(HashMap, Lookup) {
 	GTSL::HashMap<GTSL::uint64, GTSL::uint64, GTSL::DefaultAllocatorReference> hashMap(2);
 

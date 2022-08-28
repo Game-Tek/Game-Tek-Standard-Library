@@ -20,7 +20,10 @@
 #endif
 
 namespace GTSL {
-	constexpr uint64 Hash(Integral auto value) { return static_cast<uint64>(value); }
+	template<Integral T>
+	struct Hash<T> { const T& value; Hash(const T& val) : value(val) {} operator uint64() const { return static_cast<uint64>(value); } };
+
+	Hash(const uint64) -> Hash<uint64>;
 
 	template<typename K, typename V, Allocator ALLOCATOR>
 	class HashMap {
