@@ -54,7 +54,10 @@ if(CMAKE_TESTING_ENABLED)
 	"${PROJECT_SOURCE_DIR}/test/TestTree.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestAlgorithm.cpp"
 	"${PROJECT_SOURCE_DIR}/test/TestStringCommon.cpp"
-	"${PROJECT_SOURCE_DIR}/test/TestBuffer.cpp" "test/TestCollision.cpp" "test/TestIndirectionTable.cpp")
+	"${PROJECT_SOURCE_DIR}/test/TestBuffer.cpp"
+	"test/TestCollision.cpp"
+	"test/TestIndirectionTable.cpp"
+	"test/TestRatioUnit.cpp")
 	target_include_directories(GTSL_Test PUBLIC "${PROJECT_SOURCE_DIR}")
 	target_link_libraries(GTSL_Test gtest_main)
 	target_link_libraries(GTSL_Test GTSL)

@@ -17,7 +17,7 @@ namespace GTSL
 
 		explicit constexpr RatioUnit(const storing_type time) : count(time) {}
 
-template<typename RET, class R>
+		template<typename RET, class R>
 		constexpr RET As() const
 		{
 			if constexpr (R::DENOMINATOR > DENOMINATOR)
@@ -44,10 +44,13 @@ template<typename RET, class R>
 			}
 			else
 			{
-				if constexpr (NUMERATOR > R::NUMERATOR)
-				{
+				if constexpr (R::NUMERATOR < NUMERATOR) {
 					return count * static_cast<RET>(NUMERATOR);
+				} else{
+					return count;
 				}
+
+				return static_cast<RET>(count);
 			}
 
 			//auto value = static_cast<RET>(count);
@@ -55,19 +58,10 @@ template<typename RET, class R>
 			//return value / (static_cast<RET>(R::NUMERATOR) / static_cast<RET>(R::DENOMINATOR));
 		}
 
-		//template<storing_type N, storing_type D>
-		//constexpr RatioUnit(const RatioUnit<ST, N, D> other) : count(other.As<ST, decltype(*this)>())
-		//{
-		//	static_assert(N >= NUMERATOR && D <= DENOMINATOR, "Converting to a larger unit will yield a lossy transformation.");
-		//}
+		template<uint64 N, uint64 D>
+		constexpr RatioUnit(RatioUnit<ST, N, D> other) : count(other.As<ST, RatioUnit<ST, NUMERATOR, DENOMINATOR>>()) {}
 
 		constexpr RatioUnit(const RatioUnit& other) : count(other.count) {}
-
-		template<typename S, storing_type N, storing_type R>
-		constexpr explicit operator RatioUnit<S, N, R>() const
-		{
-			return RatioUnit<S, N, R>(*this);
-		}
 
 		constexpr operator storing_type() const { return count; }
 

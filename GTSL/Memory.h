@@ -94,12 +94,17 @@ namespace GTSL
 
 		*allocatedSize = GTSL::Math::RoundUpByPowerOf2(size, systemInfo.dwPageSize);
 		*data = allocatedAddress;
+#elif __linux__
+		*data = malloc(size);
+		*allocatedSize = size;
 #endif
 	}
 
 	inline void SysDealloc(uint64 size, void** data) {
 #if (_WIN64)
 		VirtualFree(*data, 0, MEM_RELEASE);
+#elif __linux__
+		free(*data);
 #endif
 	}
 }

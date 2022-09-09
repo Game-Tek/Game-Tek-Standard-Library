@@ -125,19 +125,19 @@ namespace GTSL
 
 	template<>
 	struct Hash<StringView> {
-		const StringView& value;
+		uint64 value = 0;
 
-		Hash(const StringView& val) : value(val) {}
-
-		constexpr operator uint64() const {
+		constexpr Hash(const StringView& string_view) {
 			uint64 primary_hash(525201411107845655ull);
 
-			for (uint32 i = 0; i < value.GetBytes(); ++i) {
-				primary_hash ^= value[i]; primary_hash *= 0x5bd1e9955bd1e995; primary_hash ^= primary_hash >> 47;
+			for (uint32 i = 0; i < string_view.GetBytes(); ++i) {
+				primary_hash ^= string_view[i]; primary_hash *= 0x5bd1e9955bd1e995; primary_hash ^= primary_hash >> 47;
 			}
 
-			return primary_hash;
+			value = primary_hash;
 		}
+
+		constexpr operator uint64() const { return value; }
 	};
 
 	Hash(const StringView) -> Hash<StringView>;
