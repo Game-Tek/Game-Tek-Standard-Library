@@ -29,7 +29,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/out/build/win-x64 --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/out/build/win-x64 --config ${{env.BUILD_TYPE}} -DCMAKE_TESTING_ENABLED=true
 
     - name: Test
       working-directory: ${{github.workspace}}/out/build/win-x64
