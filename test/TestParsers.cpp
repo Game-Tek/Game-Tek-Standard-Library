@@ -85,7 +85,8 @@ TEST(JSON, Deserialize) {
     "localSize":[1,1,1],
 	"shaders":["a", "b"],
     "statements":[
-        { "name":"Write", "params":[ { "name": "GetScreenPosition() "}, { "type":"float4", "params" : [{ "type":"float32", "params" : [1] }] } ] }
+        { "name":"Write", "params":[ { "name": "GetScreenPosition() "}, { "type":"float4", "params" : [{ "type":"float32", "params" : [1] }] } ] },
+		{ "name":"Write", "params":[ { "name": "GetScreenPosition() "}, { "type":"float4", "params" : [{ "type":"float32", "params" : [1] }] } ] }
 	],
 	"debug":3,
 	"index":-1,
@@ -122,11 +123,12 @@ TEST(JSON, Deserialize) {
 
 	GTSL::uint64 x{ json[u8"localSize"][0] }, y{ json[u8"localSize"][1] }, z{ json[u8"localSize"][2] };
 
+	GTEST_ASSERT_EQ(json.GetCount(), 12);
 	GTEST_ASSERT_EQ(json[u8"shaders"].GetCount(), 2);
 	GTEST_ASSERT_EQ(json[u8"shaders"][0].GetStringView(), u8"a");
 	GTEST_ASSERT_EQ(json[u8"shaders"][1].GetStringView(), u8"b");
 
-	GTEST_ASSERT_EQ(json[u8"statements"].GetCount(), 1);
+	GTEST_ASSERT_EQ(json[u8"statements"].GetCount(), 2);
 
 	GTEST_ASSERT_EQ(name, u8"ComputeShader");
 	GTEST_ASSERT_EQ(type, u8"Compute");

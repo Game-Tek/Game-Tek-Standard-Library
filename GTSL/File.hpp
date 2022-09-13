@@ -189,7 +189,7 @@ namespace GTSL {
 #endif
 		}
 
-		explicit operator bool() const { return fileHandle; }
+		explicit operator bool() const { return fileHandle && fileHandle != reinterpret_cast<void*>(0xffffffffffffffff); }
 	
 	private:
 	#if _WIN64
