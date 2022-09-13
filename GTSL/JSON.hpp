@@ -475,6 +475,29 @@ namespace GTSL {
 			MemCopy(size, data + of, buffer);
 		}
 
+		JSON(JSON&& other) noexcept : allocator(GTSL::MoveRef(other.allocator)), buffer(other.buffer), capacity(other.capacity), valid(other.valid) {
+			other.buffer = nullptr;
+			other.valid = false;
+			other.capacity = 0;
+		}
+
+		JSON& operator=(JSON&& other) noexcept {
+			if(buffer) {
+				Deallocate(allocator, capacity, buffer);
+			}
+
+			allocator = GTSL::MoveRef(other.allocator);
+			buffer = other.buffer;
+			capacity = other.capacity;
+			valid = other.valid;
+
+			other.buffer = nullptr;
+			other.valid = false;
+			other.capacity = 0;
+
+			return *this;
+		}
+
 		~JSON() {
 			if(buffer) {
 				Deallocate(allocator, capacity, buffer);
