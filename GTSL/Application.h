@@ -4,9 +4,9 @@
 #include "String.hpp"
 
 #if (_WIN64)
-#define WIN32_LEAN_AND_MEAN
-#define NO_COMM
 #include <Windows.h>
+#elif __linux__
+#include <unistd.h>
 #endif
 
 namespace GTSL
@@ -40,8 +40,7 @@ namespace GTSL
 		HINSTANCE GetHINSTANCE() const { return handle; }
 #endif
 
-		enum class Priority : uint8
-		{
+		enum class Priority : uint8 {
 			LOW, LOW_MID, MID, MID_HIGH, HIGH
 		};
 		void SetProcessPriority(Priority priority) noexcept {
@@ -56,6 +55,16 @@ namespace GTSL
 			}
 
 			SetPriorityClass(GetCurrentProcess(), priority_class);
+#elif __linux__
+			int32 niceNess = 0;
+			switch (priority) {
+			case Priority::LOW: niceNess = 19; break;
+			case Priority::LOW_MID: niceNess = 11; break;
+			case Priority::MID: niceNess = 0; break;
+			case Priority::MID_HIGH: niceNess = -10; break;
+			case Priority::HIGH: niceNess = -20; break;
+			}
+			nice(niceNess);
 #endif
 		}
 		
@@ -65,8 +74,7 @@ namespace GTSL
 #endif
 		}
 
-		struct NativeHandles
-		{
+		struct NativeHandles {
 #if (_WIN64)
 			HINSTANCE HINSTANCE{ nullptr };
 #endif
@@ -81,11 +89,12 @@ namespace GTSL
 		static uint8 ThreadCount() noexcept {
 #ifdef _WIN32
 			SYSTEM_INFO system_info; GetSystemInfo(&system_info); return static_cast<uint8>(system_info.dwNumberOfProcessors);
+#elif __linux__
+			return (uint8)sysconf(_SC_NPROCESSORS_ONLN);
 #endif
-			return 1;
 		}
 		
-		[[nodiscard]] StaticString<MAX_PATH_LENGTH> GetPathToExecutable() const {
+		[[nodiscard]] static StaticString<MAX_PATH_LENGTH> GetPathToExecutable() {
 #ifdef _WIN32
 			char s[MAX_PATH_LENGTH];
 			GetModuleFileNameA(handle, s, MAX_PATH_LENGTH);
@@ -93,6 +102,15 @@ namespace GTSL
 			StaticString<MAX_PATH_LENGTH> ret(reinterpret_cast<const char8_t*>(s));
 			ReplaceAll(ret, u8'\\', u8'/');
 			return ret;
+#elif __linux__
+			char self[MAX_PATH_LENGTH] = { 0 };
+			int nchar = readlink("/proc/self/exe", self, MAX_PATH_LENGTH);
+
+			if (nchar < 0) {
+				return {};
+			}
+
+			return StaticString<MAX_PATH_LENGTH>(GTSL::StringView(GTSL::Byte(nchar), (const char8_t*)self));
 #endif
 		}
 	};

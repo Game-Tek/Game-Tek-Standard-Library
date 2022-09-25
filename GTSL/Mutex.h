@@ -1,11 +1,7 @@
 #pragma once
 
 #if(_WIN64)
-#define WIN32_LEAN_AND_MEAN
-#define NOCOMM
 #include <Windows.h>
-#undef WIN32_LEAN_AND_MEAN
-#undef NOCOMM
 #elif __linux__
 #include <pthread.h>
 #endif

@@ -7,8 +7,8 @@
 #include <cstring>
 
 #if (_WIN64)
-#define WIN32_LEAN_AND_MEAN
-#define NO_COMM
+
+
 #include <Windows.h>
 #endif
 

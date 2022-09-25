@@ -8,7 +8,7 @@
 #include "Math/Math.hpp"
 
 #if (_WIN64)
-#define WIN32_LEAN_AND_MEAN
+
 #include <Windows.h>
 #include <memoryapi.h>
 #endif

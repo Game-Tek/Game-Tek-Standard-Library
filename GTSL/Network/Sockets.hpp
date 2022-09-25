@@ -4,12 +4,8 @@
 #include "GTSL/Range.hpp"
 
 #if (_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#define NOCOMM
 #include <WinSock2.h>
 #include <intrin.h>
-#undef NOCOMM
-#undef WIN32_LEAN_AND_MEAN
 typedef int socklen_t;
 #endif
 

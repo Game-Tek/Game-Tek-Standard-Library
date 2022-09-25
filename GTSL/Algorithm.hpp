@@ -64,8 +64,8 @@ namespace GTSL
 		return Result<typename C::const_iterator>(false);
 	}
 
-	template<typename T>
-	bool Contains(const auto& collection, const T& value) {
+	template<typename C, typename T>
+	bool Contains(const C& collection, const T& value) {
 		for (const auto& e : collection) { if (e == value) { return true; } }
 		return false;
 	}

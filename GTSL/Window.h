@@ -10,7 +10,6 @@
 #include "StringCommon.h"
 
 #if (_WIN64)
-#define WIN32_LEAN_AND_MEAN
 #include "ShObjIdl_core.h"
 #include <WinUser.h>
 #include <hidsdi.h>

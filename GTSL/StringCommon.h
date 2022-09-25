@@ -486,4 +486,20 @@ namespace GTSL
 		GTSL::Range<const GTSL::StringView*> Strings;
 		GTSL::StringView Connector;
 	};
+
+	inline bool IsIn(const GTSL::StringView string_view, const GTSL::StringView candidate) {
+		uint32 m = 0;
+
+		while(m < string_view.GetCodepoints()) {
+			uint32 l = 0;
+
+			while(candidate[l] == string_view[m] && l < candidate.GetCodepoints()) { ++l; ++m; }
+
+			if(l == candidate.GetCodepoints()) { return true; }
+
+			++m;
+		}
+
+		return false;
+	}
 }

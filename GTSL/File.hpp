@@ -8,9 +8,9 @@
 #include "StringCommon.h"
 
 #if (_WIN64)
-#define WIN32_LEAN_AND_MEAN
-#define NO_COMM
-#define NO_MIN_MAX
+
+
+
 #include <Windows.h>
 #undef ERROR
 #elif __linux__

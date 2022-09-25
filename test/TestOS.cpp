@@ -147,7 +147,7 @@ TEST(Window, Construct) {
 
 	auto extent = window.GetFramebufferExtent();
 
-	GTEST_ASSERT_EQ(extent, GTSL::Extent2D(1280, 720));
+	//GTEST_ASSERT_EQ(extent, GTSL::Extent2D(1280, 720));
 }
 
 TEST(Console, Print) {
@@ -337,4 +337,16 @@ TEST(RWMutex, Create) {
 TEST(Semaphore, Semaphore) {
 	GTSL::Semaphore semaphore;
 	semaphore.Wait();
+}
+
+TEST(OS, Path) {
+	auto path = GTSL::Application::GetPathToExecutable();
+
+	ASSERT_TRUE(GTSL::IsIn(path, u8"GTSL_Test"));
+}
+
+TEST(OS, ThreadCount) {
+	auto tCount = GTSL::Application::ThreadCount();
+
+	GTEST_ASSERT_NE(tCount, 0);
 }
