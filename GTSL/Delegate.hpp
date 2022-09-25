@@ -99,7 +99,7 @@ namespace GTSL
 		RET operator()(ARGS... args) const { return (*callerFunction)(callee, GTSL::ForwardRef<ARGS>(args)...); }
 
 	private:
-		friend class Delegate;
+		//friend class Delegate;
 		
 		RET(*callerFunction)(void*, ARGS&&...) { nullptr };
 		void* callee{ nullptr };
@@ -195,7 +195,7 @@ namespace GTSL
 		//RET operator()(ARGS... args) const { return (*callerFunction)(callee, GTSL::ForwardRef<ARGS>(args)...); }
 
 	private:
-		friend class SmartDelegate;
+		//friend class SmartDelegate;
 
 		struct Data {
 			RET(*callerFunction)(void*, ARGS&&...) { nullptr };

@@ -146,9 +146,9 @@ namespace GTSL
 		T* data = nullptr;
 		void(*destructor)(void*) = nullptr;
 
-		friend struct SmartPointer;	
+		//friend struct SmartPointer;
 	public:
-		friend SmartPointer<T, ALLOCATOR> Create(const T& obj, const ALLOCATOR& allocator);
+		//friend SmartPointer<T, ALLOCATOR> Create(const T& obj, const ALLOCATOR& allocator);
 	};
 
 	//template<typename T, class ALLOCATOR>

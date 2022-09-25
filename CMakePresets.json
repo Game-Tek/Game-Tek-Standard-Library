@@ -7,7 +7,7 @@
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_BUILD_TYPE":"Release"
+                "CMAKE_BUILD_TYPE":"Debug"
             }
         },
         {
@@ -15,6 +15,7 @@
             "name": "linux-x64",
             "description": "Using compilers: C = /usr/bin/gcc, CXX = /usr/bin/g++",
             "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/out/build/${presetName}/Test",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_CXX_COMPILER": "g++",
@@ -40,6 +41,11 @@
             "name": "win-x64-release",
             "configurePreset": "win-x64",
             "configuration": "Release"
+        },
+        {
+            "name": "linux-x64-release",
+            "configurePreset": "linux-x64",
+            "configuration": "Debug"
         }
     ],
     "testPresets": [
@@ -49,6 +55,14 @@
             "displayName": "Windows Testing",
             "configurePreset": "win-x64",
             "configuration": "Release"
+        },
+        {
+            "name": "debug-linux-x64",
+            "description": "",
+            "displayName": "Linux Testing",
+            "configurePreset": "linux-x64",
+            "inheritConfigureEnvironment": true,
+            "configuration": "Debug"
         }
     ]
 }

@@ -98,6 +98,7 @@ namespace GTSL {
 			WriteFile(fileHandle, d, static_cast<uint32>(size), &bytes, nullptr);
 			return bytes;
 #elif (__linux__)
+			return ::write(fileHandle, d, size);
 #endif
 		}
 
@@ -125,8 +126,12 @@ namespace GTSL {
 
 		template<typename T>
 		uint64 Read(uint64 size, T* buffer) const {
+#if (_WIN64)
 			DWORD bytes{ 0 };
 			ReadFile(fileHandle, buffer, static_cast<uint32>(size), &bytes, nullptr);
+#elif (__linux__)
+			auto bytes = ::read(fileHandle, (void*)buffer, size);
+#endif
 			return bytes;
 		}
 
@@ -189,7 +194,13 @@ namespace GTSL {
 #endif
 		}
 
-		explicit operator bool() const { return fileHandle && fileHandle != reinterpret_cast<void*>(0xffffffffffffffff); }
+		explicit operator bool() const { 
+#if (_WIN64)
+			return fileHandle && fileHandle != reinterpret_cast<void*>(0xffffffffffffffff);
+#elif (__linux__)
+			return fileHandle && fileHandle != -1;
+#endif
+		}
 	
 	private:
 	#if _WIN64

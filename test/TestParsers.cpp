@@ -7,11 +7,11 @@
 #include "GTSL/Vector.hpp"
 
 TEST(LUT, Valid) {
-	GTSL::File lutFile(u8"../../../../test/Kodak Ektachrome 64.cube", GTSL::File::READ, false);
-#if _WIN64
-#elif __linux__
-	//GTSL::File lutFile(u8"../test/Kodak Ektachrome 64.cube", GTSL::File::READ, false);
-#endif
+	GTSL::File lutFile(u8"../../../../test/Kodak Ektachrome 64.cube", GTSL::File::READ, true);
+
+	if(!lutFile) {
+		GTEST_SKIP_("Skipped because file could not be found.");
+	}
 
 	GTSL::Buffer<GTSL::DefaultAllocatorReference> buffer;
 	lutFile.Read(buffer);
@@ -20,7 +20,7 @@ TEST(LUT, Valid) {
 
 	GTSL::Vector<GTSL::Vector3, GTSL::DefaultAllocatorReference> vectors(33 * 33 * 33);
 
-	auto parseResult = ParseLUT(GTSL::StringView(buffer.GetSize(), buffer.GetSize(), (const char8_t*)buffer.GetData()), lutData, [&](const GTSL::Vector3 vec) { vectors.EmplaceBack(vec); });
+	auto parseResult = ParseLUT(GTSL::StringView(buffer), lutData, [&](const GTSL::Vector3 vec) { vectors.EmplaceBack(vec); });
 
 	ASSERT_TRUE(parseResult);
 	GTEST_ASSERT_EQ(lutData.Size, 33);

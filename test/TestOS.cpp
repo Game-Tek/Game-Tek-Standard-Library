@@ -24,7 +24,9 @@ TEST(File, Construct) {
 TEST(File, Open) {
 	GTSL::File file;
 
-	auto res = file.Open(u8"../../../../test/COOPBL.ttf", GTSL::File::READ, false);
+	auto res = file.Open(u8"../../../../test/COOPBL.TTF", GTSL::File::READ, false);
+
+	ASSERT_TRUE(file);
 	GTEST_ASSERT_EQ(res, GTSL::File::OpenResult::OK);
 }
 
@@ -98,7 +100,7 @@ TEST(File, ReadRaw) {
 	GTEST_ASSERT_EQ(bytesRead, 16);
 
 	GTSL::uint64 array[] = { 32ull, 32ull };
-	GTEST_ASSERT_EQ(GTSL::Range(16, reinterpret_cast<const byte*>(array)), GTSL::Range(16, buffer));
+	GTEST_ASSERT_EQ(GTSL::Range<const GTSL::byte*>(16, reinterpret_cast<const GTSL::byte*>(array)), GTSL::Range<const GTSL::byte*>(16, buffer));
 }
 
 TEST(MappedFile, Construct) {
@@ -169,9 +171,7 @@ TEST(Thread, Construct) {
 }
 
 TEST(Font, FontCOOPBL) {
-	GTSL::File file;
-
-	auto res = file.Open(u8"../../../../test/COOPBL.ttf", GTSL::File::READ, false);
+	GTSL::File file(u8"../../../../test/COOPBL.TTF", GTSL::File::READ, false);
 
 	if (!file) { 
 		GTEST_SKIP_("Could not open test file.");

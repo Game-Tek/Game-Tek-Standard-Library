@@ -1,4 +1,4 @@
-#include "GTSL/IndirectionMap.hpp"
+/* #include "GTSL/IndirectionMap.hpp"
 
 #include <gtest/gtest.h>
 
@@ -22,7 +22,7 @@ TEST(IndirectionMap, Insertion) {
 TEST(IndirectionMap, RandomInsertion) {
 	GTSL::IndirectionMap<GTSL::DefaultAllocatorReference> map;
 
-	GTSL::StaticVector<GTSL::uint32, 1024> keyVec;
+	GTSL::StaticVector<GTSL::uint32, 2048> keyVec;
 
 	GTSL::Math::RandomSeed randomKey(-2323469737);
 
@@ -51,4 +51,4 @@ TEST(IndirectionMap, Removal) {
 	GTEST_ASSERT_EQ(map[3], 2);
 	GTEST_ASSERT_EQ(map[4], 3);
 	GTEST_ASSERT_EQ(map[6], 0);
-}
+} */

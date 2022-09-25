@@ -35,9 +35,5 @@ namespace GTSL
 		Vector4 GetXBasisVector() const;
 		Vector4 GetYBasisVector() const;
 		Vector4 GetZBasisVector() const;
-		
-		operator Vector4() const { return *this; }
-		operator Vector4&() { return *this; }
-		operator const Vector4&() const { return *this; }
 	};
 }

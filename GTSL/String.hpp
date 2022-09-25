@@ -399,7 +399,7 @@ namespace GTSL
 			for (uint32 i = 0, pos = bytes; i < 3; ++i, ++pos) { data[pos] = u8'\0'; }
 		}
 
-		friend class String;
+		//friend class String;
 
 	public:
 		friend void Insert(const String& string, auto& buffer) {

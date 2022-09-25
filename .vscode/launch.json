@@ -19,7 +19,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/GTSL_Test",
+            "program": "${workspaceFolder}/out/build/linux-x64/Test/GTSL_Test",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

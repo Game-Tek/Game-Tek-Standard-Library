@@ -79,7 +79,7 @@ namespace GTSL
     };
 
     template <class T>
-    Lock(T) -> Lock<T>;
+    Lock(T&) -> Lock<T>;
 
     class ReadWriteMutex {
     public:

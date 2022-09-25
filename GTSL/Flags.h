@@ -28,7 +28,7 @@ namespace GTSL
 		constexpr Flags operator&(const Flags flag) const { return Flags(value & flag.value); }
 		constexpr bool operator==(const Flags other) const { return value == other.value; }
 	private:
-		friend Flags;
+		//friend Flags;
 		T value = 0;
 	};
 }

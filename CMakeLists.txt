@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.24)
 include(FetchContent)
 
 project(GTSL VERSION 1.0.0 LANGUAGES CXX)

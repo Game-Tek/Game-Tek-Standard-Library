@@ -414,7 +414,7 @@ namespace GTSL
 		 */
 		iterator getIterator(const length_type index) noexcept { return &this->data[index]; }
 
-		friend class Vector;
+		//friend class Vector;
 
 	public:
 		template<typename TT, class AA>

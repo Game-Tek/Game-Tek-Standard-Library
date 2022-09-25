@@ -84,7 +84,7 @@ namespace GTSL
 			bytes = lengths.First; codepoints = lengths.Second;
 		}
 
-		constexpr Range(const Byte bytes, const char8_t* string) : data(string), bytes(bytes) {
+		constexpr Range(const Byte bytes, const char8_t* string) : data(string), bytes(GTSL::uint64(bytes)) {
 			for (uint32 i = 0; i < bytes.GetCount();) { i += UTF8CodePointLength(data[i]); ++codepoints; }
 		}
 

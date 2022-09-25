@@ -82,6 +82,7 @@ namespace GTSL
 #ifdef _WIN32
 			SYSTEM_INFO system_info; GetSystemInfo(&system_info); return static_cast<uint8>(system_info.dwNumberOfProcessors);
 #endif
+			return 1;
 		}
 		
 		[[nodiscard]] StaticString<MAX_PATH_LENGTH> GetPathToExecutable() const {

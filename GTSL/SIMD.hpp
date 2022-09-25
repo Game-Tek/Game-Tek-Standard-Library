@@ -857,7 +857,7 @@ namespace GTSL
 		//static SIMD Shuffle(const SIMD a) { return _mm256_shuffle_epi32(a, _MM_SHUFFLE(D, C, B, A)); }
 
 		template<uint8 I>
-		[[nodiscard]] type GetElement() const { return _mm_extract_epi32(vector, I); }
+		[[nodiscard]] type GetElement() const { return _mm256_extract_epi32(vector, I); }
 
 		SIMD operator+(const SIMD other) const { return _mm256_add_epi32(vector, other.vector); }
 		SIMD operator-(const SIMD other) const { return _mm256_sub_epi32(vector, other.vector); }

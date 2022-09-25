@@ -26,7 +26,7 @@ namespace GTSL
 	private:
 		I from, to;
 
-		friend struct Range;
+		//friend struct Range;
 	};
 
 	template<typename I>
@@ -79,7 +79,7 @@ namespace GTSL
 	private:
 		I* from = nullptr, * to = nullptr;
 
-		friend struct Range;
+		//friend struct Range;
 	};
 
 	template<typename... TYPES>

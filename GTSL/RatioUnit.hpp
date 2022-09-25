@@ -18,32 +18,20 @@ namespace GTSL
 		explicit constexpr RatioUnit(const storing_type time) : count(time) {}
 
 		template<typename RET, class R>
-		constexpr RET As() const
-		{
-			if constexpr (R::DENOMINATOR > DENOMINATOR)
-			{
-				if constexpr (NUMERATOR == R::NUMERATOR)
-				{
+		constexpr RET As() const {
+			if constexpr (R::DENOMINATOR > DENOMINATOR) {
+				if constexpr (NUMERATOR == R::NUMERATOR) {
 					return count * (static_cast<RET>(R::DENOMINATOR) / static_cast<RET>(DENOMINATOR));
-				}
-				else
-				{
+				} else {
 					return count * static_cast<RET>(R::NUMERATOR / R::DENOMINATOR);
 				}
-			}
-			else if constexpr (R::DENOMINATOR < DENOMINATOR)
-			{
-				if constexpr (NUMERATOR == R::NUMERATOR)
-				{
+			} else if constexpr (R::DENOMINATOR < DENOMINATOR) {
+				if constexpr (NUMERATOR == R::NUMERATOR) {
 					return count / static_cast<RET>(DENOMINATOR);
-				}
-				else
-				{
+				} else {
 					return count / static_cast<RET>(NUMERATOR / DENOMINATOR);
 				}
-			}
-			else
-			{
+			} else {
 				if constexpr (R::NUMERATOR < NUMERATOR) {
 					return count * static_cast<RET>(NUMERATOR);
 				} else{
@@ -53,17 +41,17 @@ namespace GTSL
 				return static_cast<RET>(count);
 			}
 
+			return 0;
+
 			//auto value = static_cast<RET>(count);
 			//value *= (static_cast<RET>(NUM) / static_cast<RET>(DEN));
 			//return value / (static_cast<RET>(R::NUMERATOR) / static_cast<RET>(R::DENOMINATOR));
 		}
 
 		template<uint64 N, uint64 D>
-		constexpr RatioUnit(RatioUnit<ST, N, D> other) : count(other.As<ST, RatioUnit<ST, NUMERATOR, DENOMINATOR>>()) {}
+		constexpr RatioUnit(RatioUnit<ST, N, D> other) : count(other.template As<ST, RatioUnit<ST, NUM, DEN>>()) {}
 
-		constexpr RatioUnit(const RatioUnit& other) : count(other.count) {}
-
-		constexpr operator storing_type() const { return count; }
+		constexpr explicit operator storing_type() const { return count; }
 
 		constexpr storing_type GetCount() const { return count; }
 
@@ -80,9 +68,9 @@ namespace GTSL
 		constexpr bool operator>(const RatioUnit& other) const { return this->count > other.count; }
 		constexpr bool operator<(const RatioUnit& other) const { return this->count < other.count; }
 
+		constexpr bool operator==(const RatioUnit& other) const { return this->count == other.count; }
+
 	protected:
 		ST count{ 0 };
-
-		friend class RatioUnit;
 	};
 }
