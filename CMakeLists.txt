@@ -19,7 +19,7 @@ install(TARGETS GTSL DESTINATION lib)
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	message("Compiling for WIN64")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
-	target_compile_definitions(GTSL PUBLIC WIN32_LEAN_AND_MEAN NO_COMM VC_EXTRALEAN)
+	target_compile_definitions(GTSL INTERFACE WIN32_LEAN_AND_MEAN NO_COMM VC_EXTRALEAN)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
