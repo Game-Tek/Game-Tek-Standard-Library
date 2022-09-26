@@ -6,9 +6,6 @@
 #include "Flags.h"
 
 #if (_WIN64)
-
-
-
 #include <Windows.h>
 #undef ERROR
 #elif __linux__
@@ -23,7 +20,8 @@ namespace GTSL {
 		
 		FileQuery(const StringView query) {
 #if (_WIN64)
-			handle = FindFirstFileA(reinterpret_cast<const char*>(query.GetData()), &findData);
+			auto path = GTSL::Application::ResolvePath(query);
+			handle = FindFirstFileA(reinterpret_cast<const char*>(path.c_str()), &findData);
 #elif __linux__
 			glob64(reinterpret_cast<const char*>(query.GetData()), GLOB_NOSORT, nullptr, &globData);
 #endif
@@ -99,7 +97,9 @@ namespace GTSL {
 		DirectoryQuery(const StringView path, bool watch_subtree, WatchFilterFlag watch_flags)
 #if (_WIN64)
 		: watchFilter(watch_flags), watchSubtree(watch_subtree) {
-			directoryHandle = CreateFileA(reinterpret_cast<const char*>(path.GetData()), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
+			auto p = GTSL::Application::ResolvePath(path);
+
+			directoryHandle = CreateFileA(reinterpret_cast<const char*>(p.c_str()), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
 			overlapped.hEvent = CreateEventA(nullptr, false, false, nullptr);
 #elif __linux__
 		{

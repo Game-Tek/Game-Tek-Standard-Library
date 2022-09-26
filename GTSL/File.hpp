@@ -6,11 +6,9 @@
 
 #include "Range.hpp"
 #include "StringCommon.h"
+#include "Application.h"
 
 #if (_WIN64)
-
-
-
 #include <Windows.h>
 #undef ERROR
 #elif __linux__
@@ -68,7 +66,9 @@ namespace GTSL {
 
 			DWORD creationDisposition = create ? OPEN_ALWAYS : OPEN_EXISTING;
 
-			fileHandle = CreateFileA(reinterpret_cast<const char*>(path.GetData()), desiredAccess, shareMode, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
+			auto p = GTSL::Application::ResolvePath(path);
+
+			fileHandle = CreateFileA(reinterpret_cast<const char*>(p.c_str()), desiredAccess, shareMode, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
 
 			OpenResult openResult;
 

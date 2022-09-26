@@ -97,7 +97,7 @@ namespace GTSL
 		[[nodiscard]] static StaticString<MAX_PATH_LENGTH> GetPathToExecutable() {
 #ifdef _WIN32
 			char s[MAX_PATH_LENGTH];
-			GetModuleFileNameA(handle, s, MAX_PATH_LENGTH);
+			GetModuleFileNameA(GetModuleHandleA(nullptr), s, MAX_PATH_LENGTH);
 			
 			StaticString<MAX_PATH_LENGTH> ret(reinterpret_cast<const char8_t*>(s));
 			ReplaceAll(ret, u8'\\', u8'/');
@@ -112,6 +112,18 @@ namespace GTSL
 
 			return StaticString<MAX_PATH_LENGTH>(GTSL::StringView(GTSL::Byte(nchar), (const char8_t*)self));
 #endif
+		}
+
+		static auto ResolvePath(const GTSL::StringView path) {
+			if(path.GetCodepoints() < 1) { return GTSL::StaticString<2048>(); }
+
+			if(path[0] == U'/' or path[1] == U':') { return GTSL::StaticString<2048>(path); } //path is already absolute
+
+			GTSL::StaticString<2048> p(GTSL::Application::GetPathToExecutable());
+			RTrimLast(p, u8'/', 1);
+			p += path;
+
+			return p;
 		}
 	};
 }
