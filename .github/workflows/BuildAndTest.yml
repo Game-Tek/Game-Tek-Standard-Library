@@ -19,7 +19,7 @@ jobs:
     
     env:
       BUILD_TYPE: ${{ matrix.buildType }}
-    
+  
       name: Install X11 dev tools
       if: matrix.os == 'ubuntu-latest'
       run: sudo apt install libx11-dev
@@ -31,7 +31,7 @@ jobs:
       run: cmake -B ${{github.workspace}}/out/build/linux-x64/${{env.BUILD_TYPE}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_TESTING_ENABLED=true
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/out/build/linux-x64/${{env.BUILD_TYPE}} --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/out/build/linux-x64/${{env.BUILD_TYPE}} --config ${{env.BUILD_TYPE}} -D CMAKE_CXX_COMPILER=g++-10
 
     - name: Test
       working-directory: ${{github.workspace}}/out/build/linux-x64/${{env.BUILD_TYPE}}
