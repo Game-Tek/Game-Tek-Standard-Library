@@ -1,7 +1,5 @@
 #pragma once
 
-#include <concepts>
-
 #include "Core.h"
 #include "StringCommon.h"
 #include "Allocator.h"

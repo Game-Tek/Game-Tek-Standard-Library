@@ -1,7 +1,5 @@
 #pragma once
 
-#include <concepts>
-
 #include "Core.h"
 
 namespace GTSL {
