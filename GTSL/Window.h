@@ -149,6 +149,11 @@ namespace GTSL
 		
 		void BindToOS(StringView name, Extent2D extent, void* userData, Delegate<void(void*, WindowEvents, void*)> function, Window parentWindow = Window(), WindowType type = WindowType::OS_WINDOW) {
 #if (_WIN64)
+			char nullTerminatedName[512];
+
+			GTSL::MemCopy(name.GetBytes() > 512 ? 512 : name.GetBytes(), name.GetData(), nullTerminatedName);
+			nullTerminatedName[name.GetBytes() > 512 ? 511 : name.GetBytes()] = '\0';
+
 			WNDCLASSA wndclass{};
 			wndclass.lpfnWndProc = reinterpret_cast<WNDPROC>(Win32_windowProc);
 			wndclass.cbClsExtra = 0;
@@ -158,7 +163,7 @@ namespace GTSL
 			wndclass.lpszMenuName = nullptr;
 			wndclass.style = 0;
 			wndclass.cbWndExtra = 0;
-			wndclass.lpszClassName = reinterpret_cast<const char*>(name.GetData());
+			wndclass.lpszClassName = reinterpret_cast<const char*>(nullTerminatedName);
 			wndclass.hInstance = GetModuleHandle(nullptr);
 			RegisterClassA(&wndclass);
 
@@ -177,7 +182,7 @@ namespace GTSL
 			windowRect.top = 0; windowRect.left = 0;
 			windowRect.bottom = extent.Height; windowRect.right = extent.Width;
 			AdjustWindowRect(&windowRect, style, false);
-			windowHandle = CreateWindowExA(0, wndclass.lpszClassName, reinterpret_cast<const char*>(name.GetData()), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, GetModuleHandle(nullptr), &windowsCallData);
+			windowHandle = CreateWindowExA(0, wndclass.lpszClassName, reinterpret_cast<const char*>(nullTerminatedName), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, GetModuleHandle(nullptr), &windowsCallData);
 
 			GTSL_ASSERT(windowHandle, "Window failed to create!");
 
@@ -680,7 +685,6 @@ namespace GTSL
 			return true;
 		}
 
-
 		static bool xbox_get(xbox_dev xbox_dev, xbox_state* state) {
 			if (!xbox_dev.handle) { return false; }
 
@@ -702,7 +706,6 @@ namespace GTSL
 			state->right_thumb_y = *(SHORT*)(out + 21);
 			return true;
 		}
-
 
 		static bool xbox_set(xbox_dev xbox_dev, BYTE low_freq, BYTE high_freq) {
 			if (!xbox_dev.handle) { return false; }
