@@ -2,8 +2,6 @@
 
 #include "Core.h"
 
-#include <concepts>
-
 #include "Assert.h"
 #include "Algorithm.hpp"
 #include <initializer_list>
