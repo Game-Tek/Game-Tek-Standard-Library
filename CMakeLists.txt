@@ -58,7 +58,9 @@ if(CMAKE_TESTING_ENABLED)
 	"${PROJECT_SOURCE_DIR}/test/TestBuffer.cpp"
 	"test/TestCollision.cpp"
 	"test/TestIndirectionTable.cpp"
-	"test/TestRatioUnit.cpp")
+	"test/TestRatioUnit.cpp"
+	"test/TestSmartPointer.cpp"
+	)
 	target_include_directories(GTSL_Test PUBLIC "${PROJECT_SOURCE_DIR}")
 	target_link_libraries(GTSL_Test gtest_main)
 	target_link_libraries(GTSL_Test GTSL)

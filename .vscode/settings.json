@@ -1,5 +1,6 @@
 {
     "cmake.useCMakePresets": "always",
+	"C_Cpp.enhancedColorization": "Enabled",
     "files.associations": {
         "any": "cpp",
         "array": "cpp",

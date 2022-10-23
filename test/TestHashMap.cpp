@@ -115,6 +115,19 @@ TEST(HashMap, Pop) {
 	}
 }
 
+TEST(HashMap, EmplaceOrUpdate) {
+	GTSL::HashMap<GTSL::uint64, GTSL::uint64, GTSL::DefaultAllocatorReference> hashMap(2);
+
+	auto c0 = hashMap.EmplaceOrUpdate(0, 0);
+	GTEST_ASSERT_TRUE(c0); GTEST_ASSERT_EQ(c0.Get(), 0);
+
+	auto c1 = hashMap.EmplaceOrUpdate(1, 1);
+	GTEST_ASSERT_TRUE(c1); GTEST_ASSERT_EQ(c1.Get(), 1);
+
+	auto c2 = hashMap.EmplaceOrUpdate(0, 2);
+	GTEST_ASSERT_FALSE(c2); GTEST_ASSERT_EQ(c2.Get(), 2);
+}
+
 TEST(KeyMap, Construct) {
 	GTSL::KeyMap<GTSL::uint64, GTSL::DefaultAllocatorReference> keyMap(4);
 }

@@ -154,6 +154,17 @@ namespace GTSL {
 		}
 
 		template<typename... ARGS>
+		Result<V&> EmplaceOrUpdate(const K key, ARGS&&... args) {
+			auto emplace = TryEmplace(key, GTSL::ForwardRef<ARGS>(args)...);
+
+			if(!emplace) {
+				emplace.Get() = V(GTSL::ForwardRef<ARGS>(args)...);
+			}
+
+			return emplace;
+		}
+
+		template<typename... ARGS>
 		Result<V&> TryEmplace(const K key, ARGS&&... args) {
 			auto result = TryGet(key);
 

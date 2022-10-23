@@ -8,7 +8,6 @@
 #include "Math/Math.hpp"
 
 #if (_WIN64)
-
 #include <Windows.h>
 #include <memoryapi.h>
 #endif
