@@ -19,6 +19,7 @@
 #elif __linux__
 #include <X11/X.h>
 #include <xcb/xcb.h>
+//#include <wayland-client.h>
 #endif
 
 namespace GTSL
@@ -190,42 +191,87 @@ namespace GTSL
 
 			//CoCreateInstance(IID_ITaskbarList3, nullptr, CLSCTX::CLSCTX_INPROC_SERVER, IID_ITaskbarList, &iTaskbarList);
 #elif __linux__
-			int screenp = 0;
+			static constexpr bool USE_WAYLAND = false;
 
-			connection = xcb_connect(nullptr, &screenp);
+			if constexpr(!USE_WAYLAND) {
+				int screenp = 0;
 
-			if(xcb_connection_has_error(connection) != 0) {
-				return;
+				connection = xcb_connect(nullptr, &screenp);
+
+				if(xcb_connection_has_error(connection) != 0) {
+					return;
+				}
+
+				xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(connection));
+
+				for(uint32 i = screenp; i > 0; --i) {
+					xcb_screen_next(&iter);
+				}
+
+				screen = iter.data;
+
+				window = xcb_generate_id(connection);
+
+				uint32 eventMask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
+
+				uint32 valueList[] = { screen->black_pixel, 0u };
+
+				xcb_create_window(connection, XCB_COPY_FROM_PARENT, window, screen->root, 0, 0, extent.Width, extent.Height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, eventMask, valueList);
+
+				SetTitle(name);
+
+				xcb_intern_atom_cookie_t wmDeleteCookie = xcb_intern_atom(connection, 0, strlen("WM_DELETE_WINDOW"), "WM_DELETE_WINDOW");
+				xcb_intern_atom_cookie_t wmProtocolsCookie = xcb_intern_atom(connection, 0, strlen("WM_PROTOCOLS"), "WM_PROTOCOLS");
+				xcb_intern_atom_reply_t *wmDeleteReply = xcb_intern_atom_reply(connection, wmDeleteCookie, nullptr);
+				xcb_intern_atom_reply_t *wmProtocolsReply = xcb_intern_atom_reply(connection, wmProtocolsCookie, nullptr);
+				wmDeleteWin = wmDeleteReply->atom;
+				wmProtocols = wmProtocolsReply->atom;
+
+				xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, wmProtocolsReply->atom, 4, 32, 1, &wmDeleteReply->atom);
+
+				this->framebufferExtent = extent;
+			} else {
+				//// create wayland surface
+				//display = wl_display_connect(nullptr);
+				//if (!display) {
+				//	return;
+				//}
+//
+				//registry = wl_display_get_registry(display);
+				//wl_registry_add_listener(registry, &registryListener, this);
+				//wl_display_roundtrip(display);
+//
+				//if (!compositor) {
+				//	return;
+				//}
+//
+				//surface = wl_compositor_create_surface(compositor);
+				//wl_surface_add_listener(surface, &surfaceListener, this);
+				//wl_display_roundtrip(display);
+//
+				//if (!shell) {
+				//	return;
+				//}
+//
+				//shellSurface = wl_shell_get_shell_surface(shell, surface);
+				//wl_shell_surface_add_listener(shellSurface, &shellSurfaceListener, this);
+				//wl_shell_surface_set_toplevel(shellSurface);
+				//wl_display_roundtrip(display);
+//
+				//if (!xdgWmBase) {
+				//	return;
+				//}
+//
+				//xdgSurface = xdg_wm_base_get_xdg_surface(xdgWmBase, surface);
+				//xdg_toplevel *xdgToplevel = xdg_surface_get_toplevel(xdgSurface);
+				//xdg_toplevel_add_listener(xdgToplevel, &topLevelListener, this);
+				//xdg_surface_add_listener(xdgSurface, &surfaceListener, this);
+				//xdg_toplevel_set_title(xdgToplevel, name.GetData());
+				//xdg_toplevel_set_app_id(xdgToplevel, name.GetData());
+				//xdg_surface_set_window_geometry(xdgSurface, 0, 0, extent.Width, extent.Height);
+				//xdg_wm_base_add_listener(xdgWmBase, &xdgWmBaseListener, this);
+				//wl_display_roundtrip(display);
 			}
-
-			xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(connection));
-
-			for(uint32 i = screenp; i > 0; --i) {
-				xcb_screen_next(&iter);
-			}
-
-			screen = iter.data;
-
-			window = xcb_generate_id(connection);
-
-			uint32 eventMask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
-
-			uint32 valueList[] = { screen->black_pixel, 0u };
-
-			xcb_create_window(connection, XCB_COPY_FROM_PARENT, window, screen->root, 0, 0, extent.Width, extent.Height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, eventMask, valueList);
-
-			SetTitle(name);
-
-			xcb_intern_atom_cookie_t wmDeleteCookie = xcb_intern_atom(connection, 0, strlen("WM_DELETE_WINDOW"), "WM_DELETE_WINDOW");
-			xcb_intern_atom_cookie_t wmProtocolsCookie = xcb_intern_atom(connection, 0, strlen("WM_PROTOCOLS"), "WM_PROTOCOLS");
-			xcb_intern_atom_reply_t *wmDeleteReply = xcb_intern_atom_reply(connection, wmDeleteCookie, nullptr);
-			xcb_intern_atom_reply_t *wmProtocolsReply = xcb_intern_atom_reply(connection, wmProtocolsCookie, nullptr);
-			wmDeleteWin = wmDeleteReply->atom;
-			wmProtocols = wmProtocolsReply->atom;
-
-			xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, wmProtocolsReply->atom, 4, 32, 1, &wmDeleteReply->atom);
-
-			this->framebufferExtent = extent;
 #endif
 		}
 		
@@ -500,6 +546,13 @@ namespace GTSL
 		xcb_screen_t * screen = nullptr;
 		xcb_atom_t wmProtocols;
 		xcb_atom_t wmDeleteWin;
+
+		//wl_display* waylandDisplay = nullptr;
+		//wl_registry* waylandRegistry = nullptr;
+		//wl_compositor* waylandCompositor = nullptr;
+		//wl_shell* waylandShell = nullptr;
+		//wl_surface* waylandSurface = nullptr;
+		//wl_shell_surface* waylandShellSurface = nullptr;
 		GTSL::Extent2D framebufferExtent;
 #endif
 

@@ -23,12 +23,12 @@ namespace GTSL {
 			destructor = dest;
 		}
 		
-		template<typename TT>
-		SmartPointer(SmartPointer<TT, ALLOCATOR>&& other) noexcept : allocator(MoveRef(other.allocator)), size(other.size), alignment(other.alignment), data(reinterpret_cast<T*>(other.data)), destructor(other.destructor) {
+		SmartPointer(SmartPointer&& other) noexcept : allocator(MoveRef(other.allocator)), size(other.size), alignment(other.alignment), data(other.data), destructor(other.destructor) {
 			other.data = nullptr;
 		}
-		
-		SmartPointer(SmartPointer&& other) noexcept : allocator(MoveRef(other.allocator)), size(other.size), alignment(other.alignment), data(other.data), destructor(other.destructor) {
+
+		template<typename U>
+		SmartPointer(SmartPointer<U, ALLOCATOR>&& other) noexcept : allocator(MoveRef(other.allocator)), size(other.size), alignment(other.alignment), data(other.data), destructor(other.destructor) {
 			other.data = nullptr;
 		}
 
@@ -62,8 +62,7 @@ namespace GTSL {
 		T& operator*() const { return *data; }
 
 		T* GetData() const { return data; }
-	
-	private:
+	protected:
 #pragma warning(disable : 4648)
 		[[no_unique_address]] ALLOCATOR allocator;
 #pragma warning(default : 4648)
@@ -73,10 +72,7 @@ namespace GTSL {
 		T* data = nullptr;
 		void(*destructor)(void*) = nullptr;
 
-#if _WIN64 // Only MSVC seems to require this, GCC complains about implicit friendship with itself
+		template<typename U, class A>
 		friend struct SmartPointer;
-#endif
-	public:
-		//friend SmartPointer<T, ALLOCATOR> Create(const T& obj, const ALLOCATOR& allocator);
 	};
 }

@@ -73,24 +73,11 @@ namespace GTSL
 			return ToUTF32(d[0], d[1], d[2], d[3], Get<2>(pos)).Get();
 		}
 
-		////Returns true if the two String's contents are the same. Comparison is case insensitive.
-		//[[nodiscard]] bool NonSensitiveComp(const String& other) const
-		//{
-		//	//Discard if Length of strings is not equal, first because it helps us discard before even starting, second because we can't compare strings of different sizes.
-		//	if (data.GetLength() != other.data.GetLength()) return false;
-		//
-		//	length_type i = 0;
-		//	for (const auto& c : data) { if (c != (ToLowerCase(other.data[i]) || ToUpperCase(other.data[i]))) { return false; } ++i; }
-		//
-		//	return true;
-		//}
-
 		//auto begin() noexcept { return Iterator(data, bytes); }
 		[[nodiscard]] auto begin() const noexcept { return StringIterator(data, bytes, 0); }
 		//auto end() noexcept { return data + bytes + 1; }
 		[[nodiscard]] auto end() const noexcept { return StringIterator(data, bytes, bytes); }
 
-		//operator Range<char8_t*>() const { return Range<char8_t*>(begin(), end()); }
 		operator Range<const char8_t*>() const { return Range<const char8_t*>(GetBytes(), GetCodepoints(), data); }
 
 		[[nodiscard]] const char8_t* c_str() const { return data; }

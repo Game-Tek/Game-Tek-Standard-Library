@@ -50,12 +50,26 @@ namespace GTSL {
 
 			DWORD non_blocking = blocking;
 			if (ioctlsocket(handle, FIONBIO, &non_blocking) != 0) { return false; }
+#elif (__linux__)
+            // open udp socket on linux
+            handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+            sockaddr_in address{};
+            address.sin_family = AF_INET;
+            address.sin_addr.s_addr = *(reinterpret_cast<const uint32*>(endpoint.Address));
+            address.sin_port = HostToNet(endpoint.Port);
+            if (bind(handle, reinterpret_cast<const sockaddr*>(&address), sizeof(sockaddr_in)) < 0) { return false; }
+
+            // set non blocking
+            int non_blocking = blocking;
+            if (fcntl(handle, F_SETFL, O_NONBLOCK, non_blocking) == -1) { return false; }
 #endif
 
 			return true;
 		}
 		
 		[[nodiscard]] bool Send(const IPv4Endpoint endpoint, Range<const byte*> buffer) const {
+#if (_WIN32)
 			sockaddr_in addr{};
 			addr.sin_family = AF_INET;
 			addr.sin_addr.S_un.S_un_b.s_b1 = endpoint.Address[3];
@@ -68,9 +82,12 @@ namespace GTSL {
 			const auto sent_bytes = sendto(handle, reinterpret_cast<const char*>(buffer.begin()), static_cast<int32>(buffer.Bytes()), 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
 
 			return sent_bytes == static_cast<int32>(buffer.Bytes());
+#elif (__linux__)
+#endif
 		}
 
 		[[nodiscard]] bool Receive(IPv4Endpoint* sender, Range<byte*> buffer) const {
+#if (_WIN32)
 			sockaddr_in from{};
 			socklen_t fromLength{ sizeof(from) };
 
@@ -83,6 +100,8 @@ namespace GTSL {
 			sender->Port = NetToHost(from.sin_port);
 
 			return bytes_received != SOCKET_ERROR;
+#elif (__linux__)
+#endif
 		}
 
 		~Socket() {
@@ -91,6 +110,7 @@ namespace GTSL {
 				closesocket(handle);
 				WSACleanup();
 			}
+#elif (__linux__)
 #endif
 		}
 	};
