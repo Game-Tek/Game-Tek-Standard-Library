@@ -160,6 +160,8 @@ namespace GTSL
 		static bool Run(StringView path) {
 #ifdef _WIN32
 			return ShellExecuteA(nullptr, "open", reinterpret_cast<const char*>(path.GetData()), nullptr, nullptr, SW_SHOWNORMAL);
+#elif __linux__
+            return false;
 #endif
 		}
 
@@ -167,6 +169,8 @@ namespace GTSL
 #ifdef _WIN32
 			return IsWindowsVersionOrGreater(10, 5, 5);
 #endif
+
+            return true;
 		}
 	};
 

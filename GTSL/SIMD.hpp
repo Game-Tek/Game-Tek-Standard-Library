@@ -332,9 +332,6 @@ namespace GTSL
 		operator __m128i() const { return vector; }
 	};
 
-	template<>
-	class alignas(16) SIMD<int32, 4>;
-
 	namespace Math {};
 
 	template<>

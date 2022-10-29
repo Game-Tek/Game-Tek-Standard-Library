@@ -72,6 +72,8 @@ namespace GTSL
 	private:
 		char8_t array[SIZE]{ 0 };
 
+#if _WIN64
 		friend class ShortString;
+#endif
 	};
 }

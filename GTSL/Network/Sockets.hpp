@@ -7,6 +7,8 @@
 #include <WinSock2.h>
 #include <intrin.h>
 typedef int socklen_t;
+#elif (__linux__)
+#include <sys/socket.h>
 #endif
 
 namespace GTSL {
@@ -27,7 +29,11 @@ namespace GTSL {
 	}
 
 	class Socket {
+#if (_WIN32)
 		uint64 handle = 0;
+#elif (__linux__)
+        int handle = 0;
+#endif
 
 	public:
 		Socket() = default;
@@ -38,6 +44,7 @@ namespace GTSL {
 			if (const auto wsaStartResult = WSAStartup(MAKEWORD(2, 2), &wsa_data); wsaStartResult != 0) { return false; }
 
 			handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+            if(handle == INVALID_SOCKET) { return false; }
 
 			sockaddr_in address{};
 			address.sin_family = AF_INET;
@@ -53,6 +60,7 @@ namespace GTSL {
 #elif (__linux__)
             // open udp socket on linux
             handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+            if(handle < 0) { return false; }
 
             sockaddr_in address{};
             address.sin_family = AF_INET;
@@ -78,11 +86,21 @@ namespace GTSL {
 			addr.sin_addr.S_un.S_un_b.s_b4 = endpoint.Address[0];
 			addr.sin_port = HostToNet(endpoint.Port);
 
-			GTSL_ASSERT(buffer.Bytes() <= 512, "Size bigger than can be sent.")
-			const auto sent_bytes = sendto(handle, reinterpret_cast<const char*>(buffer.begin()), static_cast<int32>(buffer.Bytes()), 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
+			GTSL_ASSERT(buffer.Bytes() <= 16384, "Size bigger than can be sent.")
+			const auto sentBytes = sendto(handle, reinterpret_cast<const char*>(buffer.begin()), static_cast<int32>(buffer.Bytes()), 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
 
-			return sent_bytes == static_cast<int32>(buffer.Bytes());
+			return sentBytes == static_cast<int32>(buffer.Bytes());
 #elif (__linux__)
+            // sendto on linux
+            sockaddr_in addr{};
+            addr.sin_family = AF_INET;
+            addr.sin_addr.s_addr = *(reinterpret_cast<const uint32*>(endpoint.Address));
+            addr.sin_port = HostToNet(endpoint.Port);
+
+            GTSL_ASSERT(buffer.Bytes() <= 16384, "Size bigger than can be sent.")
+            const auto sentBytes = sendto(handle, reinterpret_cast<const char*>(buffer.begin()), static_cast<int32>(buffer.Bytes()), 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
+
+            return sentBytes == static_cast<int32>(buffer.Bytes());
 #endif
 		}
 
@@ -101,6 +119,19 @@ namespace GTSL {
 
 			return bytes_received != SOCKET_ERROR;
 #elif (__linux__)
+            // Receive on linux
+            sockaddr_in from{};
+            socklen_t fromLength{ sizeof(from) };
+
+            const auto bytesReceived = recvfrom(handle, reinterpret_cast<char*>(buffer.begin()), static_cast<int32>(buffer.Bytes()), 0, reinterpret_cast<sockaddr*>(&from), &fromLength);
+
+            sender->Address[0] = from.sin_addr.S_un.S_un_b.s_b4;
+            sender->Address[1] = from.sin_addr.S_un.S_un_b.s_b3;
+            sender->Address[2] = from.sin_addr.S_un.S_un_b.s_b2;
+            sender->Address[3] = from.sin_addr.S_un.S_un_b.s_b1;
+            sender->Port = NetToHost(from.sin_port);
+
+            return bytesReceived > 0;
 #endif
 		}
 
@@ -111,6 +142,10 @@ namespace GTSL {
 				WSACleanup();
 			}
 #elif (__linux__)
+            // Close socket on linux
+            if (handle) {
+                close(handle);
+            }
 #endif
 		}
 	};

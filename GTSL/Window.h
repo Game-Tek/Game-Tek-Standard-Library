@@ -26,6 +26,12 @@ namespace GTSL
 {
 	class Window {
 	public:
+        enum class API : uint8 {
+            WIN32,
+            XCB,
+            WAYLAND
+        };
+
 		enum class MouseButton : uint8 {
 			LEFT_BUTTON, RIGHT_BUTTON, MIDDLE_BUTTON
 		};
@@ -84,14 +90,8 @@ namespace GTSL
 		enum class WindowSizeState : uint8 {
 			MINIMIZED, MAXIMIZED, FULLSCREEN
 		};
-		
-#if _WIN64
-		Window() = default;
-#elif __linux__
-		Window() : connection(nullptr), window(0), screen(nullptr) {}
-#endif
 
-		struct JoystickUpdate {
+        		struct JoystickUpdate {
 			Gamepad::Side Side;
 			Gamepad::SourceNames Source;
 
@@ -148,12 +148,21 @@ namespace GTSL
 			bool isController = false;
 		};
 		
-		void BindToOS(StringView name, Extent2D extent, void* userData, Delegate<void(void*, WindowEvents, void*)> function, Window parentWindow = Window(), WindowType type = WindowType::OS_WINDOW) {
+#if _WIN64
+		Window(API) : windowAPI(API::WIN32) {};
+#elif __linux__
+		Window(API window_API) : windowAPI(window_API), connection(nullptr), window(0), screen(nullptr) {}
+#endif
+		
+		void BindToOS(StringView id_name, StringView display_name, Extent2D extent, void* userData, Delegate<void(void*, WindowEvents, void*)> function, const Window* parentWindow, WindowType type = WindowType::OS_WINDOW) {
 #if (_WIN64)
-			char nullTerminatedName[512];
+			char nullTerminatedIdName[512], nullTerminatedDisplayName[512];
 
-			GTSL::MemCopy(name.GetBytes() > 512 ? 512 : name.GetBytes(), name.GetData(), nullTerminatedName);
-			nullTerminatedName[name.GetBytes() > 512 ? 511 : name.GetBytes()] = '\0';
+			GTSL::MemCopy(id_name.GetBytes() > 512 ? 512 : id_name.GetBytes(), id_name.GetData(), nullTerminatedIdName);
+			nullTerminatedIdName[id_name.GetBytes() > 512 ? 511 : id_name.GetBytes()] = '\0';
+
+			GTSL::MemCopy(display_name.GetBytes() > 512 ? 512 : display_name.GetBytes(), display_name.GetData(), nullTerminatedDisplayName);
+			nullTerminatedDisplayName[display_name.GetBytes() > 512 ? 511 : display_name.GetBytes()] = '\0';
 
 			WNDCLASSA wndclass{};
 			wndclass.lpfnWndProc = reinterpret_cast<WNDPROC>(Win32_windowProc);
@@ -164,7 +173,7 @@ namespace GTSL
 			wndclass.lpszMenuName = nullptr;
 			wndclass.style = 0;
 			wndclass.cbWndExtra = 0;
-			wndclass.lpszClassName = reinterpret_cast<const char*>(nullTerminatedName);
+			wndclass.lpszClassName = reinterpret_cast<const char*>(nullTerminatedIdName);
 			wndclass.hInstance = GetModuleHandle(nullptr);
 			RegisterClassA(&wndclass);
 
@@ -183,7 +192,7 @@ namespace GTSL
 			windowRect.top = 0; windowRect.left = 0;
 			windowRect.bottom = extent.Height; windowRect.right = extent.Width;
 			AdjustWindowRect(&windowRect, style, false);
-			windowHandle = CreateWindowExA(0, wndclass.lpszClassName, reinterpret_cast<const char*>(nullTerminatedName), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, GetModuleHandle(nullptr), &windowsCallData);
+			windowHandle = CreateWindowExA(0, wndclass.lpszClassName, reinterpret_cast<const char*>(nullTerminatedDisplayName), style, CW_USEDEFAULT, CW_USEDEFAULT, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, GetModuleHandle(nullptr), &windowsCallData);
 
 			GTSL_ASSERT(windowHandle, "Window failed to create!");
 
@@ -191,9 +200,7 @@ namespace GTSL
 
 			//CoCreateInstance(IID_ITaskbarList3, nullptr, CLSCTX::CLSCTX_INPROC_SERVER, IID_ITaskbarList, &iTaskbarList);
 #elif __linux__
-			static constexpr bool USE_WAYLAND = false;
-
-			if constexpr(!USE_WAYLAND) {
+			if (windowAPI == API::XCB) {
 				int screenp = 0;
 
 				connection = xcb_connect(nullptr, &screenp);
@@ -218,7 +225,7 @@ namespace GTSL
 
 				xcb_create_window(connection, XCB_COPY_FROM_PARENT, window, screen->root, 0, 0, extent.Width, extent.Height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, eventMask, valueList);
 
-				SetTitle(name);
+				SetTitle(display_name);
 
 				xcb_intern_atom_cookie_t wmDeleteCookie = xcb_intern_atom(connection, 0, strlen("WM_DELETE_WINDOW"), "WM_DELETE_WINDOW");
 				xcb_intern_atom_cookie_t wmProtocolsCookie = xcb_intern_atom(connection, 0, strlen("WM_PROTOCOLS"), "WM_PROTOCOLS");
@@ -230,48 +237,26 @@ namespace GTSL
 				xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, wmProtocolsReply->atom, 4, 32, 1, &wmDeleteReply->atom);
 
 				this->framebufferExtent = extent;
-			} else {
-				//// create wayland surface
-				//display = wl_display_connect(nullptr);
-				//if (!display) {
-				//	return;
-				//}
-//
-				//registry = wl_display_get_registry(display);
-				//wl_registry_add_listener(registry, &registryListener, this);
-				//wl_display_roundtrip(display);
-//
-				//if (!compositor) {
-				//	return;
-				//}
-//
-				//surface = wl_compositor_create_surface(compositor);
-				//wl_surface_add_listener(surface, &surfaceListener, this);
-				//wl_display_roundtrip(display);
-//
-				//if (!shell) {
-				//	return;
-				//}
-//
-				//shellSurface = wl_shell_get_shell_surface(shell, surface);
-				//wl_shell_surface_add_listener(shellSurface, &shellSurfaceListener, this);
-				//wl_shell_surface_set_toplevel(shellSurface);
-				//wl_display_roundtrip(display);
-//
-				//if (!xdgWmBase) {
-				//	return;
-				//}
-//
-				//xdgSurface = xdg_wm_base_get_xdg_surface(xdgWmBase, surface);
-				//xdg_toplevel *xdgToplevel = xdg_surface_get_toplevel(xdgSurface);
-				//xdg_toplevel_add_listener(xdgToplevel, &topLevelListener, this);
-				//xdg_surface_add_listener(xdgSurface, &surfaceListener, this);
-				//xdg_toplevel_set_title(xdgToplevel, name.GetData());
-				//xdg_toplevel_set_app_id(xdgToplevel, name.GetData());
-				//xdg_surface_set_window_geometry(xdgSurface, 0, 0, extent.Width, extent.Height);
-				//xdg_wm_base_add_listener(xdgWmBase, &xdgWmBaseListener, this);
-				//wl_display_roundtrip(display);
 			}
+            
+            if(windowAPI == API::WAYLAND) {
+                //display = wl_display_connect(nullptr);
+                //if(!display) { return; }
+                //registry = wl_display_get_registry(display);
+                //if(!registry) { return; }
+                //wl_registry_add_listener(registry, &registryListener, this);
+                //wl_display_dispatch(display);
+                //wl_display_roundtrip(display);
+//
+                //surface = wl_compositor_create_surface(compositor);
+                //shellSurface = wl_shell_get_shell_surface(shell, surface);
+                //wl_shell_surface_add_listener(shellSurface, &shellSurfaceListener, this);
+                //wl_shell_surface_set_toplevel(shellSurface);
+                //
+                //SetTitle(display_name);
+                //
+                //this->framebufferExtent = extent;
+            }
 #endif
 		}
 		
@@ -376,6 +361,17 @@ namespace GTSL
 			extent.Height = static_cast<uint16>(rect.bottom - rect.top);
 			return extent;
 #elif __linux__
+            // Get windows dimensions
+            xcb_get_geometry_cookie_t cookie = xcb_get_geometry(connection, window);
+            xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(connection, cookie, nullptr);
+
+            Extent2D extent;
+            extent.Width = reply->width;
+            extent.Height = reply->height;
+			
+			free(reply);
+
+            return extent;
 #endif
 		}
 
@@ -537,6 +533,8 @@ namespace GTSL
 		}
 	
 	protected:
+		GTSL::Extent2D framebufferExtent;
+        API windowAPI;
 		WindowSizeState windowSizeState;
 		bool focus;
 
@@ -553,7 +551,6 @@ namespace GTSL
 		//wl_shell* waylandShell = nullptr;
 		//wl_surface* waylandSurface = nullptr;
 		//wl_shell_surface* waylandShellSurface = nullptr;
-		GTSL::Extent2D framebufferExtent;
 #endif
 
 #if (_WIN64)

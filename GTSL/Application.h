@@ -56,15 +56,15 @@ namespace GTSL
 
 			SetPriorityClass(GetCurrentProcess(), priority_class);
 #elif __linux__
-			int32 niceNess = 0;
+			int32 niceness = 0;
 			switch (priority) {
-			case Priority::LOW: niceNess = 19; break;
-			case Priority::LOW_MID: niceNess = 11; break;
-			case Priority::MID: niceNess = 0; break;
-			case Priority::MID_HIGH: niceNess = -10; break;
-			case Priority::HIGH: niceNess = -20; break;
+			case Priority::LOW: niceness = 19; break;
+			case Priority::LOW_MID: niceness = 11; break;
+			case Priority::MID: niceness = 0; break;
+			case Priority::MID_HIGH: niceness = -10; break;
+			case Priority::HIGH: niceness = -20; break;
 			}
-			nice(niceNess);
+			nice(niceness);
 #endif
 		}
 		

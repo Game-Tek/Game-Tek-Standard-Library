@@ -66,7 +66,7 @@ TEST(String, CopyAssignment) {
 	String<DefaultAllocatorReference> string0(testString);
 
 	String<DefaultAllocatorReference> string1;
-	string1 = string0; //force copy constructor //TODO: TEST CODE EMITTED
+	string1 = static_cast<String<DefaultAllocatorReference>&>(string0);
 
 	//test original string hasn't been modified
 	GTEST_ASSERT_EQ(string0.GetBytes(), StringLengths(testString).First);

@@ -65,6 +65,7 @@ namespace GTSL {
 #if (_WIN64)
 			return static_cast<uint64>(findData.ftLastWriteTime.dwHighDateTime) << 32ull | findData.ftLastWriteTime.dwLowDateTime;
 #elif __linux__
+            return 0;
 #endif
 		}
 

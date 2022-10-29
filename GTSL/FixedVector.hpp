@@ -147,7 +147,9 @@ namespace GTSL
 	private:
 		friend struct FixedVectorIterator<T>;
 
+#if _WIN64
 		friend class FixedVector;
+#endif
 
 		static constexpr uint8 BITS = static_cast<uint8>(GTSL::Bits<length_type>());
 
