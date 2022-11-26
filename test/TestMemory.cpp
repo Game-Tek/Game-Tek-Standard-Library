@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "GTSL/Allocator.h"
+#include "GTSL/Allocator.hpp"
 #include "GTSL/Memory.h"
 
 struct A {

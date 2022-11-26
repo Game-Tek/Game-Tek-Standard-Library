@@ -1,65 +1,34 @@
 {
-    "version": 2,
-    "configurePresets": [
-        {
-            "name": "base",
-            "description": "Sets base build and install directory.",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_BUILD_TYPE":"Debug"
-            }
-        },
-        {
-            "inherits":["base"],
-            "name": "linux-x64",
-            "description": "Using compilers: C = /usr/bin/gcc, CXX = /usr/bin/g++",
-            "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/out/build/${presetName}/Test",
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_CXX_COMPILER": "g++",
-                "CMAKE_TESTING_ENABLED": "true"
-            }
-        },
-        {
-            "inherits":["base"],
-            "name": "win-x64",
-            "description": "Using compilers for Visual Studio 17 2022 (x64 architecture)",
-            "generator": "Visual Studio 17 2022",
+	"version": 6,
+	"configurePresets": [
+		{
+			"name": "gcc",
+			"displayName": "gcc",
+			"description": "Compile with GCC and Ninja",
+			"generator": "Ninja",
 			"binaryDir": "${sourceDir}/out/build/${presetName}",
-            "cacheVariables": {
-                "CMAKE_CXX_COMPILER": "cl.exe",
-                "CMAKE_TESTING_ENABLED": "true"
-            }
-        }
-    ],
-    "buildPresets": [
-        {
-            "name": "win-x64-release",
-            "configurePreset": "win-x64",
-            "configuration": "Debug"
-        },
-        {
-            "name": "linux-x64-release",
-            "configurePreset": "linux-x64",
-            "configuration": "Debug"
-        }
-    ],
-    "testPresets": [
-        {
-            "name": "debug-win-x64",
-            "description": "",
-            "displayName": "Windows Testing",
-            "configurePreset": "win-x64",
-            "configuration": "Debug"
-        },
-        {
-            "name": "debug-linux-x64",
-            "description": "",
-            "displayName": "Linux Testing",
-            "configurePreset": "linux-x64",
-            "configuration": "Debug"
-        }
-    ]
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug",
+				"CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "linux-x64",
+			"configurePreset": "gcc",
+			"description": ""
+		}
+	],
+	"testPresets": [
+		{
+			"name":"core-test",
+			"configurePreset": "gcc"
+		},
+		{
+			"inherits":"core-test",
+			"name": "linux-test",
+			"configurePreset": "gcc"
+		}
+	]
 }

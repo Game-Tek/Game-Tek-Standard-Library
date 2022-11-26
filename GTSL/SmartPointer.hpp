@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core.h"
-#include "Allocator.h"
+#include "Allocator.hpp"
 
 namespace GTSL {
 	template<typename T, class ALLOCATOR>

@@ -1,4 +1,5 @@
 #include "GTSL/SmartPointer.hpp"
+#include "GTSL/Delegate.hpp"
 
 #include <gtest/gtest.h>
 
@@ -18,4 +19,10 @@ TEST(SmartPointer, Move) {
 TEST(SmartPointer, MoveSubClass) {
 	auto pointerA = GTSL::SmartPointer<InheritedClass, GTSL::DefaultAllocatorReference>(GTSL::DefaultAllocatorReference{});
 	GTSL::SmartPointer<BaseClass, GTSL::DefaultAllocatorReference> pointerB(GTSL::MoveRef(pointerA));
+}
+
+TEST(SmartPointer, BuildFromFunctionPointer) {
+	using Delegate = GTSL::Delegate<void(void*, int, float*)>;
+	auto pointerA = GTSL::SmartPointer<Delegate, GTSL::DefaultAllocatorReference>(GTSL::DefaultAllocatorReference{});
+	GTSL::SmartPointer<Delegate, GTSL::DefaultAllocatorReference> pointerB(GTSL::MoveRef(pointerA));
 }

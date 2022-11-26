@@ -2,7 +2,7 @@
 
 #include "Core.h"
 #include "StringCommon.h"
-#include "Allocator.h"
+#include "Allocator.hpp"
 #include "Unicode.hpp"
 
 namespace GTSL

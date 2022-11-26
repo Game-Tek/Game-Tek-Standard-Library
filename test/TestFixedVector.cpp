@@ -9,21 +9,20 @@ TEST(FixedVector, Construct) {
 TEST(FixedVector, Resize) {
 	GTSL::FixedVector<GTSL::uint32, GTSL::DefaultAllocatorReference> fixedVector(1);
 
-	GTSL::uint32 toInsert = fixedVector.GetCapacity() + 1;
+	EXPECT_EQ(fixedVector.GetCapacity(), 32u); // Capacity must be multiple of BITS=32
 
-	for(GTSL::uint32 i = 0; i < toInsert + 1000; ++i) {
+	GTSL::uint32 toInsert = fixedVector.GetCapacity() + 10000;
+
+	for(GTSL::uint32 i = 0; i < toInsert; ++i) {
 		fixedVector.Emplace(i);
 	}
 
-	GTSL::uint32 i = 0;
-
-	for (auto & e : fixedVector) {
-		GTEST_ASSERT_EQ(e, i);
+	for(GTSL::uint32 i = 0; i < toInsert; ++i) {
 		ASSERT_TRUE(fixedVector.IsSlotOccupied(i));
-		++i;
+		GTEST_ASSERT_EQ(fixedVector[i], i);
 	}
 
-	for (; i < fixedVector.GetCapacity(); ++i) {
+	for (GTSL::uint32 i = toInsert; i < fixedVector.GetCapacity(); ++i) {
 		ASSERT_FALSE(fixedVector.IsSlotOccupied(i));
 	}
 }

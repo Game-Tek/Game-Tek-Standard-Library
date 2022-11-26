@@ -9,6 +9,8 @@
 typedef int socklen_t;
 #elif (__linux__)
 #include <sys/socket.h>
+#include <stdlib.h>
+#include <netinet/in.h>
 #endif
 
 namespace GTSL {
@@ -64,7 +66,7 @@ namespace GTSL {
 
             sockaddr_in address{};
             address.sin_family = AF_INET;
-            address.sin_addr.s_addr = *(reinterpret_cast<const uint32*>(endpoint.Address));
+            address.sin_addr.s_addr = endpoint.GetAddress();
             address.sin_port = HostToNet(endpoint.Port);
             if (bind(handle, reinterpret_cast<const sockaddr*>(&address), sizeof(sockaddr_in)) < 0) { return false; }
 
@@ -86,7 +88,6 @@ namespace GTSL {
 			addr.sin_addr.S_un.S_un_b.s_b4 = endpoint.Address[0];
 			addr.sin_port = HostToNet(endpoint.Port);
 
-			GTSL_ASSERT(buffer.Bytes() <= 16384, "Size bigger than can be sent.")
 			const auto sentBytes = sendto(handle, reinterpret_cast<const char*>(buffer.begin()), static_cast<int32>(buffer.Bytes()), 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
 
 			return sentBytes == static_cast<int32>(buffer.Bytes());
@@ -94,10 +95,9 @@ namespace GTSL {
             // sendto on linux
             sockaddr_in addr{};
             addr.sin_family = AF_INET;
-            addr.sin_addr.s_addr = *(reinterpret_cast<const uint32*>(endpoint.Address));
+            addr.sin_addr.s_addr = endpoint.GetAddress();
             addr.sin_port = HostToNet(endpoint.Port);
 
-            GTSL_ASSERT(buffer.Bytes() <= 16384, "Size bigger than can be sent.")
             const auto sentBytes = sendto(handle, reinterpret_cast<const char*>(buffer.begin()), static_cast<int32>(buffer.Bytes()), 0, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
 
             return sentBytes == static_cast<int32>(buffer.Bytes());
@@ -125,10 +125,7 @@ namespace GTSL {
 
             const auto bytesReceived = recvfrom(handle, reinterpret_cast<char*>(buffer.begin()), static_cast<int32>(buffer.Bytes()), 0, reinterpret_cast<sockaddr*>(&from), &fromLength);
 
-            sender->Address[0] = from.sin_addr.S_un.S_un_b.s_b4;
-            sender->Address[1] = from.sin_addr.S_un.S_un_b.s_b3;
-            sender->Address[2] = from.sin_addr.S_un.S_un_b.s_b2;
-            sender->Address[3] = from.sin_addr.S_un.S_un_b.s_b1;
+			sender->SetAddress(from.sin_addr.s_addr);
             sender->Port = NetToHost(from.sin_port);
 
             return bytesReceived > 0;

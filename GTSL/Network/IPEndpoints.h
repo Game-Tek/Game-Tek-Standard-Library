@@ -31,7 +31,7 @@ namespace GTSL
 		 * \brief Returns an int packed with the 4 byte values of the IP address this IpEndpoint holds.
 		 * \return uint32 packed with the 4 byte values of the IP address this IpEndpoint holds.
 		 */
-		[[nodiscard]] uint32 IntFromAddress() const {
+		[[nodiscard]] uint32 GetAddress() const {
 			return (Address[0] << 24) | (Address[1] << 16) | (Address[2] << 8) | Address[3];
 		}
 
@@ -39,7 +39,7 @@ namespace GTSL
 		 * \brief Sets this IpEndpoint's address as the passed in int_address uint32.
 		 * \param intAddress IP address packed in uint32 from which to build the address.
 		 */
-		void AddressFromInt(const uint32 intAddress) {
+		void SetAddress(const uint32 intAddress) {
 			Address[0] = ((intAddress >> 24) & 0xFF); Address[1] = ((intAddress >> 16) & 0xFF); Address[2] = ((intAddress >> 8) & 0xFF); Address[3] = (intAddress & 0xFF);
 		}
 	};

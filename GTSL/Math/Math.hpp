@@ -172,17 +172,17 @@ namespace GTSL {
 		
 		inline uint64 RoundUpByPowerOf2(const uint64 n, const uint64 powerOfTwo) {
 			GTSL_ASSERT(IsPowerOfTwo(powerOfTwo), "Is not multiple of two!")
-			return n + (powerOfTwo - 1) & ~(powerOfTwo - 1);
+			return (n + (powerOfTwo - 1)) & ~(powerOfTwo - 1);
 		}
 
 		inline uint32 RoundUpByPowerOf2(const uint32 n, const uint32 powerOfTwo) {
 			GTSL_ASSERT(IsPowerOfTwo(powerOfTwo), "Is not multiple of two!")
-			return n + (powerOfTwo - 1) & ~(powerOfTwo - 1);
+			return (n + (powerOfTwo - 1)) & ~(powerOfTwo - 1);
 		}
 
 		inline uint16 RoundUpByPowerOf2(const uint16 n, const uint16 powerOfTwo) {
 			GTSL_ASSERT(IsPowerOfTwo(powerOfTwo), "Is not multiple of two!")
-			return n + (powerOfTwo - 1) & ~(powerOfTwo - 1);
+			return (n + (powerOfTwo - 1)) & ~(powerOfTwo - 1);
 		}
 		
 		inline uint64 RoundUp(const uint64 number, const uint32 multiple) {
@@ -826,7 +826,7 @@ namespace GTSL {
 
 		inline bool PointInBox(Vector2 min, Vector2 max, Vector2 p) { return p.X() >= min.X() && p.X() <= max.X() && p.Y() >= min.Y() && p.Y() <= max.Y(); }
 
-		inline bool PointInBoxProjection(Vector2 min, Vector2 max, Vector2 p) { return p.X() >= min.X() && p.X() <= max.X() || p.Y() >= min.Y() && p.Y() <= max.Y(); }
+		inline bool PointInBoxProjection(Vector2 min, Vector2 max, Vector2 p) { return (p.X() >= min.X() && p.X() <= max.X()) || (p.Y() >= min.Y() && p.Y() <= max.Y()); }
 
 		uint8 constexpr YAW = 0, PITCH = 1;
 

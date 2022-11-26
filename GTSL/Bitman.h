@@ -1,14 +1,13 @@
 #pragma once
 
 #if (_WIN32)
-
-
 #include <Windows.h>
 #include <intrin.h>
 #undef BitScanForward
 #include <xtr1common>
 #endif
 
+#include <type_traits>
 #include <immintrin.h>
 
 #include "Core.h"

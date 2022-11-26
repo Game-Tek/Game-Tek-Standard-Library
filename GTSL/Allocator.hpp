@@ -54,12 +54,12 @@ namespace GTSL
 		DefaultAllocatorReference& operator=(const DefaultAllocatorReference&) = default;
 		DefaultAllocatorReference& operator=(DefaultAllocatorReference&&) = default;
 
-		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size) {
+		void Allocate(uint64 size, uint64, void** data, uint64* allocated_size) {
 			GTSL::Allocate(size, data);
 			*allocated_size = size;
 		}
 		
-		void Deallocate(uint64 size, uint64 alignment, void* data) {
+		void Deallocate(uint64 size, uint64, void* data) {
 			GTSL::Deallocate(size, data);
 		}
 	};
@@ -82,13 +82,13 @@ namespace GTSL
 	{
 		StaticAllocator() = default;
 		
-		void Allocate(uint64 size, uint64 alignment, void** data, uint64* allocated_size) {
+		void Allocate(uint64 size, uint64, void** data, uint64* allocated_size) {
 			GTSL_ASSERT(size <= BYTES, "Static space is less than being requested!");
 			*data = buffer;
 			*allocated_size = BYTES;
 		}
 		
-		void Deallocate(const uint64 size, uint64 alignment, void* data) {}
+		void Deallocate(const uint64, uint64, void*) {}
 
 		StaticAllocator(const StaticAllocator& other) {}
 

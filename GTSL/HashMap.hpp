@@ -7,7 +7,7 @@
 #include <new>
 
 #include "Algorithm.hpp"
-#include "Allocator.h"
+#include "Allocator.hpp"
 #include "ArrayCommon.hpp"
 #include "Bitman.h"
 #include "Result.h"

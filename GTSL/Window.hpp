@@ -149,12 +149,13 @@ namespace GTSL
 		};
 		
 #if _WIN64
-		Window(API) : windowAPI(API::WIN32) {};
+		Window() : windowAPI(API::WIN32) {};
 #elif __linux__
-		Window(API window_API) : windowAPI(window_API), connection(nullptr), window(0), screen(nullptr) {}
+		Window() : windowAPI(API::XCB), connection(nullptr), window(0), screen(nullptr) {}
 #endif
 		
-		void BindToOS(StringView id_name, StringView display_name, Extent2D extent, void* userData, Delegate<void(void*, WindowEvents, void*)> function, const Window* parentWindow, WindowType type = WindowType::OS_WINDOW) {
+		void BindToOS(StringView id_name, StringView display_name, API api, Extent2D extent, void* userData, Delegate<void(void*, WindowEvents, void*)> function, const Window* parentWindow, WindowType type = WindowType::OS_WINDOW) {
+			windowAPI = api; // Set the API to use.
 #if (_WIN64)
 			char nullTerminatedIdName[512], nullTerminatedDisplayName[512];
 
@@ -247,7 +248,6 @@ namespace GTSL
                 //wl_registry_add_listener(registry, &registryListener, this);
                 //wl_display_dispatch(display);
                 //wl_display_roundtrip(display);
-//
                 //surface = wl_compositor_create_surface(compositor);
                 //shellSurface = wl_shell_get_shell_surface(shell, surface);
                 //wl_shell_surface_add_listener(shellSurface, &shellSurfaceListener, this);
