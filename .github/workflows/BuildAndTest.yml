@@ -34,7 +34,7 @@ jobs:
       run: cmake --preset=gcc -DCMAKE_CXX_COMPILER=g++-11
 
     - name: Build
-      run: cmake --build --preset=gcc --config=${{env.BUILD_TYPE}}
+      run: cmake --build --preset=linux-x64 --config=${{env.BUILD_TYPE}}
 
     - name: Test
       run: ctest --preset=linux-test
