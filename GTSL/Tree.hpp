@@ -1,7 +1,7 @@
 #pragma once
 #include "Core.h"
 #include "HashMap.hpp"
-#include "System.h"
+#include "System.hpp"
 #include "Vector.hpp"
 #include "Tuple.hpp"
 #include "Algorithm.hpp"

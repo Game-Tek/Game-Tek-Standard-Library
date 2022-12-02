@@ -2,7 +2,7 @@
 
 #include <GTSL/Tree.hpp>
 
-#include "GTSL/System.h"
+#include "GTSL/System.hpp"
 
 class DestructionTester {
 	GTSL::uint32* d = nullptr;

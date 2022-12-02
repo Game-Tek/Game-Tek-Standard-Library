@@ -32,7 +32,7 @@ namespace GTSL
 			const bool anySetBit = _BitScanForward64(&setBit, number);
 			return Result(static_cast<uint8>(setBit), anySetBit);
 		#elif __linux__
-			const auto setBit = __builtin_clzll(number);
+			const auto setBit = __builtin_ctzll(number);
 			return Result(static_cast<uint8>(setBit), static_cast<bool>(number));
 		#endif
 	}

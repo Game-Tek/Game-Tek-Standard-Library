@@ -1,0 +1,1 @@
+sudo apt install libxcb-keysyms1-dev

@@ -18,7 +18,14 @@
 #undef ERROR
 #elif __linux__
 #include <X11/X.h>
+#include <X11/Xlib.h>
 #include <xcb/xcb.h>
+#include <xcb/xcb_keysyms.h>
+#define XK_LATIN1
+#define XK_MISCELLANY
+#include <X11/keysymdef.h>
+#undef XK_LATIN1
+#undef XK_MISCELLANY
 //#include <wayland-client.h>
 #endif
 
@@ -222,7 +229,7 @@ namespace GTSL
 
 				uint32 eventMask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
 
-				uint32 valueList[] = { screen->black_pixel, 0u };
+				uint32 valueList[] = { screen->black_pixel, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_ENTER_WINDOW | XCB_EVENT_MASK_LEAVE_WINDOW | XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_RESIZE_REDIRECT };
 
 				xcb_create_window(connection, XCB_COPY_FROM_PARENT, window, screen->root, 0, 0, extent.Width, extent.Height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, eventMask, valueList);
 
@@ -238,6 +245,10 @@ namespace GTSL
 				xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, wmProtocolsReply->atom, 4, 32, 1, &wmDeleteReply->atom);
 
 				this->framebufferExtent = extent;
+
+				keySymbols = xcb_key_symbols_alloc(connection);
+
+				xcb_flush(connection);
 			}
             
             if(windowAPI == API::WAYLAND) {
@@ -266,6 +277,7 @@ namespace GTSL
 #elif __linux__
 			if(connection && window) {
 				xcb_destroy_window(connection, window);
+				xcb_key_symbols_free(keySymbols);
 			}
 #endif
 		}
@@ -297,15 +309,108 @@ namespace GTSL
 			
 			while(event = xcb_poll_for_event(connection)) {
 				switch (event->response_type & ~0x80) {
-				case XCB_CLIENT_MESSAGE: {
-					clientMessage = (xcb_client_message_event_t *)event;
-
-					if (clientMessage->data.data32[0] == wmDeleteWin) {
-						// ON delete window
+					case XCB_EXPOSE: {
+						xcb_expose_event_t *expose = (xcb_expose_event_t *)event;
+						/* ...do stuff */
+						break;
 					}
+					case XCB_MAP_NOTIFY: {
+						xcb_map_notify_event_t *mapNotify = (xcb_map_notify_event_t *)event;
+						FocusEventData focusEventData;
+						focusEventData.Focus = true;
+						focusEventData.HadFocus = false;
+						function(userData, WindowEvents::FOCUS, &focusEventData);						
+						break;
+					}
+					case XCB_UNMAP_NOTIFY: {
+						xcb_unmap_notify_event_t *unmap = (xcb_unmap_notify_event_t *)event;
+						FocusEventData focusEventData;
+						focusEventData.Focus = false;
+						focusEventData.HadFocus = true;
+						function(userData, WindowEvents::FOCUS, &focusEventData);
+						break;
+					}
+					case XCB_BUTTON_PRESS: {
+						xcb_button_press_event_t *press = (xcb_button_press_event_t *)event;
 
-					break;
-				}
+						MouseButtonEventData mouseButtonEventData;
+
+						//TODO: handle scroll wheel
+						mouseButtonEventData.Button = xcb_mouseButtonToMouseButton(press->detail);
+
+						if(press->response_type & XCB_EVENT_MASK_BUTTON_PRESS) {
+							mouseButtonEventData.State = true;
+						}
+
+						if(press->response_type & XCB_EVENT_MASK_BUTTON_RELEASE) {
+							mouseButtonEventData.State = false;
+						}
+
+						function(userData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+						break;
+					}
+					case XCB_MOTION_NOTIFY: {
+						xcb_motion_notify_event_t *motion = (xcb_motion_notify_event_t *)event;
+						MouseMoveEventData mouseMoveEventData;
+						xcb_calculateMousePos(motion->event_x, motion->event_y, GetWindowExtent(), mouseMoveEventData);
+						function(userData, WindowEvents::MOUSE_MOVE, &mouseMoveEventData);
+						break;
+					}
+					case XCB_KEY_PRESS: {
+						xcb_key_press_event_t *press = (xcb_key_press_event_t *)event;
+
+						//XKeyEvent xKeyEvent;
+//
+						//xKeyEvent.type = KeyPress;
+						//xKeyEvent.serial = press->sequence;
+						//xKeyEvent.send_event = press->response_type & XCB_EVENT_MASK_KEY_PRESS;
+						//xKeyEvent.display = nullptr;
+						//xKeyEvent.window = press->event;
+						//xKeyEvent.root = press->root;
+						//xKeyEvent.subwindow = press->child;
+						//xKeyEvent.time = press->time;
+						//xKeyEvent.x = press->event_x;
+						//xKeyEvent.y = press->event_y;
+						//xKeyEvent.x_root = press->root_x;
+						//xKeyEvent.y_root = press->root_y;
+						//xKeyEvent.state = press->state;
+						//xKeyEvent.keycode = press->detail;
+						//xKeyEvent.same_screen = press->same_screen;
+//
+						//auto keySim = XKeycodeToKeysym(xKeyEvent.display, xKeyEvent.keycode, 0);
+
+						xcb_keysym_t keySym = xcb_key_symbols_get_keysym(keySymbols, press->detail, 0);
+
+						KeyboardKeyEventData keyboardKeyEventData;
+
+						keyboardKeyEventData.Key = xcb_keysimToKey(keySym);
+
+						if(press->response_type & XCB_EVENT_MASK_KEY_PRESS) {
+							keyboardKeyEventData.State = true;
+						}
+
+						if(press->response_type & XCB_EVENT_MASK_KEY_RELEASE) {
+							keyboardKeyEventData.State = false;
+						}
+
+						function(userData, WindowEvents::KEYBOARD_KEY, &keyboardKeyEventData);
+
+						break;
+					}
+					case XCB_CLIENT_MESSAGE: {
+						clientMessage = (xcb_client_message_event_t *)event;
+
+						if (clientMessage->data.data32[0] == wmDeleteWin) {
+							function(userData, WindowEvents::CLOSE, nullptr);
+						}
+
+						break;
+					}
+					case XCB_RESIZE_REQUEST: {
+						xcb_resize_request_event_t *resize = (xcb_resize_request_event_t *)event;
+						// ON resize window
+						break;
+					}
 				}
 
 				free(event);
@@ -542,6 +647,7 @@ namespace GTSL
 		xcb_connection_t * connection = nullptr;
 		xcb_window_t window;
 		xcb_screen_t * screen = nullptr;
+		xcb_key_symbols_t* keySymbols = nullptr;
 		xcb_atom_t wmProtocols;
 		xcb_atom_t wmDeleteWin;
 
@@ -1316,6 +1422,118 @@ namespace GTSL
 			case VK_ESCAPE:   key = KeyboardKeys::Esc; return;
 			default: return;
 			}
+		}
+#elif __linux__
+		static void xcb_calculateMousePos(uint32 x, uint32 y, Extent2D clientSize, Vector2& mousePos) {
+			const auto halfX = static_cast<float>(clientSize.Width) * 0.5f;
+			const auto halfY = static_cast<float>(clientSize.Height) * 0.5f;
+			mousePos.X() = (x - halfX) / halfX; mousePos.Y() = (halfY - y) / halfY;
+		}
+
+		static MouseButton xcb_mouseButtonToMouseButton(xcb_button_t button) {
+			MouseButton mouseButton = MouseButton::MIDDLE_BUTTON; // Choose middle button as default, because it's the least likely to be used and least likely to cause bugs
+
+			switch (button) {
+				case XCB_BUTTON_INDEX_1: mouseButton = MouseButton::LEFT_BUTTON; break;
+				case XCB_BUTTON_INDEX_2: mouseButton = MouseButton::MIDDLE_BUTTON; break;
+				case XCB_BUTTON_INDEX_3: mouseButton = MouseButton::RIGHT_BUTTON; break;
+				default: break;
+			}
+
+			return mouseButton;
+		}
+
+		static KeyboardKeys xcb_keysimToKey(xcb_keysym_t keysym) {
+			KeyboardKeys key = KeyboardKeys::LControl; // Choose CTRL as default, because it's the least likely to be used and least likely to cause bugs
+
+			switch (keysym) {
+			case XK_A: key = KeyboardKeys::A; break;
+			case XK_B: key = KeyboardKeys::B; break;
+			case XK_C: key = KeyboardKeys::C; break;
+			case XK_D: key = KeyboardKeys::D; break;
+			case XK_E: key = KeyboardKeys::E; break;
+			case XK_F: key = KeyboardKeys::F; break;
+			case XK_G: key = KeyboardKeys::G; break;
+			case XK_H: key = KeyboardKeys::H; break;
+			case XK_I: key = KeyboardKeys::I; break;
+			case XK_J: key = KeyboardKeys::J; break;
+			case XK_K: key = KeyboardKeys::K; break;
+			case XK_L: key = KeyboardKeys::L; break;
+			case XK_M: key = KeyboardKeys::M; break;
+			case XK_N: key = KeyboardKeys::N; break;
+			case XK_O: key = KeyboardKeys::O; break;
+			case XK_P: key = KeyboardKeys::P; break;
+			case XK_Q: key = KeyboardKeys::Q; break;
+			case XK_R: key = KeyboardKeys::R; break;
+			case XK_S: key = KeyboardKeys::S; break;
+			case XK_T: key = KeyboardKeys::T; break;
+			case XK_U: key = KeyboardKeys::U; break;
+			case XK_V: key = KeyboardKeys::V; break;
+			case XK_W: key = KeyboardKeys::W; break;
+			case XK_X: key = KeyboardKeys::X; break;
+			case XK_Y: key = KeyboardKeys::Y; break;
+			case XK_Z: key = KeyboardKeys::Z; break;
+			case XK_0: key = KeyboardKeys::Keyboard0; break;
+			case XK_1: key = KeyboardKeys::Keyboard1; break;
+			case XK_2: key = KeyboardKeys::Keyboard2; break;
+			case XK_3: key = KeyboardKeys::Keyboard3; break;
+			case XK_4: key = KeyboardKeys::Keyboard4; break;
+			case XK_5: key = KeyboardKeys::Keyboard5; break;
+			case XK_6: key = KeyboardKeys::Keyboard6; break;
+			case XK_7: key = KeyboardKeys::Keyboard7; break;
+			case XK_8: key = KeyboardKeys::Keyboard8; break;
+			case XK_9: key = KeyboardKeys::Keyboard9; break;
+			case XK_Escape: key = KeyboardKeys::Esc; break;
+			case XK_F1: key = KeyboardKeys::F1; break;
+			case XK_F2: key = KeyboardKeys::F2; break;
+			case XK_F3: key = KeyboardKeys::F3; break;
+			case XK_F4: key = KeyboardKeys::F4; break;
+			case XK_F5: key = KeyboardKeys::F5; break;
+			case XK_F6: key = KeyboardKeys::F6; break;
+			case XK_F7: key = KeyboardKeys::F7; break;
+			case XK_F8: key = KeyboardKeys::F8; break;
+			case XK_F9: key = KeyboardKeys::F9; break;
+			case XK_F10: key = KeyboardKeys::F10; break;
+			case XK_F11: key = KeyboardKeys::F11; break;
+			case XK_F12: key = KeyboardKeys::F12; break;
+
+			case XK_Left: key = KeyboardKeys::LeftArrow; break;
+			case XK_Right: key = KeyboardKeys::RightArrow; break;
+			case XK_Up: key = KeyboardKeys::UpArrow; break;
+			case XK_Down: key = KeyboardKeys::DownArrow; break;
+
+			case XK_Shift_L: key = KeyboardKeys::LShift; break;
+			case XK_Shift_R: key = KeyboardKeys::RShift; break;
+
+			case XK_Control_L: key = KeyboardKeys::LControl; break;
+			case XK_Control_R: key = KeyboardKeys::RControl; break;
+
+			case XK_Alt_L: key = KeyboardKeys::Alt; break;
+			case XK_Alt_R: key = KeyboardKeys::AltGr; break;
+
+			case XK_Return: key = KeyboardKeys::Enter; break;
+			case XK_BackSpace: key = KeyboardKeys::Backspace; break;
+			case XK_Tab: key = KeyboardKeys::Tab; break;
+			case XK_space: key = KeyboardKeys::SpaceBar; break;
+			case XK_Caps_Lock: key = KeyboardKeys::CapsLock; break;
+			//case XK_asciitilde: key = KeyboardKeys::T; break;
+			//case XK_minus: key = KeyboardKeys::Minus; break;
+			//case XK_plus: key = KeyboardKeys::Plus; break;
+			//case XK_bracketleft: key = KeyboardKeys::LBracket; break;
+			//case XK_bracketright: key = KeyboardKeys::RBracket; break;
+			//case XK_semicolon: key = KeyboardKeys::Semicolon; break;
+			//case XK_comma: key = KeyboardKeys::Comma; break;
+			//case XK_period: key = KeyboardKeys::Period; break;
+			//case XK_slash: key = KeyboardKeys::Slash; break;
+			//case XK_backslash: key = KeyboardKeys::Backslash; break;
+			//case XK_apostrophe: key = KeyboardKeys::Quote; break;
+			//case XK_equal: key = KeyboardKeys::Equal; break;
+			//case XK_Num_Lock: key = KeyboardKeys::NumLock; break;
+			
+			default: break;
+			}
+
+			return key;
 		}
 #endif
 

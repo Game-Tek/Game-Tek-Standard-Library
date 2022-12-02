@@ -158,3 +158,10 @@ TEST(Bit, FindLastClear) {
 	ASSERT_TRUE(result.State());
 	GTEST_ASSERT_EQ(result.Get(), 1);
 }
+
+TEST(Bit, FindFirstSetBit) {
+	auto result = GTSL::FindFirstSetBit(4096u);
+
+	ASSERT_TRUE(result.State());
+	GTEST_ASSERT_EQ(result.Get(), 12u);
+}

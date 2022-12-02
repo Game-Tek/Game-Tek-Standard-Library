@@ -8,7 +8,7 @@
 #include "GTSL/Filesystem.h"
 #include "GTSL/Window.hpp"
 #include "GTSL/TTF.hpp"
-#include "GTSL/System.h"
+#include "GTSL/System.hpp"
 #include "GTSL/Thread.hpp"
 #include "GTSL/Delegate.hpp"
 
@@ -152,6 +152,58 @@ TEST(Window, Construct) {
 
 TEST(Console, Print) {
 	GTSL::Console::Print(u8"Test print. 😁\n");
+
+	GTSL::Console::SetTextColor(GTSL::Console::TextColor::RED);
+	GTSL::Console::Print(u8"Red\n");
+
+	GTSL::Console::SetTextColor(GTSL::Console::TextColor::GREEN);
+	GTSL::Console::Print(u8"Green\n");
+
+	GTSL::Console::SetTextColor(GTSL::Console::TextColor::BLUE);
+	GTSL::Console::Print(u8"Blue\n");
+
+	GTSL::Console::SetTextColor(GTSL::Console::TextColor::YELLOW);
+	GTSL::Console::Print(u8"Yellow\n");
+
+	GTSL::Console::SetTextColor(GTSL::Console::TextColor::MAGENTA);
+	GTSL::Console::Print(u8"Magenta\n");
+
+	GTSL::Console::SetTextColor(GTSL::Console::TextColor::CYAN);
+	GTSL::Console::Print(u8"Cyan\n");
+
+	GTSL::Console::SetTextColor(GTSL::Console::TextColor::WHITE);
+	GTSL::Console::Print(u8"White\n");
+
+	GTSL::Console::SetTextColor(GTSL::Console::TextColor::BLACK);
+	GTSL::Console::Print(u8"Black\n");
+
+	GTSL::Console::SetTextColor(GTSL::Console::TextColor::ORANGE);
+	GTSL::Console::Print(u8"Orange\n");
+
+	GTSL::Console::SetTextColor(GTSL::Console::TextColor::GRAY);
+	GTSL::Console::Print(u8"Gray\n");
+
+	GTSL::Console::SetTextColor(GTSL::Console::TextColor::RESET);
+	GTSL::Console::Print(u8"Reset\n");
+
+	GTSL::Console::SetTextEffect(GTSL::Console::TextEffect::BOLD);
+	GTSL::Console::Print(u8"Bold\n");
+	GTSL::Console::SetTextEffect(GTSL::Console::TextEffect::RESET);	
+
+	GTSL::Console::SetTextEffect(GTSL::Console::TextEffect::UNDERLINE);
+	GTSL::Console::Print(u8"Underline\n");
+
+	GTSL::Console::SetTextEffect(GTSL::Console::TextEffect::BLINK);
+	GTSL::Console::Print(u8"Blink\n");
+
+	GTSL::Console::SetTextEffect(GTSL::Console::TextEffect::CROSS);
+	GTSL::Console::Print(u8"Cross\n");
+
+	GTSL::Console::SetTextEffect(GTSL::Console::TextEffect::INVERT);
+	GTSL::Console::Print(u8"Invert\n");
+
+	GTSL::Console::SetTextEffect(GTSL::Console::TextEffect::RESET);
+	GTSL::Console::Print(u8"Reset\n");
 }
 
 TEST(Thread, Construct) {
@@ -349,4 +401,8 @@ TEST(OS, ThreadCount) {
 	auto tCount = GTSL::Application::ThreadCount();
 
 	GTEST_ASSERT_NE(tCount, 0);
+}
+
+TEST(OS, SystemInfo) {
+	auto systemInfo = GTSL::System::GetSystemInfo();
 }
