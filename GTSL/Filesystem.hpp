@@ -52,8 +52,9 @@ namespace GTSL {
 			}
 #elif __linux__
 			if(counter != globData.gl_pathc) {
-				auto path = GTSL::StaticString<256>(GTSL::StringView((const char8_t*)globData.gl_pathv[counter++]));
+				auto path = GTSL::StaticString<256>(GTSL::StringView((const char8_t*)globData.gl_pathv[counter]));
 				LTrimLast(path, u8'/');
+				++counter;
 				return Result<StaticString<256>>(GTSL::MoveRef(path), true);
 			} else {
 				return Result<StaticString<256>>(false);
@@ -66,7 +67,7 @@ namespace GTSL {
 			return static_cast<uint64>(findData.ftLastWriteTime.dwHighDateTime) << 32ull | findData.ftLastWriteTime.dwLowDateTime;
 #elif __linux__
 			struct stat64 stats;
-    		stat64(globData.gl_pathv[counter], &stats);
+    		stat64(globData.gl_pathv[counter - 1], &stats);
             return stats.st_mtim.tv_nsec;
 #endif
 		}

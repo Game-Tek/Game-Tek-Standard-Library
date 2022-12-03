@@ -31,10 +31,10 @@ jobs:
       uses: seanmiddleditch/gha-setup-ninja@v3
 
     - name: Configure CMake
-      run: cmake --preset=gcc -DCMAKE_CXX_COMPILER=g++-11
+      run: cmake --preset=gcc-test -DCMAKE_CXX_COMPILER=g++-11
 
     - name: Build
-      run: cmake --build --preset=linux-x64 --config=${{env.BUILD_TYPE}}
+      run: cmake --build --preset=linux-x64-test --config=${{env.BUILD_TYPE}}
 
     - name: Test
       run: ctest --preset=linux-test

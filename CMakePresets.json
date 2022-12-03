@@ -11,12 +11,23 @@
 				"CMAKE_BUILD_TYPE": "Debug",
 				"CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
 			}
+		},
+		{
+			"name": "gcc-test", "inherits": "gcc",
+			"cacheVariables": {
+				"BUILD_TESTING": "ON"
+			}
 		}
 	],
 	"buildPresets": [
 		{
 			"name": "linux-x64",
 			"configurePreset": "gcc",
+			"description": ""
+		},
+		{
+			"name": "linux-x64-test",
+			"configurePreset": "gcc-test",
 			"description": ""
 		}
 	],
@@ -28,7 +39,7 @@
 		{
 			"inherits":"core-test",
 			"name": "linux-test",
-			"configurePreset": "gcc"
+			"configurePreset": "gcc-test"
 		}
 	]
 }

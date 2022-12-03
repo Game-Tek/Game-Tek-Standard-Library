@@ -5,7 +5,7 @@
 #include "GTSL/File.hpp"
 #include "GTSL/DLL.h"
 #include "GTSL/MappedFile.hpp"
-#include "GTSL/Filesystem.h"
+#include "GTSL/Filesystem.hpp"
 #include "GTSL/Window.hpp"
 #include "GTSL/TTF.hpp"
 #include "GTSL/System.hpp"

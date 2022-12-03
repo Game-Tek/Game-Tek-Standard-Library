@@ -46,35 +46,34 @@ namespace GTSL
 		enum class KeyboardKeys : uint8 {
 			Q, W, E, R, T, Y, U, I, O, P, A, S, D, F, G, H, J, K, L, Z, X, C, V, B, N, M,
 
-			Keyboard0, Keyboard1, Keyboard2, Keyboard3, Keyboard4, Keyboard5, Keyboard6, Keyboard7, Keyboard8, Keyboard9,
+			BACKSPACE,			
+			ENTER,
 
-			Backspace,
-			Enter,
+			DELETE,
 
-			Supr,
+			TAB,
+			CAPS_LOCK,
 
-			Tab,
-			CapsLock,
+			ESCAPE,
 
-			Esc,
+			RIGHT_SHIFT,
+			LEFT_SHIFT,
 
-			RShift,
-			LShift,
+			RIGHT_CONTROL,
+			LEFT_CONTROL,
 
-			RControl,
-			LControl,
+			LEFT_ALT,
+			RIGHT_ALT,
 
-			Alt,
-			AltGr,
+			UP,
+			RIGHT,
+			DOWN,
+			LEFT,
 
-			UpArrow,
-			RightArrow,
-			DownArrow,
-			LeftArrow,
+			SPACE_BAR,
 
-			SpaceBar,
-
-			Numpad0, Numpad1, Numpad2, Numpad3, Numpad4, Numpad5, Numpad6, Numpad7, Numpad8, Numpad9,
+			KEYBOARD_0, KEYBOARD_1, KEYBOARD_2, KEYBOARD_3, KEYBOARD_4, KEYBOARD_5, KEYBOARD_6, KEYBOARD_7, KEYBOARD_8, KEYBOARD_9,
+			NUMPAD_0, NUMPAD_1, NUMPAD_2, NUMPAD_3, NUMPAD_4, NUMPAD_5, NUMPAD_6, NUMPAD_7, NUMPAD_8, NUMPAD_9,
 
 			F1,
 			F2,
@@ -98,7 +97,7 @@ namespace GTSL
 			MINIMIZED, MAXIMIZED, FULLSCREEN
 		};
 
-        		struct JoystickUpdate {
+        struct JoystickUpdate {
 			Gamepad::Side Side;
 			Gamepad::SourceNames Source;
 
@@ -246,6 +245,7 @@ namespace GTSL
 
 				this->framebufferExtent = extent;
 
+				// Allocate keycode translation table (keysyms)
 				keySymbols = xcb_key_symbols_alloc(connection);
 
 				xcb_flush(connection);
@@ -333,51 +333,48 @@ namespace GTSL
 					case XCB_BUTTON_PRESS: {
 						xcb_button_press_event_t *press = (xcb_button_press_event_t *)event;
 
-						MouseButtonEventData mouseButtonEventData;
+						if(press->detail != 4 && press->detail != 5) { // Normal mouse button
+							MouseButtonEventData mouseButtonEventData;
 
-						//TODO: handle scroll wheel
-						mouseButtonEventData.Button = xcb_mouseButtonToMouseButton(press->detail);
+							if(press->response_type & XCB_EVENT_MASK_BUTTON_PRESS) {
+								mouseButtonEventData.State = true;
+							}
 
-						if(press->response_type & XCB_EVENT_MASK_BUTTON_PRESS) {
-							mouseButtonEventData.State = true;
+							if(press->response_type & XCB_EVENT_MASK_BUTTON_RELEASE) {
+								mouseButtonEventData.State = false;
+							}
+
+							mouseButtonEventData.Button = xcb_mouseButtonToMouseButton(press->detail);
+
+							function(userData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+						} else { // Scroll wheel
+							// XCB_BUTTON_PRESS and XCB_BUTTON_RELEASE are sent for each scroll wheel tick so we ignore the release event
+							// and only handle the press event so that we only get one event per scroll wheel tick
+							if(press->response_type & XCB_EVENT_MASK_BUTTON_RELEASE) { break;}
+
+							MouseWheelEventData mouseWheelEventData;
+							
+							if(press->detail == 4) { // Scroll up
+								mouseWheelEventData = 1.f;
+							} else { // Scroll down
+								mouseWheelEventData = -1.f;
+							}
+
+							function(userData, WindowEvents::MOUSE_WHEEL, &mouseWheelEventData);
 						}
 
-						if(press->response_type & XCB_EVENT_MASK_BUTTON_RELEASE) {
-							mouseButtonEventData.State = false;
-						}
-
-						function(userData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
 						break;
 					}
 					case XCB_MOTION_NOTIFY: {
 						xcb_motion_notify_event_t *motion = (xcb_motion_notify_event_t *)event;
 						MouseMoveEventData mouseMoveEventData;
+						if(motion->same_screen) { break; } // If the mouse is not on the same screen as the window, ignore it
 						xcb_calculateMousePos(motion->event_x, motion->event_y, GetWindowExtent(), mouseMoveEventData);
 						function(userData, WindowEvents::MOUSE_MOVE, &mouseMoveEventData);
 						break;
 					}
 					case XCB_KEY_PRESS: {
 						xcb_key_press_event_t *press = (xcb_key_press_event_t *)event;
-
-						//XKeyEvent xKeyEvent;
-//
-						//xKeyEvent.type = KeyPress;
-						//xKeyEvent.serial = press->sequence;
-						//xKeyEvent.send_event = press->response_type & XCB_EVENT_MASK_KEY_PRESS;
-						//xKeyEvent.display = nullptr;
-						//xKeyEvent.window = press->event;
-						//xKeyEvent.root = press->root;
-						//xKeyEvent.subwindow = press->child;
-						//xKeyEvent.time = press->time;
-						//xKeyEvent.x = press->event_x;
-						//xKeyEvent.y = press->event_y;
-						//xKeyEvent.x_root = press->root_x;
-						//xKeyEvent.y_root = press->root_y;
-						//xKeyEvent.state = press->state;
-						//xKeyEvent.keycode = press->detail;
-						//xKeyEvent.same_screen = press->same_screen;
-//
-						//auto keySim = XKeycodeToKeysym(xKeyEvent.display, xKeyEvent.keycode, 0);
 
 						xcb_keysym_t keySym = xcb_key_symbols_get_keysym(keySymbols, press->detail, 0);
 
@@ -400,7 +397,7 @@ namespace GTSL
 					case XCB_CLIENT_MESSAGE: {
 						clientMessage = (xcb_client_message_event_t *)event;
 
-						if (clientMessage->data.data32[0] == wmDeleteWin) {
+						if (clientMessage->data.data32[0] == wmDeleteWin) { // If atom in clientMessage is the wmDeleteWin atom, the close button was pressed
 							function(userData, WindowEvents::CLOSE, nullptr);
 						}
 
@@ -1276,63 +1273,63 @@ namespace GTSL
 			input.ki.wScan = 0;
 
 			switch (key) {
-			case KeyboardKeys::Q: break; case KeyboardKeys::W: break;
-			case KeyboardKeys::E: break; case KeyboardKeys::R: break;
-			case KeyboardKeys::T: break; case KeyboardKeys::Y: break;
-			case KeyboardKeys::U: break; case KeyboardKeys::I: break;
-			case KeyboardKeys::O: break; case KeyboardKeys::P: break;
-			case KeyboardKeys::A: input.ki.wVk = 0x41; break; case KeyboardKeys::S: break;
-			case KeyboardKeys::D: break; case KeyboardKeys::F: break;
-			case KeyboardKeys::G: break; case KeyboardKeys::H: break;
-			case KeyboardKeys::J: break; case KeyboardKeys::K: break;
-			case KeyboardKeys::L: break; case KeyboardKeys::Z: break;
-			case KeyboardKeys::X: break; case KeyboardKeys::C: break;
-			case KeyboardKeys::V: break; case KeyboardKeys::B: break;
-			case KeyboardKeys::N: break; case KeyboardKeys::M: break;
-			case KeyboardKeys::Keyboard0: break; case KeyboardKeys::Keyboard1: break;
-			case KeyboardKeys::Keyboard2: break; case KeyboardKeys::Keyboard3: break;
-			case KeyboardKeys::Keyboard4: break; case KeyboardKeys::Keyboard5: break;
-			case KeyboardKeys::Keyboard6: break; case KeyboardKeys::Keyboard7: break;
-			case KeyboardKeys::Keyboard8: break; case KeyboardKeys::Keyboard9: break;
-			case KeyboardKeys::Backspace: break;
-			case KeyboardKeys::Enter: break;
-			case KeyboardKeys::Supr: break;
-			case KeyboardKeys::Tab: break;
-			case KeyboardKeys::CapsLock: break;
-			case KeyboardKeys::Esc: break;
-			case KeyboardKeys::RShift: break;
-			case KeyboardKeys::LShift: break;
-			case KeyboardKeys::RControl: break;
-			case KeyboardKeys::LControl: break;
-			case KeyboardKeys::Alt: break;
-			case KeyboardKeys::AltGr: break;
-			case KeyboardKeys::UpArrow: break;
-			case KeyboardKeys::RightArrow: break;
-			case KeyboardKeys::DownArrow: break;
-			case KeyboardKeys::LeftArrow: break;
-			case KeyboardKeys::SpaceBar: break;
-			case KeyboardKeys::Numpad0: break;
-			case KeyboardKeys::Numpad1: break;
-			case KeyboardKeys::Numpad2: break;
-			case KeyboardKeys::Numpad3: break;
-			case KeyboardKeys::Numpad4: break;
-			case KeyboardKeys::Numpad5: break;
-			case KeyboardKeys::Numpad6: break;
-			case KeyboardKeys::Numpad7: break;
-			case KeyboardKeys::Numpad8: break;
-			case KeyboardKeys::Numpad9: break;
-			case KeyboardKeys::F1: break;
-			case KeyboardKeys::F2: break;
-			case KeyboardKeys::F3: break;
-			case KeyboardKeys::F4: break;
-			case KeyboardKeys::F5: break;
-			case KeyboardKeys::F6: break;
-			case KeyboardKeys::F7: break;
-			case KeyboardKeys::F8: break;
-			case KeyboardKeys::F9: break;
-			case KeyboardKeys::F10: break;
-			case KeyboardKeys::F11: break;
-			case KeyboardKeys::F12: break;
+				case KeyboardKeys::Q: break; case KeyboardKeys::W: break;
+				case KeyboardKeys::E: break; case KeyboardKeys::R: break;
+				case KeyboardKeys::T: break; case KeyboardKeys::Y: break;
+				case KeyboardKeys::U: break; case KeyboardKeys::I: break;
+				case KeyboardKeys::O: break; case KeyboardKeys::P: break;
+				case KeyboardKeys::A: input.ki.wVk = 0x41; break; case KeyboardKeys::S: break;
+				case KeyboardKeys::D: break; case KeyboardKeys::F: break;
+				case KeyboardKeys::G: break; case KeyboardKeys::H: break;
+				case KeyboardKeys::J: break; case KeyboardKeys::K: break;
+				case KeyboardKeys::L: break; case KeyboardKeys::Z: break;
+				case KeyboardKeys::X: break; case KeyboardKeys::C: break;
+				case KeyboardKeys::V: break; case KeyboardKeys::B: break;
+				case KeyboardKeys::N: break; case KeyboardKeys::M: break;
+				case KeyboardKeys::KEYBOARD_0: break; case KeyboardKeys::KEYBOARD_1: break;
+				case KeyboardKeys::KEYBOARD_2: break; case KeyboardKeys::KEYBOARD_3: break;
+				case KeyboardKeys::KEYBOARD_4: break; case KeyboardKeys::KEYBOARD_5: break;
+				case KeyboardKeys::KEYBOARD_6: break; case KeyboardKeys::KEYBOARD_7: break;
+				case KeyboardKeys::KEYBOARD_8: break; case KeyboardKeys::KEYBOARD_9: break;
+				case KeyboardKeys::BACKSPACE: break;
+				case KeyboardKeys::ENTER: break;
+				case KeyboardKeys::DELETE: break;
+				case KeyboardKeys::TAB: break;
+				case KeyboardKeys::CAPS_LOCK: break;
+				case KeyboardKeys::ESCAPE: break;
+				case KeyboardKeys::RIGHT_SHIFT: break;
+				case KeyboardKeys::LEFT_SHIFT: break;
+				case KeyboardKeys::RIGHT_CONTROL: break;
+				case KeyboardKeys::LEFT_CONTROL: break;
+				case KeyboardKeys::LEFT_ALT: break;
+				case KeyboardKeys::RIGHT_ALT: break;
+				case KeyboardKeys::UP: break;
+				case KeyboardKeys::RIGHT: break;
+				case KeyboardKeys::DOWN: break;
+				case KeyboardKeys::LEFT: break;
+				case KeyboardKeys::SPACE_BAR: break;
+				case KeyboardKeys::NUMPAD_0: break;
+				case KeyboardKeys::NUMPAD_1: break;
+				case KeyboardKeys::NUMPAD_2: break;
+				case KeyboardKeys::NUMPAD_3: break;
+				case KeyboardKeys::NUMPAD_4: break;
+				case KeyboardKeys::NUMPAD_5: break;
+				case KeyboardKeys::NUMPAD_6: break;
+				case KeyboardKeys::NUMPAD_7: break;
+				case KeyboardKeys::NUMPAD_8: break;
+				case KeyboardKeys::NUMPAD_9: break;
+				case KeyboardKeys::F1: break;
+				case KeyboardKeys::F2: break;
+				case KeyboardKeys::F3: break;
+				case KeyboardKeys::F4: break;
+				case KeyboardKeys::F5: break;
+				case KeyboardKeys::F6: break;
+				case KeyboardKeys::F7: break;
+				case KeyboardKeys::F8: break;
+				case KeyboardKeys::F9: break;
+				case KeyboardKeys::F10: break;
+				case KeyboardKeys::F11: break;
+				case KeyboardKeys::F12: break;
 			}
 
 			SendInput(1, &input, sizeof(INPUT));
@@ -1346,88 +1343,92 @@ namespace GTSL
 		
 		static void Win32_translateKeys(uint64 win32Key, uint64 context, KeyboardKeys& key) {
 			switch (win32Key) {
-			case VK_BACK:     key = KeyboardKeys::Backspace; return;
-			case VK_TAB:      key = KeyboardKeys::Tab; return;
-			case VK_RETURN:   key = KeyboardKeys::Enter; return;
-			case VK_LSHIFT:   key = KeyboardKeys::LShift; return;
-			case VK_RSHIFT:   key = KeyboardKeys::RShift; return;
-			case VK_LCONTROL: key = KeyboardKeys::LControl; return;
-			case VK_RCONTROL: key = KeyboardKeys::RControl; return;
-			case VK_LMENU:    key = KeyboardKeys::Alt; return;
-			case VK_RMENU:    key = KeyboardKeys::AltGr; return;
-			case VK_CAPITAL:  key = KeyboardKeys::CapsLock; return;
-			case VK_UP:       key = KeyboardKeys::UpArrow; return;
-			case VK_LEFT:     key = KeyboardKeys::LeftArrow; return;
-			case VK_DOWN:     key = KeyboardKeys::DownArrow; return;
-			case VK_RIGHT:    key = KeyboardKeys::RightArrow; return;
-			case VK_SPACE:    key = KeyboardKeys::SpaceBar; return;
-			case 0x30:        key = KeyboardKeys::Keyboard0; return;
-			case 0x31:        key = KeyboardKeys::Keyboard1; return;
-			case 0x32:        key = KeyboardKeys::Keyboard2; return;
-			case 0x33:        key = KeyboardKeys::Keyboard3; return;
-			case 0x34:        key = KeyboardKeys::Keyboard4; return;
-			case 0x35:        key = KeyboardKeys::Keyboard5; return;
-			case 0x36:        key = KeyboardKeys::Keyboard6; return;
-			case 0x37:        key = KeyboardKeys::Keyboard7; return;
-			case 0x38:        key = KeyboardKeys::Keyboard8; return;
-			case 0x39:        key = KeyboardKeys::Keyboard9; return;
-			case 0x41:        key = KeyboardKeys::A; return;
-			case 0x42:        key = KeyboardKeys::B; return;
-			case 0x43:        key = KeyboardKeys::C; return;
-			case 0x44:        key = KeyboardKeys::D; return;
-			case 0x45:        key = KeyboardKeys::E; return;
-			case 0x46:        key = KeyboardKeys::F; return;
-			case 0x47:        key = KeyboardKeys::G; return;
-			case 0x48:        key = KeyboardKeys::H; return;
-			case 0x49:        key = KeyboardKeys::I; return;
-			case 0x4A:        key = KeyboardKeys::J; return;
-			case 0x4B:        key = KeyboardKeys::K; return;
-			case 0x4C:        key = KeyboardKeys::L; return;
-			case 0x4D:        key = KeyboardKeys::M; return;
-			case 0x4E:        key = KeyboardKeys::N; return;
-			case 0x4F:        key = KeyboardKeys::O; return;
-			case 0x50:        key = KeyboardKeys::P; return;
-			case 0x51:        key = KeyboardKeys::Q; return;
-			case 0x52:        key = KeyboardKeys::R; return;
-			case 0x53:        key = KeyboardKeys::S; return;
-			case 0x54:        key = KeyboardKeys::T; return;
-			case 0x55:        key = KeyboardKeys::U; return;
-			case 0x56:        key = KeyboardKeys::V; return;
-			case 0x57:        key = KeyboardKeys::W; return;
-			case 0x58:        key = KeyboardKeys::X; return;
-			case 0x59:        key = KeyboardKeys::Y; return;
-			case 0x5A:        key = KeyboardKeys::Z; return;
-			case VK_F1:       key = KeyboardKeys::F1; return;
-			case VK_F2:       key = KeyboardKeys::F2; return;
-			case VK_F3:       key = KeyboardKeys::F3; return;
-			case VK_F4:       key = KeyboardKeys::F4; return;
-			case VK_F5:       key = KeyboardKeys::F5; return;
-			case VK_F6:       key = KeyboardKeys::F6; return;
-			case VK_F7:       key = KeyboardKeys::F7; return;
-			case VK_F8:       key = KeyboardKeys::F8; return;
-			case VK_F9:       key = KeyboardKeys::F9; return;
-			case VK_F10:      key = KeyboardKeys::F10; return;
-			case VK_F11:      key = KeyboardKeys::F11; return;
-			case VK_F12:      key = KeyboardKeys::F12; return;
-			case VK_NUMPAD0:  key = KeyboardKeys::Numpad0; return;
-			case VK_NUMPAD1:  key = KeyboardKeys::Numpad1; return;
-			case VK_NUMPAD2:  key = KeyboardKeys::Numpad2; return;
-			case VK_NUMPAD3:  key = KeyboardKeys::Numpad3; return;
-			case VK_NUMPAD4:  key = KeyboardKeys::Numpad4; return;
-			case VK_NUMPAD5:  key = KeyboardKeys::Numpad5; return;
-			case VK_NUMPAD6:  key = KeyboardKeys::Numpad6; return;
-			case VK_NUMPAD7:  key = KeyboardKeys::Numpad7; return;
-			case VK_NUMPAD8:  key = KeyboardKeys::Numpad8; return;
-			case VK_NUMPAD9:  key = KeyboardKeys::Numpad9; return;
-			case VK_ESCAPE:   key = KeyboardKeys::Esc; return;
-			default: return;
+				case VK_BACK:     key = KeyboardKeys::BACKSPACE; return;
+				case VK_TAB:      key = KeyboardKeys::TAB; return;
+				case VK_RETURN:   key = KeyboardKeys::ENTER; return;
+				case VK_LSHIFT:   key = KeyboardKeys::LEFT_SHIFT; return;
+				case VK_RSHIFT:   key = KeyboardKeys::RIGHT_SHIFT; return;
+				case VK_LCONTROL: key = KeyboardKeys::LEFT_CONTROL; return;
+				case VK_RCONTROL: key = KeyboardKeys::RIGHT_CONTROL; return;
+				case VK_LMENU:    key = KeyboardKeys::LEFT_ALT; return;
+				case VK_RMENU:    key = KeyboardKeys::RIGHT_ALT; return;
+				case VK_CAPITAL:  key = KeyboardKeys::CAPS_LOCK; return;
+				case VK_UP:       key = KeyboardKeys::UP; return;
+				case VK_LEFT:     key = KeyboardKeys::LEFT; return;
+				case VK_DOWN:     key = KeyboardKeys::DOWN; return;
+				case VK_RIGHT:    key = KeyboardKeys::RIGHT; return;
+				case VK_SPACE:    key = KeyboardKeys::SPACE_BAR; return;
+				case 0x30:        key = KeyboardKeys::KEYBOARD_0; return;
+				case 0x31:        key = KeyboardKeys::KEYBOARD_1; return;
+				case 0x32:        key = KeyboardKeys::KEYBOARD_2; return;
+				case 0x33:        key = KeyboardKeys::KEYBOARD_3; return;
+				case 0x34:        key = KeyboardKeys::KEYBOARD_4; return;
+				case 0x35:        key = KeyboardKeys::KEYBOARD_5; return;
+				case 0x36:        key = KeyboardKeys::KEYBOARD_6; return;
+				case 0x37:        key = KeyboardKeys::KEYBOARD_7; return;
+				case 0x38:        key = KeyboardKeys::KEYBOARD_8; return;
+				case 0x39:        key = KeyboardKeys::KEYBOARD_9; return;
+				case 0x41:        key = KeyboardKeys::A; return;
+				case 0x42:        key = KeyboardKeys::B; return;
+				case 0x43:        key = KeyboardKeys::C; return;
+				case 0x44:        key = KeyboardKeys::D; return;
+				case 0x45:        key = KeyboardKeys::E; return;
+				case 0x46:        key = KeyboardKeys::F; return;
+				case 0x47:        key = KeyboardKeys::G; return;
+				case 0x48:        key = KeyboardKeys::H; return;
+				case 0x49:        key = KeyboardKeys::I; return;
+				case 0x4A:        key = KeyboardKeys::J; return;
+				case 0x4B:        key = KeyboardKeys::K; return;
+				case 0x4C:        key = KeyboardKeys::L; return;
+				case 0x4D:        key = KeyboardKeys::M; return;
+				case 0x4E:        key = KeyboardKeys::N; return;
+				case 0x4F:        key = KeyboardKeys::O; return;
+				case 0x50:        key = KeyboardKeys::P; return;
+				case 0x51:        key = KeyboardKeys::Q; return;
+				case 0x52:        key = KeyboardKeys::R; return;
+				case 0x53:        key = KeyboardKeys::S; return;
+				case 0x54:        key = KeyboardKeys::T; return;
+				case 0x55:        key = KeyboardKeys::U; return;
+				case 0x56:        key = KeyboardKeys::V; return;
+				case 0x57:        key = KeyboardKeys::W; return;
+				case 0x58:        key = KeyboardKeys::X; return;
+				case 0x59:        key = KeyboardKeys::Y; return;
+				case 0x5A:        key = KeyboardKeys::Z; return;
+				case VK_F1:       key = KeyboardKeys::F1; return;
+				case VK_F2:       key = KeyboardKeys::F2; return;
+				case VK_F3:       key = KeyboardKeys::F3; return;
+				case VK_F4:       key = KeyboardKeys::F4; return;
+				case VK_F5:       key = KeyboardKeys::F5; return;
+				case VK_F6:       key = KeyboardKeys::F6; return;
+				case VK_F7:       key = KeyboardKeys::F7; return;
+				case VK_F8:       key = KeyboardKeys::F8; return;
+				case VK_F9:       key = KeyboardKeys::F9; return;
+				case VK_F10:      key = KeyboardKeys::F10; return;
+				case VK_F11:      key = KeyboardKeys::F11; return;
+				case VK_F12:      key = KeyboardKeys::F12; return;
+				case VK_NUMPAD0:  key = KeyboardKeys::NUMPAD_0; return;
+				case VK_NUMPAD1:  key = KeyboardKeys::NUMPAD_1; return;
+				case VK_NUMPAD2:  key = KeyboardKeys::NUMPAD_2; return;
+				case VK_NUMPAD3:  key = KeyboardKeys::NUMPAD_3; return;
+				case VK_NUMPAD4:  key = KeyboardKeys::NUMPAD_4; return;
+				case VK_NUMPAD5:  key = KeyboardKeys::NUMPAD_5; return;
+				case VK_NUMPAD6:  key = KeyboardKeys::NUMPAD_6; return;
+				case VK_NUMPAD7:  key = KeyboardKeys::NUMPAD_7; return;
+				case VK_NUMPAD8:  key = KeyboardKeys::NUMPAD_8; return;
+				case VK_NUMPAD9:  key = KeyboardKeys::NUMPAD_9; return;
+				case VK_ESCAPE:   key = KeyboardKeys::ESCAPE; return;
+				default: return;
 			}
 		}
 #elif __linux__
+		// Returns normalized mouse position for XCB.
+		// GTSL mouse coordinates are in the range of [-1, 1].
+		// XCB mouse coordinates are in the range of [0, width] and [0, height] with (0, 0) being the top left corner.
 		static void xcb_calculateMousePos(uint32 x, uint32 y, Extent2D clientSize, Vector2& mousePos) {
-			const auto halfX = static_cast<float>(clientSize.Width) * 0.5f;
-			const auto halfY = static_cast<float>(clientSize.Height) * 0.5f;
-			mousePos.X() = (x - halfX) / halfX; mousePos.Y() = (halfY - y) / halfY;
+			mousePos.X() = (float)x / (float)clientSize.Width;
+			mousePos.Y() = (float)y / (float)clientSize.Height;
+			mousePos.X() *= 2.0f; mousePos.X() -= 1.0f;
+			mousePos.Y() *= 2.0f; mousePos.Y() -= 1.0f;
 		}
 
 		static MouseButton xcb_mouseButtonToMouseButton(xcb_button_t button) {
@@ -1444,93 +1445,121 @@ namespace GTSL
 		}
 
 		static KeyboardKeys xcb_keysimToKey(xcb_keysym_t keysym) {
-			KeyboardKeys key = KeyboardKeys::LControl; // Choose CTRL as default, because it's the least likely to be used and least likely to cause bugs
+			KeyboardKeys key = KeyboardKeys::LEFT_CONTROL; // Choose CTRL as default, because it's the least likely to be used and least likely to cause bugs
 
 			switch (keysym) {
-			case XK_A: key = KeyboardKeys::A; break;
-			case XK_B: key = KeyboardKeys::B; break;
-			case XK_C: key = KeyboardKeys::C; break;
-			case XK_D: key = KeyboardKeys::D; break;
-			case XK_E: key = KeyboardKeys::E; break;
-			case XK_F: key = KeyboardKeys::F; break;
-			case XK_G: key = KeyboardKeys::G; break;
-			case XK_H: key = KeyboardKeys::H; break;
-			case XK_I: key = KeyboardKeys::I; break;
-			case XK_J: key = KeyboardKeys::J; break;
-			case XK_K: key = KeyboardKeys::K; break;
-			case XK_L: key = KeyboardKeys::L; break;
-			case XK_M: key = KeyboardKeys::M; break;
-			case XK_N: key = KeyboardKeys::N; break;
-			case XK_O: key = KeyboardKeys::O; break;
-			case XK_P: key = KeyboardKeys::P; break;
-			case XK_Q: key = KeyboardKeys::Q; break;
-			case XK_R: key = KeyboardKeys::R; break;
-			case XK_S: key = KeyboardKeys::S; break;
-			case XK_T: key = KeyboardKeys::T; break;
-			case XK_U: key = KeyboardKeys::U; break;
-			case XK_V: key = KeyboardKeys::V; break;
-			case XK_W: key = KeyboardKeys::W; break;
-			case XK_X: key = KeyboardKeys::X; break;
-			case XK_Y: key = KeyboardKeys::Y; break;
-			case XK_Z: key = KeyboardKeys::Z; break;
-			case XK_0: key = KeyboardKeys::Keyboard0; break;
-			case XK_1: key = KeyboardKeys::Keyboard1; break;
-			case XK_2: key = KeyboardKeys::Keyboard2; break;
-			case XK_3: key = KeyboardKeys::Keyboard3; break;
-			case XK_4: key = KeyboardKeys::Keyboard4; break;
-			case XK_5: key = KeyboardKeys::Keyboard5; break;
-			case XK_6: key = KeyboardKeys::Keyboard6; break;
-			case XK_7: key = KeyboardKeys::Keyboard7; break;
-			case XK_8: key = KeyboardKeys::Keyboard8; break;
-			case XK_9: key = KeyboardKeys::Keyboard9; break;
-			case XK_Escape: key = KeyboardKeys::Esc; break;
-			case XK_F1: key = KeyboardKeys::F1; break;
-			case XK_F2: key = KeyboardKeys::F2; break;
-			case XK_F3: key = KeyboardKeys::F3; break;
-			case XK_F4: key = KeyboardKeys::F4; break;
-			case XK_F5: key = KeyboardKeys::F5; break;
-			case XK_F6: key = KeyboardKeys::F6; break;
-			case XK_F7: key = KeyboardKeys::F7; break;
-			case XK_F8: key = KeyboardKeys::F8; break;
-			case XK_F9: key = KeyboardKeys::F9; break;
-			case XK_F10: key = KeyboardKeys::F10; break;
-			case XK_F11: key = KeyboardKeys::F11; break;
-			case XK_F12: key = KeyboardKeys::F12; break;
+				case XK_A: key = KeyboardKeys::A; break;
+				case XK_B: key = KeyboardKeys::B; break;
+				case XK_C: key = KeyboardKeys::C; break;
+				case XK_D: key = KeyboardKeys::D; break;
+				case XK_E: key = KeyboardKeys::E; break;
+				case XK_F: key = KeyboardKeys::F; break;
+				case XK_G: key = KeyboardKeys::G; break;
+				case XK_H: key = KeyboardKeys::H; break;
+				case XK_I: key = KeyboardKeys::I; break;
+				case XK_J: key = KeyboardKeys::J; break;
+				case XK_K: key = KeyboardKeys::K; break;
+				case XK_L: key = KeyboardKeys::L; break;
+				case XK_M: key = KeyboardKeys::M; break;
+				case XK_N: key = KeyboardKeys::N; break;
+				case XK_O: key = KeyboardKeys::O; break;
+				case XK_P: key = KeyboardKeys::P; break;
+				case XK_Q: key = KeyboardKeys::Q; break;
+				case XK_R: key = KeyboardKeys::R; break;
+				case XK_S: key = KeyboardKeys::S; break;
+				case XK_T: key = KeyboardKeys::T; break;
+				case XK_U: key = KeyboardKeys::U; break;
+				case XK_V: key = KeyboardKeys::V; break;
+				case XK_W: key = KeyboardKeys::W; break;
+				case XK_X: key = KeyboardKeys::X; break;
+				case XK_Y: key = KeyboardKeys::Y; break;
+				case XK_Z: key = KeyboardKeys::Z; break;
 
-			case XK_Left: key = KeyboardKeys::LeftArrow; break;
-			case XK_Right: key = KeyboardKeys::RightArrow; break;
-			case XK_Up: key = KeyboardKeys::UpArrow; break;
-			case XK_Down: key = KeyboardKeys::DownArrow; break;
+				case XK_a: key = KeyboardKeys::A; break;
+				case XK_b: key = KeyboardKeys::B; break;
+				case XK_c: key = KeyboardKeys::C; break;
+				case XK_d: key = KeyboardKeys::D; break;
+				case XK_e: key = KeyboardKeys::E; break;
+				case XK_f: key = KeyboardKeys::F; break;
+				case XK_g: key = KeyboardKeys::G; break;
+				case XK_h: key = KeyboardKeys::H; break;
+				case XK_i: key = KeyboardKeys::I; break;
+				case XK_j: key = KeyboardKeys::J; break;
+				case XK_k: key = KeyboardKeys::K; break;
+				case XK_l: key = KeyboardKeys::L; break;
+				case XK_m: key = KeyboardKeys::M; break;
+				case XK_n: key = KeyboardKeys::N; break;
+				case XK_o: key = KeyboardKeys::O; break;
+				case XK_p: key = KeyboardKeys::P; break;
+				case XK_q: key = KeyboardKeys::Q; break;
+				case XK_r: key = KeyboardKeys::R; break;
+				case XK_s: key = KeyboardKeys::S; break;
+				case XK_t: key = KeyboardKeys::T; break;
+				case XK_u: key = KeyboardKeys::U; break;
+				case XK_v: key = KeyboardKeys::V; break;
+				case XK_w: key = KeyboardKeys::W; break;
+				case XK_x: key = KeyboardKeys::X; break;
+				case XK_y: key = KeyboardKeys::Y; break;
+				case XK_z: key = KeyboardKeys::Z; break;
 
-			case XK_Shift_L: key = KeyboardKeys::LShift; break;
-			case XK_Shift_R: key = KeyboardKeys::RShift; break;
+				case XK_0: key = KeyboardKeys::KEYBOARD_0; break;
+				case XK_1: key = KeyboardKeys::KEYBOARD_1; break;
+				case XK_2: key = KeyboardKeys::KEYBOARD_2; break;
+				case XK_3: key = KeyboardKeys::KEYBOARD_3; break;
+				case XK_4: key = KeyboardKeys::KEYBOARD_4; break;
+				case XK_5: key = KeyboardKeys::KEYBOARD_5; break;
+				case XK_6: key = KeyboardKeys::KEYBOARD_6; break;
+				case XK_7: key = KeyboardKeys::KEYBOARD_7; break;
+				case XK_8: key = KeyboardKeys::KEYBOARD_8; break;
+				case XK_9: key = KeyboardKeys::KEYBOARD_9; break;
+				case XK_Escape: key = KeyboardKeys::ESCAPE; break;
+				case XK_F1: key = KeyboardKeys::F1; break;
+				case XK_F2: key = KeyboardKeys::F2; break;
+				case XK_F3: key = KeyboardKeys::F3; break;
+				case XK_F4: key = KeyboardKeys::F4; break;
+				case XK_F5: key = KeyboardKeys::F5; break;
+				case XK_F6: key = KeyboardKeys::F6; break;
+				case XK_F7: key = KeyboardKeys::F7; break;
+				case XK_F8: key = KeyboardKeys::F8; break;
+				case XK_F9: key = KeyboardKeys::F9; break;
+				case XK_F10: key = KeyboardKeys::F10; break;
+				case XK_F11: key = KeyboardKeys::F11; break;
+				case XK_F12: key = KeyboardKeys::F12; break;
 
-			case XK_Control_L: key = KeyboardKeys::LControl; break;
-			case XK_Control_R: key = KeyboardKeys::RControl; break;
+				case XK_Left: key = KeyboardKeys::LEFT; break;
+				case XK_Right: key = KeyboardKeys::RIGHT; break;
+				case XK_Up: key = KeyboardKeys::UP; break;
+				case XK_Down: key = KeyboardKeys::DOWN; break;
 
-			case XK_Alt_L: key = KeyboardKeys::Alt; break;
-			case XK_Alt_R: key = KeyboardKeys::AltGr; break;
+				case XK_Shift_L: key = KeyboardKeys::LEFT_SHIFT; break;
+				case XK_Shift_R: key = KeyboardKeys::RIGHT_SHIFT; break;
 
-			case XK_Return: key = KeyboardKeys::Enter; break;
-			case XK_BackSpace: key = KeyboardKeys::Backspace; break;
-			case XK_Tab: key = KeyboardKeys::Tab; break;
-			case XK_space: key = KeyboardKeys::SpaceBar; break;
-			case XK_Caps_Lock: key = KeyboardKeys::CapsLock; break;
-			//case XK_asciitilde: key = KeyboardKeys::T; break;
-			//case XK_minus: key = KeyboardKeys::Minus; break;
-			//case XK_plus: key = KeyboardKeys::Plus; break;
-			//case XK_bracketleft: key = KeyboardKeys::LBracket; break;
-			//case XK_bracketright: key = KeyboardKeys::RBracket; break;
-			//case XK_semicolon: key = KeyboardKeys::Semicolon; break;
-			//case XK_comma: key = KeyboardKeys::Comma; break;
-			//case XK_period: key = KeyboardKeys::Period; break;
-			//case XK_slash: key = KeyboardKeys::Slash; break;
-			//case XK_backslash: key = KeyboardKeys::Backslash; break;
-			//case XK_apostrophe: key = KeyboardKeys::Quote; break;
-			//case XK_equal: key = KeyboardKeys::Equal; break;
-			//case XK_Num_Lock: key = KeyboardKeys::NumLock; break;
-			
-			default: break;
+				case XK_Control_L: key = KeyboardKeys::LEFT_CONTROL; break;
+				case XK_Control_R: key = KeyboardKeys::RIGHT_CONTROL; break;
+
+				case XK_Alt_L: key = KeyboardKeys::LEFT_ALT; break;
+				case XK_Alt_R: key = KeyboardKeys::RIGHT_ALT; break;
+
+				case XK_Return: key = KeyboardKeys::ENTER; break;
+				case XK_BackSpace: key = KeyboardKeys::BACKSPACE; break;
+				case XK_Tab: key = KeyboardKeys::TAB; break;
+				case XK_space: key = KeyboardKeys::SPACE_BAR; break;
+				case XK_Caps_Lock: key = KeyboardKeys::CAPS_LOCK; break;
+				//case XK_asciitilde: key = KeyboardKeys::T; break;
+				//case XK_minus: key = KeyboardKeys::Minus; break;
+				//case XK_plus: key = KeyboardKeys::Plus; break;
+				//case XK_bracketleft: key = KeyboardKeys::LBracket; break;
+				//case XK_bracketright: key = KeyboardKeys::RBracket; break;
+				//case XK_semicolon: key = KeyboardKeys::Semicolon; break;
+				//case XK_comma: key = KeyboardKeys::Comma; break;
+				//case XK_period: key = KeyboardKeys::Period; break;
+				//case XK_slash: key = KeyboardKeys::Slash; break;
+				//case XK_backslash: key = KeyboardKeys::Backslash; break;
+				//case XK_apostrophe: key = KeyboardKeys::Quote; break;
+				//case XK_equal: key = KeyboardKeys::Equal; break;
+				//case XK_Num_Lock: key = KeyboardKeys::NumLock; break;
+				
+				default: break;
 			}
 
 			return key;
