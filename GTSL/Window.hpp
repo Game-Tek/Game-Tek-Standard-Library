@@ -39,7 +39,7 @@ namespace GTSL
             WAYLAND
         };
 
-		enum class MouseButton : uint8 {
+		enum class MouseButtons : uint8 {
 			LEFT_BUTTON, RIGHT_BUTTON, MIDDLE_BUTTON
 		};
 
@@ -89,68 +89,71 @@ namespace GTSL
 			F12
 		};
 
-		enum class WindowType : uint8 {
+		enum class WindowTypes : uint8 {
 			OS_WINDOW, NO_ELEMENTS
 		};
 
-		enum class WindowSizeState : uint8 {
+		enum class WindowSizeStates : uint8 {
 			MINIMIZED, MAXIMIZED, FULLSCREEN
 		};
 
         struct JoystickUpdate {
-			Gamepad::Side Side;
-			Gamepad::SourceNames Source;
+			Gamepad::Side side;
+			Gamepad::SourceNames source;
 
 			union {
-				Vector2 Vector;
-				float32 Linear;
-				bool Action;
+				Vector2 vector;
+				float32 scalar;
+				bool action;
 			};
 		};
 
-		enum class WindowEvents {
+		enum class WindowEvents : uint8 {
 			CLOSE, KEYBOARD_KEY, CHAR, SIZE, MOVING, MOUSE_MOVE, MOUSE_WHEEL,
 			MOUSE_BUTTON, FOCUS, JOYSTICK_UPDATE, DEVICE_CHANGE, PPI_CHANGE
 		};
 
-		struct MouseButtonEventData {
-			MouseButton Button; bool State;
+		struct MouseButtonEvent {
+			MouseButtons button; bool state = false;
 		};
 
-		struct KeyboardKeyEventData {
-			KeyboardKeys Key; bool State; bool IsFirstTime;
+		struct KeyboardKeyEvent {
+			KeyboardKeys key; bool state = false; bool isFirstTime = true;
 		};
 
 		using CharEventData = uint32;
 
-		struct WindowMoveEventData {
+		struct WindowMoveEvent {
 			uint16 X, Y;
 		};
 
 		/**
-		 * \brief Delegate called when mouse moves, the first two floats are the X;Y in the -1 <-> 1 range, and the other two floats are delta position in the same range in respect to the last update to the screen.
+		 * \brief The first two floats are the X;Y in the -1 <-> 1 range, and the other two floats are delta position in the same range in respect to the last update to the screen.
 		 */
-		using MouseMoveEventData = Vector2;
-		using WindowSizeEventData = Extent2D;
-		using MouseWheelEventData = float32;
-
-		struct FocusEventData {
-			bool Focus, HadFocus;
+		struct MouseMoveEvent {
+			Vector2 absolutePosition, deltaPosition;
 		};
 
-		struct PPIChangeData {
+		using WindowSizeEvent = Extent2D;
+		using MouseWheelEvent = float32;
+
+		struct FocusEvent {
+			bool hasFocus = false, hadFocus = false;
+		};
+
+		struct PPIChange {
 			uint32 PPI = 0;
 		};
 
-		struct WindowsCallData {
+		struct WindowsCall {
 			void* UserData;
 			Delegate<void(void*, WindowEvents, void*)> FunctionToCall;
 			Window* WindowPointer;
 			bool hadResize = false;
-			MouseMoveEventData MouseMove;
+			MouseMoveEvent MouseMove;
 		};
 
-		struct DeviceChangeData {
+		struct DeviceChange {
 			bool isController = false;
 		};
 		
@@ -160,7 +163,7 @@ namespace GTSL
 		Window() : windowAPI(API::XCB), connection(nullptr), window(0), screen(nullptr) {}
 #endif
 		
-		void BindToOS(StringView id_name, StringView display_name, API api, Extent2D extent, void* userData, Delegate<void(void*, WindowEvents, void*)> function, const Window* parentWindow, WindowType type = WindowType::OS_WINDOW) {
+		void BindToOS(StringView id_name, StringView display_name, API api, Extent2D extent, void* userData, Delegate<void(void*, WindowEvents, void*)> function, const Window* parentWindow, WindowTypes type = WindowTypes::OS_WINDOW) {
 			windowAPI = api; // Set the API to use.
 #if (_WIN64)
 			char nullTerminatedIdName[512], nullTerminatedDisplayName[512];
@@ -186,11 +189,11 @@ namespace GTSL
 
 			uint32 style = 0;
 			switch (type) {
-			case WindowType::OS_WINDOW: style = WS_OVERLAPPEDWINDOW; break;
-			case WindowType::NO_ELEMENTS: style = WS_POPUP; break;
+			case WindowTypes::OS_WINDOW: style = WS_OVERLAPPEDWINDOW; break;
+			case WindowTypes::NO_ELEMENTS: style = WS_POPUP; break;
 			}
 
-			WindowsCallData windowsCallData;
+			WindowsCall windowsCallData;
 			windowsCallData.UserData = userData;
 			windowsCallData.WindowPointer = this;
 			windowsCallData.FunctionToCall = function;
@@ -228,7 +231,10 @@ namespace GTSL
 
 				uint32 eventMask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
 
-				uint32 valueList[] = { screen->black_pixel, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_ENTER_WINDOW | XCB_EVENT_MASK_LEAVE_WINDOW | XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_RESIZE_REDIRECT };
+				uint32 valueList[] = { 
+					screen->black_pixel,
+					XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_ENTER_WINDOW | XCB_EVENT_MASK_LEAVE_WINDOW | XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_RESIZE_REDIRECT | XCB_EVENT_MASK_STRUCTURE_NOTIFY
+				};
 
 				xcb_create_window(connection, XCB_COPY_FROM_PARENT, window, screen->root, 0, 0, extent.Width, extent.Height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, eventMask, valueList);
 
@@ -282,13 +288,13 @@ namespace GTSL
 #endif
 		}
 
-		void Update(void* userData, Delegate<void(void*, WindowEvents, void*)> function) {
+		void Update(void* userData, Delegate<void(Window*, void*, WindowEvents, void*)> function) {
 #if (_WIN64)
-			WindowsCallData windowsCallData;
+			WindowsCall windowsCallData;
 			windowsCallData.WindowPointer = this;
 			windowsCallData.UserData = userData;
 			windowsCallData.FunctionToCall = function;
-			windowsCallData.MouseMove = MouseMoveEventData{ 0 };
+			windowsCallData.MouseMove = MouseMoveEvent{ 0 };
 			SetWindowLongPtrA(windowHandle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&windowsCallData));
 
 			MSG message;
@@ -305,7 +311,6 @@ namespace GTSL
 			}
 #elif __linux__
 			xcb_generic_event_t* event = nullptr;
-			xcb_client_message_event_t* clientMessage = nullptr;
 			
 			while(event = xcb_poll_for_event(connection)) {
 				switch (event->response_type & ~0x80) {
@@ -316,43 +321,31 @@ namespace GTSL
 					}
 					case XCB_MAP_NOTIFY: {
 						xcb_map_notify_event_t *mapNotify = (xcb_map_notify_event_t *)event;
-						FocusEventData focusEventData;
-						focusEventData.Focus = true;
-						focusEventData.HadFocus = false;
-						function(userData, WindowEvents::FOCUS, &focusEventData);						
+						FocusEvent focusEventData;
+						focusEventData.hasFocus = true;
+						focusEventData.hadFocus = false;
+						function(this, userData, WindowEvents::FOCUS, &focusEventData);						
 						break;
 					}
 					case XCB_UNMAP_NOTIFY: {
 						xcb_unmap_notify_event_t *unmap = (xcb_unmap_notify_event_t *)event;
-						FocusEventData focusEventData;
-						focusEventData.Focus = false;
-						focusEventData.HadFocus = true;
-						function(userData, WindowEvents::FOCUS, &focusEventData);
+						FocusEvent focusEventData;
+						focusEventData.hasFocus = false;
+						focusEventData.hadFocus = true;
+						function(this, userData, WindowEvents::FOCUS, &focusEventData);
 						break;
 					}
 					case XCB_BUTTON_PRESS: {
 						xcb_button_press_event_t *press = (xcb_button_press_event_t *)event;
 
 						if(press->detail != 4 && press->detail != 5) { // Normal mouse button
-							MouseButtonEventData mouseButtonEventData;
+							MouseButtonEvent mouseButtonEventData;
+							mouseButtonEventData.state = true;
+							mouseButtonEventData.button = xcb_mouseButtonToMouseButton(press->detail);
 
-							if(press->response_type & XCB_EVENT_MASK_BUTTON_PRESS) {
-								mouseButtonEventData.State = true;
-							}
-
-							if(press->response_type & XCB_EVENT_MASK_BUTTON_RELEASE) {
-								mouseButtonEventData.State = false;
-							}
-
-							mouseButtonEventData.Button = xcb_mouseButtonToMouseButton(press->detail);
-
-							function(userData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+							function(this, userData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
 						} else { // Scroll wheel
-							// XCB_BUTTON_PRESS and XCB_BUTTON_RELEASE are sent for each scroll wheel tick so we ignore the release event
-							// and only handle the press event so that we only get one event per scroll wheel tick
-							if(press->response_type & XCB_EVENT_MASK_BUTTON_RELEASE) { break;}
-
-							MouseWheelEventData mouseWheelEventData;
+							MouseWheelEvent mouseWheelEventData;
 							
 							if(press->detail == 4) { // Scroll up
 								mouseWheelEventData = 1.f;
@@ -360,52 +353,83 @@ namespace GTSL
 								mouseWheelEventData = -1.f;
 							}
 
-							function(userData, WindowEvents::MOUSE_WHEEL, &mouseWheelEventData);
+							function(this, userData, WindowEvents::MOUSE_WHEEL, &mouseWheelEventData);
+						}
+
+						break;
+					}
+					case XCB_BUTTON_RELEASE: {
+						xcb_button_release_event_t *release = (xcb_button_release_event_t *)event;
+
+						if(release->detail != 4 && release->detail != 5) { // Normal mouse button
+							MouseButtonEvent mouseButtonEventData;
+							mouseButtonEventData.state = false;
+							mouseButtonEventData.button = xcb_mouseButtonToMouseButton(release->detail);
+
+							function(this, userData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
 						}
 
 						break;
 					}
 					case XCB_MOTION_NOTIFY: {
 						xcb_motion_notify_event_t *motion = (xcb_motion_notify_event_t *)event;
-						MouseMoveEventData mouseMoveEventData;
+						MouseMoveEvent mouseMoveEventData;
 						if(motion->same_screen) { break; } // If the mouse is not on the same screen as the window, ignore it
-						xcb_calculateMousePos(motion->event_x, motion->event_y, GetWindowExtent(), mouseMoveEventData);
-						function(userData, WindowEvents::MOUSE_MOVE, &mouseMoveEventData);
+
+						mouseMoveEventData.absolutePosition = xcb_calculateMousePosition(motion->event_x, motion->event_y, GetWindowExtent());
+
+						if(lastMousePosition.X() == NAN || lastMousePosition.Y() == NAN) { // If mouse is in it's initial state, set it to the current position to be able to calculate the delta
+							lastMousePosition = mouseMoveEventData.absolutePosition;
+						}
+
+						mouseMoveEventData.deltaPosition = mouseMoveEventData.absolutePosition - lastMousePosition;
+
+						lastMousePosition = mouseMoveEventData.absolutePosition;
+
+						function(this, userData, WindowEvents::MOUSE_MOVE, &mouseMoveEventData);
 						break;
 					}
 					case XCB_KEY_PRESS: {
-						xcb_key_press_event_t *press = (xcb_key_press_event_t *)event;
+						xcb_key_press_event_t* press = (xcb_key_press_event_t*)event;
 
 						xcb_keysym_t keySym = xcb_key_symbols_get_keysym(keySymbols, press->detail, 0);
 
-						KeyboardKeyEventData keyboardKeyEventData;
+						KeyboardKeyEvent keyboardKeyEventData;
+						keyboardKeyEventData.key = xcb_keysimToKey(keySym);
+						keyboardKeyEventData.state = true;
 
-						keyboardKeyEventData.Key = xcb_keysimToKey(keySym);
+						function(this, userData, WindowEvents::KEYBOARD_KEY, &keyboardKeyEventData);
 
-						if(press->response_type & XCB_EVENT_MASK_KEY_PRESS) {
-							keyboardKeyEventData.State = true;
-						}
+						break;
+					}
+					case XCB_KEY_RELEASE: {
+						xcb_key_release_event_t* release = (xcb_key_release_event_t*)event;
 
-						if(press->response_type & XCB_EVENT_MASK_KEY_RELEASE) {
-							keyboardKeyEventData.State = false;
-						}
+						xcb_keysym_t keySym = xcb_key_symbols_get_keysym(keySymbols, release->detail, 0);
 
-						function(userData, WindowEvents::KEYBOARD_KEY, &keyboardKeyEventData);
+						KeyboardKeyEvent keyboardKeyEventData;
+						keyboardKeyEventData.key = xcb_keysimToKey(keySym);
+						keyboardKeyEventData.state = false;
+
+						function(this, userData, WindowEvents::KEYBOARD_KEY, &keyboardKeyEventData);
 
 						break;
 					}
 					case XCB_CLIENT_MESSAGE: {
-						clientMessage = (xcb_client_message_event_t *)event;
+						xcb_client_message_event_t* clientMessage = (xcb_client_message_event_t *)event;
 
 						if (clientMessage->data.data32[0] == wmDeleteWin) { // If atom in clientMessage is the wmDeleteWin atom, the close button was pressed
-							function(userData, WindowEvents::CLOSE, nullptr);
+							function(this, userData, WindowEvents::CLOSE, nullptr);
 						}
 
 						break;
 					}
 					case XCB_RESIZE_REQUEST: {
 						xcb_resize_request_event_t *resize = (xcb_resize_request_event_t *)event;
-						// ON resize window
+						WindowSizeEvent windowSizeEventData;
+						windowSizeEventData.Width = resize->width;
+						windowSizeEventData.Height = resize->height;
+						function(this, userData, WindowEvents::SIZE, &resize->width);
 						break;
 					}
 				}
@@ -504,7 +528,7 @@ namespace GTSL
 
 		struct WindowState
 		{
-			WindowSizeState NewWindowSizeState;
+			WindowSizeStates NewWindowSizeState;
 			uint32 RefreshRate{ 0 };
 			Extent2D NewResolution;
 			uint8 NewBitsPerPixel = 8;
@@ -512,14 +536,14 @@ namespace GTSL
 		void SetState(const WindowState & windowState) {
 	#if (_WIN64)
 			switch (windowState.NewWindowSizeState) {
-			case WindowSizeState::MAXIMIZED: {
+			case WindowSizeStates::MAXIMIZED: {
 				SetWindowLongPtrA(windowHandle, GWL_STYLE, defaultWindowStyle);
 				ShowWindowAsync(windowHandle, SW_SHOWMAXIMIZED);
 
 				windowSizeState = windowState.NewWindowSizeState;
 				break;
 			}
-			case WindowSizeState::FULLSCREEN: {
+			case WindowSizeStates::FULLSCREEN: {
 				const DWORD remove = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 				const DWORD new_style = defaultWindowStyle & ~remove;
 				SetWindowLongPtrA(windowHandle, GWL_STYLE, new_style);
@@ -529,7 +553,7 @@ namespace GTSL
 				windowSizeState = windowState.NewWindowSizeState;
 				break;
 			}
-			case WindowSizeState::MINIMIZED: {
+			case WindowSizeStates::MINIMIZED: {
 				SetWindowLongPtrA(windowHandle, GWL_STYLE, defaultWindowStyle);
 				ShowWindowAsync(windowHandle, SW_MINIMIZE);
 
@@ -637,10 +661,12 @@ namespace GTSL
 	protected:
 		GTSL::Extent2D framebufferExtent;
         API windowAPI;
-		WindowSizeState windowSizeState;
+		WindowSizeStates windowSizeState;
 		bool focus;
 
 #if __linux__
+		GTSL::Vector2 lastMousePosition = { NAN, NAN };
+
 		xcb_connection_t * connection = nullptr;
 		xcb_window_t window;
 		xcb_screen_t * screen = nullptr;
@@ -873,101 +899,102 @@ namespace GTSL
 		}
 
 		static uint64 __stdcall Win32_windowProc(void* hwnd, uint32 uMsg, uint64 wParam, uint64 lParam) {
-			auto* windowCallData = reinterpret_cast<WindowsCallData*>(GetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA));
+			auto* windowCallData = reinterpret_cast<WindowsCall*>(GetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA));
 			const HWND winHandle = static_cast<HWND>(hwnd);
+			auto* window = windowCallData->WindowPointer;
 			if (!windowCallData) { return DefWindowProcA(winHandle, uMsg, wParam, lParam); }
 
 			switch (uMsg) {
 			case WM_CREATE: {
 				auto* createStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
-				windowCallData = static_cast<WindowsCallData*>(createStruct->lpCreateParams);
+				windowCallData = static_cast<WindowsCall*>(createStruct->lpCreateParams);
 				SetWindowLongPtrA(static_cast<HWND>(hwnd), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowCallData));
 				break;
 			}
 			case WM_CLOSE: {
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::CLOSE, nullptr);
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::CLOSE, nullptr);
 				return 0;
 			}
 			case WM_LBUTTONDOWN: {
-				MouseButtonEventData mouseButtonEventData;
-				mouseButtonEventData.State = true;
-				mouseButtonEventData.Button = MouseButton::LEFT_BUTTON;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+				MouseButtonEvent mouseButtonEventData;
+				mouseButtonEventData.state = true;
+				mouseButtonEventData.button = MouseButtons::LEFT_BUTTON;
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
 				return 0;
 			}
 			case WM_LBUTTONUP: {
-				MouseButtonEventData mouseButtonEventData;
-				mouseButtonEventData.State = false;
-				mouseButtonEventData.Button = MouseButton::LEFT_BUTTON;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+				MouseButtonEvent mouseButtonEventData;
+				mouseButtonEventData.state = false;
+				mouseButtonEventData.button = MouseButtons::LEFT_BUTTON;
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
 				return 0;
 			}
 			case WM_RBUTTONDOWN: {
-				MouseButtonEventData mouseButtonEventData;
-				mouseButtonEventData.State = true;
-				mouseButtonEventData.Button = MouseButton::RIGHT_BUTTON;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+				MouseButtonEvent mouseButtonEventData;
+				mouseButtonEventData.state = true;
+				mouseButtonEventData.button = MouseButtons::RIGHT_BUTTON;
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
 				return 0;
 			}
 			case WM_RBUTTONUP: {
-				MouseButtonEventData mouseButtonEventData;
-				mouseButtonEventData.State = false;
-				mouseButtonEventData.Button = MouseButton::RIGHT_BUTTON;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+				MouseButtonEvent mouseButtonEventData;
+				mouseButtonEventData.state = false;
+				mouseButtonEventData.button = MouseButtons::RIGHT_BUTTON;
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
 				return 0;
 			}
 			case WM_MBUTTONDOWN: {
-				MouseButtonEventData mouseButtonEventData;
-				mouseButtonEventData.State = true;
-				mouseButtonEventData.Button = MouseButton::MIDDLE_BUTTON;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+				MouseButtonEvent mouseButtonEventData;
+				mouseButtonEventData.state = true;
+				mouseButtonEventData.button = MouseButtons::MIDDLE_BUTTON;
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
 				return 0;
 			}
 			case WM_MBUTTONUP: {
-				MouseButtonEventData mouseButtonEventData;
-				mouseButtonEventData.State = false;
-				mouseButtonEventData.Button = MouseButton::MIDDLE_BUTTON;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
+				MouseButtonEvent mouseButtonEventData;
+				mouseButtonEventData.state = false;
+				mouseButtonEventData.button = MouseButtons::MIDDLE_BUTTON;
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::MOUSE_BUTTON, &mouseButtonEventData);
 				return 0;
 			}
 			case WM_KEYDOWN: {
-				KeyboardKeyEventData keyboardKeyPressEventData;
-				Win32_translateKeys(wParam, lParam, keyboardKeyPressEventData.Key);
-				keyboardKeyPressEventData.State = true;
-				keyboardKeyPressEventData.IsFirstTime = !((lParam >> 30) & 1);
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::KEYBOARD_KEY, &keyboardKeyPressEventData);
+				KeyboardKeyEvent keyboardKeyPressEventData;
+				Win32_translateKeys(wParam, lParam, keyboardKeyPressEventData.key);
+				keyboardKeyPressEventData.state = true;
+				keyboardKeyPressEventData.isFirstTime = !((lParam >> 30) & 1);
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::KEYBOARD_KEY, &keyboardKeyPressEventData);
 				return 0;
 			}
 			case WM_KEYUP: {
-				KeyboardKeyEventData keyboardKeyPressEventData;
-				Win32_translateKeys(wParam, lParam, keyboardKeyPressEventData.Key);
-				keyboardKeyPressEventData.State = false;
-				keyboardKeyPressEventData.IsFirstTime = true;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::KEYBOARD_KEY, &keyboardKeyPressEventData);
+				KeyboardKeyEvent keyboardKeyPressEventData;
+				Win32_translateKeys(wParam, lParam, keyboardKeyPressEventData.key);
+				keyboardKeyPressEventData.state = false;
+				keyboardKeyPressEventData.isFirstTime = true;
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::KEYBOARD_KEY, &keyboardKeyPressEventData);
 				return 0;
 			}
 			case WM_UNICHAR: {
 				CharEventData charEventData = static_cast<uint32>(wParam);
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::CHAR, &charEventData);
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::CHAR, &charEventData);
 				return 0;
 			}
 			case WM_SIZE: {
-				WindowSizeEventData clientSize;
+				WindowSizeEvent clientSize;
 				clientSize.Width = LOWORD(lParam);
 				clientSize.Height = HIWORD(lParam);
 
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::SIZE, &clientSize);
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::SIZE, &clientSize);
 				return 0;
 			}
 			case WM_SIZING: {
 				RECT rect = *reinterpret_cast<RECT*>(lParam);
 
 				if (!windowCallData->hadResize) {
-					WindowSizeEventData clientSize;
+					WindowSizeEvent clientSize;
 					clientSize.Width = static_cast<uint16>(rect.right);
 					clientSize.Height = static_cast<uint16>(rect.bottom);
 
-					windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::SIZE, &clientSize);
+					windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::SIZE, &clientSize);
 
 					windowCallData->hadResize = true;
 				}
@@ -981,35 +1008,35 @@ namespace GTSL
 				windowSize.Width = static_cast<uint16>(rect.right);
 				windowSize.Height = static_cast<uint16>(rect.bottom);
 
-				WindowMoveEventData windowMoveEventData;
+				WindowMoveEvent windowMoveEventData;
 				windowMoveEventData.X = static_cast<uint16>(reinterpret_cast<LPRECT>(lParam)->left + static_cast<LONG>(windowSize.Width) / 2);
 				windowMoveEventData.Y = static_cast<uint16>(reinterpret_cast<LPRECT>(lParam)->top - static_cast<LONG>(windowSize.Height) / 2);
 
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOVING, &windowMoveEventData);
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::MOVING, &windowMoveEventData);
 				return true; //An application should return TRUE if it processes this message.
 			}
 			case WM_ACTIVATE: {
 				auto hasFocus = static_cast<bool>(LOWORD(wParam));
-				FocusEventData focusEventData;
-				focusEventData.Focus = hasFocus;
-				focusEventData.HadFocus = windowCallData->WindowPointer->focus;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::FOCUS, &focusEventData);
+				FocusEvent focusEventData;
+				focusEventData.hasFocus = hasFocus;
+				focusEventData.hadFocus = windowCallData->WindowPointer->focus;
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::FOCUS, &focusEventData);
 				windowCallData->WindowPointer->focus = hasFocus;
 				return 0;
 			}
 			case WM_SETFOCUS: {
-				FocusEventData focusEventData;
-				focusEventData.Focus = true;
-				focusEventData.HadFocus = windowCallData->WindowPointer->focus;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::FOCUS, &focusEventData);
+				FocusEvent focusEventData;
+				focusEventData.hasFocus = true;
+				focusEventData.hadFocus = windowCallData->WindowPointer->focus;
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::FOCUS, &focusEventData);
 				windowCallData->WindowPointer->focus = true;
 				return 0;
 			}
 			case WM_KILLFOCUS: {
-				FocusEventData focusEventData;
-				focusEventData.Focus = false;
-				focusEventData.HadFocus = windowCallData->WindowPointer->focus;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::FOCUS, &focusEventData);
+				FocusEvent focusEventData;
+				focusEventData.hasFocus = false;
+				focusEventData.hadFocus = windowCallData->WindowPointer->focus;
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::FOCUS, &focusEventData);
 				windowCallData->WindowPointer->focus = false;
 				return 0;
 			}
@@ -1026,7 +1053,7 @@ namespace GTSL
 
 				switch (pRawInput->header.dwType) {
 				case RIM_TYPEMOUSE: { //mouse
-					MouseMoveEventData result;
+					MouseMoveEvent result;
 					const int32 x = pRawInput->data.mouse.lLastX, y = pRawInput->data.mouse.lLastY;
 
 					if ((pRawInput->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) == MOUSE_MOVE_ABSOLUTE) {
@@ -1051,8 +1078,8 @@ namespace GTSL
 					// Wheel data needs to be pointer casted to interpret an unsigned short as a short, with no conversion
 					// otherwise it'll overflow when going negative.
 					if (pRawInput->data.mouse.usButtonFlags & RI_MOUSE_WHEEL) {
-						MouseWheelEventData mouseWheelEventData = -static_cast<float32>(*reinterpret_cast<short*>(&pRawInput->data.mouse.usButtonData)) / static_cast<float32>(WHEEL_DELTA);
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::MOUSE_WHEEL, &mouseWheelEventData);
+						MouseWheelEvent mouseWheelEventData = -static_cast<float32>(*reinterpret_cast<short*>(&pRawInput->data.mouse.usButtonData)) / static_cast<float32>(WHEEL_DELTA);
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::MOUSE_WHEEL, &mouseWheelEventData);
 					}
 
 					break;
@@ -1068,144 +1095,144 @@ namespace GTSL
 						const auto value = static_cast<float>(state.left_trigger) / 255.0f;
 						gamepadQuery.leftTrigger = state.left_trigger;
 
-						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::TRIGGER, { .Linear = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::TRIGGER, { .scalar = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (state.right_trigger != gamepadQuery.rightTrigger) {
 						const auto value = static_cast<float>(state.right_trigger) / 255.0f;
 						gamepadQuery.rightTrigger = state.right_trigger;
 
-						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::TRIGGER, {.Linear = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::TRIGGER, {.scalar = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (state.left_thumb_x != gamepadQuery.thumbLX || state.left_thumb_y != gamepadQuery.thumbLY) {
 						const auto value = Vector2(static_cast<float>(state.left_thumb_x) / 32768.f, static_cast<float>(state.left_thumb_y) / 32768.f);
 						gamepadQuery.thumbLX = state.left_thumb_x; gamepadQuery.thumbLY = state.left_thumb_y;
 
-						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::THUMB, { .Vector = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::THUMB, { .vector = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (state.right_thumb_x != gamepadQuery.thumbRX || state.right_thumb_y != gamepadQuery.thumbRY) {
 						const auto value = Vector2(static_cast<float>(state.right_thumb_x) / 32768.f, static_cast<float>(state.right_thumb_y) / 32768.f);
 						gamepadQuery.thumbRX = state.right_thumb_x; gamepadQuery.thumbRY = state.right_thumb_y;
 
-						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::THUMB, { .Vector = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::THUMB, { .vector = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_DPAD_UP) != gamepadQuery.dpadUp) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_DPAD_UP);
 						gamepadQuery.dpadUp = value;
 
-						JoystickUpdate result{ Gamepad::Side::UP, Gamepad::SourceNames::DPAD, { .Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::UP, Gamepad::SourceNames::DPAD, { .action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_DPAD_DOWN) != gamepadQuery.dpadDown) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_DPAD_DOWN);
 						gamepadQuery.dpadDown = value;
 
-						JoystickUpdate result{ Gamepad::Side::DOWN, Gamepad::SourceNames::DPAD, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::DOWN, Gamepad::SourceNames::DPAD, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_DPAD_LEFT) != gamepadQuery.dpadLeft) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_DPAD_LEFT);
 						gamepadQuery.dpadLeft = value;
 
-						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::DPAD, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::DPAD, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_DPAD_RIGHT) != gamepadQuery.dpadRight) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_DPAD_RIGHT);
 						gamepadQuery.dpadRight = value;
 
-						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::DPAD, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::DPAD, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_START) != gamepadQuery.start) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_START);
 						gamepadQuery.start = value;
 
-						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::MIDDLE_BUTTONS, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::MIDDLE_BUTTONS, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_BACK) != gamepadQuery.back) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_BACK);
 						gamepadQuery.back = value;
 
-						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::MIDDLE_BUTTONS, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::MIDDLE_BUTTONS, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_LEFT_THUMB) != gamepadQuery.leftThumb) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_LEFT_THUMB);
 						gamepadQuery.leftThumb = value;
 
-						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::THUMB_BUTTONS, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::THUMB_BUTTONS, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_RIGHT_THUMB) != gamepadQuery.rightThumb) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_RIGHT_THUMB);
 						gamepadQuery.rightThumb = value;
 
-						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::THUMB_BUTTONS, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::THUMB_BUTTONS, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_LEFT_SHOULDER) != gamepadQuery.leftShoulder) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_LEFT_SHOULDER);
 						gamepadQuery.leftShoulder = value;
 
-						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::SHOULDER, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::SHOULDER, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_RIGHT_SHOULDER) != gamepadQuery.rightShoulder) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
 						gamepadQuery.rightShoulder = value;
 
-						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::SHOULDER, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::SHOULDER, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_A) != gamepadQuery.a) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_A);
 						gamepadQuery.a = value;
 
-						JoystickUpdate result{ Gamepad::Side::DOWN, Gamepad::SourceNames::FACE_BUTTONS, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::DOWN, Gamepad::SourceNames::FACE_BUTTONS, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_B) != gamepadQuery.b) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_B);
 						gamepadQuery.b = value;
 
-						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::FACE_BUTTONS, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::RIGHT, Gamepad::SourceNames::FACE_BUTTONS, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_X) != gamepadQuery.x) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_X);
 						gamepadQuery.x = value;
 
-						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::FACE_BUTTONS, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::LEFT, Gamepad::SourceNames::FACE_BUTTONS, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 
 					if (static_cast<bool>(state.buttons & XINPUT_GAMEPAD_Y) != gamepadQuery.y) {
 						const auto value = static_cast<bool>(state.buttons & XINPUT_GAMEPAD_Y);
 						gamepadQuery.y = value;
 
-						JoystickUpdate result{ Gamepad::Side::UP, Gamepad::SourceNames::FACE_BUTTONS, {.Action = value } };
-						windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
+						JoystickUpdate result{ Gamepad::Side::UP, Gamepad::SourceNames::FACE_BUTTONS, {.action = value } };
+						windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::JOYSTICK_UPDATE, &result);
 					}
 				}
 				}
@@ -1247,17 +1274,17 @@ namespace GTSL
 				//RID_DEVICE_INFO_HID device_info;
 				//isDualshock4(device_info);// isXboxController(device_info);
 
-				DeviceChangeData result;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::DEVICE_CHANGE, &result);
+				DeviceChange result;
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::DEVICE_CHANGE, &result);
 
 				return 0;
 			}
 			case WM_DPICHANGED: {
 				auto dpi = HIWORD(wParam);
 
-				PPIChangeData result;
+				PPIChange result;
 				result.PPI = dpi;
-				windowCallData->FunctionToCall(windowCallData->UserData, WindowEvents::PPI_CHANGE, &result);
+				windowCallData->FunctionToCall(window, windowCallData->UserData, WindowEvents::PPI_CHANGE, &result);
 
 				return 0;
 			}
@@ -1424,20 +1451,22 @@ namespace GTSL
 		// Returns normalized mouse position for XCB.
 		// GTSL mouse coordinates are in the range of [-1, 1].
 		// XCB mouse coordinates are in the range of [0, width] and [0, height] with (0, 0) being the top left corner.
-		static void xcb_calculateMousePos(uint32 x, uint32 y, Extent2D clientSize, Vector2& mousePos) {
-			mousePos.X() = (float)x / (float)clientSize.Width;
-			mousePos.Y() = (float)y / (float)clientSize.Height;
-			mousePos.X() *= 2.0f; mousePos.X() -= 1.0f;
-			mousePos.Y() *= 2.0f; mousePos.Y() -= 1.0f;
+		static GTSL::Vector2 xcb_calculateMousePosition(uint32 x, uint32 y, Extent2D clientSize) {
+			GTSL::Vector2 absoluteMousePositon;
+			absoluteMousePositon.X() = (float)x / (float)clientSize.Width;
+			absoluteMousePositon.Y() = (float)y / (float)clientSize.Height;
+			absoluteMousePositon.X() *= 2.0f; absoluteMousePositon.X() -= 1.0f;
+			absoluteMousePositon.Y() *= -2.0f; absoluteMousePositon.Y() += 1.0f;
+			return absoluteMousePositon;
 		}
 
-		static MouseButton xcb_mouseButtonToMouseButton(xcb_button_t button) {
-			MouseButton mouseButton = MouseButton::MIDDLE_BUTTON; // Choose middle button as default, because it's the least likely to be used and least likely to cause bugs
+		static MouseButtons xcb_mouseButtonToMouseButton(xcb_button_t button) {
+			MouseButtons mouseButton = MouseButtons::MIDDLE_BUTTON; // Choose middle button as default, because it's the least likely to be used and least likely to cause bugs
 
 			switch (button) {
-				case XCB_BUTTON_INDEX_1: mouseButton = MouseButton::LEFT_BUTTON; break;
-				case XCB_BUTTON_INDEX_2: mouseButton = MouseButton::MIDDLE_BUTTON; break;
-				case XCB_BUTTON_INDEX_3: mouseButton = MouseButton::RIGHT_BUTTON; break;
+				case XCB_BUTTON_INDEX_1: mouseButton = MouseButtons::LEFT_BUTTON; break;
+				case XCB_BUTTON_INDEX_2: mouseButton = MouseButtons::MIDDLE_BUTTON; break;
+				case XCB_BUTTON_INDEX_3: mouseButton = MouseButtons::RIGHT_BUTTON; break;
 				default: break;
 			}
 
