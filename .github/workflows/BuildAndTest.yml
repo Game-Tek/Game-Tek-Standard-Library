@@ -22,7 +22,7 @@ jobs:
   
       name: Install X11 dev tools
       if: matrix.os == 'ubuntu-latest'
-      run: ./install.sh
+      run: sudo ./install.sh
 
     steps:
     - uses: actions/checkout@v3
