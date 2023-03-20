@@ -165,7 +165,7 @@ namespace GTSL
 		Window() : windowAPI(API::XCB), connection(nullptr), window(0), screen(nullptr) {}
 #endif
 		
-		void BindToOS(StringView id_name, StringView display_name, API api, Extent2D extent, void* userData, Window function, const Window* parentWindow, WindowTypes type = WindowTypes::OS_WINDOW) {
+		void BindToOS(StringView id_name, StringView display_name, API api, Extent2D extent, void* userData, WindowDelegate function, const Window* parentWindow = nullptr, WindowTypes type = WindowTypes::OS_WINDOW) {
 			windowAPI = api; // Set the API to use.
 #if (_WIN64)
 			char nullTerminatedIdName[512], nullTerminatedDisplayName[512];

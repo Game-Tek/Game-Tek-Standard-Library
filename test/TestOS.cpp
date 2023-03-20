@@ -137,11 +137,11 @@ TEST(DLL, Construct) {
 TEST(Window, Construct) {
 	GTSL::Window window;
 
-	auto onEvent = [](void*, GTSL::Window::WindowEvents, void*) {
+	auto onEvent = [](GTSL::Window*, void*, GTSL::Window::WindowEvents, void*) {
 		ASSERT_FALSE(true);
 	};
 
-	window.BindToOS(u8"GTSLTestWindow", u8"Hello", GTSL::Window::API::XCB, { 1280, 720 }, nullptr, GTSL::Delegate<void(void*, GTSL::Window::WindowEvents, void*)>::Create(onEvent), nullptr);
+	window.BindToOS(u8"GTSLTestWindow", u8"Hello", GTSL::Window::API::XCB, { 1280, 720 }, nullptr, GTSL::Window::WindowDelegate::Create(onEvent), nullptr);
 
 	window.SetWindowVisibility(true);
 

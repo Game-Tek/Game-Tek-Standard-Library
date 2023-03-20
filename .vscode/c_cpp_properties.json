@@ -3,8 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "GTSL/"
+                "GTSL/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
