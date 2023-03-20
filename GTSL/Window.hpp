@@ -145,25 +145,27 @@ namespace GTSL
 			uint32 PPI = 0;
 		};
 
+		struct DeviceChange {
+			bool isController = false;
+		};
+		
+		using WindowDelegate = Delegate<void(Window*, void*, WindowEvents, void*)>;
+
 		struct WindowsCall {
 			void* UserData;
-			Delegate<void(void*, WindowEvents, void*)> FunctionToCall;
+			WindowDelegate FunctionToCall;
 			Window* WindowPointer;
 			bool hadResize = false;
 			MouseMoveEvent MouseMove;
 		};
 
-		struct DeviceChange {
-			bool isController = false;
-		};
-		
 #if _WIN64
 		Window() : windowAPI(API::WIN32) {};
 #elif __linux__
 		Window() : windowAPI(API::XCB), connection(nullptr), window(0), screen(nullptr) {}
 #endif
 		
-		void BindToOS(StringView id_name, StringView display_name, API api, Extent2D extent, void* userData, Delegate<void(void*, WindowEvents, void*)> function, const Window* parentWindow, WindowTypes type = WindowTypes::OS_WINDOW) {
+		void BindToOS(StringView id_name, StringView display_name, API api, Extent2D extent, void* userData, Window function, const Window* parentWindow, WindowTypes type = WindowTypes::OS_WINDOW) {
 			windowAPI = api; // Set the API to use.
 #if (_WIN64)
 			char nullTerminatedIdName[512], nullTerminatedDisplayName[512];
@@ -288,7 +290,7 @@ namespace GTSL
 #endif
 		}
 
-		void Update(void* userData, Delegate<void(Window*, void*, WindowEvents, void*)> function) {
+		void Update(void* userData, WindowDelegate function) {
 #if (_WIN64)
 			WindowsCall windowsCallData;
 			windowsCallData.WindowPointer = this;
@@ -374,7 +376,7 @@ namespace GTSL
 					case XCB_MOTION_NOTIFY: {
 						xcb_motion_notify_event_t *motion = (xcb_motion_notify_event_t *)event;
 						MouseMoveEvent mouseMoveEventData;
-						if(motion->same_screen) { break; } // If the mouse is not on the same screen as the window, ignore it
+						if(!motion->same_screen) { break; } // If the mouse is not on the same screen as the window, ignore it
 
 						mouseMoveEventData.absolutePosition = xcb_calculateMousePosition(motion->event_x, motion->event_y, GetWindowExtent());
 
