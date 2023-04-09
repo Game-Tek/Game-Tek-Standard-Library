@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-test:
-    name: Run CMake and test
+    name: Run Meson and test
   
     strategy:
       matrix:
@@ -29,11 +29,5 @@ jobs:
     - name: Install needed dev packages
       run: ./install.sh
 
-    - name: Configure CMake
-      run: cmake --preset=gcc-test -DCMAKE_CXX_COMPILER=g++-11
-
-    - name: Build
-      run: cmake --build --preset=linux-x64-test --config=${{env.BUILD_TYPE}}
-
-    - name: Test
-      run: ctest --preset=linux-test
+    - name: Everything
+      run: meson setup builddir && cd builddir && meson compile && ./GTSL_Test

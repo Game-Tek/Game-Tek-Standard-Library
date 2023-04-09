@@ -24,14 +24,14 @@ TEST(File, Construct) {
 TEST(File, Open) {
 	GTSL::File file;
 
-	auto res = file.Open(u8"../../../test/COOPBL.TTF", GTSL::File::READ, false);
+	auto res = file.Open(u8"./test/COOPBL.TTF", GTSL::File::READ, false);
 
 	ASSERT_TRUE(file);
 	GTEST_ASSERT_EQ(res, GTSL::File::OpenResult::OK);
 }
 
 TEST(File, Write) {
-	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::WRITE, true);
+	GTSL::File file(u8"./test/WriteFile", GTSL::File::WRITE, true);
 #if _WIN64
 #elif __linux__
 	//GTSL::File file(u8"../test/WriteFile", GTSL::File::WRITE, true);
@@ -54,7 +54,7 @@ TEST(File, Write) {
 
 TEST(File, Read) {
 
-	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::READ, false);
+	GTSL::File file(u8"./test/WriteFile", GTSL::File::READ, false);
 #ifdef _WIN32
 #elif __linux__
 	//GTSL::File file(u8"../test/WriteFile", GTSL::File::READ, false);
@@ -91,7 +91,7 @@ TEST(File, Read) {
 }
 
 TEST(File, ReadRaw) {
-	GTSL::File file(u8"../../../test/WriteFile", GTSL::File::READ, false);
+	GTSL::File file(u8"./test/WriteFile", GTSL::File::READ, false);
 
 	GTSL::byte buffer[16];
 
@@ -108,7 +108,7 @@ TEST(MappedFile, Construct) {
 }
 
 TEST(FileQuery, Do) {
-	GTSL::FileQuery file_query(u8"../../../test/*.cube");
+	GTSL::FileQuery file_query(u8"./test/*.cube");
 
 	auto res = file_query();
 	GTEST_ASSERT_EQ(res.Get(), u8"Kodak Ektachrome 64.cube");
@@ -223,7 +223,7 @@ TEST(Thread, Construct) {
 }
 
 TEST(Font, FontCOOPBL) {
-	GTSL::File file(u8"../../../test/COOPBL.TTF", GTSL::File::READ, false);
+	GTSL::File file(u8"./test/COOPBL.TTF", GTSL::File::READ, false);
 
 	if (!file) { 
 		GTEST_SKIP_("Could not open test file.");
