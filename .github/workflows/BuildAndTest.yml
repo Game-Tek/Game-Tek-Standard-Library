@@ -47,4 +47,5 @@ jobs:
       run: meson compile -v -C build
 
     - name: Run Test Suite
-      run: meson test -v -C build
+      #run: meson test -v -C build
+      run: ./build/GTSL_Test
