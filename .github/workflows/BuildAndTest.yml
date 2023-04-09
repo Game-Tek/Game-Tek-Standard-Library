@@ -22,12 +22,26 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install Python Dependencies
+      run: pip install meson ninja
     
-    - name: Install ninja-build tool
-      uses: seanmiddleditch/gha-setup-ninja@v3
+    # - name: Install ninja-build tool
+    #   uses: seanmiddleditch/gha-setup-ninja@v3
 
     - name: Install needed dev packages
       run: ./install.sh
 
-    - name: Everything
-      run: meson setup builddir && cd builddir && meson compile && ./GTSL_Test
+    - name: Prepare Build
+      run: meson setup build
+
+    - name: Run Build
+      run: meson compile -v -C build
+      
+    - name: Run Test Suite
+      run: meson test -v -C build
