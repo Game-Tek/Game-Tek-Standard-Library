@@ -151,6 +151,10 @@ TEST(Window, Construct) {
 
 	auto extent = window.GetFramebufferExtent();
 
+	if(extent.X == 0 || extent.Y == 0) {
+		GTEST_SKIP() << "Window not visible.";
+	}
+
 	GTEST_ASSERT_EQ(extent, GTSL::Extent2D(1280, 720));
 }
 
