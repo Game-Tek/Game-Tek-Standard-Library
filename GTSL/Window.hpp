@@ -251,6 +251,9 @@ namespace GTSL
 
 				xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, wmProtocolsReply->atom, 4, 32, 1, &wmDeleteReply->atom);
 
+				free(wmDeleteReply);
+				free(wmProtocolsReply);
+
 				this->framebufferExtent = extent;
 
 				// Allocate keycode translation table (keysyms)
@@ -279,12 +282,23 @@ namespace GTSL
 #endif
 		}
 		
+		void Initialize(StringView id_name, StringView display_name, API api, Extent2D extent, void* userData, WindowDelegate function, const Window* parentWindow = nullptr, WindowTypes type = WindowTypes::OS_WINDOW) {
+			BindToOS(id_name, display_name, api, extent, userData, function, parentWindow, type);
+		}
+
 		~Window() {
 #if (_WIN64)
 			DestroyWindow(windowHandle);
 #elif __linux__
 			if(connection && window) {
 				xcb_destroy_window(connection, window);
+			}
+
+			if(connection) {
+				xcb_disconnect(connection);
+			}
+
+			if(keySymbols) {
 				xcb_key_symbols_free(keySymbols);
 			}
 #endif

@@ -66,5 +66,6 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "xstring": "cpp"
-    }
+	},
+	"C_Cpp.default.compileCommands": "builddir/vscode_compile_commands.json"
 }

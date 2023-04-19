@@ -53,7 +53,15 @@ namespace GTSL
 		using Key = uint32;
 
 		Tree(const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {}
-		Tree(const uint32 minElements, const ALLOCATOR& allocator = ALLOCATOR()) : allocator(allocator) {}
+		Tree(const uint32 minElements, const ALLOCATOR& allocator= ALLOCATOR()) : allocator(allocator) {}
+
+		~Tree() {
+			for (uint32 i = 0; i < length; ++i) {
+				GTSL::Destroy(nodes[i].Data);
+			}
+
+			GTSL::Deallocate(allocator, capacity, nodes);
+		}
 
 		template<typename... ARGS>
 		uint32 Emplace(const uint32 parentNodeHandle, ARGS&&... args) {
@@ -230,6 +238,7 @@ namespace GTSL
 			}
 
 			tryResizeAlphaTable(1);
+			tryResizeMultiTable(sizeof(TraversalData) + sizeof(T));
 
 			auto index = entries++;
 			auto handleValue = entries;
@@ -237,8 +246,6 @@ namespace GTSL
 			AlphaNode* alphaNode = ::new(alphaTable + index) AlphaNode();
 
 			alphaNode->NodeKey = key;
-
-			tryResizeMultiTable(sizeof(TraversalData) + sizeof(T));
 
 			indirectionTable[index] = multiTableSize;
 

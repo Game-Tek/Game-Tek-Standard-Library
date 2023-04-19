@@ -28,6 +28,12 @@ test_dependencies = [
 	'test/TestSmartPointer.cpp'
 ]
 
-e = executable('GTSL_Test', test_dependencies, dependencies: [gtest_dep, x11, xcb, xcb_keysyms], cpp_args : ['-mavx'], install: true, include_directories: include_directories('GTSL'))
+install_subdir('GTSL', install_dir: 'include')
+
+pkg = import('pkgconfig')
+h = ['GTSL']
+pkg.generate(subdirs : h, version : '1.0', name : 'GTSL', filebase : 'GTSL', description : 'Game Tek Standard Library.', requires: ['x11', 'xcb', 'xcb-keysyms'])
+
+e = executable('GTSL_Test', test_dependencies, dependencies: [gtest_dep, x11, xcb, xcb_keysyms], cpp_args : ['-mavx'], include_directories: include_directories('GTSL'))
 
 test('GTSL', e)

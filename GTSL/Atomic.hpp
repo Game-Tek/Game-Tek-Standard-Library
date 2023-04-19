@@ -26,7 +26,7 @@ namespace GTSL
 	class Atomic;
 
 	template<>
-	class Atomic<uint32> {
+	class alignas(64) Atomic<uint32> {
 	public:
 		using type = uint32;
 		
@@ -76,16 +76,16 @@ namespace GTSL
 			return value;
 #elif __linux__
 			alignas(64) type n = 0;
-			__atomic_load(AtomicAddressAs<const unsigned long>(value), AtomicAddressAsNonVolatile<unsigned long>(n), __ATOMIC_SEQ_CST);
+			__atomic_load(AtomicAddressAs<const unsigned int>(value), AtomicAddressAsNonVolatile<unsigned int>(n), __ATOMIC_SEQ_CST);
 			return n;
 #endif
 		}
 	private:
-		alignas(type) type value = 0;
+		type value = 0;
 	};
 
 	template<>
-	class Atomic<uint64>
+	class alignas(64) Atomic<uint64>
 	{
 	public:
 		using type = uint64;

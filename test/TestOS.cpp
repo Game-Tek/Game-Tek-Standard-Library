@@ -141,13 +141,13 @@ TEST(Window, Construct) {
 		ASSERT_FALSE(true);
 	};
 
-	window.BindToOS(u8"GTSLTestWindow", u8"Hello", GTSL::Window::API::XCB, { 1280, 720 }, nullptr, GTSL::Window::WindowDelegate::Create(onEvent), nullptr);
+	window.Initialize(u8"GTSLTestWindow", u8"Hello", GTSL::Window::API::XCB, { 1280, 720 }, nullptr, GTSL::Window::WindowDelegate::Create(onEvent), nullptr);
 
 	window.SetWindowVisibility(true);
 
 	auto extent = window.GetFramebufferExtent();
 
-	//GTEST_ASSERT_EQ(extent, GTSL::Extent2D(1280, 720));
+	GTEST_ASSERT_EQ(extent, GTSL::Extent2D(1280, 720));
 }
 
 TEST(Console, Print) {
