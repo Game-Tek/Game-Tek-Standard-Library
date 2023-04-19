@@ -151,7 +151,7 @@ TEST(Window, Construct) {
 
 	auto extent = window.GetFramebufferExtent();
 
-	if(extent.X == 0 || extent.Y == 0) {
+	if(extent.Width == 0 || extent.Height == 0) {
 		GTEST_SKIP() << "Window not visible.";
 	}
 
