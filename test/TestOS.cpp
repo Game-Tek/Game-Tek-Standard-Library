@@ -143,6 +143,10 @@ TEST(Window, Construct) {
 
 	window.Initialize(u8"GTSLTestWindow", u8"Hello", GTSL::Window::API::XCB, { 1280, 720 }, nullptr, GTSL::Window::WindowDelegate::Create(onEvent), nullptr);
 
+	if (window.GetXCBConnection() == nullptr) {
+		GTEST_SKIP() << "XCB not supported.";
+	}
+
 	window.SetWindowVisibility(true);
 
 	auto extent = window.GetFramebufferExtent();
