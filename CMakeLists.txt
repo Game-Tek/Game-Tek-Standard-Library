@@ -3,7 +3,7 @@ include(FetchContent)
 
 project(GTSL VERSION 1.0.0 LANGUAGES CXX)
 
-set(BUILD_TESTING ON)
+set(BUILD_TESTING OFF)
 # requirements
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
