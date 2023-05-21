@@ -184,7 +184,7 @@ namespace GTSL
 		 * \param count Number of T type to leave space for.
 		 */
 		void Shrink(const length_type count) {
-			for (auto* begin = begin() + count; begin != end(); ++begin) { GTSL::Destroy(*begin); }
+            for(auto* b = begin() + count; b != end(); ++b) { GTSL::Destroy(*b);}
 			GTSL::Resize(allocator, &data, &capacity, count, length);
 		}
 

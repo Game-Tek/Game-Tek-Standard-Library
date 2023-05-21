@@ -26,7 +26,7 @@ namespace GTSL {
 			--length;
 		}
 
-		uint8 GetLength() const { return length; }
+		[[nodiscard]] uint8 GetLength() const { return length; }
 
 		GTSL::Vector3 operator[](const uint8 index) const { return points[index]; }
 
@@ -121,7 +121,7 @@ namespace GTSL {
 
 	struct CollisionInfo {
 		GTSL::Vector3 A, B, Normal;
-		float32 Depth;
+		float32 Depth{};
 	};
 
 	inline void GetFaceNormals(GTSL::Range<const GTSL::Vector3*> polytope, GTSL::Range<const std::array<uint16, 3>*> indices, auto& normals, uint32& minFace) {

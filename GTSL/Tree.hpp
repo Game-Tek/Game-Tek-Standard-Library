@@ -47,7 +47,8 @@ namespace GTSL
 			uint32 TreeDown = 0, TreeRight = 0, ChildrenCount = 0, RightMostChild = 0;
 
 			template<typename ... ARGS>
-			Node(ARGS&&... args) : Data(GTSL::ForwardRef<ARGS>(args)...) {}
+			Node(ARGS&&... args) : Data(ForwardRef<ARGS>(args)...) {}
+
 		};
 	public:
 		using Key = uint32;
@@ -60,14 +61,14 @@ namespace GTSL
 				GTSL::Destroy(nodes[i].Data);
 			}
 
-			GTSL::Deallocate(allocator, capacity, nodes);
+			Deallocate(allocator, capacity, nodes);
 		}
 
 		template<typename... ARGS>
 		uint32 Emplace(const uint32 parentNodeHandle, ARGS&&... args) {
 			tryResize(1);
 
-			::new(nodes + length++) Node(GTSL::ForwardRef<ARGS>(args)...);
+			::new(nodes + length++) Node(ForwardRef<ARGS>(args)...);
 
 			if(parentNodeHandle) {
 				Node& parentNode = at(parentNodeHandle);
@@ -214,7 +215,7 @@ namespace GTSL
 		}
 
 		template<typename T, typename... ARGS>
-		GTSL::Result<Key> Emplace(uint64 key, Key leftNodeHandle, Key parentNodeHandle, ARGS&&... params) {
+		Result<Key> Emplace(uint64 key, Key leftNodeHandle, Key parentNodeHandle, ARGS&&... params) {
 			static_assert(IsInPack<T, CLASSES...>(), "Type T is not in tree's type list.");
 
 			auto typeIndex = static_cast<uint8>(GetTypeIndex<T>());
@@ -229,7 +230,7 @@ namespace GTSL
 
 					if(p.TypeIndex == typeIndex) { // If current node is of the same type as we are checking
 						if(AlphaNode& t = getHelper(l); t.NodeKey == key) {
-							return { GTSL::MoveRef(l), false };
+							return { MoveRef(l), false };
 						}
 					}
 
@@ -254,7 +255,7 @@ namespace GTSL
 
 			multiTableSize += sizeof(TraversalData);
 
-			::new(multiTable + multiTableSize) T(GTSL::ForwardRef<ARGS>(params)...);
+			::new(multiTable + multiTableSize) T(ForwardRef<ARGS>(params)...);
 
 			multiTableSize += sizeof(T);
 
@@ -294,7 +295,7 @@ namespace GTSL
 				//parentNodeTraversalData.ChildrenCount += 1;
 			}
 
-			return { GTSL::MoveRef(handleValue), true };
+			return { MoveRef(handleValue), true };
 		}
 
 		void UpdateNodeKey(Key node_handle, const uint64 new_key) {
@@ -314,7 +315,7 @@ namespace GTSL
 
 		template<typename T>
 		static consteval uint32 GetTypeIndex() {
-			return GTSL::GetTypeIndex<T, CLASSES...>();
+			return GetTypeIndex<T, CLASSES...>();
 		}
 
 		ALPHA& GetAlpha(const Key i) { return alphaTable[i - 1].Alpha; }

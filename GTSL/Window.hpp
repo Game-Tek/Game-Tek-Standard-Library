@@ -10,11 +10,12 @@
 #include "StringCommon.h"
 
 #if (_WIN64)
-#include "ShObjIdl_core.h"
 #include <WinUser.h>
 #include <hidsdi.h>
 #include <SetupAPI.h>
 #include <Dbt.h>
+#include <shobjidl.h>
+
 #undef ERROR
 #elif __linux__
 #include <X11/X.h>
@@ -34,7 +35,7 @@ namespace GTSL
 	class Window {
 	public:
         enum class API : uint8 {
-            WIN32,
+            WIN,
             XCB,
             WAYLAND
         };
@@ -49,7 +50,7 @@ namespace GTSL
 			BACKSPACE,			
 			ENTER,
 
-			DELETE,
+			DEL,
 
 			TAB,
 			CAPS_LOCK,
@@ -160,7 +161,7 @@ namespace GTSL
 		};
 
 #if _WIN64
-		Window() : windowAPI(API::WIN32) {};
+		Window() : windowAPI(API::WIN) {};
 #elif __linux__
 		Window() : windowAPI(API::XCB), connection(nullptr), window(0), screen(nullptr) {}
 #endif
@@ -322,8 +323,9 @@ namespace GTSL
 
 			SetWindowLongPtrA(windowHandle, GWLP_USERDATA, 0);
 
-			if(windowsCallData.MouseMove != 0) {
-				function(userData, WindowEvents::MOUSE_MOVE, &windowsCallData.MouseMove);
+			if(windowsCallData.MouseMove.absolutePosition != 0)
+            {
+				function(this,userData, WindowEvents::MOUSE_MOVE, &windowsCallData.MouseMove);
 			}
 #elif __linux__
 			xcb_generic_event_t* event = nullptr;
@@ -1081,11 +1083,12 @@ namespace GTSL
 						int absoluteX = static_cast<int>(pRawInput->data.mouse.lLastX / 65535.0f * width);
 						int absoluteY = static_cast<int>(pRawInput->data.mouse.lLastY / 65535.0f * height);
 
-						result.X() = static_cast<float32>(absoluteX); result.Y() = static_cast<float32>(absoluteY);
+						result.absolutePosition.X() = static_cast<float32>(absoluteX); result.absolutePosition.Y() = static_cast<float32>(absoluteY);
 					}
 
+                    // TODO: Check
 					if ((pRawInput->data.mouse.usFlags & MOUSE_MOVE_RELATIVE) == MOUSE_MOVE_RELATIVE) {
-						result.X() = static_cast<float32>(x); result.Y() = static_cast<float32>(-y);
+						result.absolutePosition.X() = static_cast<float32>(x); result.absolutePosition.Y() = static_cast<float32>(-y);
 					}
 
 					//set mouse move variable, then at end of window update cycle it will be read and only the last event will be reported
@@ -1336,7 +1339,7 @@ namespace GTSL
 				case KeyboardKeys::KEYBOARD_8: break; case KeyboardKeys::KEYBOARD_9: break;
 				case KeyboardKeys::BACKSPACE: break;
 				case KeyboardKeys::ENTER: break;
-				case KeyboardKeys::DELETE: break;
+				case KeyboardKeys::DEL: break;
 				case KeyboardKeys::TAB: break;
 				case KeyboardKeys::CAPS_LOCK: break;
 				case KeyboardKeys::ESCAPE: break;

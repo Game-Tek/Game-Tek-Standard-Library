@@ -4,7 +4,9 @@
 #include <Windows.h>
 #include <intrin.h>
 #undef BitScanForward
+#ifdef _MSC_VER
 #include <xtr1common>
+#endif
 #endif
 
 #include <type_traits>

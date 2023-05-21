@@ -20,7 +20,7 @@ namespace GTSL
 		}
 
 		template<typename... ARGS>
-		Matrix(ARGS... args) : array{ args... } {}
+		explicit Matrix(ARGS... args) : array{ args... } {}
 
 		T& operator()(const uint32 x, const uint32 y) { return array[x][y]; }
 		T operator()(const uint32 x, const uint32 y) const { return array[x][y]; }
@@ -110,7 +110,7 @@ namespace GTSL
 
 		explicit Matrix4(const class AxisAngle& axisAngle);
 
-		explicit Matrix4(const Vector3 position);
+		explicit Matrix4(const Vector3& position);
 
 		explicit Matrix4(const class Matrix3x4& matrix);
 
@@ -132,10 +132,10 @@ namespace GTSL
 		 */
 		[[nodiscard]] const float32* GetData() const { return array[0]; }
 
-		[[nodiscard]] Vector4 GetXBasisVector() const { return Vector4(array[0][0], array[0][1], array[0][2], array[0][3]); }
-		[[nodiscard]] Vector4 GetYBasisVector() const { return Vector4(array[1][0], array[1][1], array[1][2], array[1][3]); }
-		[[nodiscard]] Vector4 GetZBasisVector() const { return Vector4(array[2][0], array[2][1], array[2][2], array[2][3]); }
-		[[nodiscard]] Vector4 GetWBasisVector() const { return Vector4(array[3][0], array[3][1], array[3][2], array[3][3]); }
+		[[nodiscard]] Vector4 GetXBasisVector() const { return {array[0][0], array[0][1], array[0][2], array[0][3]}; }
+		[[nodiscard]] Vector4 GetYBasisVector() const { return {array[1][0], array[1][1], array[1][2], array[1][3]}; }
+		[[nodiscard]] Vector4 GetZBasisVector() const { return {array[2][0], array[2][1], array[2][2], array[2][3]}; }
+		[[nodiscard]] Vector4 GetWBasisVector() const { return {array[3][0], array[3][1], array[3][2], array[3][3]}; }
 		
 		void Transpose() {
 			auto a{ float4x(AlignedPointer<const float32, 16>(array[0])) }, b{ float4x(AlignedPointer<const float32, 16>(array[1])) }, c{ float4x(AlignedPointer<const float32, 16>(array[2])) }, d{ float4x(AlignedPointer<const float32, 16>(array[3])) };
@@ -239,10 +239,10 @@ namespace GTSL
 		Matrix4& operator*=(float32 other) {
 			const auto brod = float4x(other);
 
-			for (uint8 i = 0; i < 4; ++i) {
-				auto row = float4x(AlignedPointer<const float32, 16>(array[i]));
+			for (auto & i : array) {
+				auto row = float4x(AlignedPointer<const float32, 16>(i));
 				row *= brod;
-				row.CopyTo(AlignedPointer<float32, 16>(array[i]));
+				row.CopyTo(AlignedPointer<float32, 16>(i));
 			}
 
 			return *this;
@@ -258,12 +258,12 @@ namespace GTSL
 
 			float4x this_x, this_y, this_z, this_w, row;
 
-			for (uint8 i = 0; i < 4; ++i) {
-				this_x = array[i][0]; this_y = array[i][1]; this_z = array[i][2]; this_w = array[i][3];
+			for (auto & i : array) {
+				this_x = i[0]; this_y = i[1]; this_z = i[2]; this_w = i[3];
 
 				row = this_x * other_row_1 + this_y * other_row_2 + this_z * other_row_3 + this_w * other_row_4;
 
-				row.CopyTo(AlignedPointer<float32, 16>(array[i]));
+				row.CopyTo(AlignedPointer<float32, 16>(i));
 			}
 
 			return *this;
@@ -294,7 +294,7 @@ namespace GTSL
 		const float32* operator[](const uint8 index) const { return array[index]; }
 
 		Vector3 operator*(const Vector3& other) const {
-			return Vector3(array[0][0] * other.X() + array[0][1] * other.Y() + array[0][2] * other.Z() + array[0][3] * 1/*W*/, array[1][0] * other.X() + array[1][1] * other.Y() + array[1][2] * other.Z() + array[1][3] * 1/*W*/, array[2][0] * other.X() + array[2][1] * other.Y() + array[2][2] * other.Z() + array[2][3] * 1/*W*/);
+			return {array[0][0] * other.X() + array[0][1] * other.Y() + array[0][2] * other.Z() + array[0][3] * 1/*W*/, array[1][0] * other.X() + array[1][1] * other.Y() + array[1][2] * other.Z() + array[1][3] * 1/*W*/, array[2][0] * other.X() + array[2][1] * other.Y() + array[2][2] * other.Z() + array[2][3] * 1/*W*/};
 		}
 
 		Matrix3x4& operator*=(const Matrix3x4& other) {
@@ -307,12 +307,12 @@ namespace GTSL
 
 			float4x this_x, this_y, this_z, this_w, row;
 
-			for (uint8 i = 0; i < 3; ++i) {
-				this_x = array[i][0]; this_y = array[i][1]; this_z = array[i][2]; this_w = array[i][3];
+			for (auto & i : array) {
+				this_x = i[0]; this_y = i[1]; this_z = i[2]; this_w = i[3];
 
 				row = this_x * other_row_1 + this_y * other_row_2 + this_z * other_row_3 + this_w * other_row_4;
 
-				row.CopyTo(AlignedPointer<float32, 16>(array[i]));
+				row.CopyTo(AlignedPointer<float32, 16>(i));
 			}
 
 			return *this;
@@ -321,7 +321,7 @@ namespace GTSL
 		friend Matrix4;
 	};
 
-	inline Matrix4::Matrix4(const Vector3 position) {
+	inline Matrix4::Matrix4(const Vector3& position) {
 		(*this)(0, 3) = position.X(); (*this)(1, 3) = position.Y(); (*this)(2, 3) = position.Z();
 	}
 

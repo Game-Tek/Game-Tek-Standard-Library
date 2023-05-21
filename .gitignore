@@ -30,6 +30,9 @@ bld/
 [Bb]in-int/
 [Oo]bj/
 [Ll]og/
+[Oo]ut
+[Cc]make-build-debug
+[Cc]make-build-release
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/

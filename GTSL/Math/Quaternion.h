@@ -30,10 +30,10 @@ namespace GTSL
 			return result *= other;
 		}
 
-		Vector3 operator*(const Vector3 other) const;
+		Vector3 operator*(const Vector3& other) const;
 
-		Vector4 GetXBasisVector() const;
-		Vector4 GetYBasisVector() const;
-		Vector4 GetZBasisVector() const;
+		[[nodiscard]] Vector4 GetXBasisVector() const;
+		[[nodiscard]] Vector4 GetYBasisVector() const;
+		[[nodiscard]] Vector4 GetZBasisVector() const;
 	};
 }

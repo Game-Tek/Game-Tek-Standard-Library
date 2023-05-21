@@ -2,6 +2,7 @@
 
 namespace GTSL
 {
+    // TODO: Implement
 	class AxisAngle
 	{
 	public:
@@ -15,7 +16,7 @@ namespace GTSL
 		}
 
 		AxisAngle(const class Vector3& vector, float angle);
-		AxisAngle(const class Quaternion& quaternion);
+		explicit AxisAngle(const class Quaternion& quaternion);
 
 		static AxisAngle Normalized(const AxisAngle& axisAngle);
 	};

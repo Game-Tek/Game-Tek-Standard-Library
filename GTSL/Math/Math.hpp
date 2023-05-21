@@ -68,7 +68,7 @@ namespace GTSL {
 		T SquareRoot(const T a) {
 			T s = a; T aS;
 
-			const uint32 iterations = static_cast<uint32>(a * static_cast<T>(0.008));
+			const auto iterations = static_cast<uint32>(a * static_cast<T>(0.008));
 
 			auto loop = [&]() { aS = a / s;	s = (s + aS) * static_cast<T>(0.5); };
 			
@@ -1394,7 +1394,7 @@ namespace GTSL {
 		W() = Math::Cosine(-axisAngle.Angle / 2);
 	}
 
-	inline Vector3 Quaternion::operator*(const Vector3 other) const {
+	inline Vector3 Quaternion::operator*(const Vector3& other) const {
 		Vector3 u(X(), Y(), Z()); float32 s = W();
 		return u * 2.0f * Math::DotProduct(u, other) + other * (s * s - Math::DotProduct(u, u)) + Math::Cross(u, other) * 2.0f * s;
 	}
@@ -1448,7 +1448,7 @@ namespace GTSL {
 		return *this;
 	}
 
-	// Function to get cofactor of A[p][q] in temp[][]. n is current
+    // Function to get cofactor of A[p][q] in temp[][]. n is current
 	// dimension of A[][]
 	inline void GetCofactor(Matrix4 A, Matrix4& temp, int p, int q, int n) {
 		int i = 0, j = 0;
