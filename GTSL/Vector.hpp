@@ -188,6 +188,11 @@ namespace GTSL
 			GTSL::Resize(allocator, &data, &capacity, count, length);
 		}
 
+        void PushBack(const T* other)
+        {
+            PushBack({other});
+        }
+
 		void PushBack(const Range<const T*> other) {
 			tryReallocate(static_cast<int32>(other.ElementCount()));
 			copyArray(other.begin(), data + length, static_cast<uint32>(other.ElementCount()));

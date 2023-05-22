@@ -327,7 +327,8 @@ namespace GTSL
 		enum class TextEffect : uint8 {
 			BOLD, UNDERLINE, BLINK, INVERT, CROSS, RESET
 		};
-		static void SetTextEffect(TextEffect textEffect) {
+		static void SetTextEffect(TextEffect textEffect); 
+		{
 #if __linux__
 			switch (textEffect) {
 				case TextEffect::BOLD:      write(1, BOLD, 5ull); break;
