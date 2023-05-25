@@ -4,6 +4,7 @@
 #include <GTSL/Collections/Vector.hpp>
 #include <GTSL/Window.hpp>
 #include <GTSL/Log.hpp>
+#include <GTSL/Id.hpp>
 
 const char* ToString(GTSL::WindowEvents event)
 {
