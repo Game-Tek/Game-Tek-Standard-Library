@@ -1,45 +1,31 @@
 {
-	"version": 6,
-	"configurePresets": [
-		{
-			"name": "gcc",
-			"displayName": "gcc",
-			"description": "Compile with GCC and Ninja",
-			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/out/build/${presetName}",
-			"cacheVariables": {
-				"CMAKE_BUILD_TYPE": "Debug",
-				"CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
-			}
-		},
-		{
-			"name": "gcc-test", "inherits": "gcc",
-			"cacheVariables": {
-				"BUILD_TESTING": "ON"
-			}
-		}
-	],
-	"buildPresets": [
-		{
-			"name": "linux-x64",
-			"configurePreset": "gcc",
-			"description": ""
-		},
-		{
-			"name": "linux-x64-test",
-			"configurePreset": "gcc-test",
-			"description": ""
-		}
-	],
-	"testPresets": [
-		{
-			"name":"core-test",
-			"configurePreset": "gcc"
-		},
-		{
-			"inherits":"core-test",
-			"name": "linux-test",
-			"configurePreset": "gcc-test"
-		}
-	]
+  "version" : 3,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}"
+    },
+    {
+      "name": "Debug",
+      "displayName": "x64 Debug",
+      "inherits": "base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "Release",
+      "displayName": "x64 Release",
+      "inherits": "Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ]
 }

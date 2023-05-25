@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Core.h"
-
+#include "Core.hpp"
 #include <type_traits>
 
-namespace GTSL {
+namespace GTSL
+{
 	template<typename T>
-	constexpr bool IsIntegral() { return false; };
+	constexpr bool IsIntegral() { return false; }
 
 	template<>
 	constexpr bool IsIntegral<uint32>() { return true; }
@@ -16,7 +16,7 @@ namespace GTSL {
 
 	template<typename T>
 	concept Integral = IsIntegral<T>();
-	
+
 	template<typename E>
 	inline constexpr bool IsEnum = __is_enum(E);
 
@@ -25,7 +25,7 @@ namespace GTSL {
 
 	template<typename T>
 	inline constexpr bool IsPOD = __is_pod(T);
-	
+
 	template<typename E>
 	concept Enum = IsEnum<E>;
 
@@ -39,7 +39,8 @@ namespace GTSL {
 	using UnderlyingType = __underlying_type(E);
 
 	template<class T, class... Ts>
-	constexpr bool IsInPack() noexcept {
+	constexpr bool IsInPack() noexcept
+	{
 		return (std::is_same_v<T, Ts> || ...);
 	}
 
@@ -47,25 +48,32 @@ namespace GTSL {
 	struct TypeAt;
 
 	template<typename HEAD, typename... TAIL >
-	struct TypeAt<0, HEAD, TAIL...> {
+	struct TypeAt<0, HEAD, TAIL...>
+	{
 		using type = HEAD;
 	};
 
 	template<uint64 POS, typename HEAD, typename... TAIL >
-	struct TypeAt<POS, HEAD, TAIL...> {
+	struct TypeAt<POS, HEAD, TAIL...>
+	{
 		using type = typename TypeAt<POS - 1, TAIL...>::type;
 	};
+
+	template<typename A, typename B>
+	constexpr bool IsDerived() { return std::is_base_of_v<A, B>; }
 
 	template<typename A, typename B>
 	constexpr bool IsSame() { return std::is_same_v<A, B>; }
 
 	template<typename... ARGS>
-	consteval uint64 PackSize() {
+	consteval uint64 PackSize()
+	{
 		return (sizeof(ARGS) + ... + 0);
 	}
 
 	template<uint32 I, typename Target, typename ListHead, typename... ListTails>
-	constexpr uint32 GetTypeIndex_impl() {
+	constexpr uint32 GetTypeIndex_impl()
+	{
 		if constexpr (std::is_same_v<Target, ListHead>)
 			return I;
 		else
@@ -73,13 +81,15 @@ namespace GTSL {
 	}
 
 	template<typename Target, typename... ListTails>
-	constexpr uint32 GetTypeIndex() {
+	constexpr uint32 GetTypeIndex()
+	{
 		static_assert(IsInPack<Target, ListTails...>(), "Type T is not in template pack.");
 		return GetTypeIndex_impl<0, Target, ListTails...>();
 	}
 
 	template<uint32 AT, uint32 I, typename HEAD, typename... TAIL>
-	consteval uint64 PackSizeAt_impl() {
+	consteval uint64 PackSizeAt_impl()
+	{
 		if constexpr (AT == I)
 			return 0;
 		else
@@ -87,12 +97,14 @@ namespace GTSL {
 	}
 
 	template<uint32 AT, typename... ARGS>
-	consteval uint64 PackSizeAt() {
+	consteval uint64 PackSizeAt()
+	{
 		return PackSizeAt_impl<AT, 0, ARGS...>();
 	}
 
 	template<typename T>
-	std::reference_wrapper<const T> ref(const T& a) {
+	std::reference_wrapper<const T> ref(const T& a)
+	{
 		return a;
 	}
 }

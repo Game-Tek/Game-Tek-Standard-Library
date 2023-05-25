@@ -1,26 +1,25 @@
 ﻿#pragma once
 
-#include "AxisAngle.h"
-#include "GTSL/Core.h"
+#include "AxisAngle.hpp"
+#include "../Core.hpp"
 #include "Vectors.hpp"
-#include "Quaternion.h"
+#include "Quaternion.hpp"
 #include "Matrix.hpp"
-#include "Plane.h"
-#include "Rotator.h"
-#include "GTSL/Assert.h"
-#include "GTSL/Range.hpp"
-#include <GTSL/Extent.h>
+#include "Plane.hpp"
+#include "Rotator.hpp"
+#include "../Collections/Range.hpp"
+#include "Extent.hpp"
 
-#include "GTSL/SIMD.hpp"
+#include "../SIMD.hpp"
 
 #include <cmath>
 
 namespace GTSL {
 	union FloatintPoint {
-		FloatintPoint(float32 f) : Float(f) {}
+		FloatintPoint(float f) : Float(f) {}
 		FloatintPoint(int32 i) : Int(i) {}
 
-		float32 Float; int32 Int;
+		float Float; int32 Int;
 	};
 
 	template<typename T>
@@ -37,8 +36,8 @@ namespace GTSL {
 	template<typename T>
 	class Degree : public TypedVal<T> {};
 
-	using Degrees = Degree<float32>;
-	using Radians = Radian<float32>;
+	using Degrees = Degree<float>;
+	using Radians = Radian<float>;
 	
 	/**
 	 * \brief Provides most of the same methods of math but usually skips input checking for non valid inputs, NaN, etc. Useful when working in conditions which assure you certain
@@ -50,7 +49,7 @@ namespace GTSL {
 		 * \param x Number to compute the square root of
 		 * \return The square root of x
 		 */
-		inline float32 FastImpreciseSqrt(const float32 x) {
+		inline float FastImpreciseSqrt(const float x) {
 			return FloatintPoint((FloatintPoint(x).Int >> 1) + (FloatintPoint(1.0f).Int >> 1)).Float; // aprox
 		}
 
@@ -59,7 +58,7 @@ namespace GTSL {
 		 * \param x Number to compute the square root of
 		 * \return The square root of x
 		 */
-		inline float32 FastSqrt(const float32 x) {
+		inline float FastSqrt(const float x) {
 			auto y = FastImpreciseSqrt(x);
 			return (y * y + x) / (2.0f * y); //Newton-Rhapson iteration for increased precision
 		}
@@ -77,20 +76,20 @@ namespace GTSL {
 			return s;
 		}
 
-		inline float32 Interp(const float32 target, const float32 current, const float32 factor) {
+		inline float Interp(const float target, const float current, const float factor) {
 			return current + (target - current) * factor;
 		}
 
-		inline float32 InterpDelta(const float32 target, const float32 current, const float32 factor) {
+		inline float InterpDelta(const float target, const float current, const float factor) {
 			return (target - current) * factor;
 		}
 
-		inline float32 Modulo(const float32 a, const float32 b, float32& c, int32& intC) {
+		inline float Modulo(const float a, const float b, float& c, int32& intC) {
 			c = a / b; intC = static_cast<int32>(c);
 			return (c - intC) * b;
 		}
 
-		inline float32 Abs(const float32 a) { return a < 0.0f ? -a : a; }
+		inline float Abs(const float a) { return a < 0.0f ? -a : a; }
 	}
 
 	namespace Math
@@ -118,15 +117,15 @@ namespace GTSL {
 
 		struct float16
 		{
-			explicit float16(const float32 a) : float16(*((uint32*)&a))
+			explicit float16(const float a) : float16(*((uint32*)&a))
 			{
 			}
 
-			explicit operator float32() const
+			explicit operator float() const
 			{
 				//auto tt = (Sign << 16) | ((Exponent + 0x1C000) << 13) | (Fraction << 13);
 				auto tt = ((halfFloat & 0x8000) << 16) | (((halfFloat & 0x7c00) + 0x1C000) << 13) | ((halfFloat & 0x03FF) << 13);
-				return *reinterpret_cast<float32*>(&tt);
+				return *reinterpret_cast<float*>(&tt);
 			}
 			
 			//uint16 Sign : 1, Exponent : 5, Fraction : 10;
@@ -139,15 +138,15 @@ namespace GTSL {
 			{}
 		};
 		
-		inline float32 Power(float32 a, const uint32 times) {
+		inline float Power(float a, const uint32 times) {
 			if (!times) { return 1.0f; }
 			for (uint32 i = 0; i < times - 1; i++) a *= a;
 			return a;
 		}
 
-		inline constexpr float64 PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286;
-		inline constexpr float64 e = 2.718281828459045235360287471352662497757247093699959574966967627724076630353;
-		//inline constexpr float32 Epsilon = 2.718281828459045235360287471352662497757247093699959574966967627724076630353;
+		inline constexpr double PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286;
+		inline constexpr double e = 2.718281828459045235360287471352662497757247093699959574966967627724076630353;
+		//inline constexpr float Epsilon = 2.718281828459045235360287471352662497757247093699959574966967627724076630353;
 
 		inline constexpr Vector3 Right = Vector3(1.0f, 0.0f, 0.0f);
 		inline constexpr Vector3 Up = Vector3(0.0f, 1.0f, 0.0f);
@@ -194,7 +193,7 @@ namespace GTSL {
 		 * \param y exponent
 		 * \return x ^ y
 		 */
-		inline float32 Power(float32 x, float32 y) {
+		inline float Power(float x, float y) {
 			return powf(x, y);
 		}
 
@@ -203,7 +202,7 @@ namespace GTSL {
 		 * \param x number
 		 * \return Base 10 logarithm of x
 		 */
-		inline float32 Log10(float32 x) {
+		inline float Log10(float x) {
 			return log10f(x);
 		}
 
@@ -212,18 +211,18 @@ namespace GTSL {
 		
 		inline bool IsEven(int32 a) { return a & 1; }
 
-		inline float32 Floor(const float32 a) {
+		inline float Floor(const float a) {
 #ifdef _M_CEE
 			return _CSTD floorf(_Xx);
 #elif defined(__clang__)
 			return __builtin_floorf(_Xx);
 #else // ^^^ __clang__ / !__clang__ vvv
 			return floorf(a);
-			//return a > 0 ? static_cast<float32>(static_cast<int32>(a)) : static_cast<float32>(static_cast<int32>(a) - 1);
+			//return a > 0 ? static_cast<float>(static_cast<int32>(a)) : static_cast<float>(static_cast<int32>(a) - 1);
 #endif // __clang__
 		}
 
-		inline auto Floor(const SIMD<float32, 4> a) {
+		inline auto Floor(const SIMD<float, 4> a) {
 			return decltype(a)::Floor(a);
 		}
 
@@ -259,25 +258,25 @@ namespace GTSL {
 		
 		inline uint32 Abs(const int32 a) { return static_cast<uint32>(a < 0.0f ? -a : a); }
 		inline uint64 Abs(const int64 a) { return static_cast<uint64>(a < 0.0f ? -a : a); }
-		inline float32 Abs(const float32 a) { return a < 0.0f ? -a : a; }
+		inline float Abs(const float a) { return a < 0.0f ? -a : a; }
 
 		/**
 		 * \brief Calculates the sine of an angle in a clockwise manner.
 		 * \param x angle in radians
 		 * \return The sine of x.
 		 */
-		inline float32 sin_CW(Radians radians) {
+		inline float sin_CW(Radians radians) {
 			auto x = radians();
-			x = Wrap(x, static_cast<float32>(PI));
+			x = Wrap(x, static_cast<float>(PI));
 
-			const float32 x2 = x * x, x4 = x2 * x2, x8 = x4 * x4, x9 = x8 * x;
+			const float x2 = x * x, x4 = x2 * x2, x8 = x4 * x4, x9 = x8 * x;
 			const auto a = x * (-1.0f + x2 * (1.666666666640169148537065260055e-1f + x2 * (-8.333333316490113523036717102793e-3f + x2 * 1.984126600659171392655484413285e-4f)));
 			const auto b = -2.755690114917374804474016589137e-6f + x2 * (2.502845227292692953118686710787e-8f + x2 * -1.538730635926417598443354215485e-10f);
 			return a + x9 * b;
 		}
 
-		inline float32 cos_CW(const float32 x) {
-			return sin_CW(Radians(x + static_cast<float32>(PI) / 2.0f));
+		inline float cos_CW(const float x) {
+			return sin_CW(Radians(x + static_cast<float>(PI) / 2.0f));
 		}
 		
 		/**
@@ -285,7 +284,7 @@ namespace GTSL {
 		 * \param radians Angle in radians.
 		 * \return Sine of radians
 		 */
-		inline float64 Sine(float64 radians) { return ::sin(radians); }
+		inline double Sine(double radians) { return ::sin(radians); }
 
 		/**
 		* \brief Returns the cosine of an angle.
@@ -297,9 +296,9 @@ namespace GTSL {
 			return Sine<T>(x + PI / 2.0f);
 		}
 
-		//inline float32 Cosine(float32 x) {
+		//inline float Cosine(float x) {
 		//	x = (x > 0) ? -x : x;
-		//	return Sine(x + static_cast<float32>(PI) * 0.5f);
+		//	return Sine(x + static_cast<float>(PI) * 0.5f);
 		//}
 
 		/**
@@ -307,14 +306,14 @@ namespace GTSL {
 		* \param radians Angle in radians.
 		* \return Cosine of radians
 		*/
-		inline float64 Cosine(float64 radians) { return ::cos(radians); }
+		inline double Cosine(double radians) { return ::cos(radians); }
 
 		/**
 		* \brief Returns the tangent of an angle.
 		* \param radians Angle in radians.
 		* \return Tangent of radians
 		*/
-		//inline float32 Tangent(float32 x) {
+		//inline float Tangent(float x) {
 			//return Sine(x) / Cosine(x);
 		//}
 
@@ -323,89 +322,89 @@ namespace GTSL {
 			return Sine(x) / Cosine(x);
 		}
 
-		//inline SIMD<float32, 4> TanTan(SIMD<float32, 4> x) {
-		//	x = Modulo(x, SIMD<float32, 4>(PI * 2)); //get rid of values over 2 PI
-		//	auto octant = SIMD<int32, 4>(x / SIMD<float32, 4>(PI / 4));
+		//inline SIMD<float, 4> TanTan(SIMD<float, 4> x) {
+		//	x = Modulo(x, SIMD<float, 4>(PI * 2)); //get rid of values over 2 PI
+		//	auto octant = SIMD<int32, 4>(x / SIMD<float, 4>(PI / 4));
 		//
-		//	auto tan_82s = [](SIMD<float32, 4> x) {
-		//		const SIMD<float32, 4> c1 = 211.849369664121, c2 = -12.5288887278448, c3 = 269.73500131214121, c4 = -71.4145309347748;
+		//	auto tan_82s = [](SIMD<float, 4> x) {
+		//		const SIMD<float, 4> c1 = 211.849369664121, c2 = -12.5288887278448, c3 = 269.73500131214121, c4 = -71.4145309347748;
 		//		auto x2 = x * x;
 		//		return x * (c1 + c2 * x2) / (c3 + x2 * (c4 + x2));
 		//	};
 		//
-		//	SIMD<float32, 4> xArg = x, halfPiMinX = SIMD<float32, 4>(PI / 2) - x, xMinHalfPi = x - SIMD<float32, 4>(PI / 2), piMinX = SIMD<float32, 4>(PI) - x, xMinPi = x - SIMD<float32, 4>(PI), threeHalfPiMinX = SIMD<float32, 4>(PI * 3/2) - x, xMinThreeHalfPi = SIMD<float32, 4>(PI * 3 / 2) - x, twoPiMinX = SIMD<float32, 4>(PI * 2) - x;
+		//	SIMD<float, 4> xArg = x, halfPiMinX = SIMD<float, 4>(PI / 2) - x, xMinHalfPi = x - SIMD<float, 4>(PI / 2), piMinX = SIMD<float, 4>(PI) - x, xMinPi = x - SIMD<float, 4>(PI), threeHalfPiMinX = SIMD<float, 4>(PI * 3/2) - x, xMinThreeHalfPi = SIMD<float, 4>(PI * 3 / 2) - x, twoPiMinX = SIMD<float, 4>(PI * 2) - x;
 		//
-		//	xArg = SIMD<float32, 4>(xArg, halfPiMinX, float4x(octant == 1));
-		//	xArg = SIMD<float32, 4>(xArg, xMinHalfPi, float4x(octant == 2));
-		//	xArg = SIMD<float32, 4>(xArg, piMinX, float4x(octant == 3));
-		//	xArg = SIMD<float32, 4>(xArg, xMinPi, float4x(octant == 4));
-		//	xArg = SIMD<float32, 4>(xArg, threeHalfPiMinX, float4x(octant == 5));
-		//	xArg = SIMD<float32, 4>(xArg, xMinThreeHalfPi, float4x(octant == 6));
-		//	xArg = SIMD<float32, 4>(xArg, twoPiMinX, float4x(octant == 7));
+		//	xArg = SIMD<float, 4>(xArg, halfPiMinX, float4x(octant == 1));
+		//	xArg = SIMD<float, 4>(xArg, xMinHalfPi, float4x(octant == 2));
+		//	xArg = SIMD<float, 4>(xArg, piMinX, float4x(octant == 3));
+		//	xArg = SIMD<float, 4>(xArg, xMinPi, float4x(octant == 4));
+		//	xArg = SIMD<float, 4>(xArg, threeHalfPiMinX, float4x(octant == 5));
+		//	xArg = SIMD<float, 4>(xArg, xMinThreeHalfPi, float4x(octant == 6));
+		//	xArg = SIMD<float, 4>(xArg, twoPiMinX, float4x(octant == 7));
 		//
-		//	auto tanRes = tan_82s(xArg * SIMD<float32, 4>(4 / PI));
+		//	auto tanRes = tan_82s(xArg * SIMD<float, 4>(4 / PI));
 		//
 		//	float4x divTerm;
-		//	divTerm = SIMD<float32, 4>(divTerm, tanRes * tanRes, float4x(octant == 0 || octant == 4));
-		//	divTerm = SIMD<float32, 4>(divTerm, 1, float4x(octant == 1 || octant == 5));
-		//	divTerm = SIMD<float32, 4>(divTerm, -1, float4x(octant == 2 || octant == 6));
-		//	divTerm = SIMD<float32, 4>(divTerm, (tanRes * tanRes) *= -1, float4x(octant == 3 || octant == 7));
+		//	divTerm = SIMD<float, 4>(divTerm, tanRes * tanRes, float4x(octant == 0 || octant == 4));
+		//	divTerm = SIMD<float, 4>(divTerm, 1, float4x(octant == 1 || octant == 5));
+		//	divTerm = SIMD<float, 4>(divTerm, -1, float4x(octant == 2 || octant == 6));
+		//	divTerm = SIMD<float, 4>(divTerm, (tanRes * tanRes) *= -1, float4x(octant == 3 || octant == 7));
 		//
 		//	return divTerm / tanRes;
 		//}
 
 		//template<uint8 S>
-		//SIMD<float32, S> Tangent(SIMD<float32, S> x) {
-		//	return SIMD<float32, S>::Tangent(x);
+		//SIMD<float, S> Tangent(SIMD<float, S> x) {
+		//	return SIMD<float, S>::Tangent(x);
 		//}
 
-		//inline float32 Tangent(float32 x) { return tanf(x); }
+		//inline float Tangent(float x) { return tanf(x); }
 		
 		/**
 		* \brief Returns the tangent of an angle.
 		* \param radians Angle in radians.
 		* \return Tangent of radians
 		*/
-		//inline float64 Tangent(float64 radians) { return tan(radians); }
+		//inline double Tangent(double radians) { return tan(radians); }
 
 		/**
 		* \brief Returns the arcsine of A in radians.
 		* \param A value
 		* \return Radians of A
 		*/
-		inline float32 ArcSine(float32 A) { return asin(A); }
+		inline float ArcSine(float A) { return asin(A); }
 
 		/**
 		* \brief Returns the arccosine of A in radians.
 		* \param A value
 		* \return Radians of A
 		*/
-		inline float32 ArcCosine(float32 A) { return acos(A); }
+		inline float ArcCosine(float A) { return acos(A); }
 
 		/**
 		* \brief Returns the arctangent of A in radians.
 		* \param A value
 		* \return Radians of A
 		*/
-		inline float32 ArcTangent(float32 A) { return atan(A); }
+		inline float ArcTangent(float A) { return atan(A); }
 
 		/**
 		* \brief Returns the arctangent of Y / X in degrees.
 		* \return Degrees of Y / X
 		*/
-		inline float32 ArcTan2(float32 y, float32 x) { return atan2(y, x); }
+		inline float ArcTan2(float y, float x) { return atan2(y, x); }
 
-		//inline float32 Modulo(const float32 a, const float32 b) {
-		//	const float32 c = a / b;
+		//inline float Modulo(const float a, const float b) {
+		//	const float c = a / b;
 		//	return (c - Floor(c)) * b;
 		//}
 		//
-		//inline float32 Wrap(const float32 a, const float32 range) {
+		//inline float Wrap(const float a, const float range) {
 		//	return Modulo(a - range, range * 2) - range;
 		//}
 
-		inline void Sine(Range<const float32*> n, Range<float32*> results) {
-			using SIMD = SIMD<float32, 4>;
+		inline void Sine(Range<const float*> n, Range<float*> results) {
+			using SIMD = SIMD<float, 4>;
 
 			uint32 i = 0;
 
@@ -416,14 +415,14 @@ namespace GTSL {
 				a6(1.538730635926417598443354215485e-10f);
 
 			for (uint32 t = 0; t < n.ElementCount() / SIMD::ElementCount; ++t, i += SIMD::ElementCount) {
-				auto x = SIMD(AlignedPointer<const float32, 16>(n.begin() + i));
+				auto x = SIMD(AlignedPointer<const float, 16>(n.begin() + i));
 
 				x = Wrap(x, SIMD(PI));
 
 				const SIMD x2 = x * x, x4 = x2 * x2, x8 = x4 * x4, x9 = x8 * x;
 				const auto a = x * (a0 + x2 * (a1 + x2 * (a2 + x2 * a3)));
 				const auto b = a4 + x2 * (a5 + x2 * a6);
-				(a + x9 * b).CopyTo(AlignedPointer<float32, 16>(results.begin() + i));
+				(a + x9 * b).CopyTo(AlignedPointer<float, 16>(results.begin() + i));
 			}
 
 			for (; i < n.ElementCount(); ++i) {
@@ -431,8 +430,8 @@ namespace GTSL {
 			}
 		}
 
-		inline void Cosine(Range<const float32*> n, Range<float32*> results) {
-			using SIMD = SIMD<float32, 4>;
+		inline void Cosine(Range<const float*> n, Range<float*> results) {
+			using SIMD = SIMD<float, 4>;
 
 			uint32 i = 0;
 
@@ -443,7 +442,7 @@ namespace GTSL {
 				a6(1.538730635926417598443354215485e-10f);
 
 			for (uint32 t = 0; t < n.ElementCount() / SIMD::ElementCount; ++t, i += SIMD::ElementCount) {
-				Cosine(SIMD(n.begin() + i)).CopyTo(AlignedPointer<float32, 16>(results.begin() + i));
+				Cosine(SIMD(n.begin() + i)).CopyTo(AlignedPointer<float, 16>(results.begin() + i));
 			}
 
 			for (; i < n.ElementCount(); ++i) {
@@ -451,13 +450,13 @@ namespace GTSL {
 			}
 		}
 
-		inline void Tangent(Range<const float32*> n, Range<float32*> results) {
-			using SIMD = SIMD<float32, 4>;
+		inline void Tangent(Range<const float*> n, Range<float*> results) {
+			using SIMD = SIMD<float, 4>;
 
 			uint32 i = 0;
 
 			for (uint32 t = 0; t < n.ElementCount() / SIMD::ElementCount; ++t, i += SIMD::ElementCount) {
-				Tangent(SIMD(n.begin() + i)).CopyTo(AlignedPointer<float32, 16>(results.begin() + i));
+				Tangent(SIMD(n.begin() + i)).CopyTo(AlignedPointer<float, 16>(results.begin() + i));
 			}
 
 			for (; i < n.ElementCount(); ++i) {
@@ -465,12 +464,12 @@ namespace GTSL {
 			}
 		}
 
-		inline float32 SquareRoot(const float32 a) {
+		inline float SquareRoot(const float a) {
 			if (a > 0.0f) { return AdvancedMath::SquareRoot(a); }
 			return 0.0f;
 		}
 
-		inline float64 SquareRoot(const float64 a) {
+		inline double SquareRoot(const double a) {
 			if (a > 0.0) { return AdvancedMath::SquareRoot(a); }
 			return 0.0;
 		}
@@ -480,7 +479,7 @@ namespace GTSL {
 		 * \param x Number to compute the square root of
 		 * \return The square root of x
 		 */
-		inline float32 FastSqrt(const float32 x) {
+		inline float FastSqrt(const float x) {
 			if (x > 0.0f) { return AdvancedMath::FastSqrt(x); }
 			return 0.0f;
 		}
@@ -510,7 +509,7 @@ namespace GTSL {
 		}
 
 		//Returns 1 if A is bigger than 0. 0 if A is equal to 0. and -1 if A is less than 0.
-		inline int8 Sign(const float32 A) {
+		inline int8 Sign(const float A) {
 			if (A > 0.0f)			
 				return 1;
 			
@@ -521,35 +520,35 @@ namespace GTSL {
 		}
 		
 		//Mixes A and B by the specified values, Where Alpha 0 returns A and Alpha 1 returns B.
-		inline float32 Lerp(const float32 a, const float32 b, const float32 alpha) {
+		inline float Lerp(const float a, const float b, const float alpha) {
 			return a + alpha * (b - a);
 		}
 
-		inline Vector2 Lerp(const Vector2 a, const Vector2 b, const float32 alpha) {
+		inline Vector2 Lerp(const Vector2 a, const Vector2 b, const float alpha) {
 			return { Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha) };
 		}
 
-		inline Vector3 Lerp(const Vector3 a, const Vector3 b, const float32 alpha) {
+		inline Vector3 Lerp(const Vector3 a, const Vector3 b, const float alpha) {
 			return { Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha), Lerp(a.Z(), b.Z(), alpha) };
 		}
 
-		inline Vector4 Lerp(const Vector4 a, const Vector4 b, const float32 alpha) {
+		inline Vector4 Lerp(const Vector4 a, const Vector4 b, const float alpha) {
 			return { Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha), Lerp(a.Z(), b.Z(), alpha), Lerp(a.W(), b.W(), alpha) };
 		}
 
-		inline float32 LengthSquared(const Vector2 a) { return a.X() * a.X() + a.Y() * a.Y(); }
-		inline float32 LengthSquared(const Vector3 a) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z(); }
-		inline float32 LengthSquared(const Vector4 a) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z() + a.W() * a.W(); }
-		inline float32 DistanceSquared(const Vector2 a, const Vector2 b) { return LengthSquared(b - a); }
-		inline float32 DistanceSquared(const Vector3 a, const Vector3 b) { return LengthSquared(b - a); }
-		inline float32 DistanceSquared(const Vector4 a, const Vector4 b) { return LengthSquared(b - a); }
+		inline float LengthSquared(const Vector2 a) { return a.X() * a.X() + a.Y() * a.Y(); }
+		inline float LengthSquared(const Vector3 a) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z(); }
+		inline float LengthSquared(const Vector4 a) { return a.X() * a.X() + a.Y() * a.Y() + a.Z() * a.Z() + a.W() * a.W(); }
+		inline float DistanceSquared(const Vector2 a, const Vector2 b) { return LengthSquared(b - a); }
+		inline float DistanceSquared(const Vector3 a, const Vector3 b) { return LengthSquared(b - a); }
+		inline float DistanceSquared(const Vector4 a, const Vector4 b) { return LengthSquared(b - a); }
 
-		inline float32 Length(const Vector2 a) { return SquareRoot(LengthSquared(a)); }
-		inline float32 Length(const Vector3 a) { return SquareRoot(LengthSquared(a)); }
-		inline float32 Length(const Vector4 a) { return SquareRoot(LengthSquared(a)); }
-		inline float32 Distance(const Vector2 a, const Vector2 b) { return SquareRoot(DistanceSquared(a, b)); }
-		inline float32 Distance(const Vector3 a, const Vector3 b) { return SquareRoot(DistanceSquared(a, b)); }
-		inline float32 Distance(const Vector4 a, const Vector4 b) { return SquareRoot(DistanceSquared(a, b)); }
+		inline float Length(const Vector2 a) { return SquareRoot(LengthSquared(a)); }
+		inline float Length(const Vector3 a) { return SquareRoot(LengthSquared(a)); }
+		inline float Length(const Vector4 a) { return SquareRoot(LengthSquared(a)); }
+		inline float Distance(const Vector2 a, const Vector2 b) { return SquareRoot(DistanceSquared(a, b)); }
+		inline float Distance(const Vector3 a, const Vector3 b) { return SquareRoot(DistanceSquared(a, b)); }
+		inline float Distance(const Vector4 a, const Vector4 b) { return SquareRoot(DistanceSquared(a, b)); }
 
 		inline Vector2 Normalized(const Vector2& a) {
 			auto length = Length(a); if (length == 0.0f) { return a; }
@@ -603,50 +602,50 @@ namespace GTSL {
 			return { a.X() * length, a.Y() * length, a.Z() * length, a.W() * length };
 		}
 		
-		inline Quaternion Lerp(const Quaternion a, const Quaternion b, const float32 alpha) {
+		inline Quaternion Lerp(const Quaternion a, const Quaternion b, const float alpha) {
 			return Normalized(Quaternion(Lerp(a.X(), b.X(), alpha), Lerp(a.Y(), b.Y(), alpha), Lerp(a.Z(), b.Z(), alpha), Lerp(a.W(), b.W(), alpha)));
 		}
 
-		inline float32 Square(const float32 a) { return a * a; }
+		inline float Square(const float a) { return a * a; }
 
 		//Interpolates from Current to Target, returns Current + an amount determined by the InterpSpeed.
-		inline float32 Interp(const float32 Target, const float32 Current, const float32 DT, const float32 InterpSpeed) {
+		inline float Interp(const float Target, const float Current, const float DT, const float InterpSpeed) {
 			return AdvancedMath::Interp(Target, Current, DT * InterpSpeed);
 		}
 
-		inline Vector2 Interp(const Vector2 target, const Vector2 current, const float32 deltaTime, const float32 speed) {
+		inline Vector2 Interp(const Vector2 target, const Vector2 current, const float deltaTime, const float speed) {
 			auto factor = deltaTime * speed;
 			return Vector2(AdvancedMath::Interp(target.X(), current.X(), factor), AdvancedMath::Interp(target.Y(), current.Y(), factor));
 		}
 
-		inline Vector3 Interp(const Vector3 target, const Vector3 current, const float32 deltaTime, const float32 speed) {
+		inline Vector3 Interp(const Vector3 target, const Vector3 current, const float deltaTime, const float speed) {
 			auto factor = deltaTime * speed;
 			return Vector3(AdvancedMath::Interp(target.X(), current.X(), factor), AdvancedMath::Interp(target.Y(), current.Y(), factor),
 				AdvancedMath::Interp(target.Z(), current.Z(), factor));
 		}
 
-		inline Vector4 Interp(const Vector4 target, const Vector4 current, const float32 deltaTime, const float32 speed) {
+		inline Vector4 Interp(const Vector4 target, const Vector4 current, const float deltaTime, const float speed) {
 			auto factor = deltaTime * speed;
 			return Vector4(AdvancedMath::Interp(target.X(), current.X(), factor), AdvancedMath::Interp(target.Y(), current.Y(), factor),
 				AdvancedMath::Interp(target.Z(), current.Z(), factor), AdvancedMath::Interp(target.W(), current.W(), factor));
 		}
 
-		inline float32 InterpDelta(const float32 target, const float32 current, const float32 deltaTime, const float32 speed) {
+		inline float InterpDelta(const float target, const float current, const float deltaTime, const float speed) {
 			return AdvancedMath::InterpDelta(target, current, deltaTime * speed);
 		}
 
-		inline Vector2 InterpDelta(const Vector2 target, const Vector2 current, const float32 deltaTime, const float32 speed) {
+		inline Vector2 InterpDelta(const Vector2 target, const Vector2 current, const float deltaTime, const float speed) {
 			auto factor = deltaTime * speed;
 			return Vector2(AdvancedMath::InterpDelta(target.X(), current.X(), factor), AdvancedMath::InterpDelta(target.Y(), current.Y(), factor));
 		}
 
-		inline Vector3 InterpDelta(const Vector3 target, const Vector3 current, const float32 deltaTime, const float32 speed) {
+		inline Vector3 InterpDelta(const Vector3 target, const Vector3 current, const float deltaTime, const float speed) {
 			auto factor = deltaTime * speed;
 			return Vector3(AdvancedMath::InterpDelta(target.X(), current.X(), factor), AdvancedMath::InterpDelta(target.Y(), current.Y(), factor),
 				AdvancedMath::InterpDelta(target.Z(), current.Z(), factor));
 		}
 
-		inline Vector4 InterpDelta(const Vector4 target, const Vector4 current, const float32 deltaTime, const float32 speed) {
+		inline Vector4 InterpDelta(const Vector4 target, const Vector4 current, const float deltaTime, const float speed) {
 			auto factor = deltaTime * speed;
 			return Vector4(AdvancedMath::InterpDelta(target.X(), current.X(), factor), AdvancedMath::InterpDelta(target.Y(), current.Y(), factor),
 				AdvancedMath::InterpDelta(target.Z(), current.Z(), factor), AdvancedMath::InterpDelta(target.W(), current.W(), factor));
@@ -654,9 +653,9 @@ namespace GTSL {
 		
 		inline uint32 InvertRange(const uint32 a, const uint32 max) { return max - a; }
 
-		inline float32 InvertRange(const float32 a, const float32 max) { return max - a; }
+		inline float InvertRange(const float a, const float max) { return max - a; }
 		
-		inline float32 MapToRange(const float32 x, const float32 inMin, const float32 inMax, const float32 outMin, const float32 outMax) {
+		inline float MapToRange(const float x, const float inMin, const float inMax, const float outMin, const float outMax) {
 			if ((inMax - inMin) == 0.0f) { return x; }
 
 			GTSL_ASSERT(x >= inMin && x <= inMax, "Not in range");
@@ -667,9 +666,9 @@ namespace GTSL {
 			return { MapToRange(a.X(), matrixin.X(), matrixax.X(), OutMin.X(), OutMax.X()), MapToRange(a.Y(), matrixin.Y(), matrixax.Y(), OutMin.Y(), OutMax.Y()) };
 		}
 
-		inline float32 MapToRangeZeroToOne(const float32 a, const float32 inMax, const float32 outMax) { return a / (inMax / outMax); }
+		inline float MapToRangeZeroToOne(const float a, const float inMax, const float outMax) { return a / (inMax / outMax); }
 
-		inline float32 Root(const float32 a, const float32 root) { return Power(a, 1.0f / root); }
+		inline float Root(const float a, const float root) { return Power(a, 1.0f / root); }
 
 		template<typename T>
 		T Limit(const T a, const T max) { return a > max ? max : a; }
@@ -694,36 +693,36 @@ namespace GTSL {
 		 * \param degrees degrees to convert
 		 * \return Degrees as radians
 		 */
-		inline float32 DegreesToRadians(const float32 degrees) { return degrees * static_cast<float32>(PI / 180.0); }
+		inline float DegreesToRadians(const float degrees) { return degrees * static_cast<float>(PI / 180.0); }
 
 		/**
 		 * \brief Returns degrees converted to radians.
 		 * \param degrees degrees to convert
 		 * \return Degrees as radians
 		 */
-		inline float64 DegreesToRadians(const float64 degrees) { return degrees * (PI / 180.0); }
+		inline double DegreesToRadians(const double degrees) { return degrees * (PI / 180.0); }
 
 		/**
 		 * \brief Returns Radians converted to degrees.
 		 * \param radians radians to convert.
 		 * \return Radians as degrees.
 		 */
-		inline float32 RadiansToDegrees(const float32 radians) { return radians * static_cast<float32>(180.0 / PI); }
+		inline float RadiansToDegrees(const float radians) { return radians * static_cast<float>(180.0 / PI); }
 
 		/**
 		 * \brief Returns Radians converted to degrees.
 		 * \param radians radians to convert.
 		 * \return Radians as degrees.
 		 */
-		inline float64 RadiansToDegrees(const float64 radians) { return radians * (180.0 / PI); }
+		inline double RadiansToDegrees(const double radians) { return radians * (180.0 / PI); }
 
 		//////////////////////////////////////////////////////////////
 		//						VECTOR MATH							//
 		//////////////////////////////////////////////////////////////
 
-		inline float32 DotProduct(const Vector2 a, const Vector2 b) { return a.X() * b.X() + a.Y() * b.Y(); }
-		inline float32 DotProduct(const Vector3& a, const Vector3& b) { return a.X() * b.X() + a.Y() * b.Y() + a.Z() * b.Z(); }
-		inline float32 DotProduct(const Vector4& a, const Vector4& b) { return a.X() * b.X() + a.Y() * b.Y() + a.Z() * b.Z() + a.W() * b.W(); }
+		inline float DotProduct(const Vector2 a, const Vector2 b) { return a.X() * b.X() + a.Y() * b.Y(); }
+		inline float DotProduct(const Vector3& a, const Vector3& b) { return a.X() * b.X() + a.Y() * b.Y() + a.Z() * b.Z(); }
+		inline float DotProduct(const Vector4& a, const Vector4& b) { return a.X() * b.X() + a.Y() * b.Y() + a.Z() * b.Z() + a.W() * b.W(); }
 
 		inline Vector3 Cross(const Vector3& a, const Vector3& b) { return { a.Y() * b.Z() - a.Z() * b.Y(), a.Z() * b.X() - a.X() * b.Z(), a.X() * b.Y() - a.Y() * b.X() }; }
 		inline Vector3 TripleProduct(const Vector3& a, const Vector3& b) { return Cross(Cross(a, b), b); }
@@ -732,7 +731,7 @@ namespace GTSL {
 		inline Vector3 Abs(const Vector3 a) { return { Abs(a.X()), Abs(a.Y()), Abs(a.Z()) }; }
 		inline Vector4 Abs(const Vector4 a) { return { Abs(a.X()), Abs(a.Y()), Abs(a.Z()), Abs(a.W()) }; }
 
-		inline void Negate(float32& a) { a *= -1.0f; }
+		inline void Negate(float& a) { a *= -1.0f; }
 
 		inline Vector2 Negated(const Vector2& a) { return { -a.X(), -a.Y() }; }
 		inline Vector3 Negated(const Vector3& a) { return { -a.X(), -a.Y(), -a.Z() }; }
@@ -748,28 +747,28 @@ namespace GTSL {
 		inline Quaternion Conjugated(const Quaternion& a) { return Quaternion(-a.X(), -a.Y(), -a.Z(), a.W()); }
 		inline void Conjugate(Quaternion& a) { a.X() = -a.X(); a.Y() = -a.Y(); a.Z() = -a.Z(); }
 
-		inline Quaternion Slerp(Quaternion a, Quaternion b, float32 alpha) {
+		inline Quaternion Slerp(Quaternion a, Quaternion b, float alpha) {
 			//Implementation from assimp
 			// Calculate angle between them.
-			float32 cosom = DotProduct(a, b);
+			float cosom = DotProduct(a, b);
 			if (cosom < 0.0f) {
 				Negate(b);
 				Negate(cosom);
 			}
 
-			float32 sclp, sclq;
+			float sclp, sclq;
 
 			// Calculate coefficients
-			if ((static_cast<float32>(1.0) - cosom) > static_cast<float32>(0.0001)) { // 0.0001 -> some epsillon
+			if ((static_cast<float>(1.0) - cosom) > static_cast<float>(0.0001)) { // 0.0001 -> some epsillon
 				// Standard case (slerp)
-				float32 omega, sinom;
+				float omega, sinom;
 				omega = ArcCosine(cosom); // extract theta from dot product's cos theta
 				sinom = Sine(omega);
-				sclp = Sine((static_cast<float32>(1.0) - alpha) * omega) / sinom;
+				sclp = Sine((static_cast<float>(1.0) - alpha) * omega) / sinom;
 				sclq = Sine(alpha * omega) / sinom;
 			} else {
 				// Very close, do linear interp (because it's faster)
-				sclp = static_cast<float32>(1.0) - alpha;
+				sclp = static_cast<float>(1.0) - alpha;
 				sclq = alpha;
 			}
 
@@ -781,30 +780,30 @@ namespace GTSL {
 		//////////////////////////////////////////////////////////////
 
 		//Compares float numbers with adaptive epsilon based on the scale of the numbers
-		inline bool Compare(float32 f1, float32 f2) {
+		inline bool Compare(float f1, float f2) {
 			static constexpr auto epsilon = 1.0e-05f;
 			if (Abs(f1 - f2) <= epsilon)
 				return true;
 			return Abs(f1 - f2) <= epsilon * Max(Abs(f1), Abs(f2));
 		}
 		
-		inline bool IsNearlyEqual(const float32 A, const float32 Target, const float32 Tolerance) {
+		inline bool IsNearlyEqual(const float A, const float Target, const float Tolerance) {
 			return (A >= Target - Tolerance) && (A <= Target + Tolerance);
 		}
 
-		inline bool IsInRange(const float32 A, const float32 Min, const float32 Max) {
+		inline bool IsInRange(const float A, const float Min, const float Max) {
 			return (A >= Min) && (A <= Max);
 		}
 
-		inline bool IsNearlyEqual(const Vector2& A, const Vector2& Target, const float32 Tolerance) {
+		inline bool IsNearlyEqual(const Vector2& A, const Vector2& Target, const float Tolerance) {
 			return IsNearlyEqual(A.X(), Target.X(), Tolerance) && IsNearlyEqual(A.Y(), Target.Y(), Tolerance);
 		}
 
-		inline bool IsNearlyEqual(const Vector3& A, const Vector3& Target, const float32 Tolerance) {
+		inline bool IsNearlyEqual(const Vector3& A, const Vector3& Target, const float Tolerance) {
 			return IsNearlyEqual(A.X(), Target.X(), Tolerance) && IsNearlyEqual(A.Y(), Target.Y(), Tolerance) && IsNearlyEqual(A.Z(), Target.Z(), Tolerance);
 		}
 
-		inline bool IsNearlyEqual(const Vector4& a, const Vector4& b, const float32 tolerance) {
+		inline bool IsNearlyEqual(const Vector4& a, const Vector4& b, const float tolerance) {
 			return IsNearlyEqual(a.X(), b.X(), tolerance) && IsNearlyEqual(a.Y(), b.Y(), tolerance) && IsNearlyEqual(a.Z(), b.Z(), tolerance) && IsNearlyEqual(a.W(), b.W(), tolerance);
 		}
 
@@ -912,7 +911,7 @@ namespace GTSL {
 		// +0 indicates point is to the right
 		// 0 indicates point is on the line
 		// -0 indicates point is to the left
-		inline float32 TestPointToLineSide(const Vector2 a, const Vector2 b, const Vector2 p) {
+		inline float TestPointToLineSide(const Vector2 a, const Vector2 b, const Vector2 p) {
 			return ((a.X() - b.X()) * (p.Y() - b.Y()) - (a.Y() - b.Y()) * (p.X() - b.X()));
 		};
 
@@ -944,7 +943,7 @@ namespace GTSL {
 		 * \param farPlane Distance between the far clipping plane and the origin of the camera.
 		 * \return Perspective projection matrix.
 		 */
-		inline Matrix4 BuildPerspectiveMatrix(const float32 fov, const float32 aspectRatio, const float32 nearPlane, const float32 farPlane) {
+		inline Matrix4 BuildPerspectiveMatrix(const float fov, const float aspectRatio, const float nearPlane, const float farPlane) {
 			Matrix4 matrix;
 			
 			//Tangent of half the vertical view angle.
@@ -963,7 +962,7 @@ namespace GTSL {
 			return matrix;
 		}
 
-		inline Matrix4 BuildInvertedPerspectiveMatrix(const float32 fov, const float32 aspectRatio, const float32 nearPlane, const float32 farPlane) {
+		inline Matrix4 BuildInvertedPerspectiveMatrix(const float fov, const float aspectRatio, const float nearPlane, const float farPlane) {
 			Matrix4 matrix;
 
 			//Tangent of half the vertical view angle.
@@ -981,11 +980,11 @@ namespace GTSL {
 			return matrix;
 		}
 
-		inline Matrix4 MakeOrthoMatrix(const float32 right, const float32 left, const float32 top, const float32 bottom, const float32 nearPlane, const float32 farPlane) {
+		inline Matrix4 MakeOrthoMatrix(const float right, const float left, const float top, const float bottom, const float nearPlane, const float farPlane) {
 			Matrix4 matrix;
-			matrix[0][0] = static_cast<float32>(2) / (right - left);
-			matrix[1][1] = static_cast<float32>(2) / (top - bottom);
-			matrix[2][2] = static_cast<float32>(1) / (farPlane - nearPlane);
+			matrix[0][0] = static_cast<float>(2) / (right - left);
+			matrix[1][1] = static_cast<float>(2) / (top - bottom);
+			matrix[2][2] = static_cast<float>(1) / (farPlane - nearPlane);
 			matrix[3][0] = -(right + left) / (right - left);
 			matrix[3][1] = -(top + bottom) / (top - bottom);
 			matrix[3][2] = -nearPlane / (farPlane - nearPlane);
@@ -993,7 +992,7 @@ namespace GTSL {
 			return matrix;
 		}
 
-		inline Matrix4 MakeOrthoMatrix(const Extent2D extent, const float32 nearPlane, const float32 farPlane) {
+		inline Matrix4 MakeOrthoMatrix(const Extent2D extent, const float nearPlane, const float farPlane) {
 			Vector2 xy(extent.Width, extent.Height); xy /= 2.0f;
 			return MakeOrthoMatrix(xy.X(), -xy.X(), xy.Y(), -xy.X(), nearPlane, farPlane);
 		}
@@ -1002,11 +1001,11 @@ namespace GTSL {
 		T Clamp(T a, T min, T max) { return a > max ? max : (a < min ? min : a); }
 
 		inline Vector3 ClosestPointOnPlane(const Vector3& point, const Plane& plane) {
-			const float32 T = (DotProduct(plane.Normal, point) - plane.D) / DotProduct(plane.Normal, plane.Normal);
+			const float T = (DotProduct(plane.Normal, point) - plane.D) / DotProduct(plane.Normal, plane.Normal);
 			return point - plane.Normal * T;
 		}
 
-		inline float32 DistanceFromPointToPlane(const Vector3& point, const Plane& plane)
+		inline float DistanceFromPointToPlane(const Vector3& point, const Plane& plane)
 		{
 			// return Dot(q, p.n) - p.d; if plane equation normalized (||p.n||==1)
 			return (DotProduct(plane.Normal, point) - plane.D) / DotProduct(plane.Normal, plane.Normal);
@@ -1029,7 +1028,7 @@ namespace GTSL {
 			return a + AB * t;
 		}
 		
-		inline Vector2 ClosestPointOnLineSegmentToPoint(const Vector2 a, const Vector2 b, const Vector2 p, float32& isOnLine) {
+		inline Vector2 ClosestPointOnLineSegmentToPoint(const Vector2 a, const Vector2 b, const Vector2 p, float& isOnLine) {
 			const auto AB = b - a;
 			// Project c onto ab, computing parameterized position d(t) = a + t*(b – a)
 			auto t = DotProduct(p - a, AB) / LengthSquared(AB);
@@ -1053,14 +1052,14 @@ namespace GTSL {
 			return a + AB * t;
 		}
 
-		inline float32 SquaredDistancePointToSegment(const Vector3& a, const Vector3& b, const Vector3& c) {
+		inline float SquaredDistancePointToSegment(const Vector3& a, const Vector3& b, const Vector3& c) {
 			const Vector3 AB = b - a;
 			const Vector3 AC = c - a;
 			const Vector3 BC = c - b;
-			const float32 E = DotProduct(AC, AB);
+			const float E = DotProduct(AC, AB);
 			// Handle cases where c projects outside ab
 			if (E <= 0.0f) return DotProduct(AC, AC);
-			const float32 f = DotProduct(AB, AB);
+			const float f = DotProduct(AB, AB);
 			if (E >= f) return DotProduct(BC, BC);
 			// Handle cases where c projects onto ab
 			return DotProduct(AC, AC) - E * E / f;
@@ -1068,9 +1067,9 @@ namespace GTSL {
 
 		// Compute barycentric coordinates (u, v, w) for
 		// point p with respect to triangle (a, b, c)
-		inline void Barycentric(Vector2 a, Vector2 b, Vector2 c, Vector2 p, float32& s, float32& t, float32& u) {
+		inline void Barycentric(Vector2 a, Vector2 b, Vector2 c, Vector2 p, float& s, float& t, float& u) {
 			Vector2 v0 = b - a, v1 = c - a, v2 = p - a;
-			float32 den = v0.X() * v1.Y() - v1.X() * v0.Y();
+			float den = v0.X() * v1.Y() - v1.X() * v0.Y();
 			s = (v2.X() * v1.Y() - v1.X() * v2.Y()) / den;	
 			t = (v0.X() * v2.Y() - v2.X() * v0.Y()) / den;
 			u = 1.0f - s - t;
@@ -1082,47 +1081,47 @@ namespace GTSL {
 			const Vector3 AB = p2 - p1;
 			const Vector3 AC = p3 - p1;
 
-			const float32 D1 = DotProduct(AB, AP);
-			const float32 D2 = DotProduct(AC, AP);
+			const float D1 = DotProduct(AB, AP);
+			const float D2 = DotProduct(AC, AP);
 			if (D1 <= 0.0f && D2 <= 0.0f) return p1; // barycentric coordinates (1,0,0)
 
 			// Check if P in vertex region outside B
 			const Vector3 BP = a - p2;
-			const float32 D3 = DotProduct(AB, BP);
-			const float32 D4 = DotProduct(AC, BP);
+			const float D3 = DotProduct(AB, BP);
+			const float D4 = DotProduct(AC, BP);
 			if (D3 >= 0.0f && D4 <= D3) return p2; // barycentric coordinates (0,1,0)
 
 			// Check if P in edge region of AB, if so return projection of P onto AB
-			const float32 VC = D1 * D4 - D3 * D2;
+			const float VC = D1 * D4 - D3 * D2;
 			if (VC <= 0.0f && D1 >= 0.0f && D3 <= 0.0f) {
-				const float32 V = D1 / (D1 - D3);
+				const float V = D1 / (D1 - D3);
 				return p1 + AB * V; // barycentric coordinates (1-v,v,0)
 			}
 
 			// Check if P in vertex region outside C
 			const Vector3 CP = a - p3;
-			const float32 D5 = DotProduct(AB, CP);
-			const float32 D6 = DotProduct(AC, CP);
+			const float D5 = DotProduct(AB, CP);
+			const float D6 = DotProduct(AC, CP);
 			if (D6 >= 0.0f && D5 <= D6) return p3; // barycentric coordinates (0,0,1)
 
 			// Check if P in edge region of AC, if so return projection of P onto AC
-			const float32 VB = D5 * D2 - D1 * D6;
+			const float VB = D5 * D2 - D1 * D6;
 			if (VB <= 0.0f && D2 >= 0.0f && D6 <= 0.0f) {
-				const float32 W = D2 / (D2 - D6);
+				const float W = D2 / (D2 - D6);
 				return p1 + AC * W; // barycentric coordinates (1-w,0,w)
 			}
 
 			// Check if P in edge region of BC, if so return projection of P onto BC
-			const float32 VA = D3 * D6 - D5 * D4;
+			const float VA = D3 * D6 - D5 * D4;
 			if (VA <= 0.0f && (D4 - D3) >= 0.0f && (D5 - D6) >= 0.0f) {
-				const float32 W = (D4 - D3) / ((D4 - D3) + (D5 - D6));
+				const float W = (D4 - D3) / ((D4 - D3) + (D5 - D6));
 				return p2 + (p3 - p2) * W; // barycentric coordinates (0,1-w,w)
 			}
 
 			// P inside face region. Compute Q through its barycentric coordinates (u,v,w)
-			const float32 Denom = 1.0f / (VA + VB + VC);
-			const float32 V = VB * Denom;
-			const float32 W = VC * Denom;
+			const float Denom = 1.0f / (VA + VB + VC);
+			const float V = VB * Denom;
+			const float W = VC * Denom;
 			return p1 + AB * V + AC * W; // = u*a + v*b + w*c, u = va * denom = 1.0f - v - w
 		}
 
@@ -1131,8 +1130,8 @@ namespace GTSL {
 		}
 
 		inline bool PointOutsideOfPlane(const Vector3& p, const Vector3& a, const Vector3& b, const Vector3& c, const Vector3& d) {
-			const float32 signp = DotProduct(p - a, Cross(b - a, c - a)); // [AP AB AC]
-			const float32 signd = DotProduct(d - a, Cross(b - a, c - a)); // [AD AB AC]
+			const float signp = DotProduct(p - a, Cross(b - a, c - a)); // [AP AB AC]
+			const float signd = DotProduct(d - a, Cross(b - a, c - a)); // [AD AB AC]
 			// Points on opposite sides if expression signs are opposite
 			return signp * signd < 0.0f;
 		}
@@ -1140,12 +1139,12 @@ namespace GTSL {
 		inline Vector3 ClosestPtPointTetrahedron(const Vector3& p, const Vector3& a, const Vector3& b, const Vector3& c, const Vector3& d) {
 			// Start out assuming point inside all halfspaces, so closest to itself
 			Vector3 ClosestPoint = p;
-			float32 BestSquaredDistance = 3.402823466e+38F;
+			float BestSquaredDistance = 3.402823466e+38F;
 
 			// If point outside face abc then compute closest point on abc
 			if (PointOutsideOfPlane(p, a, b, c)) {
 				const Vector3 q = ClosestPointOnTriangleToPoint(p, a, b, c);
-				const float32 sqDist = DotProduct(q - p, q - p);
+				const float sqDist = DotProduct(q - p, q - p);
 				// Update best closest point if (squared) distance is less than current best
 				if (sqDist < BestSquaredDistance) BestSquaredDistance = sqDist, ClosestPoint = q;
 			}
@@ -1153,21 +1152,21 @@ namespace GTSL {
 			// Repeat test for face acd
 			if (PointOutsideOfPlane(p, a, c, d)) {
 				const Vector3 q = ClosestPointOnTriangleToPoint(p, a, c, d);
-				const float32 sqDist = DotProduct(q - p, q - p);
+				const float sqDist = DotProduct(q - p, q - p);
 				if (sqDist < BestSquaredDistance) BestSquaredDistance = sqDist, ClosestPoint = q;
 			}
 
 			// Repeat test for face adb
 			if (PointOutsideOfPlane(p, a, d, b)) {
 				const Vector3 q = ClosestPointOnTriangleToPoint(p, a, d, b);
-				const float32 sqDist = DotProduct(q - p, q - p);
+				const float sqDist = DotProduct(q - p, q - p);
 				if (sqDist < BestSquaredDistance) BestSquaredDistance = sqDist, ClosestPoint = q;
 			}
 
 			// Repeat test for face bdc
 			if (PointOutsideOfPlane(p, b, d, c)) {
 				const Vector3 q = ClosestPointOnTriangleToPoint(p, b, d, c);
-				const float32 sqDist = DotProduct(q - p, q - p);
+				const float sqDist = DotProduct(q - p, q - p);
 				if (sqDist < BestSquaredDistance) BestSquaredDistance = sqDist, ClosestPoint = q;
 			}
 
@@ -1176,7 +1175,7 @@ namespace GTSL {
 
 		//Expects unit vectors
 		inline Quaternion FromTwoVectors(Vector3 u, Vector3 v) {
-			float32 m = SquareRoot(2.f + 2.f * DotProduct(u, v));
+			float m = SquareRoot(2.f + 2.f * DotProduct(u, v));
 			Vector3 w = (1.f / m) * Cross(u, v);
 			return Quaternion(w.X(), w.Y(), w.Z(), 0.5f * m);
 		}
@@ -1252,12 +1251,12 @@ namespace GTSL {
 			return r;
 		}
 
-		inline void DotProduct(float32* __restrict dps, MultiRange<const float32, const float32> v0, MultiRange<const float32, const float32> v1) {
+		inline void DotProduct(float* __restrict dps, MultiRange<const float, const float> v0, MultiRange<const float, const float> v1) {
 			uint32 i = 0;
 
-			for (; i < v0.GetLength() / SIMD<float32, 8>::ElementCount; i += SIMD<float32, 8>::ElementCount) {
-				SIMD<float32, 8> x0Vec(v0.GetPointer<0>(i)), y0Vec(v0.GetPointer<1>(i));
-				SIMD<float32, 8> x1Vec(v1.GetPointer<0>(i)), y1Vec(v1.GetPointer<1>(i));
+			for (; i < v0.GetLength() / SIMD<float, 8>::ElementCount; i += SIMD<float, 8>::ElementCount) {
+				SIMD<float, 8> x0Vec(v0.GetPointer<0>(i)), y0Vec(v0.GetPointer<1>(i));
+				SIMD<float, 8> x1Vec(v1.GetPointer<0>(i)), y1Vec(v1.GetPointer<1>(i));
 
 				(x0Vec * x1Vec + y0Vec * y1Vec).CopyTo(dps + i);
 			}
@@ -1267,13 +1266,13 @@ namespace GTSL {
 			}
 		}
 
-		inline void DotProduct(float32* __restrict dps, MultiRange<const float, const float> range, const Vector2 v1) {
+		inline void DotProduct(float* __restrict dps, MultiRange<const float, const float> range, const Vector2 v1) {
 			uint32 i = 0;
 
-			const SIMD<float32, 8> x1Vec(v1.X()), y1Vec(v1.Y());
+			const SIMD<float, 8> x1Vec(v1.X()), y1Vec(v1.Y());
 
-			for (; i < range.GetLength() / SIMD<float32, 8>::ElementCount; i += SIMD<float32, 8>::ElementCount) {
-				SIMD<float32, 8> x0Vec(range.GetPointer<0>(i)), y0Vec(range.GetPointer<1>(i));
+			for (; i < range.GetLength() / SIMD<float, 8>::ElementCount; i += SIMD<float, 8>::ElementCount) {
+				SIMD<float, 8> x0Vec(range.GetPointer<0>(i)), y0Vec(range.GetPointer<1>(i));
 
 				(x0Vec * x1Vec + y0Vec * y1Vec).CopyTo(dps + i);
 			}
@@ -1283,12 +1282,12 @@ namespace GTSL {
 			}
 		}
 
-		inline void DotProduct(float32* __restrict dps, MultiRange<const float32, const float32, const float32> v0, MultiRange<const float32, const float32, const float32> v1) {
+		inline void DotProduct(float* __restrict dps, MultiRange<const float, const float, const float> v0, MultiRange<const float, const float, const float> v1) {
 			uint32 i = 0;
 
-			for(; i < v0.GetLength() / SIMD<float32, 8>::ElementCount; i += SIMD<float32, 8>::ElementCount) {
-				SIMD<float32, 8> x0Vec(v0.GetPointer<0>(i)), y0Vec(v0.GetPointer<1>(i)), z0Vec(v0.GetPointer<2>(i));
-				SIMD<float32, 8> x1Vec(v1.GetPointer<0>(i)), y1Vec(v1.GetPointer<1>(i)), z1Vec(v1.GetPointer<2>(i));
+			for(; i < v0.GetLength() / SIMD<float, 8>::ElementCount; i += SIMD<float, 8>::ElementCount) {
+				SIMD<float, 8> x0Vec(v0.GetPointer<0>(i)), y0Vec(v0.GetPointer<1>(i)), z0Vec(v0.GetPointer<2>(i));
+				SIMD<float, 8> x1Vec(v1.GetPointer<0>(i)), y1Vec(v1.GetPointer<1>(i)), z1Vec(v1.GetPointer<2>(i));
 
 				(x0Vec * x1Vec + y0Vec * y1Vec + z0Vec * z1Vec).CopyTo(dps + i);
 			}
@@ -1298,13 +1297,13 @@ namespace GTSL {
 			}
 		}
 
-		inline void DotProduct(float32* __restrict dps, MultiRange<const float, const float, const float> range, const Vector3 v1) {
+		inline void DotProduct(float* __restrict dps, MultiRange<const float, const float, const float> range, const Vector3 v1) {
 			uint32 i = 0;
 
-			const SIMD<float32, 8> x1Vec(v1.X()), y1Vec(v1.Y()), z1Vec(v1.Z());
+			const SIMD<float, 8> x1Vec(v1.X()), y1Vec(v1.Y()), z1Vec(v1.Z());
 
-			for (; i < range.GetLength() / SIMD<float32, 8>::ElementCount; i += SIMD<float32, 8>::ElementCount) {
-				SIMD<float32, 8> x0Vec(range.GetPointer<0>(i)), y0Vec(range.GetPointer<1>(i)), z0Vec(range.GetPointer<2>(i));
+			for (; i < range.GetLength() / SIMD<float, 8>::ElementCount; i += SIMD<float, 8>::ElementCount) {
+				SIMD<float, 8> x0Vec(range.GetPointer<0>(i)), y0Vec(range.GetPointer<1>(i)), z0Vec(range.GetPointer<2>(i));
 
 				(x0Vec * x1Vec + y0Vec * y1Vec + z0Vec * z1Vec).CopyTo(dps + i);
 			}
@@ -1320,9 +1319,9 @@ namespace GTSL {
 		//Attitude = rotation about z axis
 		//Bank = rotation about x axis
 
-		float32 ch = Math::Cosine(rotator.Y); float32 sh = Math::Sine(rotator.Y);
-		float32 ca = Math::Cosine(rotator.Z); float32 sa = Math::Sine(rotator.Z);
-		float32 cb = Math::Cosine(rotator.X); float32 sb = Math::Sine(rotator.X);
+		float ch = Math::Cosine(rotator.Y); float sh = Math::Sine(rotator.Y);
+		float ca = Math::Cosine(rotator.Z); float sa = Math::Sine(rotator.Z);
+		float cb = Math::Cosine(rotator.X); float sb = Math::Sine(rotator.X);
 
 		(*this)(0, 0) = ch * ca;
 		(*this)(0, 1) = sh * sb - ch * sa * cb;
@@ -1350,10 +1349,10 @@ namespace GTSL {
 	}
 
 	inline Matrix4::Matrix4(const AxisAngle& axisAngle) {
-		const float32 c = Math::Cosine(axisAngle.Angle); const float32 s = Math::Sine(axisAngle.Angle); const float32 t = 1.0f - c;
-		const float32 xx = axisAngle.X * axisAngle.X; const float32 xy = axisAngle.X * axisAngle.Y;
-		const float32 xz = axisAngle.X * axisAngle.Z; const float32 yy = axisAngle.Y * axisAngle.Y;
-		const float32 yz = axisAngle.Y * axisAngle.Z; const float32 zz = axisAngle.Z * axisAngle.Z;
+		const float c = Math::Cosine(axisAngle.Angle); const float s = Math::Sine(axisAngle.Angle); const float t = 1.0f - c;
+		const float xx = axisAngle.X * axisAngle.X; const float xy = axisAngle.X * axisAngle.Y;
+		const float xz = axisAngle.X * axisAngle.Z; const float yy = axisAngle.Y * axisAngle.Y;
+		const float yz = axisAngle.Y * axisAngle.Z; const float zz = axisAngle.Z * axisAngle.Z;
 
 		// build rotation matrix
 		array[0][0] = c + xx * t; array[1][1] = c + yy * t; array[2][2] = c + zz * t;
@@ -1395,7 +1394,7 @@ namespace GTSL {
 	}
 
 	inline Vector3 Quaternion::operator*(const Vector3& other) const {
-		Vector3 u(X(), Y(), Z()); float32 s = W();
+		Vector3 u(X(), Y(), Z()); float s = W();
 		return u * 2.0f * Math::DotProduct(u, other) + other * (s * s - Math::DotProduct(u, u)) + Math::Cross(u, other) * 2.0f * s;
 	}
 
@@ -1418,14 +1417,14 @@ namespace GTSL {
 
 	inline Plane::Plane(const Vector3& a, const Vector3& b, const Vector3& c) : Normal(Math::Normalized(Math::Cross(b - a, c - a))), D(Math::DotProduct(Normal, a)) {}
 
-	inline AxisAngle::AxisAngle(const Vector3& vector, const float32 angle) : X(vector.X()), Y(vector.Y()), Z(vector.Z()), Angle(angle) {}
+	inline AxisAngle::AxisAngle(const Vector3& vector, const float angle) : X(vector.X()), Y(vector.Y()), Z(vector.Z()), Angle(angle) {}
 
 	inline AxisAngle::AxisAngle(const Quaternion& quaternion) : Angle(2.0f * Math::ArcCosine(quaternion.W())) {
 		float4x components(quaternion.X(), quaternion.Y(), quaternion.Z(), quaternion.W());
 		const float4x sqrt(1 - quaternion.W() * quaternion.W());
 		components /= sqrt;
 		alignas(16) float data[4];
-		components.CopyTo(AlignedPointer<float32, 16>(data));
+		components.CopyTo(AlignedPointer<float, 16>(data));
 		X = data[0];
 		Y = data[1];
 		Z = data[2];
@@ -1474,8 +1473,8 @@ namespace GTSL {
 
 	/* Recursive function for finding determinant of matrix.
 	   n is current dimension of A[][]. */
-	inline float32 Determinant(Matrix4 A, int n) {
-		float32 D = 0; // Initialize result
+	inline float Determinant(Matrix4 A, int n) {
+		float D = 0; // Initialize result
 
 		//  Base case : if matrix contains single element
 		if (n == 1)
@@ -1483,7 +1482,7 @@ namespace GTSL {
 
 		Matrix4 temp; // To store cofactors
 
-		float32 sign = 1;  // To store sign multiplier
+		float sign = 1;  // To store sign multiplier
 
 		 // Iterate for each element of first row
 		for (int f = 0; f < n; f++) {
@@ -1507,7 +1506,7 @@ namespace GTSL {
 		}
 
 		// temp is used to store cofactors of A[][]
-		float32 sign = 1;
+		float sign = 1;
 		Matrix4 temp;
 
 		for (int i = 0; i < 4; i++) {
@@ -1547,38 +1546,38 @@ namespace GTSL {
 		return true;
 	}
 
-	// +  float32
-// += float32
+	// +  float
+// += float
 // +  type
 // += type
-// -  float32
-// -= float32
+// -  float
+// -= float
 // -  type
 // -= type
-// *  float32
-// *= float32
+// *  float
+// *= float
 // *  type
 // *= type
-// /  float32
-// /= float32
+// /  float
+// /= float
 // /  type
 // /= type
 
 	/* since sin256_ps and cos256_ps are almost identical, sincos256_ps could replace both of them..
 	it is almost as fast, and gives you a free cosine with your sine */
-	//void sincos256_ps(SIMD<float32, 8> x, SIMD<float32, 8>* s, SIMD<float32, 8>* c) {
+	//void sincos256_ps(SIMD<float, 8> x, SIMD<float, 8>* s, SIMD<float, 8>* c) {
 	//
-	//	SIMD<float32, 8> xmm1, xmm2, xmm3 = _mm256_setzero_ps(), sign_bit_sin, y;
+	//	SIMD<float, 8> xmm1, xmm2, xmm3 = _mm256_setzero_ps(), sign_bit_sin, y;
 	//	SIMD<int32, 8> imm0, imm2, imm4;
 	//
 	//	sign_bit_sin = x;
 	//	/* take the absolute value */
-	//	x = _mm256_and_ps(x, *(SIMD<float32, 8>*)_ps256_inv_sign_mask);
+	//	x = _mm256_and_ps(x, *(SIMD<float, 8>*)_ps256_inv_sign_mask);
 	//	/* extract the sign bit (upper one) */
-	//	sign_bit_sin = _mm256_and_ps(sign_bit_sin, *(SIMD<float32, 8>*)_ps256_sign_mask);
+	//	sign_bit_sin = _mm256_and_ps(sign_bit_sin, *(SIMD<float, 8>*)_ps256_sign_mask);
 	//
 	//	/* scale by 4/Pi */
-	//	y = _mm256_mul_ps(x, *(SIMD<float32, 8>*)_ps256_cephes_FOPI);
+	//	y = _mm256_mul_ps(x, *(SIMD<float, 8>*)_ps256_cephes_FOPI);
 	//	
 	//	/* store the integer part of y in imm2 */
 	//	imm2 = _mm256_cvttps_epi32(y);
@@ -1593,20 +1592,20 @@ namespace GTSL {
 	//	/* get the swap sign flag for the sine */
 	//	imm0 = avx2_mm256_and_si256(imm2, *(SIMD<int32, 8>*)_pi32_256_4);
 	//	imm0 = avx2_mm256_slli_epi32(imm0, 29);
-	//	//SIMD<float32, 8> swap_sign_bit_sin = _mm256_castsi256_ps(imm0);
+	//	//SIMD<float, 8> swap_sign_bit_sin = _mm256_castsi256_ps(imm0);
 	//
 	//	/* get the polynom selection mask for the sine*/
 	//	imm2 = avx2_mm256_and_si256(imm2, *(SIMD<int32, 8>*)_pi32_256_2);
 	//	imm2 = avx2_mm256_cmpeq_epi32(imm2, *(SIMD<int32, 8>*)_pi32_256_0);
-	//	//SIMD<float32, 8> poly_mask = _mm256_castsi256_ps(imm2);
-	//	SIMD<float32, 8> swap_sign_bit_sin = _mm256_castsi256_ps(imm0);
-	//	SIMD<float32, 8> poly_mask = _mm256_castsi256_ps(imm2);
+	//	//SIMD<float, 8> poly_mask = _mm256_castsi256_ps(imm2);
+	//	SIMD<float, 8> swap_sign_bit_sin = _mm256_castsi256_ps(imm0);
+	//	SIMD<float, 8> poly_mask = _mm256_castsi256_ps(imm2);
 	//
 	//	/* The magic pass: "Extended precision modular arithmetic"
 	//	   x = ((x - y * DP1) - y * DP2) - y * DP3; */
-	//	xmm1 = *(SIMD<float32, 8>*)_ps256_minus_cephes_DP1;
-	//	xmm2 = *(SIMD<float32, 8>*)_ps256_minus_cephes_DP2;
-	//	xmm3 = *(SIMD<float32, 8>*)_ps256_minus_cephes_DP3;
+	//	xmm1 = *(SIMD<float, 8>*)_ps256_minus_cephes_DP1;
+	//	xmm2 = *(SIMD<float, 8>*)_ps256_minus_cephes_DP2;
+	//	xmm3 = *(SIMD<float, 8>*)_ps256_minus_cephes_DP3;
 	//	xmm1 = _mm256_mul_ps(y, xmm1);
 	//	xmm2 = _mm256_mul_ps(y, xmm2);
 	//	xmm3 = _mm256_mul_ps(y, xmm3);
@@ -1618,39 +1617,39 @@ namespace GTSL {
 	//	imm4 = avx2_mm256_andnot_si256(imm4, *(SIMD<int32, 8>*)_pi32_256_4);
 	//	imm4 = avx2_mm256_slli_epi32(imm4, 29);
 	//
-	//	SIMD<float32, 8> sign_bit_cos = _mm256_castsi256_ps(imm4);
+	//	SIMD<float, 8> sign_bit_cos = _mm256_castsi256_ps(imm4);
 	//
 	//	sign_bit_sin = _mm256_xor_ps(sign_bit_sin, swap_sign_bit_sin);
 	//
 	//	/* Evaluate the first polynom  (0 <= x <= Pi/4) */
-	//	SIMD<float32, 8> z = _mm256_mul_ps(x, x);
-	//	y = *(SIMD<float32, 8>*)_ps256_coscof_p0;
+	//	SIMD<float, 8> z = _mm256_mul_ps(x, x);
+	//	y = *(SIMD<float, 8>*)_ps256_coscof_p0;
 	//
 	//	y = _mm256_mul_ps(y, z);
-	//	y = _mm256_add_ps(y, *(SIMD<float32, 8>*)_ps256_coscof_p1);
+	//	y = _mm256_add_ps(y, *(SIMD<float, 8>*)_ps256_coscof_p1);
 	//	y = _mm256_mul_ps(y, z);
-	//	y = _mm256_add_ps(y, *(SIMD<float32, 8>*)_ps256_coscof_p2);
+	//	y = _mm256_add_ps(y, *(SIMD<float, 8>*)_ps256_coscof_p2);
 	//	y = _mm256_mul_ps(y, z);
 	//	y = _mm256_mul_ps(y, z);
-	//	SIMD<float32, 8> tmp = _mm256_mul_ps(z, *(SIMD<float32, 8>*)_ps256_0p5);
+	//	SIMD<float, 8> tmp = _mm256_mul_ps(z, *(SIMD<float, 8>*)_ps256_0p5);
 	//	y = _mm256_sub_ps(y, tmp);
-	//	y = _mm256_add_ps(y, *(SIMD<float32, 8>*)_ps256_1);
+	//	y = _mm256_add_ps(y, *(SIMD<float, 8>*)_ps256_1);
 	//
 	//	/* Evaluate the second polynom  (Pi/4 <= x <= 0) */
 	//
-	//	SIMD<float32, 8> y2 = *(SIMD<float32, 8>*)_ps256_sincof_p0;
+	//	SIMD<float, 8> y2 = *(SIMD<float, 8>*)_ps256_sincof_p0;
 	//	y2 = _mm256_mul_ps(y2, z);
-	//	y2 = _mm256_add_ps(y2, *(SIMD<float32, 8>*)_ps256_sincof_p1);
+	//	y2 = _mm256_add_ps(y2, *(SIMD<float, 8>*)_ps256_sincof_p1);
 	//	y2 = _mm256_mul_ps(y2, z);
-	//	y2 = _mm256_add_ps(y2, *(SIMD<float32, 8>*)_ps256_sincof_p2);
+	//	y2 = _mm256_add_ps(y2, *(SIMD<float, 8>*)_ps256_sincof_p2);
 	//	y2 = _mm256_mul_ps(y2, z);
 	//	y2 = _mm256_mul_ps(y2, x);
 	//	y2 = _mm256_add_ps(y2, x);
 	//
 	//	/* select the correct result from the two polynoms */
 	//	xmm3 = poly_mask;
-	//	SIMD<float32, 8> ysin2 = _mm256_and_ps(xmm3, y2);
-	//	SIMD<float32, 8> ysin1 = _mm256_andnot_ps(xmm3, y);
+	//	SIMD<float, 8> ysin2 = _mm256_and_ps(xmm3, y2);
+	//	SIMD<float, 8> ysin1 = _mm256_andnot_ps(xmm3, y);
 	//	y2 = _mm256_sub_ps(y2, ysin2);
 	//	y = _mm256_sub_ps(y, ysin1);
 	//

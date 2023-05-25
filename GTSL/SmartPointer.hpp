@@ -1,15 +1,17 @@
 #pragma once
 
-#include "Core.h"
+#include "Core.hpp"
 #include "Allocator.hpp"
 
 namespace GTSL {
 	template<typename T, class ALLOCATOR>
-	struct SmartPointer {
+	struct SmartPointer
+	{
 		SmartPointer() {}
 
 		template<typename... ARGS>
-		SmartPointer(const ALLOCATOR& alloc, ARGS&&... args) : allocator(alloc) {
+		SmartPointer(const ALLOCATOR& alloc, ARGS&&... args) : allocator(alloc)
+		{
 			uint64 allocatedSize = 0;
 			allocator.Allocate(sizeof(T), alignof(T), reinterpret_cast<void**>(&data), &allocatedSize);
 			size = static_cast<uint32>(allocatedSize);

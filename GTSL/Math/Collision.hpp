@@ -1,37 +1,45 @@
-//module;
-
 #pragma once
 
 #include "Math.hpp"
 #include "Vectors.hpp"
+
+#include "../Collections/Pair.hpp"
+#include "../Collections/Vector.hpp"
+
 #include <array>
+#include <stdexcept>
 
-#include "GTSL/Pair.hpp"
-#include "GTSL/Vector.hpp"
-
-//export module Collision;
-
-namespace GTSL {
-	class Simplex {
+namespace GTSL
+{
+	class Simplex
+	{
 	public:
-		void AddPoint(GTSL::Vector3 newPoint) {
-			points[length++] = newPoint;
+		void AddPoint(Vector3 newPoint)
+		{
+			m_points[length++] = newPoint;
 		}
 
-		void Remove(const uint8 index) {
-			//for (uint8 i = index; i < length - 1; ++i) {
-			//	points[i] = points[i + 1];
-			//}
+		void Remove(const uint8 index)
+		{
+			if (index < 0 || index > length - 1) throw std::_Xout_of_range("");
 
-			--length;
+			for(auto i = index; i < length  - 1; ++i)
+			{
+				m_points[i] = m_points[i + 1];
+
+				if(i + 1 == length - 1)
+				{
+					m_points[i + 1] = 0;
+				}
+			}
 		}
 
-		[[nodiscard]] uint8 GetLength() const { return length; }
+		[[nodiscard]] uint8 GetLength() const { return m_length; }
 
-		GTSL::Vector3 operator[](const uint8 index) const { return points[index]; }
-
+		Vector3& operator[](const uint8 index) const { return m_points[index]; }
 	private:
-		GTSL::Vector3 points[4]; uint8 length = 0;
+		Vector3 m_points[4];
+		uint8 m_length = 0;
 	};
 
 	inline bool GJK(auto& objectA, auto& objectB) {
@@ -119,7 +127,8 @@ namespace GTSL {
 		}
 	}
 
-	struct CollisionInfo {
+	struct CollisionInfo
+	{
 		GTSL::Vector3 A, B, Normal;
 		float32 Depth{};
 	};
