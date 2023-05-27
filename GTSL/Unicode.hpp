@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Core.h"
+#include "Core.hpp"
 #include <array>
-#include "Result.h"
-#include "Pair.hpp"
-#include "Bitman.h"
+#include "Result.hpp"
+#include "Collections/Pair.hpp"
+#include "Bitman.hpp"
 
 namespace GTSL {
 	struct utf_t {

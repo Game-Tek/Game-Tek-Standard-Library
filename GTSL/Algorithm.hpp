@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Core.h"
-#include "Result.h"
+#include "Core.hpp"
+#include "Result.hpp"
+#include "Collections/Tuple.hpp"
 #include <new>
-#include "Tuple.hpp"
 
 namespace GTSL
 {
@@ -13,10 +13,10 @@ namespace GTSL
 
 	template<typename T>
 	void Destroy(T& object) { object.~T(); }
-	
+
 	template<typename T>
 	constexpr uint64 Bits() { return sizeof(T) * 8; }
-	
+
 	template<typename T>
 	bool IsPowerOfTwo(T number) { return (number & (number - 1)) == 0; }
 
@@ -29,7 +29,7 @@ namespace GTSL
 	template<typename F, typename... ARGS>
 	void MultiFor(F&& function, uint32 length, ARGS&&... iterators) {
 		auto add = [](auto& n) { ++n; };
-		
+
 		for (uint32 i = 0; i < length; ++i) {
 			function(i, *(iterators.begin())...);
 			add(iterators.begin()...);
@@ -49,7 +49,7 @@ namespace GTSL
 				return Result(MoveRef(begin), true);
 			}
 		}
-		
+
 		return Result<typename C::iterator>(false);
 	}
 
@@ -72,7 +72,7 @@ namespace GTSL
 
 	template <typename F, typename... ARGS>
 	auto CallForEach(F&& lambda, Tuple<ARGS...> tup) {
-		return []<uint64... I>(F&& lambda, Tuple<ARGS...> tup, Indices<I...>) {
+		return[]<uint64... I>(F && lambda, Tuple<ARGS...> tup, Indices<I...>) {
 			return (lambda(Get<I>(tup)) && ...);
 		}(ForwardRef<F>(lambda), tup, BuildIndices<sizeof...(ARGS)>{});
 	}
@@ -117,7 +117,7 @@ namespace GTSL
 
 	template<typename T>
 	void Max(T* var, T val) {
-		if(val > *var) {
+		if (val > *var) {
 			*var = val;
 		}
 	}

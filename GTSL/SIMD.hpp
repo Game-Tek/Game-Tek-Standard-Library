@@ -1,7 +1,6 @@
 #pragma once
 
-#include "GTSL/Assert.h"
-#include "GTSL/Core.h"
+#include "Core.hpp"
 
 #include <immintrin.h>
 #include <ammintrin.h>
@@ -57,7 +56,8 @@ namespace GTSL
 		SIMD(const AlignedPointer<type, 16> data) : vector(_mm_load_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
 		SIMD(const UnalignedPointer<type> data) : vector(_mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
 
-		SIMD(const type a, const type b, const type c, const type d, const type e, const type f, const type g, const type h, const type i, const type j, const type k, const type l, const type m, const type n, const type o, const type p) : vector(_mm_set_epi8(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)) {}
+		SIMD(const type a, const type b, const type c, const type d, const type e, const type f, const type g, const type h, const type i, const type j, const type k, const type l, const type m, const type n, const type o, const type p) 
+        : vector(_mm_set_epi8(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)) {}
 
 		SIMD(const SIMD& other) = default;
 
@@ -77,13 +77,10 @@ namespace GTSL
 		SIMD& operator=(const AlignedPointer<type, 16> data) { vector = _mm_load_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
 		SIMD& operator=(const UnalignedPointer<type> data) { vector = _mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
 		void CopyTo(const AlignedPointer<type, 16> data) const { _mm_store_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
 		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
 
-		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
 		template<uint8 A, uint8 B, uint8 C, uint8 D, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
 		[[nodiscard]] static SIMD Shuffle(const SIMD& a, const SIMD& b) { return _mm_shuffle_epi8(a.vector, SIMD(P, O, N, M, L, K, J, I, H, G, F, E, D, C, B, A)); }
 
@@ -92,18 +89,7 @@ namespace GTSL
 		static SIMD Min(const SIMD& a, const SIMD& b) { return _mm_min_epi8(a, b); }
 		static SIMD Max(const SIMD& a, const SIMD& b) { return _mm_max_epi8(a, b); }
 
-		//static SIMD HorizontalAdd(const SIMD& a, const SIMD& b) { return _mm_hadd_epi8(a.vector, b.vector); }
-		//
-		////Horizontally add adjacent pairs of single - precision(32 - bit) floating - point elements in a and B, and pack the results in dst.
-		//static SIMD HorizontalSub(const SIMD& a, const SIMD& b) { return _mm_hsub_epi8(a.vector, b.vector); }
-		//
-		////Alternatively add and subtract packed single-precision (32-bit) floating-point elements in a to/from packed elements in B, and store the results in dst
-		//[[nodiscard]] static SIMD Add13Sub02(const SIMD& a, const SIMD& b) { return _mm_addsub_epi8(a.vector, b.vector); }
-		//
-		////Conditionally multiply the packed single-precision (32-bit) floating-point elements in a and B using the high 4 bits in imm8, sum the four products, and conditionally store the sum in dst using the low 4 bits of imm8.
-		//[[nodiscard]] static SIMD DotProduct(const SIMD& a, const SIMD& b) { return _mm_dp_epi8(a.vector, b.vector, 0xff); }
 
-		//static void Transpose(SIMD& a, SIMD& b, SIMD& c, SIMD& d) { _MM_TRANSPOSE4_epi8(a, b, c, d); }
 
 		uint16 BitMask() const { return static_cast<uint16>(_mm_movemask_epi8(vector)); }
 
@@ -112,20 +98,13 @@ namespace GTSL
 
 		SIMD operator+(const SIMD& other) const { return _mm_add_epi8(vector, other.vector); }
 		SIMD operator-(const SIMD& other) const { return _mm_sub_epi8(vector, other.vector); }
-		//SIMD operator*(const SIMD& other) const { return _mm_mul_epi8(vector, other.vector); }
-		//SIMD operator/(const SIMD& other) const { return _mm_div_epi8(vector, other.vector); }
 
 		SIMD& operator+=(const SIMD& other) { vector = _mm_add_epi8(vector, other.vector); return *this; }
 		SIMD& operator-=(const SIMD& other) { vector = _mm_sub_epi8(vector, other.vector); return *this; }
-		//SIMD& operator*=(const SIMD& other) { vector = _mm_mul_epi8(vector, other.vector); return *this; }
-		//SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi8(vector, other.vector); return *this; }
 
 		SIMD operator==(const SIMD& other) const { return _mm_cmpeq_epi8(vector, other.vector); }
-		//SIMD operator!=(const SIMD& other) const { return _mm_cmpneq_(vector, other.vector); }
 		SIMD operator>(const SIMD& other)  const { return _mm_cmpgt_epi8(vector, other.vector); }
-		//SIMD operator>=(const SIMD& other) const { return _mm_cmpge_si128(vector, other.vector); }
 		SIMD operator<(const SIMD& other)  const { return _mm_cmplt_epi8(vector, other.vector); }
-		//SIMD operator<=(const SIMD& other) const { return _mm_cmple_ss(vector, other.vector); }
 
 		SIMD operator&(const SIMD& other) const { return _mm_and_si128(vector, other.vector); }
 		SIMD operator|(const SIMD& other) const { return _mm_or_si128(vector, other.vector); }
@@ -153,7 +132,8 @@ namespace GTSL
 		SIMD(const AlignedPointer<type, 16> data) : vector(_mm_load_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
 		SIMD(const UnalignedPointer<type> data) : vector(_mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
 
-		SIMD(const type a, const type b, const type c, const type d, const type e, const type f, const type g, const type h, const type i, const type j, const type k, const type l, const type m, const type n, const type o, const type p) : vector(_mm_set_epi8(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)) {}
+		SIMD(const type a, const type b, const type c, const type d, const type e, const type f, const type g, const type h, const type i, const type j, const type k, const type l, const type m, const type n, const type o, const type p) 
+            : vector(_mm_set_epi8(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)) {}
 
 		SIMD(const SIMD& other) = default;
 
@@ -173,15 +153,12 @@ namespace GTSL
 		SIMD& operator=(const AlignedPointer<type, 16> data) { vector = _mm_load_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
 		SIMD& operator=(const UnalignedPointer<type> data) { vector = _mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
 		void CopyTo(const AlignedPointer<type, 16> data) const { _mm_store_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
 		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
 
 		uint16 BitMask() const { return static_cast<uint16>(_mm_movemask_epi8(vector)); }
 
-		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
 		template<uint8 A, uint8 B, uint8 C, uint8 D, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
 		[[nodiscard]] static SIMD Shuffle(const SIMD& a) { return _mm_shuffle_epi8(a.vector, SIMD(P, O, N, M, L, K, J, I, H, G, F, E, D, C, B, A)); }
 
@@ -190,31 +167,14 @@ namespace GTSL
 		static SIMD Min(const SIMD& a, const SIMD& b) { return _mm_min_epi8(a, b); }
 		static SIMD Max(const SIMD& a, const SIMD& b) { return _mm_max_epi8(a, b); }
 
-		//static SIMD HorizontalAdd(const SIMD& a, const SIMD& b) { return _mm_hadd_epi8(a.vector, b.vector); }
-		//
-		////Horizontally add adjacent pairs of single - precision(32 - bit) floating - point elements in a and B, and pack the results in dst.
-		//static SIMD HorizontalSub(const SIMD& a, const SIMD& b) { return _mm_hsub_epi8(a.vector, b.vector); }
-		//
-		////Alternatively add and subtract packed single-precision (32-bit) floating-point elements in a to/from packed elements in B, and store the results in dst
-		//[[nodiscard]] static SIMD Add13Sub02(const SIMD& a, const SIMD& b) { return _mm_addsub_epi8(a.vector, b.vector); }
-		//
-		////Conditionally multiply the packed single-precision (32-bit) floating-point elements in a and B using the high 4 bits in imm8, sum the four products, and conditionally store the sum in dst using the low 4 bits of imm8.
-		//[[nodiscard]] static SIMD DotProduct(const SIMD& a, const SIMD& b) { return _mm_dp_epi8(a.vector, b.vector, 0xff); }
-
-		//static void Transpose(SIMD& a, SIMD& b, SIMD& c, SIMD& d) { _MM_TRANSPOSE4_epi8(a, b, c, d); }
-
 		template<uint8 I>
 		[[nodiscard]] type GetElement() const { return _mm_extract_epi8(vector, I); }
 
 		SIMD operator+(const SIMD& other) const { return _mm_add_epi8(vector, other.vector); }
 		SIMD operator-(const SIMD& other) const { return _mm_sub_epi8(vector, other.vector); }
-		//SIMD operator*(const SIMD& other) const { return _mm_mul_epi8(vector, other.vector); }
-		//SIMD operator/(const SIMD& other) const { return _mm_div_epi8(vector, other.vector); }
 
 		SIMD& operator+=(const SIMD& other) { vector = _mm_add_epi8(vector, other.vector); return *this; }
 		SIMD& operator-=(const SIMD& other) { vector = _mm_sub_epi8(vector, other.vector); return *this; }
-		//SIMD& operator*=(const SIMD& other) { vector = _mm_mul_epi8(vector, other.vector); return *this; }
-		//SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi8(vector, other.vector); return *this; }
 
 		SIMD operator==(const SIMD& other) const { return _mm_cmpeq_epi8(vector, other.vector); }
 		SIMD operator!=(const SIMD& other) const { return _mm_andnot_si128(_mm_cmpeq_epi64(vector, other.vector), _mm_set1_epi64x(-1)); }
@@ -270,33 +230,17 @@ namespace GTSL
 		SIMD& operator=(const AlignedPointer<type, 16> data) { vector = _mm_load_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
 		SIMD& operator=(const UnalignedPointer<type> data) { vector = _mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
 		void CopyTo(const AlignedPointer<type, 16> data) const { _mm_store_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
 		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
 
-		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
-		//template<uint8 A, uint8 B, uint8 C, uint8 DestructionTester, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
-		//[[nodiscard]] static SIMD Shuffle(const SIMD& a, const SIMD& b) { return _MM_SHUFFLE2(a.vector, SIMD(A, B, C, DestructionTester, E, F, G, H, I, J, K, L, M, N, O, P)); }
 
 		void Abs() { vector = _mm_abs_epi64(vector); }
 
 		static SIMD Min(const SIMD& a, const SIMD& b) { return _mm_min_epi64(a, b); }
 		static SIMD Max(const SIMD& a, const SIMD& b) { return _mm_max_epi64(a, b); }
 
-		//static SIMD HorizontalAdd(const SIMD& a, const SIMD& b) { return _mm_hadd_epi64(a.vector, b.vector); }
-		//
-		////Horizontally add adjacent pairs of single - precision(32 - bit) floating - point elements in a and B, and pack the results in dst.
-		//static SIMD HorizontalSub(const SIMD& a, const SIMD& b) { return _mm_hsub_epi64(a.vector, b.vector); }
-		//
-		////Alternatively add and subtract packed single-precision (32-bit) floating-point elements in a to/from packed elements in B, and store the results in dst
-		//[[nodiscard]] static SIMD Add13Sub02(const SIMD& a, const SIMD& b) { return _mm_addsub_epi64(a.vector, b.vector); }
-		//
-		////Conditionally multiply the packed single-precision (32-bit) floating-point elements in a and B using the high 4 bits in imm8, sum the four products, and conditionally store the sum in dst using the low 4 bits of imm8.
-		//[[nodiscard]] static SIMD DotProduct(const SIMD& a, const SIMD& b) { return _mm_dp_epi64(a.vector, b.vector, 0xff); }
 
-		//static void Transpose(SIMD& a, SIMD& b, SIMD& c, SIMD& d) { _MM_TRANSPOSE4_epi64(a, b, c, d); }
 
 		uint16 BitMask() const { return static_cast<uint16>(_mm_movemask_epi8(vector)); }
 
@@ -305,13 +249,9 @@ namespace GTSL
 
 		SIMD operator+(const SIMD& other) const { return _mm_add_epi64(vector, other.vector); }
 		SIMD operator-(const SIMD& other) const { return _mm_sub_epi64(vector, other.vector); }
-		//SIMD operator*(const SIMD& other) const { return _mm_mul_epi64(vector, other.vector); }
-		//SIMD operator/(const SIMD& other) const { return _mm_div_epi64(vector, other.vector); }
 
 		SIMD& operator+=(const SIMD& other) { vector = _mm_add_epi64(vector, other.vector); return *this; }
 		SIMD& operator-=(const SIMD& other) { vector = _mm_sub_epi64(vector, other.vector); return *this; }
-		//SIMD& operator*=(const SIMD& other) { vector = _mm_mul_epi64(vector, other.vector); return *this; }
-		//SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi64(vector, other.vector); return *this; }
 
 		SIMD operator==(const SIMD& other) const { return _mm_cmpeq_epi64(vector, other.vector); }
 		SIMD operator!=(const SIMD& other) const { return _mm_andnot_si128(_mm_cmpeq_epi64(vector, other.vector), _mm_set1_epi64x(-1)); }
@@ -335,9 +275,9 @@ namespace GTSL
 	namespace Math {};
 
 	template<>
-	class alignas(16) SIMD<float32, 4> {
+	class alignas(16) SIMD<float, 4> {
 	public:
-		using type = float32;
+		using type = float;
 		static constexpr uint8 ElementCount = 4;
 
 		SIMD() : vector(_mm_setzero_ps()) {}
@@ -381,7 +321,6 @@ namespace GTSL
 		SIMD& operator=(const AlignedPointer<const type, 16> data) { vector = _mm_load_ps(data); return *this; }
 		SIMD& operator=(const UnalignedPointer<const type> data) { vector = _mm_loadu_ps(data); return *this; }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
 		void CopyTo(const AlignedPointer<type, 16> data) const { _mm_store_ps(data, vector); }
 
 		void CopyTo(type* data) const {
@@ -389,7 +328,6 @@ namespace GTSL
 			_mm_store_ps(data, vector);
 		}
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
 		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_ps(data, vector); }
 
 		template<int32 A, int32 B, int32 C, int32 D>
@@ -417,13 +355,10 @@ namespace GTSL
 
 		static SIMD HorizontalAdd(const SIMD& a, const SIMD& b) { return _mm_hadd_ps(a.vector, b.vector); }
 
-		//Horizontally add adjacent pairs of single - precision(32 - bit) floating - point elements in a and B, and pack the results in dst.
 		static SIMD HorizontalSub(const SIMD& a, const SIMD& b) { return _mm_hsub_ps(a.vector, b.vector); }
 
-		//Alternatively add and subtract packed single-precision (32-bit) floating-point elements in a to/from packed elements in B, and store the results in dst
 		[[nodiscard]] static SIMD Add13Sub02(const SIMD& a, const SIMD& b) { return _mm_addsub_ps(a.vector, b.vector); }
 
-		//Conditionally multiply the packed single-precision (32-bit) floating-point elements in a and B using the high 4 bits in imm8, sum the four products, and conditionally store the sum in dst using the low 4 bits of imm8.
 		[[nodiscard]] static SIMD DotProduct(const SIMD& a, const SIMD& b) { return _mm_dp_ps(a.vector, b.vector, 0xff); }
 
 		static void Transpose(SIMD& a, SIMD& b, SIMD& c, SIMD& d) { _MM_TRANSPOSE4_PS(a, b, c, d); }
@@ -463,10 +398,6 @@ namespace GTSL
 		SIMD operator^(const SIMD& other) const { return _mm_xor_ps(vector, other); }
 		SIMD& operator~() { vector = _mm_xor_ps(vector, _mm_cmpeq_ps(vector, vector)); return *this; }
 
-		//static SIMD Modulo(SIMD a, SIMD b) { return _mm_fmod_ps(a.vector, b.vector); }
-		//static SIMD Sine(SIMD v) { return _mm_sin_ps(v.vector); }
-		//static SIMD Cosine(SIMD v) { return _mm_cos_ps(v.vector); }
-		//static SIMD Tangent(SIMD v) { return _mm_tan_ps(v.vector); }
 
 	private:
 		__m128 vector;
@@ -478,9 +409,9 @@ namespace GTSL
 	};
 
 	template<>
-	class alignas(32) SIMD<float32, 8> {
+	class alignas(32) SIMD<float, 8> {
 	public:
-		using type = float32;
+		using type = float;
 		static constexpr uint8 ElementCount = 8;
 
 		SIMD() : vector(_mm256_setzero_ps()) {}
@@ -522,20 +453,16 @@ namespace GTSL
 		SIMD& operator=(const AlignedPointer<const type, 32> data) { vector = _mm256_load_ps(data); return *this; }
 		SIMD& operator=(const UnalignedPointer<const type> data) { vector = _mm256_loadu_ps(data); return *this; }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
 		void CopyTo(const AlignedPointer<type, 32> data) const { _mm256_store_ps(data, vector); }
 		
 		void CopyTo(type* data) const { _mm256_store_ps(data, vector); }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
 		void CopyTo(const UnalignedPointer<type> data) const { _mm256_storeu_ps(data, vector); }
 
 		template<int32 A, int32 B, int32 C, int32 D>
 		[[nodiscard]] static SIMD Shuffle(const SIMD a, const SIMD b) {
 			if constexpr (A == 0 and B == 1 and C == 0 and D == 1) {
-				//return _mm256_move(a, b);
 			} if constexpr (A == 2 and B == 3 and C == 2 and D == 3) {
-				//return _mm256_movehl_ps(a, b);
 			}
 			else {
 				return _mm256_shuffle_ps(a.vector, b.vector, _MM_SHUFFLE(D, C, B, A));
@@ -556,16 +483,12 @@ namespace GTSL
 
 		static SIMD HorizontalAdd(const SIMD& a, const SIMD& b) { return _mm256_hadd_ps(a.vector, b.vector); }
 
-		//Horizontally add adjacent pairs of single - precision(32 - bit) floating - point elements in a and B, and pack the results in dst.
 		static SIMD HorizontalSub(const SIMD& a, const SIMD& b) { return _mm256_hsub_ps(a.vector, b.vector); }
 
-		//Alternatively add and subtract packed single-precision (32-bit) floating-point elements in a to/from packed elements in B, and store the results in dst
 		[[nodiscard]] static SIMD Add13Sub02(const SIMD& a, const SIMD& b) { return _mm256_addsub_ps(a.vector, b.vector); }
 
-		//Conditionally multiply the packed single-precision (32-bit) floating-point elements in a and B using the high 4 bits in imm8, sum the four products, and conditionally store the sum in dst using the low 4 bits of imm8.
 		[[nodiscard]] static SIMD DotProduct(const SIMD& a, const SIMD& b) { return _mm256_dp_ps(a.vector, b.vector, 0xff); }
 
-		//static void Transpose(SIMD& a, SIMD& b, SIMD& c, SIMD& d) { _mm256_tr(a, b, c, d); }
 
 		[[nodiscard]] SIMD SquareRoot() const { return _mm256_sqrt_ps(vector); }
 
@@ -591,12 +514,7 @@ namespace GTSL
 		SIMD operator&(const SIMD& other) const { return _mm256_and_ps(vector, other.vector); }
 		SIMD operator|(const SIMD& other) const { return _mm256_or_ps(vector, other.vector); }
 		SIMD operator^(const SIMD& other) const { return _mm256_xor_ps(vector, other); }
-		//SIMD& operator~() { vector = _mm256_xor_ps(vector, _mm256_cmpeq_ps(vector, vector)); return *this; }
 
-		//static SIMD Modulo(SIMD a, SIMD b) { return _mm256_fmod_ps(a.vector, b.vector); }
-		//static SIMD Sine(SIMD v) { return _mm256_sin_ps(v.vector); }
-		//static SIMD Cosine(SIMD v) { return _mm256_cos_ps(v.vector); }
-		//static SIMD Tangent(SIMD v) { return _mm256_tan_ps(v.vector); }
 
 	private:
 		__m256 vector;
@@ -608,9 +526,9 @@ namespace GTSL
 	};
 
 	template<>
-	class alignas(16) SIMD<float64, 2> {
+	class alignas(16) SIMD<double, 2> {
 	public:
-		using type = float64;
+		using type = double;
 		static constexpr uint8 ElementCount = 2;
 
 		SIMD() = default;
@@ -640,13 +558,10 @@ namespace GTSL
 		SIMD& operator=(const AlignedPointer<type, 16> data) { vector = _mm_load_pd(data); return *this; }
 		SIMD& operator=(const UnalignedPointer<type> data) { vector = _mm_loadu_pd(data); return *this; }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
 		void CopyTo(const AlignedPointer<type, 16> data) const { _mm_store_pd(data, vector); }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
 		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_pd(data, vector); }
 
-		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
 		template<int32 A, int32 B, int32 C, int32 D>
 		[[nodiscard]] static SIMD Shuffle(const SIMD& a, const SIMD& b) { return _mm_shuffle_pd(a.vector, b.vector, _MM_SHUFFLE(A, B, C, D)); }
 
@@ -657,16 +572,12 @@ namespace GTSL
 
 		static SIMD HorizontalAdd(const SIMD& a, const SIMD& b) { return _mm_hadd_pd(a.vector, b.vector); }
 
-		//Horizontally add adjacent pairs of single - precision(32 - bit) floating - point elements in a and B, and pack the results in dst.
 		static SIMD HorizontalSub(const SIMD& a, const SIMD& b) { return _mm_hsub_pd(a.vector, b.vector); }
 
-		//Alternatively add and subtract packed single-precision (32-bit) floating-point elements in a to/from packed elements in B, and store the results in dst
 		[[nodiscard]] static SIMD Add13Sub02(const SIMD& a, const SIMD& b) { return _mm_addsub_pd(a.vector, b.vector); }
 
-		//Conditionally multiply the packed single-precision (32-bit) floating-point elements in a and B using the high 4 bits in imm8, sum the four products, and conditionally store the sum in dst using the low 4 bits of imm8.
 		[[nodiscard]] static SIMD DotProduct(const SIMD& a, const SIMD& b) { return _mm_dp_pd(a.vector, b.vector, 0xff); }
 
-		//static void Transpose(SIMD& a, SIMD& b, SIMD& c, SIMD& d) { _MM_TRANSPOSE4_PD(a, b, c, d); }
 
 		[[nodiscard]] SIMD SquareRoot() const { return _mm_sqrt_pd(vector); }
 
@@ -676,7 +587,6 @@ namespace GTSL
 		 */
 		[[nodiscard]] SIMD SquareRootToLower() const { return _mm_sqrt_sd(vector, vector); }
 
-		//http://searchivarius.org/blog/whats-wrong-mmextractps-and-mmextractpd
 		template<uint8 I>
 		[[nodiscard]] float GetElement() const { return _mm_cvtsd_f64(_mm_shuffle_pd(vector, vector, _MM_SHUFFLE2(0, I))); }
 
@@ -723,7 +633,7 @@ namespace GTSL
 		SIMD(const AlignedPointer<type, 16> data) : vector(_mm_load_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
 		SIMD(const UnalignedPointer<type> data) : vector(_mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get()))) {}
 
-		SIMD(const SIMD<float32, 4> other) : vector(_mm_cvtps_epi32(other.vector)) {}
+		SIMD(const SIMD<float, 4> other) : vector(_mm_cvtps_epi32(other.vector)) {}
 
 		SIMD(const type a, const type b, const type c, const type d) : vector(_mm_setr_epi32(a, b, c, d)) {}
 
@@ -745,15 +655,10 @@ namespace GTSL
 		SIMD& operator=(const AlignedPointer<type, 16> data) { vector = _mm_load_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
 		SIMD& operator=(const UnalignedPointer<type> data) { vector = _mm_loadu_si128(reinterpret_cast<__m128i*>(data.Get())); return *this; }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
 		void CopyTo(const AlignedPointer<type, 16> data) const { _mm_store_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
 		void CopyTo(const UnalignedPointer<type> data) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(data.Get()), vector); }
 
-		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
-		//template<uint8 A, uint8 B, uint8 C, uint8 DestructionTester, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
-		//[[nodiscard]] static SIMD Shuffle(const SIMD& a, const SIMD& b) { return _MM_SHUFFLE2(a.vector, SIMD(A, B, C, DestructionTester, E, F, G, H, I, J, K, L, M, N, O, P)); }
 
 		void Abs() { vector = _mm_abs_epi32(vector); }
 
@@ -769,12 +674,10 @@ namespace GTSL
 		SIMD operator+(const SIMD& other) const { return _mm_add_epi32(vector, other.vector); }
 		SIMD operator-(const SIMD& other) const { return _mm_sub_epi32(vector, other.vector); }
 		SIMD operator*(const SIMD& other) const { return _mm_mul_epi32(vector, other.vector); }
-		//SIMD operator/(const SIMD& other) const { return _mm_div_epi32(vector, other.vector); }
 
 		SIMD& operator+=(const SIMD& other) { vector = _mm_add_epi32(vector, other.vector); return *this; }
 		SIMD& operator-=(const SIMD& other) { vector = _mm_sub_epi32(vector, other.vector); return *this; }
 		SIMD& operator*=(const SIMD& other) { vector = _mm_mul_epi32(vector, other.vector); return *this; }
-		//SIMD& operator/=(const SIMD& other) { vector = _mm_div_epi32(vector, other.vector); return *this; }
 
 		SIMD operator==(const SIMD other) const { return _mm_cmpeq_epi32(vector, other.vector); }
 		SIMD operator!=(const SIMD& other) const { return _mm_andnot_si128(_mm_cmpeq_epi32(vector, other.vector), _mm_set1_epi32(-1)); }
@@ -797,7 +700,7 @@ namespace GTSL
 		SIMD(const __m128i m128) : vector(m128) {}
 		operator __m128i() const { return vector; }
 
-		friend class SIMD<float32, 4>;
+		friend class SIMD<float, 4>;
 	};
 
 	template<>
@@ -813,7 +716,7 @@ namespace GTSL
 		SIMD(const AlignedPointer<type, 32> data) : vector(_mm256_load_si256(reinterpret_cast<__m256i*>(data.Get()))) {}
 		SIMD(const UnalignedPointer<type> data) : vector(_mm256_loadu_si256(reinterpret_cast<__m256i*>(data.Get()))) {}
 
-		SIMD(const SIMD<float32, 8> other) : vector(_mm256_castps_si256(other.vector)) {}
+		SIMD(const SIMD<float, 8> other) : vector(_mm256_castps_si256(other.vector)) {}
 
 		SIMD(const type a, const type b, const type c, const type d, const type e, const type f, const type g, const type h) : vector(_mm256_setr_epi32(a, b, c, d, e, f, g, h)) {}
 
@@ -835,23 +738,16 @@ namespace GTSL
 		SIMD& operator=(const AlignedPointer<type, 32> data) { vector = _mm256_load_si256(reinterpret_cast<__m256i*>(data.Get())); return *this; }
 		SIMD& operator=(const UnalignedPointer<type> data) { vector = _mm256_loadu_si256(reinterpret_cast<__m256i*>(data.Get())); return *this; }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into aligned memory.
 		void CopyTo(const AlignedPointer<type, 32> data) const { _mm256_store_si256(reinterpret_cast<__m256i*>(data.Get()), vector); }
 
-		//Store 128-bits (composed of 4 packed single-precision (32-bit) floating-point elements) from this vector into unaligned memory.
 		void CopyTo(const UnalignedPointer<type> data) const { _mm256_storeu_si256(reinterpret_cast<__m256i*>(data.Get()), vector); }
 
-		//Shuffle single-precision (32-bit) floating-point elements in a using the control in imm8, and store the results in dst.
-		//template<uint8 A, uint8 B, uint8 C, uint8 DestructionTester, uint8 E, uint8 F, uint8 G, uint8 H, uint8 I, uint8 J, uint8 K, uint8 L, uint8 M, uint8 N, uint8 O, uint8 P>
-		//[[nodiscard]] static SIMD Shuffle(const SIMD& a, const SIMD& b) { return _MM_SHUFFLE2(a.vector, SIMD(A, B, C, DestructionTester, E, F, G, H, I, J, K, L, M, N, O, P)); }
 
 		void Abs() { vector = _mm256_abs_epi32(vector); }
 
 		static SIMD Min(const SIMD& a, const SIMD& b) { return _mm256_min_epi32(a, b); }
 		static SIMD Max(const SIMD& a, const SIMD& b) { return _mm256_max_epi32(a, b); }
 
-		//template<uint8 A, uint8 B, uint8 C, uint8 D>
-		//static SIMD Shuffle(const SIMD a) { return _mm256_shuffle_epi32(a, _MM_SHUFFLE(D, C, B, A)); }
 
 		template<uint8 I>
 		[[nodiscard]] type GetElement() const { return _mm256_extract_epi32(vector, I); }
@@ -859,12 +755,10 @@ namespace GTSL
 		SIMD operator+(const SIMD other) const { return _mm256_add_epi32(vector, other.vector); }
 		SIMD operator-(const SIMD other) const { return _mm256_sub_epi32(vector, other.vector); }
 		SIMD operator*(const SIMD other) const { return _mm256_mul_epi32(vector, other.vector); }
-		//SIMD operator/(const SIMD other) const { return _mm256_div_epi32(vector, other.vector); }
 
 		SIMD& operator+=(const SIMD other) { vector = _mm256_add_epi32(vector, other.vector); return *this; }
 		SIMD& operator-=(const SIMD other) { vector = _mm256_sub_epi32(vector, other.vector); return *this; }
 		SIMD& operator*=(const SIMD other) { vector = _mm256_mul_epi32(vector, other.vector); return *this; }
-		//SIMD& operator/=(const SIMD other) { vector = _mm256_div_epi32(vector, other.vector); return *this; }
 
 		SIMD operator==(const SIMD& other) const { return _mm256_cmpeq_epi32(vector, other.vector); }
 		SIMD operator!=(const SIMD& other) const { return _mm256_andnot_si256(_mm256_cmpeq_epi32(vector, other.vector), _mm256_set1_epi32(-1)); }
@@ -884,12 +778,12 @@ namespace GTSL
 		SIMD(const __m256i m128) : vector(m128) {}
 		operator __m256i() const { return vector; }
 
-		friend class SIMD<float32, 8>;
+		friend class SIMD<float, 8>;
 	};
 
-	inline SIMD<float32, 4>::SIMD(const SIMD<int32, 4> other) : vector(_mm_castsi128_ps(other.vector)) {}
+	inline SIMD<float, 4>::SIMD(const SIMD<int32, 4> other) : vector(_mm_castsi128_ps(other.vector)) {}
 	inline SIMD<float, 8>::SIMD(const SIMD<int32, 8> other) : vector(_mm256_castsi256_ps(other.vector)) {}
 
-	using float4x = SIMD<float32, 4>;
-	using float8x = SIMD<float32, 8>;
+	using float4x = SIMD<float, 4>;
+	using float8x = SIMD<float, 8>;
 }
