@@ -1,9 +1,8 @@
 #pragma once
 
 #include <chrono>
-#include <format>
-#include <string>
-
+#include "String/StringCommon.hpp"
+#include "Format.hpp"
 namespace GTSL
 {
 	enum class LogLevel
@@ -16,11 +15,11 @@ namespace GTSL
         FATAL
     };
 
-    class Log final
+    class Logger
     {
     public:
-        Log() = default;
-    	~Log() = default;
+        Logger() = default;
+    	~Logger() = default;
 
         void Trace(const char* message)
         {
@@ -84,48 +83,19 @@ namespace GTSL
             Fatal(message.c_str());
         }
 
+    protected:
+
+        virtual void OnLog(LogLevel level, std::string message) {}
+
     private:
-        struct LogEntry
-        {
-            LogEntry(LogLevel level, std::string message)
-                : m_level(level), m_message(std::move(message)), m_timestamp(std::chrono::system_clock::now())
-            {
-
-            }
-
-            LogLevel level() const
-            {
-                return m_level;
-            }
-
-            const char* message() const
-            {
-                return m_message.c_str();
-            }
-
-            const std::chrono::system_clock::time_point& timestamp() const
-            {
-                return m_timestamp;
-            }
-
-        private:
-            LogLevel m_level;
-            std::string m_message;
-            std::chrono::system_clock::time_point m_timestamp;
-        };
-
-    	void logEntry(const LogEntry& entry)
-        {
-
-            std::string timeStr = std::format("{:%Y-%m-%d %H:%M:%S}", entry.timestamp());
-            timeStr.pop_back();
-            std::cout << "[" << timeStr << "] " << ToString(entry.level()) << ": " << entry.message() << std::endl;
-        }
-
         void LogMessage(LogLevel level, const char* message)
         {
-            LogEntry entry(level, message);
-            logEntry(entry);
+            std::string timeStr = std::format("{:%Y-%m-%d %H:%M:%S}", std::chrono::system_clock::now());
+            timeStr.pop_back();
+
+            const auto m = GTSL::FormatString("[{}] {}: {}",timeStr,ToString(level),message);
+            std::cout << m << std::endl;
+            OnLog(level, m);
         }
 
         static const char* ToString(LogLevel level)
@@ -152,23 +122,23 @@ namespace GTSL
 }
 
 #define LOG_TRACE(fmt,...)\
-    GTSL::Log().Trace(std::format(fmt,__VA_ARGS__));
+    GTSL::Logger().Trace(std::format(fmt,__VA_ARGS__));
 
 #ifdef _DEBUG
 #define LOG_DEBUG(fmt,...)\
-    GTSL::Log().Debug(std::format(fmt,__VA_ARGS__));
+    GTSL::Logger().Debug(std::format(fmt,__VA_ARGS__));
 #else
 #define LOG_DEBUG(fmt,...)
 #endif
 
 #define LOG_INFO(fmt,...)\
-    GTSL::Log().Info(std::format(fmt,__VA_ARGS__));
+    GTSL::Logger().Info(std::format(fmt,__VA_ARGS__));
 
 #define LOG_WARN(fmt,...)\
-    GTSL::Log().Warn(std::format(fmt,__VA_ARGS__));
+    GTSL::Logger().Warn(std::format(fmt,__VA_ARGS__));
 
 #define LOG_ERROR(fmt,...)\
-    GTSL::Log().Error(std::format(fmt,__VA_ARGS__));
+    GTSL::Logger().Error(std::format(fmt,__VA_ARGS__));
 
 #define LOG_FATAL(fmt,...)\
-    GTSL::Log().Fatal(std::format(fmt,__VA_ARGS__));
+    GTSL::Logger().Fatal(std::format(fmt,__VA_ARGS__));

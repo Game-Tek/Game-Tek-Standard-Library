@@ -3,8 +3,9 @@
 #include <GTSL/SmartPointer.hpp>
 #include <GTSL/Collections/Vector.hpp>
 #include <GTSL/Window.hpp>
-#include <GTSL/Log.hpp>
+#include <GTSL/Logger.hpp>
 #include <GTSL/Id.hpp>
+#include <GTSL/Math/Quaternion.hpp>
 
 const char* ToString(GTSL::WindowEvents event)
 {
@@ -39,9 +40,12 @@ int main(int argc, char** argv)
 		std::cout << "Window Event: " << ToString(event) << std::endl;
     });
 
+    GTSL::Quaternion d = {10,30,40,10};
+
     while(!window->ShouldWindowClose())
     {
         glfwPollEvents();
+        LOG_TRACE("{}",d)
     }
 
     glfwTerminate();

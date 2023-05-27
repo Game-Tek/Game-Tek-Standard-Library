@@ -1,5 +1,18 @@
 #pragma once
 
+#include <string>
+#include <format>
+
+namespace GTSL
+{
+	template<typename... Args>
+	std::string FormatString(const char* format,Args&&... args)
+	{
+		return std::vformat(format, std::make_format_args(args...));
+	}
+
+}
+
 // TODO: Create
 /*#include <regex>
 
